@@ -27,4 +27,6 @@ pip install .
 
 ## What can MIAMIS do for you?
 
+See [example.py](example.py).
+
 ## Acknowledgements
