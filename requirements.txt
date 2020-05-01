@@ -1,0 +1,6 @@
+matplotlib
+astropy
+munch
+scipy
+termcolor
+uncertainties
