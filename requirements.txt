@@ -3,4 +3,3 @@ astropy
 munch
 scipy
 termcolor
-uncertainties
