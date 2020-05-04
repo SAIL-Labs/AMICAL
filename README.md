@@ -25,8 +25,8 @@ conda install -c conda-forge uncertainties
 pip install .
 ```
 
-## What can MIAMIS do for you?
+## What can MIAMIS do for you ?
 
-See [example.py](example.py). 
+See [example.py](example.py).
 
 ## Acknowledgements

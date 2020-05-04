@@ -12,7 +12,7 @@ file_c = datadir + 'c_binary_120mas_dm=5.0_mag=5.0_posang=45.0__F430M_81_flat_x1
 
 maskname = "g7"
 
-params_ami = {"peakmethod": True,
+params_ami = {"peakmethod": False,
               "bs_MultiTri": True,
               "naive_err": False,
               "n_blocks": 0,
@@ -28,7 +28,7 @@ bs_t = miamis.extract_bs_mf(file_t, maskname, targetname='fakebinary',
                             **params_ami, **params_data, display=False)
 
 bs_c = miamis.extract_bs_mf(file_c, maskname, targetname='fakepsf',
-                            **params_ami, **params_data, display=False)
+                            **params_ami, **params_data, display=True)
 
 cal = miamis.calibrate(bs_t, bs_c)
 

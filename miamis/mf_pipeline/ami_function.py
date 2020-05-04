@@ -9,11 +9,11 @@ MIAMIS: Multi-Instruments Aperture Masking Interferometry Software
 Matched filter sub-pipeline method.
 
 All AMI related function, the most important are:
-- make_mf: compute splodge position for a given mask,
+- make_mf: compute splodge positions for a given mask,
 - bs_multiTriangle: compute bispectrum using multiple triangle method,
 - tri_pix: compute unique closing triangle for a given splodge.
 
--------------------------------------------------------------------- 
+--------------------------------------------------------------------
 """
 
 import numpy as np
@@ -45,7 +45,7 @@ def index_mask(n_holes, verbose=False):
     `n_bispect`: int
         The number of bispectrum elements (n_holes*(n_holes-1)*(n_holes-2)/6),\n
     `n_cov`: int
-        The number of bispectrum covariance 
+        The number of bispectrum covariance
         (n_holes*(n_holes-1)*(n_holes-2)*(n_holes-3)/4),\n
     `h2bl_ix`: numpy.array
         Holes to baselines index,\n
@@ -156,7 +156,7 @@ def make_mf(maskname, instrument, filtname, npix,
     `mas_pixel`: float
         Pixel size of the detector [mas] (default = 65.6 mas for NIRISS),\n
     `peakmethod`: boolean
-        If True, perform FFTs to compute the peak position in the Fourier space (default). 
+        If True, perform FFTs to compute the peak position in the Fourier space (default).
         Otherwise, set the u-v peak sampled into 4 pixels,\n
     `n_wl`: int
         number of wavelengths to use to simulate bandwidth,\n
@@ -233,11 +233,26 @@ def make_mf(maskname, instrument, filtname, npix,
     ap1all = []
     ap2all = []
     mfall = []
+
+    round_uv_to_pixel = False
+
     for i in range(n_baselines):
-        u[i] = (xy_coords[bl2h_ix[0, i], 0] -
-                xy_coords[bl2h_ix[1, i], 0])/filt[0]
-        v[i] = (xy_coords[bl2h_ix[0, i], 1] -
-                xy_coords[bl2h_ix[1, i], 1])/filt[0]
+
+        if not round_uv_to_pixel:
+            u[i] = (xy_coords[bl2h_ix[0, i], 0] -
+                    xy_coords[bl2h_ix[1, i], 0])/filt[0]
+            v[i] = (xy_coords[bl2h_ix[0, i], 1] -
+                    xy_coords[bl2h_ix[1, i], 1])/filt[0]
+        else:
+            onepix = 1./(npix*pixelSize)
+            onepix_xy = onepix*filt[0]
+            new_xy = (xy_coords/onepix_xy).astype(int)*onepix_xy
+
+            u[i] = (new_xy[bl2h_ix[0, i], 0] -
+                    new_xy[bl2h_ix[1, i], 0])/filt[0]
+            v[i] = (new_xy[bl2h_ix[0, i], 1] -
+                    new_xy[bl2h_ix[1, i], 1])/filt[0]
+
         mf = np.zeros([npix, npix])
 
         if peakmethod:
