@@ -15,6 +15,7 @@ and calc_bispect.pro).
 """
 
 import time
+import warnings
 
 import numpy as np
 from astropy.io import fits
@@ -30,6 +31,8 @@ from miamis.tools import cov2cor
 from .ami_function import (GivePeakInfo2d, bs_multiTriangle, index_mask,
                            make_mf, phase_chi2, tri_pix)
 from .idl_function import dblarr, dist, regress_noc
+
+warnings.filterwarnings("ignore")
 
 
 def extract_bs_mf(filename, maskname, filtname=None, targetname=None, isz=256, r1=100, dr=20, clean=True,
