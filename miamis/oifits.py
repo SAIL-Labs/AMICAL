@@ -931,7 +931,7 @@ def ApplyFlag(dic1, unit='arcsec'):
 
 
 def show(inputList, diffWl=False, vmin=0, vmax=1.05, cmax=180, setlog=False,
-         unit='arcsec', unit_cp='deg', snr=3, true_flag_v2=True, true_flag_cp=False):
+         unit='arcsec', unit_cp='deg', snr=3, true_flag_v2=True, true_flag_t3=False):
     """ Show oifits data of a multiple dataset (loaded with oifits.load or oifits filename).
 
     Parameters:
@@ -951,7 +951,7 @@ def show(inputList, diffWl=False, vmin=0, vmax=1.05, cmax=180, setlog=False,
     `true_flag_v2` {bool}:
         If inputs are classes from miamis.calibrate, compute the true flag of vis2 
         using snr parameter (default: True).\n
-    `true_flag_cp` {bool}:
+    `true_flag_t3` {bool}:
         If inputs are classes from miamis.calibrate, compute the true flag of cp 
         using snr parameter (default: True),\n
     `snr` {float}:
