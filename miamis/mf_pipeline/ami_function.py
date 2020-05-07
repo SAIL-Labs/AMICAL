@@ -202,13 +202,13 @@ def make_mf(maskname, instrument, filtname, npix,
         n_holes)
 
     ncp_i = int((n_holes - 1)*(n_holes - 2)/2)
-
-    cprint('---------------------------', 'cyan')
-    cprint('%s (%s): %i holes masks' %
-           (instrument.upper(), filtname, n_holes), 'cyan')
-    cprint('---------------------------', 'cyan')
-    cprint('nbl = %i, nbs = %i, ncp_i = %i, ncov = %i' %
-           (n_baselines, n_bispect, ncp_i, n_cov), 'cyan')
+    if verbose:
+        cprint('---------------------------', 'cyan')
+        cprint('%s (%s): %i holes masks' %
+               (instrument.upper(), filtname, n_holes), 'cyan')
+        cprint('---------------------------', 'cyan')
+        cprint('nbl = %i, nbs = %i, ncp_i = %i, ncov = %i' %
+               (n_baselines, n_bispect, ncp_i, n_cov), 'cyan')
 
     # Consider the filter to be made up of n_wl wavelengths
     wl = np.arange(n_wl)/n_wl*filt[1]
