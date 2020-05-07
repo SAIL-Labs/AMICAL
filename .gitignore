@@ -1,4 +1,5 @@
 .vscode/
+__pycache__/
 miamis/__pycache__/
 miamis/mf_pipeline/__pycache__/
 Saveoifits/
