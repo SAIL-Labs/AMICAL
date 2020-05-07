@@ -71,7 +71,7 @@ def extract_bs_mf(filename, maskname, filtname=None, targetname=None, isz=256, r
         Name of the target to save in oifits file (if not in header of the
         cube),\n
     `verbose` {bool}:
-        If Trie, print usefull informations during the process.\n
+        If True, print usefull informations during the process.\n
     `display` {bool}:
         If True, display all figures,\n
     `zoom` {bool}:
@@ -180,7 +180,8 @@ def extract_bs_mf(filename, maskname, filtname=None, targetname=None, isz=256, r
         sampledisk_r = minbl / 2 / mf.wl * mf.pixelSize * dim1 * fw_splodge
 
     if bs_MultiTri:
-        closing_tri_pix = tri_pix(dim1, sampledisk_r, display=display, verbose=verbose)
+        closing_tri_pix = tri_pix(
+            dim1, sampledisk_r, display=display, verbose=verbose)
 
     # 5. Display the power spectrum of the first frame to check the computed
     # positions of the peaks.
@@ -251,15 +252,18 @@ def extract_bs_mf(filename, maskname, filtname=None, targetname=None, isz=256, r
     rvis = np.zeros(n_baselines)
     ivis = np.zeros(n_baselines)
 
-    print("\nFilename: %s" % filename.split("/")[-1])
-    print("# of frames = %i" % n_ps)
+    if verbose:
+        print("\nFilename: %s" % filename.split("/")[-1])
+        print("# of frames = %i" % n_ps)
 
     if (n_blocks == 0) or (n_blocks == 1):
-        cprint("! Warning: nblocks == 0 -> n_blocks set to n_ps", "green")
+        if verbose:
+            cprint("! Warning: nblocks == 0 -> n_blocks set to n_ps", "green")
         n_blocks = n_ps
     elif n_blocks > n_ps:
-        cprint("------------------------------------", "green")
-        cprint("! Warning: nblocks > n_ps -> n_blocks set to n_ps", "green")
+        if verbose:
+            cprint("------------------------------------", "green")
+            cprint("! Warning: nblocks > n_ps -> n_blocks set to n_ps", "green")
         n_blocks = n_ps
 
     dark_v2 = np.zeros(n_baselines)
@@ -666,7 +670,9 @@ def extract_bs_mf(filename, maskname, filtname=None, targetname=None, isz=256, r
                 res.x) / (n_baselines - n_holes + 1))
         find_piston = np.dot(res.x, fitmat)
     else:
-        cprint("Error calculating hole pistons...", "red")
+        if verbose:
+            cprint("Error calculating hole pistons...", "red")
+            pass
 
     if display:
         plt.figure()
@@ -794,7 +800,8 @@ def extract_bs_mf(filename, maskname, filtname=None, targetname=None, isz=256, r
     t = time.time() - start_time
     m = t // 60
 
-    cprint("\nDone (exec time: %d min %2.1f s)." %
-           (m, t - m * 60), color="magenta")
+    if verbose:
+        cprint("\nDone (exec time: %d min %2.1f s)." %
+               (m, t - m * 60), color="magenta")
 
     return dict2class(res)
