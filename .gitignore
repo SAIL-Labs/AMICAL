@@ -1,3 +1,15 @@
 .vscode/
+miamis/__pycache__/
+miamis/mf_pipeline/__pycache__/
 Saveoifits/
 .DS_Store
+myexample.py
+testSPHERE.py
+mydata/
+Saveoifits/
+Simulated_NRM/
+example_cal.py
+*.dpy
+*.zip
+*aveoifit*/
+*.pyc
