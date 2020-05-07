@@ -25,6 +25,8 @@ from termcolor import cprint
 
 from miamis.tools import rad2mas
 
+list_color = ['#00a7b5', '#afd1de', '#055c63', '#ce0058', '#8a8d8f', '#f1b2dc']
+
 
 def computeflag(value, sigma, limit=4.):
     """ Compute flag array using snr (snr < 4 by default). """
@@ -116,6 +118,11 @@ def cal2dict(cal, target=None, fake_obj=False, pa=0, del_pa=0, snr=4,
     u1 = u*np.cos(np.deg2rad(thepa)) + v*np.sin(np.deg2rad(thepa))
     v1 = -u*np.sin(np.deg2rad(thepa)) + v*np.cos(np.deg2rad(thepa))
 
+    if type(res_c) is list:
+        calib_name = res_c[0].target
+    else:
+        calib_name = res_c.target
+
     dic = {'OI_VIS2': {'VIS2DATA': cal.vis2,
                        'VIS2ERR': cal.e_vis2,
                        'UCOORD': u1,
@@ -145,7 +152,7 @@ def cal2dict(cal, target=None, fake_obj=False, pa=0, del_pa=0, snr=4,
            'OI_WAVELENGTH': {'EFF_WAVE': np.array([res_t.wl]),
                              'EFF_BAND': np.array([res_t.e_wl])},
            'info': {'TARGET': target,
-                    'CALIB': res_c.target,
+                    'CALIB': calib_name,
                     'FILT': res_t.filtname,
                     'INSTRUME': ins,
                     'MASK': nrmnamr,
@@ -501,8 +508,6 @@ def save(cal, oifits_file=None, fake_obj=False,
                        true_flag_v2=true_flag_v2, true_flag_t3=true_flag_t3)
     else:
         dic = cal.copy()
-
-    datadir = 'Saveoifits/'
 
     if not os.path.exists(datadir):
         print('### Create %s directory to save all requested Oifits ###' % datadir)
@@ -895,58 +900,100 @@ def save(cal, oifits_file=None, fake_obj=False,
     #          Save file
     # ------------------------------
     hdulist.writeto(datadir + filename, overwrite=True)
-    cprint('\n\n### OIFITS CREATED (%s).' % filename, 'cyan')
+    if verbose:
+        cprint('\n\n### OIFITS CREATED (%s).' % filename, 'cyan')
     return dic
 
 
-def show(cal, pa=0, true_flag_v2=True, true_flag_t3=False, snr=4,
-         unit='arcsec', setlog=False, vmin=0, vmax=1.05, cmin=-4, cmax=4, unit_cp='rad'):
-    """ Display u-v plan, squared visibilities (v2) and closure phase (cp) of oifits data.
+def ApplyFlag(dic1, unit='arcsec'):
+    """ Apply flag and convert to appropriete units."""
 
-    Parameters
-    ----------
-    `dic` : {dict}
-        Dictionnary containing all data extracted from NRM instrument (see cal2dict function),\n
-    `unit` : {str}, (optional),
-        Unit of the fourier space (spatial frequencies), by default 'arcsec',\n
-    `setlog` : {bool}, (optional),
-        If True, v2 are plotted in log scale, by default False,\n
-    `vmin` : {int}, (optional),
-        Minimum v2 to set the Y axis, by default 0,\n
-    `vmax` : {float}, ,
-        Maximum v2 to set the Y axis, by default 1.05,\n
-    `cmin` : {int}, (optional),
-        Minimum cp to set the Y axis [rad], by default -4,\n
-    `cmax` : {int}, (optional),
-        Maximum cp to set the Y axis [rad], by default 4.\n
-    """
-    unit = 'arcsec'
-
-    if (type(cal) == dict):
-        dic = cal.copy()
-    else:
-        dic = cal2dict(cal, pa=pa, true_flag_v2=true_flag_v2,
-                       true_flag_t3=true_flag_t3, snr=snr)
-
+    wl = dic1['OI_WAVELENGTH']['EFF_WAVE']
     uv_scale = {'m': 1,
-                'rad': 1/dic['OI_WAVELENGTH']['EFF_WAVE'],
-                'arcsec': 1/dic['OI_WAVELENGTH']['EFF_WAVE']/rad2mas(1e-3),
-                'lambda': 1/dic['OI_WAVELENGTH']['EFF_WAVE']/1e6}
+                'rad': 1/wl,
+                'arcsec': 1/wl/rad2mas(1e-3),
+                'lambda': 1/wl/1e6}
 
-    U = dic['OI_VIS2']['UCOORD']*uv_scale[unit]
-    V = dic['OI_VIS2']['VCOORD']*uv_scale[unit]
+    U = dic1['OI_VIS2']['UCOORD']*uv_scale[unit]
+    V = dic1['OI_VIS2']['VCOORD']*uv_scale[unit]
 
-    flag_v2 = np.invert(dic['OI_VIS2']['FLAG'])
-    V2 = dic['OI_VIS2']['VIS2DATA'][flag_v2]
-    e_V2 = dic['OI_VIS2']['VIS2ERR'][flag_v2] * 1
-    sp_freq_vis = dic['OI_VIS2']['BL'][flag_v2] * uv_scale[unit]
-    flag_cp = np.invert(dic['OI_T3']['FLAG'])
-    cp = dic['OI_T3']['T3PHI'][flag_cp]
-    e_cp = dic['OI_T3']['T3PHIERR'][flag_cp]
-    sp_freq_cp = dic['OI_T3']['BL'][flag_cp] * uv_scale[unit]
+    flag_v2 = np.invert(dic1['OI_VIS2']['FLAG'])
+    V2 = dic1['OI_VIS2']['VIS2DATA'][flag_v2]
+    e_V2 = dic1['OI_VIS2']['VIS2ERR'][flag_v2] * 1
+    sp_freq_vis = dic1['OI_VIS2']['BL'][flag_v2] * uv_scale[unit]
+    flag_cp = np.invert(dic1['OI_T3']['FLAG'])
+    cp = dic1['OI_T3']['T3PHI'][flag_cp]
+    e_cp = dic1['OI_T3']['T3PHIERR'][flag_cp]
+    sp_freq_cp = dic1['OI_T3']['BL'][flag_cp] * uv_scale[unit]
     bmax = 1.2*np.max(np.sqrt(U**2+V**2))
 
-    # Configuration fenetre
+    return U, V, bmax, V2, e_V2, cp, e_cp, sp_freq_vis, sp_freq_cp, wl[0], dic1['info']['FILT']
+
+
+def show(inputList, diffWl=False, vmin=0, vmax=1.05, cmax=180, setlog=False,
+         unit='arcsec', unit_cp='deg', snr=3, true_flag_v2=True, true_flag_cp=False):
+    """ Show oifits data of a multiple dataset (loaded with oifits.load or oifits filename).
+
+    Parameters:
+    -----------
+    `diffWl` {bool}:
+        If True, differentiate the file (wavelenghts) by color,\n
+    `vmin`, `vmax` {float}:
+        Minimum and maximum visibilities (default: 0, 1.05),\n
+    `cmax` {float}:
+        Maximum closure phase [deg] (default: 180),\n
+    `setlog` {bool}:
+        If True, the visibility curve is plotted in log scale,\n
+    `unit` {str}:
+        Unit of the sp. frequencies (default: 'arcsec'),\n
+    `unit_cp` {str}:
+        Unit of the closure phases (default: 'deg'),\n
+    `true_flag_v2` {bool}:
+        If inputs are classes from miamis.calibrate, compute the true flag of vis2 
+        using snr parameter (default: True).\n
+    `true_flag_cp` {bool}:
+        If inputs are classes from miamis.calibrate, compute the true flag of cp 
+        using snr parameter (default: True),\n
+    `snr` {float}:
+        If inputs are classes from miamis.calibrate, use snr param to compute flag,
+    """
+
+    if type(inputList) is not list:
+        inputList = [inputList]
+
+    pa = 0
+    true_flag_v2 = True
+    true_flag_t3 = False
+    snr = 3
+
+    try:
+        inputList[0].v2
+        isclass = True
+    except AttributeError:
+        isclass = False
+
+    if isclass:
+        l_dic = [cal2dict(x, pa=pa, true_flag_v2=true_flag_v2,
+                          true_flag_t3=true_flag_t3, snr=snr) for x in inputList]
+        print('Inputs are classes from miamis.calibrate)')
+        print('(Check true_flag_v2, true_flag_t3 and snr parameters)')
+    elif type(inputList[0]) is str:
+        l_dic = [load(x) for x in inputList]
+        print('Inputs are oifits filename.')
+    elif type(inputList[0]) is dict:
+        l_dic = inputList
+        print('Inputs are dict from miamis.load.')
+
+    # return None
+
+    dic_color = {}
+    i_c = 0
+    for dic in l_dic:
+        filt = dic['info']['FILT']
+        if filt not in dic_color.keys():
+            dic_color[filt] = list_color[i_c]
+            i_c += 1
+
     fig = plt.figure(figsize=(16, 5.5))
     ax1 = plt.subplot2grid((2, 6), (0, 0), rowspan=2, colspan=2)
     ax2 = plt.subplot2grid((2, 6), (0, 2), colspan=4)
@@ -954,17 +1001,30 @@ def show(cal, pa=0, true_flag_v2=True, true_flag_t3=False, snr=4,
 
     # Plot plan UV
     # -------
-    fig.subplots_adjust(top=0.974,
-                        bottom=0.091,
-                        left=0.038,
-                        right=0.996,
-                        hspace=0.127,
-                        wspace=0.35)
-    ax1.scatter(U, V, s=50, c='#00adb5',
-                edgecolors='#364f6b', marker='o', alpha=1)
-    ax1.scatter(-1*np.array(U), -1*np.array(V), s=50, c='#fc5185',
-                edgecolors='#364f6b', marker='o', alpha=1)
-    ax1.axis([bmax, -bmax, -bmax, bmax])
+    l_bmax, l_band_al = [], []
+    for dic in l_dic:
+        tmp = ApplyFlag(dic)
+        U = tmp[0]
+        V = tmp[1]
+        band = tmp[10]
+        wl = tmp[9]
+        label = '%2.2f $\mu m$ (%s)' % (wl, band)
+        if diffWl:
+            c1, c2 = dic_color[band], dic_color[band]
+            if band not in l_band_al:
+                label = '%2.2f $\mu m$ (%s)' % (wl*1e6, band)
+        else:
+            c1, c2 = '#00adb5', '#fc5185'
+        l_bmax.append(tmp[2])
+        l_band_al.append(band)
+
+        ax1.scatter(U, V, s=50, c=c1, label=label,
+                    edgecolors='#364f6b', marker='o', alpha=1)
+        ax1.scatter(-1*np.array(U), -1*np.array(V), s=50, c=c2,
+                    edgecolors='#364f6b', marker='o', alpha=1)
+
+    Bmax = np.max(l_bmax)
+    ax1.axis([Bmax, -Bmax, -Bmax, Bmax])
     ax1.spines['left'].set_visible(False)
     ax1.spines['right'].set_visible(False)
     ax1.spines['bottom'].set_visible(False)
@@ -973,7 +1033,12 @@ def show(cal, pa=0, true_flag_v2=True, true_flag_t3=False, snr=4,
     ax1.patch.set_alpha(1)
     ax1.xaxis.set_ticks_position('none')
     ax1.yaxis.set_ticks_position('none')
-    # ax1.yaxis.set_ticks_position('left')
+    if diffWl:
+        handles, labels = ax1.get_legend_handles_labels()
+        labels, handles = zip(
+            *sorted(zip(labels, handles), key=lambda t: t[0]))
+        ax1.legend(handles, labels, loc='best', fontsize=9)
+        # ax1.legend(loc='best')
 
     unitlabel = {'m': 'm',
                  'rad': 'rad$^{-1}$',
@@ -986,14 +1051,27 @@ def show(cal, pa=0, true_flag_v2=True, true_flag_t3=False, snr=4,
 
     # Plot V2
     # -------
-    ax2.errorbar(sp_freq_vis, V2, yerr=e_V2, linestyle="None", capsize=1, ecolor='#364f6b', mfc='#00adb5', mec='#364f6b',
-                 marker='.', elinewidth=0.5, alpha=1, ms=8)
+    max_f_vis = []
+    for dic in l_dic:
+        tmp = ApplyFlag(dic, unit='arcsec')
+        V2 = tmp[3]
+        e_V2 = tmp[4]
+        sp_freq_vis = tmp[7]
+        max_f_vis.append(np.max(sp_freq_vis))
+        band = tmp[10]
+        if diffWl:
+            mfc = dic_color[band]
+        else:
+            mfc = '#00adb5'
 
-    ax2.hlines(1, 0, 1.2*np.max(sp_freq_vis),
+        ax2.errorbar(sp_freq_vis, V2, yerr=e_V2, linestyle="None", capsize=1, mfc=mfc, ecolor='#364f6b', mec='#364f6b',
+                     marker='.', elinewidth=0.5, alpha=1, ms=9)
+
+    ax2.hlines(1, 0, 1.2*np.max(max_f_vis),
                lw=1, color='k', alpha=.2, ls='--')
 
     ax2.set_ylim([vmin, vmax])
-    ax2.set_xlim([0, 1.2*np.max(sp_freq_vis)])
+    ax2.set_xlim([0, 1.2*np.max(max_f_vis)])
     ax2.set_ylabel(r'$V^2$')
     ax2.spines['left'].set_visible(False)
     ax2.spines['right'].set_visible(False)
@@ -1013,20 +1091,32 @@ def show(cal, pa=0, true_flag_v2=True, true_flag_t3=False, snr=4,
     # -------
 
     if unit_cp == 'rad':
-        cp = np.deg2rad(cp).copy()
-        e_cp = np.deg2rad(e_cp).copy()
+        conv_cp = np.pi/180.
         h1 = np.pi
-        pass
     else:
+        conv_cp = 1
         h1 = np.rad2deg(np.pi)
 
     cmin = -cmax
 
-    ax3.errorbar(sp_freq_cp, cp, yerr=e_cp, linestyle="None", capsize=1, ecolor='#364f6b', mfc='#00adb5', mec='#364f6b',
-                 marker='.', elinewidth=0.5, alpha=1, ms=8)
-    ax3.hlines(h1, 0, 1.2*np.max(sp_freq_vis),
+    max_f_cp = []
+    for dic in l_dic:
+        tmp = ApplyFlag(dic, unit='arcsec')
+        cp = tmp[5]*conv_cp
+        e_cp = tmp[6]*conv_cp
+        sp_freq_cp = tmp[8]
+        max_f_cp.append(np.max(sp_freq_cp))
+        band = tmp[10]
+        if diffWl:
+            mfc = dic_color[band]
+        else:
+            mfc = '#00adb5'
+
+        ax3.errorbar(sp_freq_cp, cp, yerr=e_cp, linestyle="None", capsize=1, mfc=mfc, ecolor='#364f6b', mec='#364f6b',
+                     marker='.', elinewidth=0.5, alpha=1, ms=9)
+    ax3.hlines(h1, 0, 1.2*np.max(max_f_cp),
                lw=1, color='k', alpha=.2, ls='--')
-    ax3.hlines(-h1, 0, 1.2*np.max(sp_freq_vis),
+    ax3.hlines(-h1, 0, 1.2*np.max(max_f_cp),
                lw=1, color='k', alpha=.2, ls='--')
     ax3.spines['left'].set_visible(False)
     ax3.spines['right'].set_visible(False)
@@ -1038,7 +1128,15 @@ def show(cal, pa=0, true_flag_v2=True, true_flag_t3=False, snr=4,
     ax3.yaxis.set_ticks_position('none')
     ax3.set_xlabel('Spatial frequency [cycle/arcsec]')
     ax3.set_ylabel('Clos. $\phi$ [%s]' % unit_cp)
-    ax3.axis([0, 1.2*np.max(sp_freq_vis), cmin, cmax])
+    ax3.axis([0, 1.2*np.max(max_f_cp), cmin*conv_cp, cmax*conv_cp])
     ax3.grid(which='both', alpha=.2)
+
+    plt.subplots_adjust(top=0.974,
+                        bottom=0.091,
+                        left=0.04,
+                        right=0.99,
+                        hspace=0.127,
+                        wspace=0.35)
+
     plt.show(block=False)
-    return fig, dic
+    return fig
