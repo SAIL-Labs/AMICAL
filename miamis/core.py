@@ -159,6 +159,64 @@ def clean_data(data, isz=None, r1=None, dr=None, checkrad=False):
     return cube
 
 
+def computeMultiCal(res_c):
+    """ Average calibration factors of visibilities and closure phases over 
+    multiple calibrator files."""
+    if type(res_c) is list:
+        v2_c_all, cp_c_all, e_v2_c_all, e_cp_c_all = [], [], [], []
+        list_res_c = np.array(res_c).copy()
+        for res_c in list_res_c:
+            v2_corr_c = calc_correctionAtm_vis2(res_c)
+            v2_c = res_c.v2/v2_corr_c
+            e_v2_c = res_c.v2_sig/v2_corr_c
+            cp_c = res_c.cp
+            e_cp_c = res_c.cp_sig
+
+            v2_c_all.append(v2_c)
+            cp_c_all.append(cp_c)
+            e_v2_c_all.append(e_v2_c)
+            e_cp_c_all.append(e_cp_c)
+
+        v2_c_all = np.array(v2_c_all)
+        e_v2_c_all = np.array(e_v2_c_all)
+        cp_c_all = np.array(cp_c_all)
+        e_cp_c_all = np.array(e_cp_c_all)
+
+        # Average v2 calibrator over multiple files:
+        v2_c_m = []
+        for bl in range(v2_c_all.shape[1]):
+            u_v2_c = []
+            for ifile in range(v2_c_all.shape[0]):
+                u_v2_c.append(ufloat(v2_c_all[ifile, bl],
+                                     e_v2_c_all[ifile, bl]))
+            u_v2_c = np.array(u_v2_c)
+            v2_c_m.append(np.mean(u_v2_c))
+
+        # Average cp calibrator over multiple files:
+        cp_c_m = []
+        for bs in range(cp_c_all.shape[1]):
+            u_cp_c = []
+            for ifile in range(cp_c_all.shape[0]):
+                u_cp_c.append(ufloat(cp_c_all[ifile, bs],
+                                     e_cp_c_all[ifile, bs]))
+            u_cp_c = np.array(u_cp_c)
+            cp_c_m.append(np.mean(u_cp_c))
+
+        u_v2_c_m = np.array(v2_c_m)
+        u_cp_c_m = np.array(cp_c_m)
+    else:
+        v2_corr_c = calc_correctionAtm_vis2(res_c)
+        v2_c = res_c.v2/v2_corr_c
+        v2_err_c = res_c.v2_sig/v2_corr_c
+        cp_c = res_c.cp
+        e_cp_c = res_c.cp_sig
+        u_v2_c_m = np.array([ufloat(v2_c[i], v2_err_c[i])
+                             for i in range(len(v2_c))])
+        u_cp_c_m = np.array([ufloat(cp_c[i], e_cp_c[i])
+                             for i in range(len(cp_c))])
+    return u_v2_c_m, u_cp_c_m
+
+
 def calibrate(res_t, res_c, apply_phscorr=False):
     """ Calibrate v2 and cp from a science target and its calibrator.
 
@@ -166,8 +224,8 @@ def calibrate(res_t, res_c, apply_phscorr=False):
     ----------
     `res_t` : {dict}
         Dictionnary containing extracted NRM data of science target (see bispect.py),\n
-    `res_c` : {dict}
-        Dictionnary containing extracted NRM data of calibrator target,\n
+    `res_c` : {list or dict}
+        Dictionnary or a list of dictionnary containing extracted NRM data of calibrator target,\n
     `apply_phscorr` : {bool}, optional
         If True, apply a phasor correction from seeing and wind shacking issues, by default False
         *alpha > beta*
@@ -181,36 +239,49 @@ def calibrate(res_t, res_c, apply_phscorr=False):
         (u-v coordinates), `wl` (wavelength), `raw_t` and `raw_c` (dictionnary of extracted raw 
         NRM data, inputs of this function).
     """
+    
+    u_v2_c_m, u_cp_c_m = computeMultiCal(res_c)
+
     v2_corr_t = calc_correctionAtm_vis2(res_t)
-    v2_corr_c = calc_correctionAtm_vis2(res_c)
 
     if apply_phscorr:
         v2_corr_t *= res_t.phs_v2corr
-        v2_corr_c *= res_c.phs_v2corr
 
     v2_t = res_t.v2/v2_corr_t
-    v2_c = res_c.v2/v2_corr_c
-
     v2_err_t = res_t.v2_sig/v2_corr_t
-    v2_err_c = res_c.v2_sig/v2_corr_c
 
-    cp = res_t.cp - res_c.cp
-    e_cp = res_t.cp_sig + res_c.cp_sig
+    cp_t = res_t.cp
+    e_cp_t = res_t.cp_sig
+
+    u_cp_t = np.array([ufloat(cp_t[i], e_cp_t[i]) for i in range(len(cp_t))])
+
+    CP = u_cp_t - u_cp_c_m
+    cp = np.array([x.nominal_value for x in CP])
+    e_cp = np.array([x.std_dev for x in CP])
+    # cp = res_t.cp - res_c.cp
+    # e_cp = res_t.cp_sig + res_c.cp_sig
 
     V2_t = np.array([ufloat(v2_t[i], v2_err_t[i]) for i in range(len(v2_t))])
-    V2_c = np.array([ufloat(v2_c[i], v2_err_c[i]) for i in range(len(v2_c))])
-    V2 = V2_t/V2_c
+    V2 = V2_t/u_v2_c_m
 
     vis2 = np.array([x.nominal_value for x in V2])
     e_vis2 = np.array([x.std_dev for x in V2])
 
     visamp_t = np.abs(res_t.cvis_all)
-    visamp_c = np.abs(res_c.cvis_all)
     visphi_t = np.angle(res_t.cvis_all)
-    visphi_c = np.angle(res_c.cvis_all)
+    
+    if type(res_c) == list:
+        visamp_c = np.abs(res_c[0].cvis_all)
+        visphi_c = np.angle(res_c[0].cvis_all)
 
-    fact_calib_visamp = np.mean(visamp_c, axis=0)
-    fact_calib_visphi = np.mean(visphi_c, axis=0)
+        fact_calib_visamp = np.mean(visamp_c, axis=0)
+        fact_calib_visphi = np.mean(visphi_c, axis=0)
+    else:
+        visamp_c = np.abs(res_c.cvis_all)
+        visphi_c = np.angle(res_c.cvis_all)
+
+        fact_calib_visamp = np.mean(visamp_c, axis=0)
+        fact_calib_visphi = np.mean(visphi_c, axis=0)
 
     visamp_calibrated = visamp_t/fact_calib_visamp
     visphi_calibrated = visphi_t - fact_calib_visphi
