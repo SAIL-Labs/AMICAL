@@ -930,7 +930,7 @@ def ApplyFlag(dic1, unit='arcsec'):
     return U, V, bmax, V2, e_V2, cp, e_cp, sp_freq_vis, sp_freq_cp, wl[0], dic1['info']['FILT']
 
 
-def show(inputList, diffWl=False, vmin=0, vmax=1.05, cmax=180, setlog=False,
+def show(inputList, diffWl=False, vmin=0, vmax=1.05, cmax=180, setlog=False, pa=0,
          unit='arcsec', unit_cp='deg', snr=3, true_flag_v2=True, true_flag_t3=False):
     """ Show oifits data of a multiple dataset (loaded with oifits.load or oifits filename).
 
@@ -960,12 +960,7 @@ def show(inputList, diffWl=False, vmin=0, vmax=1.05, cmax=180, setlog=False,
 
     if type(inputList) is not list:
         inputList = [inputList]
-
-    pa = 0
-    true_flag_v2 = True
-    true_flag_t3 = False
-    snr = 3
-
+        
     try:
         inputList[0].v2
         isclass = True
