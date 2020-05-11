@@ -10,7 +10,5 @@ mydata/
 Saveoifits/
 Simulated_NRM/
 example_cal.py
-*.dpy
-*.zip
-*aveoifit*/
+Saved*/
 *.pyc
