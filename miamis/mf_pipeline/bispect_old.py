@@ -24,29 +24,27 @@ from munch import munchify as dict2class
 from scipy.optimize import minimize
 from termcolor import cprint
 
-# from miamis.dataProcessing import clean_data
 from miamis.getInfosObs import GetMaskPos
 from miamis.tools import cov2cor
+from miamis.dataProcessing import clean_data
 
 from .ami_function import (GivePeakInfo2d, bs_multiTriangle, index_mask,
                            make_mf, phase_chi2, tri_pix)
 from .idl_function import dblarr, dist, regress_noc
-from tqdm import tqdm
 
 warnings.filterwarnings("ignore")
 
 
-def extract_bs_mf(cube, filename, maskname, filtname=None, targetname=None, bs_MultiTri=False, n_blocks=0, peakmethod=True, hole_diam=0.8,
+def extract_bs_mf(filename, maskname, filtname=None, targetname=None, isz=256, r1=100, dr=20, clean=True,
+                  checkrad=False, bs_MultiTri=False, n_blocks=0, peakmethod=True, hole_diam=0.8,
                   cutoff=1e-4, fw_splodge=0.7, naive_err=False, n_wl=3, verbose=False, display=True,):
     """Compute bispectrum (bs, v2, cp, etc.) from a data cube.
 
     Parameters:
     -----------
 
-    `cube` {array}:
-        Cleaned and checked data cube ready to extract NRM data,\n
-    `filename` {array}:
-        Name of the file containing the datacube (to keep track on it),\n
+    `filename` {str}:
+        filename of the cube,\n
     `maskname` {str}:
         Name of the mask,\n
     `filtname` {str}:
@@ -95,6 +93,7 @@ def extract_bs_mf(cube, filename, maskname, filtname=None, targetname=None, bs_M
     # grid artefact (negative fft values).
     # ------------------------------------------------------------------------
     hdu = fits.open(filename)
+    data = hdu[0].data
     hdr = hdu[0].header
 
     try:
@@ -116,6 +115,15 @@ def extract_bs_mf(cube, filename, maskname, filtname=None, targetname=None, bs_M
         except KeyError:
             cprint("Warning: FILTER is not in the header, filtname is used.", "green")
             return None
+
+    # Clean data: centering, apodise, sky-substraction, rolling.
+    if clean:
+        cube = clean_data(data, isz=isz, r1=r1, dr=dr, checkrad=checkrad)
+    else:
+        cube = data.copy()
+
+    if cube is None:
+        return None
 
     npix = cube.shape[1]
     if cube.shape[1] % 2 == 1:
@@ -188,7 +196,7 @@ def extract_bs_mf(cube, filename, maskname, filtname=None, targetname=None, bs_M
     plt.imshow(np.fft.fftshift(
         abs(ft_arr[0])), cmap="gist_stern", origin="lower")
     plt.tight_layout()
-
+    
     if display:
         plt.figure(figsize=(12, 6))
         plt.subplot(1, 2, 1)
@@ -242,6 +250,8 @@ def extract_bs_mf(cube, filename, maskname, filtname=None, targetname=None, bs_M
         plt.subplots_adjust(
             top=0.965, bottom=0.035, left=0.019, right=0.981, hspace=0.2, wspace=0.2
         )
+        if checkrad:
+            plt.show(block=True)
 
     # 6. Initialize arrays
     # ------------------------------------------------------------------------
@@ -286,7 +296,7 @@ def extract_bs_mf(cube, filename, maskname, filtname=None, targetname=None, bs_M
         print("\nCalculating V^2 and BS...")
 
     # Start to go through the cube
-    for i in tqdm(range(n_ps), ncols=100, desc='Extracting in the cube', leave=True):
+    for i in range(n_ps):
         ft_frame = ft_arr[i]
         ps = np.abs(ft_frame) ** 2
 
@@ -552,7 +562,7 @@ def extract_bs_mf(cube, filename, maskname, filtname=None, targetname=None, bs_M
 
     # 10. Now normalise all return variables
     # ------------------------------------------------------------------------
-
+    
     smallfloat = 1e-16
 
     bs_all = bs_arr / np.mean(fluxes ** 3) * n_holes ** 3
@@ -667,7 +677,7 @@ def extract_bs_mf(cube, filename, maskname, filtname=None, targetname=None, bs_M
     if res.success:
         if verbose:
             print("Phase Chi^2: ", phase_chi2(
-                res.x, fitmat, ph_mn, ph_err) / (n_baselines - n_holes + 1))
+                res.x) / (n_baselines - n_holes + 1))
         find_piston = np.dot(res.x, fitmat)
     else:
         if verbose:
@@ -756,7 +766,7 @@ def extract_bs_mf(cube, filename, maskname, filtname=None, targetname=None, bs_M
         orig = hdr["ORIGFILE"]
     except KeyError:
         orig = 'SimulatedData'
-
+        
     hdr = {"INSTRUME": hdr["INSTRUME"], "ORIGFILE": orig,
            "NRMNAME": maskname, "PIXELSCL": mf.pixelSize}
 

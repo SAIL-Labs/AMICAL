@@ -208,7 +208,7 @@ def clean_data(data, isz=None, r1=None, dr=None, n_show=0, checkrad=False):
         return None
 
     cube = []
-    for i in tqdm(range(n_im), ncols=100, desc='Cleaning'):
+    for i in tqdm(range(n_im), ncols=100, desc='Cleaning', leave=False):
         img0 = applyMaskApod(data[i], r=int(npix//3))
         im_rec_max, pos = crop_max(img0, isz, f=3)
         img_biased, bg = skyCorrection(im_rec_max, r1=r1, dr=dr)
@@ -222,11 +222,4 @@ def clean_data(data, isz=None, r1=None, dr=None, n_show=0, checkrad=False):
             cprint(i, 'red')
 
     cube = np.array(cube)
-    # If image size is odd, remove the last line and row (need even size image
-    # for fft purposes.
-
-    if cube.shape[1] % 2 == 1:
-        cube = np.array([im[:-1, :-1] for im in cube])
-
-        cube = np.roll(np.roll(cube, npix//2, axis=1), npix//2, axis=2)
     return cube
