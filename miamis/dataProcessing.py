@@ -1,5 +1,6 @@
 import numpy as np
 from matplotlib import pyplot as plt
+from matplotlib.colors import PowerNorm
 from termcolor import cprint
 from tqdm import tqdm
 
@@ -78,6 +79,9 @@ def checkDataCube(cube, clip_fact=0.5, clip=False, verbose=True, display=True):
     fluxes = np.array(fluxes)
     flag_fram = np.array(flag_fram)
 
+    best_fr = np.argmax(fluxes)
+    worst_fr = np.argmin(fluxes)
+
     std_flux = np.std(fluxes)
     med_flux = np.median(fluxes)
 
@@ -93,6 +97,12 @@ def checkDataCube(cube, clip_fact=0.5, clip=False, verbose=True, display=True):
         ind_clip = np.where(fluxes <= limit_flux)[0]
     else:
         cube_cleaned_checked = np.array(good_fram)
+
+    ind_clip2 = np.where(fluxes <= limit_flux)[0]
+    if ((worst_fr in ind_clip2) and clip) or (worst_fr in flag_fram):
+        ext = '(rejected)'
+    else:
+        ext = ''
 
     if display:
         plt.figure()
@@ -115,6 +125,18 @@ def checkDataCube(cube, clip_fact=0.5, clip=False, verbose=True, display=True):
         plt.grid(alpha=.2)
         plt.tight_layout()
 
+        plt.figure(figsize=(7, 7))
+        plt.subplot(2, 2, 1)
+        plt.title('Best fram (%i)' % best_fr)
+        plt.imshow(cube[best_fr], norm=PowerNorm(.5), cmap='afmhot', vmin=0)
+        plt.subplot(2, 2, 2)
+        plt.imshow(np.fft.fftshift(fft_fram[best_fr]), cmap='gist_stern')
+        plt.subplot(2, 2, 3)
+        plt.title('Worst fram (%i) %s' % (worst_fr, ext))
+        plt.imshow(cube[worst_fr], norm=PowerNorm(.5), cmap='afmhot', vmin=0)
+        plt.subplot(2, 2, 4)
+        plt.imshow(np.fft.fftshift(fft_fram[worst_fr]), cmap='gist_stern')
+        plt.tight_layout()
     if verbose:
         n_good = len(cube_cleaned_checked)
         n_bad = len(cube) - n_good
