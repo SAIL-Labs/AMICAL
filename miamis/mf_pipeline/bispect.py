@@ -24,9 +24,9 @@ from munch import munchify as dict2class
 from scipy.optimize import minimize
 from termcolor import cprint
 
-from miamis.core import clean_data
 from miamis.getInfosObs import GetMaskPos
 from miamis.tools import cov2cor
+from miamis.dataProcessing import clean_data
 
 from .ami_function import (GivePeakInfo2d, bs_multiTriangle, index_mask,
                            make_mf, phase_chi2, tri_pix)
@@ -92,13 +92,14 @@ def extract_bs_mf(filename, maskname, filtname=None, targetname=None, isz=256, r
     # 1. Open the data cube and perform a series of roll (both axis) to avoid
     # grid artefact (negative fft values).
     # ------------------------------------------------------------------------
-
     hdu = fits.open(filename)
     data = hdu[0].data
     hdr = hdu[0].header
 
     try:
-        target = targetname  # hdr['OBJECT']
+        target = hdr['OBJECT']
+        if targetname is not None:
+            target = targetname
     except KeyError:
         target = targetname  # if cube if a simulated target use target_name
         cprint("Warning: OBJECT is not in the header, targetname is used.", "green")
@@ -120,16 +121,14 @@ def extract_bs_mf(filename, maskname, filtname=None, targetname=None, isz=256, r
         cube = clean_data(data, isz=isz, r1=r1, dr=dr, checkrad=checkrad)
     else:
         cube = data.copy()
+        npix = cube.shape[1]
+        if cube.shape[1] % 2 == 1:
+            cube = np.array([im[:-1, :-1] for im in cube])
+        npix = cube.shape[1]
+        cube = np.roll(np.roll(cube, npix // 2, axis=1), npix // 2, axis=2)
 
     if cube is None:
         return None
-
-    npix = cube.shape[1]
-    if cube.shape[1] % 2 == 1:
-        cube = np.array([im[:-1, :-1] for im in cube])
-
-    npix = cube.shape[1]
-    cube = np.roll(np.roll(cube, npix // 2, axis=1), npix // 2, axis=2)
 
     ft_arr = np.fft.fft2(cube)
     save_ft = ft_arr[0].copy()
@@ -190,6 +189,12 @@ def extract_bs_mf(filename, maskname, filtname=None, targetname=None, isz=256, r
     # positions of the peaks.
     # ------------------------------------------------------------------------
 
+    plt.figure(figsize=(6, 6))
+    plt.title("Power spectrum")
+    plt.imshow(np.fft.fftshift(
+        abs(ft_arr[0])), cmap="gist_stern", origin="lower")
+    plt.tight_layout()
+    
     if display:
         plt.figure(figsize=(12, 6))
         plt.subplot(1, 2, 1)
@@ -555,7 +560,7 @@ def extract_bs_mf(filename, maskname, filtname=None, targetname=None, isz=256, r
 
     # 10. Now normalise all return variables
     # ------------------------------------------------------------------------
-
+    
     smallfloat = 1e-16
 
     bs_all = bs_arr / np.mean(fluxes ** 3) * n_holes ** 3
@@ -755,7 +760,12 @@ def extract_bs_mf(filename, maskname, filtname=None, targetname=None, isz=256, r
     for j in range(n_baselines):
         phs_v2corr[j] = np.mean(np.exp(-2.5 * predictor[:, j] / imsize ** 2))
 
-    hdr = {"INSTRUME": hdr["INSTRUME"],
+    try:
+        orig = hdr["ORIGFILE"]
+    except KeyError:
+        orig = 'SimulatedData'
+        
+    hdr = {"INSTRUME": hdr["INSTRUME"], "ORIGFILE": orig,
            "NRMNAME": maskname, "PIXELSCL": mf.pixelSize}
 
     res = {

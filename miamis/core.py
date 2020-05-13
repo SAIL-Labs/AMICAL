@@ -15,12 +15,9 @@ implemented yet).
 import numpy as np
 from matplotlib import pyplot as plt
 from munch import munchify as dict2class
-from termcolor import cprint
 from uncertainties import ufloat
 
 from miamis.dpfit import leastsqFit
-from miamis.tools import (applyMaskApod, checkRadiusResize, crop_max,
-                          skyCorrection)
 
 
 def v2varfunc(X, parms):
@@ -106,59 +103,6 @@ def calc_correctionAtm_vis2(data, v2=True, corr_const=1, nf=100, display=False,
     return correction
 
 
-def clean_data(data, isz=None, r1=None, dr=None, checkrad=False):
-    """ Clean data (if not simulated data).
-
-    Parameters:
-    -----------
-
-    `data` {np.array} -- datacube containing the NRM data\n
-    `isz` {int} -- Size of the cropped image (default: {None})\n
-    `r1` {int} -- Radius of the rings to compute background sky (default: {None})\n
-    `dr` {int} -- Outer radius to compute sky (default: {None})\n
-    `checkrad` {bool} -- If True, check the resizing and sky substraction parameters (default: {False})\n
-
-    Returns:
-    --------
-    `cube` {np.array} -- Cleaned datacube.
-    """
-    if data.shape[1] % 2 == 1:
-        data = np.array([im[:-1, :-1] for im in data])
-
-    n_im = data.shape[0]
-    npix = data.shape[1]
-
-    if checkrad:
-        img0 = applyMaskApod(data[0], r=int(npix//3))
-        ref0_max, pos = crop_max(img0, isz, f=3)
-        fig = checkRadiusResize(img0, isz, r1, dr, pos)
-        fig.show()
-        return None
-
-    cube = []
-    for i in range(n_im):
-        img0 = applyMaskApod(data[i], r=int(npix//3))
-        im_rec_max, pos = crop_max(img0, isz, f=3)
-        img_biased, bg = skyCorrection(im_rec_max, r1=r1, dr=dr)
-        try:
-            img = applyMaskApod(img_biased, r=isz//5)
-            cube.append(img)
-        except ValueError:
-            cprint(
-                'Error: problem with centering process -> check isz/r1/dr parameters.', 'red')
-            cprint(i, 'red')
-
-    cube = np.array(cube)
-    # If image size is odd, remove the last line and row (need even size image
-    # for fft purposes.
-
-    if cube.shape[1] % 2 == 1:
-        cube = np.array([im[:-1, :-1] for im in cube])
-
-    # cube = np.roll(np.roll(cube, npix//2, axis=1), npix//2, axis=2)
-    return cube
-
-
 def computeMultiCal(res_c):
     """ Average calibration factors of visibilities and closure phases over 
     multiple calibrator files."""
@@ -239,7 +183,7 @@ def calibrate(res_t, res_c, apply_phscorr=False):
         (u-v coordinates), `wl` (wavelength), `raw_t` and `raw_c` (dictionnary of extracted raw 
         NRM data, inputs of this function).
     """
-    
+
     u_v2_c_m, u_cp_c_m = computeMultiCal(res_c)
 
     v2_corr_t = calc_correctionAtm_vis2(res_t)
@@ -269,7 +213,7 @@ def calibrate(res_t, res_c, apply_phscorr=False):
 
     visamp_t = np.abs(res_t.cvis_all)
     visphi_t = np.angle(res_t.cvis_all)
-    
+
     if type(res_c) == list:
         visamp_c = np.abs(res_c[0].cvis_all)
         visphi_c = np.angle(res_c[0].cvis_all)
