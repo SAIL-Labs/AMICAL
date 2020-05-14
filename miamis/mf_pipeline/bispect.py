@@ -183,11 +183,12 @@ def extract_bs_mf(cube, filename, maskname, filtname=None, targetname=None, bs_M
     # positions of the peaks.
     # ------------------------------------------------------------------------
 
-    plt.figure(figsize=(6, 6))
-    plt.title("Power spectrum")
-    plt.imshow(np.fft.fftshift(
-        abs(ft_arr[0])), cmap="gist_stern", origin="lower")
-    plt.tight_layout()
+
+    # plt.figure(figsize=(6, 6))
+    # plt.title("Power spectrum")
+    # plt.imshow(np.fft.fftshift(
+    #     abs(ft_arr[0])), cmap="gist_stern", origin="lower")
+    # plt.tight_layout()
 
     if display:
         plt.figure(figsize=(12, 6))

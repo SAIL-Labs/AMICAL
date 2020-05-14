@@ -178,7 +178,7 @@ def skyCorrection(imA, r1=100, dr=20, verbose=False):
     return imC, backgroundC
 
 
-def clean_data(data, isz=None, r1=None, dr=None, n_show=0, checkrad=False):
+def clean_data(data, isz=None, r1=None, dr=None, edge=100, n_show=0, checkrad=False):
     """ Clean data (if not simulated data).
 
     Parameters:
@@ -188,6 +188,7 @@ def clean_data(data, isz=None, r1=None, dr=None, n_show=0, checkrad=False):
     `isz` {int} -- Size of the cropped image (default: {None})\n
     `r1` {int} -- Radius of the rings to compute background sky (default: {None})\n
     `dr` {int} -- Outer radius to compute sky (default: {None})\n
+    `edge` {int} -- Patch the edges of the image (VLT/SPHERE artifact, default: {200}),\n
     `checkrad` {bool} -- If True, check the resizing and sky substraction parameters (default: {False})\n
 
     Returns:
@@ -198,18 +199,25 @@ def clean_data(data, isz=None, r1=None, dr=None, n_show=0, checkrad=False):
         data = np.array([im[:-1, :-1] for im in data])
 
     n_im = data.shape[0]
-    npix = data.shape[1]
-
     if checkrad:
-        img0 = applyMaskApod(data[n_show], r=int(npix//3))
+        img0 = data[n_show]
+        img0[:, 0:edge] = 0
+        img0[:, -edge:-1] = 0
+        img0[0:edge, :] = 0
+        img0[-edge:-1, :] = 0
         ref0_max, pos = crop_max(img0, isz, f=3)
         fig = checkRadiusResize(img0, isz, r1, dr, pos)
         fig.show()
         return None
 
     cube = []
-    for i in tqdm(range(n_im), ncols=100, desc='Cleaning', leave=False):
-        img0 = applyMaskApod(data[i], r=int(npix//3))
+    for i in tqdm(range(n_im), ncols=100, desc='Cleaning', leave=True):
+        # img0 = applyMaskApod(data[i], r=int(npix//3))
+        img0 = data[i]
+        img0[:, 0:edge] = 0
+        img0[:, -edge:-1] = 0
+        img0[0:edge, :] = 0
+        img0[-edge:-1, :] = 0
         im_rec_max, pos = crop_max(img0, isz, f=3)
         img_biased, bg = skyCorrection(im_rec_max, r1=r1, dr=dr)
 
