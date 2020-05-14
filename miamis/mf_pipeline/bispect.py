@@ -23,6 +23,7 @@ from matplotlib import pyplot as plt
 from munch import munchify as dict2class
 from scipy.optimize import minimize
 from termcolor import cprint
+from tqdm import tqdm
 
 # from miamis.dataProcessing import clean_data
 from miamis.getInfosObs import GetMaskPos
@@ -31,7 +32,6 @@ from miamis.tools import cov2cor
 from .ami_function import (GivePeakInfo2d, bs_multiTriangle, index_mask,
                            make_mf, phase_chi2, tri_pix)
 from .idl_function import dblarr, dist, regress_noc
-from tqdm import tqdm
 
 warnings.filterwarnings("ignore")
 
@@ -182,7 +182,6 @@ def extract_bs_mf(cube, filename, maskname, filtname=None, targetname=None, bs_M
     # 5. Display the power spectrum of the first frame to check the computed
     # positions of the peaks.
     # ------------------------------------------------------------------------
-
 
     # plt.figure(figsize=(6, 6))
     # plt.title("Power spectrum")

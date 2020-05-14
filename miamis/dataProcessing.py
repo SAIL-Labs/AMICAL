@@ -1,4 +1,5 @@
 import numpy as np
+from astropy.io import fits
 from matplotlib import pyplot as plt
 from matplotlib.colors import PowerNorm
 from termcolor import cprint
@@ -231,3 +232,33 @@ def clean_data(data, isz=None, r1=None, dr=None, edge=100, n_show=0, checkrad=Fa
 
     cube = np.array(cube)
     return cube
+
+
+def selectCleanData(filename, isz=256, r1=100, dr=10, edge=100, clip=True,
+                    clip_fact=0.5, checkrad=False, n_show=0,
+                    verbose=False, display=False):
+    """ Clean and select good datacube (sigma-clipping using fluxes variations)."""
+    hdu = fits.open(filename)
+    cube = hdu[0].data
+    hdr = hdu[0].header
+
+    if hdr['INSTRUME'] == 'SPHERE':
+        seeing_start = float(hdr['HIERARCH ESO TEL AMBI FWHM START'])
+        seeing = float(hdr['HIERARCH ESO TEL IA FWHM'])
+        seeing_end = float(hdr['HIERARCH ESO TEL AMBI FWHM END'])
+
+    print('\n----- Seeing conditions -----')
+    print("%2.2f (start), %2.2f (end), %2.2f (Corrected AirMass)" %
+          (seeing_start, seeing_end, seeing))
+
+    if (hdr['INSTRUME'] == 'SPHERE') & (hdr['FILTER'] == 'H2'):
+        cube_patched = ApplyPatchGhost(cube, 392, 360)
+    else:
+        cube_patched = cube.copy()
+
+    cube_cleaned = clean_data(cube_patched, isz=isz, r1=r1, edge=edge,
+                              dr=dr, n_show=n_show, checkrad=checkrad)
+
+    cube_final = checkDataCube(cube_cleaned, clip=clip, clip_fact=clip_fact,
+                               verbose=verbose, display=display)
+    return cube_final, cube_cleaned
