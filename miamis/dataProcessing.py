@@ -86,9 +86,10 @@ def checkDataCube(cube, clip_fact=0.5, clip=False, verbose=True, display=True):
     std_flux = np.std(fluxes)
     med_flux = np.median(fluxes)
 
-    if (med_flux/std_flux) <= 5.:
-        cprint('\nStd of the fluxes along the cube < 5 (%2.1f):\n -> sigma clipping is suggested (clip=True).' % (
-            (med_flux/std_flux)), 'cyan')
+    if verbose:
+        if (med_flux/std_flux) <= 5.:
+            cprint('\nStd of the fluxes along the cube < 5 (%2.1f):\n -> sigma clipping is suggested (clip=True).' % (
+                (med_flux/std_flux)), 'cyan')
 
     limit_flux = med_flux - clip_fact*std_flux
 
@@ -173,13 +174,14 @@ def skyCorrection(imA, r1=100, dr=20, verbose=False):
     except IndexError:
         imC = imA.copy()
         backgroundC = 0
-        cprint('Warning: Background not computed', 'green')
-        cprint('-> check the inner and outer radius rings (checkrad option).', 'green')
+        if verbose:
+            cprint('Warning: Background not computed', 'green')
+            cprint('-> check the inner and outer radius rings (checkrad option).', 'green')
 
     return imC, backgroundC
 
 
-def clean_data(data, isz=None, r1=None, dr=None, edge=100, n_show=0, checkrad=False):
+def clean_data(data, isz=None, r1=None, dr=None, edge=100, n_show=0, checkrad=False, verbose=False):
     """ Clean data (if not simulated data).
 
     Parameters:
@@ -212,7 +214,7 @@ def clean_data(data, isz=None, r1=None, dr=None, edge=100, n_show=0, checkrad=Fa
         return None
 
     cube = []
-    for i in tqdm(range(n_im), ncols=100, desc='Cleaning', leave=True):
+    for i in tqdm(range(n_im), ncols=100, desc='Cleaning', leave=False):
         # img0 = applyMaskApod(data[i], r=int(npix//3))
         img0 = data[i]
         img0[:, 0:edge] = 0
@@ -226,9 +228,10 @@ def clean_data(data, isz=None, r1=None, dr=None, edge=100, n_show=0, checkrad=Fa
             img = applyMaskApod(img_biased, r=isz//3)
             cube.append(img)
         except ValueError:
-            cprint(
-                'Error: problem with centering process -> check isz/r1/dr parameters.', 'red')
-            cprint(i, 'red')
+            if verbose:
+                cprint(
+                    'Error: problem with centering process -> check isz/r1/dr parameters.', 'red')
+                cprint(i, 'red')
 
     cube = np.array(cube)
     return cube
@@ -247,17 +250,22 @@ def selectCleanData(filename, isz=256, r1=100, dr=10, edge=100, clip=True,
         seeing = float(hdr['HIERARCH ESO TEL IA FWHM'])
         seeing_end = float(hdr['HIERARCH ESO TEL AMBI FWHM END'])
 
-    print('\n----- Seeing conditions -----')
-    print("%2.2f (start), %2.2f (end), %2.2f (Corrected AirMass)" %
-          (seeing_start, seeing_end, seeing))
+    if verbose:
+        print('\n----- Seeing conditions -----')
+        print("%2.2f (start), %2.2f (end), %2.2f (Corrected AirMass)" %
+              (seeing_start, seeing_end, seeing))
 
-    if (hdr['INSTRUME'] == 'SPHERE') & (hdr['FILTER'] == 'H2'):
+    if (hdr['INSTRUME'] == 'SPHERE') & (hdr['FILTER'] == 'K1'):
         cube_patched = ApplyPatchGhost(cube, 392, 360)
+    elif (hdr['INSTRUME'] == 'SPHERE') & (hdr['FILTER'] == 'K2'):
+        cube_patched = ApplyPatchGhost(cube, 378, 311)
+        cube_patched = ApplyPatchGhost(cube_patched, 891, 315)
     else:
         cube_patched = cube.copy()
 
     cube_cleaned = clean_data(cube_patched, isz=isz, r1=r1, edge=edge,
-                              dr=dr, n_show=n_show, checkrad=checkrad)
+                              dr=dr, n_show=n_show, checkrad=checkrad,
+                              verbose=verbose)
 
     cube_final = checkDataCube(cube_cleaned, clip=clip, clip_fact=clip_fact,
                                verbose=verbose, display=display)

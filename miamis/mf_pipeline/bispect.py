@@ -286,7 +286,7 @@ def extract_bs_mf(cube, filename, maskname, filtname=None, targetname=None, bs_M
         print("\nCalculating V^2 and BS...")
 
     # Start to go through the cube
-    for i in tqdm(range(n_ps), ncols=100, desc='Extracting in the cube', leave=True):
+    for i in tqdm(range(n_ps), ncols=100, desc='Extracting in the cube', leave=False):
         ft_frame = ft_arr[i]
         ps = np.abs(ft_frame) ** 2
 
@@ -757,50 +757,58 @@ def extract_bs_mf(cube, filename, maskname, filtname=None, targetname=None, bs_M
     except KeyError:
         orig = 'SimulatedData'
 
-    hdr = {"INSTRUME": hdr["INSTRUME"], "ORIGFILE": orig,
-           "NRMNAME": maskname, "PIXELSCL": mf.pixelSize}
+    try:
+        seeing_start = float(hdr['HIERARCH ESO TEL AMBI FWHM START'])
+        seeing_end = float(hdr['HIERARCH ESO TEL AMBI FWHM END'])
+        seeing = np.mean([seeing_start, seeing_end])
+    except KeyError:
+        seeing = np.nan
 
-    res = {
-        "v2": v2,
-        "v2_sig": e_v2,
-        "v2_cov": v2_cov,
-        "v2_cor": v2_cor,
-        "bs": bs,
-        "bs_cov": bs_cov,
-        "bs_var": bs_var,
-        "bs_v2_cov": bs_v2_cov,
-        "bs_all": bs_all,
-        "cp": cp,
-        "cp_sig": e_cp,
-        "cp_cov": cp_cov,
-        "cp_all": cp_all,
-        "v2_all": v2_all,
-        "cvis_all": cvis_all,
-        "avar": avar,
-        "err_avar": err_avar,
-        "cp_var": cp_var,
-        "phs_v2corr": phs_v2corr,
-        "ps": ps,
-        "u": mf.u,
-        "v": mf.v,
-        "wl": mf.wl,
-        "e_wl": mf.e_wl,
-        "bl": np.sqrt(mf.u ** 2 + mf.v ** 2),
-        "bl_cp": bl_cp,
-        "t3_coord": t3_coord,
-        "save_ft": save_ft,
-        "target": target,
-        "filename": filename,
-        "maskname": maskname,
-        "filtname": filtname,
-        "isz": dim1,
-        "closing_tri": closing_tri,
-        "bl2h_ix": bl2h_ix,
-        "bs2bl_ix": bs2bl_ix,
-        "n_baselines": n_baselines,
-        "xycoord": mf.xy_coords,
-        "hdr": hdr,
-    }
+    hdr = {"INSTRUME": hdr["INSTRUME"], "ORIGFILE": orig,
+           "NRMNAME": maskname, "PIXELSCL": mf.pixelSize,
+           "SEEING": seeing}
+
+    res = {"v2": v2,
+           "v2_sig": e_v2,
+           "v2_cov": v2_cov,
+           "v2_cor": v2_cor,
+           "bs": bs,
+           "bs_cov": bs_cov,
+           "bs_var": bs_var,
+           "bs_v2_cov": bs_v2_cov,
+           "bs_all": bs_all,
+           "cp": cp,
+           "cp_sig": e_cp,
+           "cp_cov": cp_cov,
+           "cp_all": cp_all,
+           "v2_all": v2_all,
+           "cvis_all": cvis_all,
+           "avar": avar,
+           "err_avar": err_avar,
+           "cp_var": cp_var,
+           "phs_v2corr": phs_v2corr,
+           "flux": np.mean(fluxes),
+           "ps": ps,
+           "u": mf.u,
+           "v": mf.v,
+           "wl": mf.wl,
+           "e_wl": mf.e_wl,
+           "bl": np.sqrt(mf.u ** 2 + mf.v ** 2),
+           "bl_cp": bl_cp,
+           "t3_coord": t3_coord,
+           "save_ft": save_ft,
+           "target": target,
+           "filename": filename,
+           "maskname": maskname,
+           "filtname": filtname,
+           "isz": dim1,
+           "closing_tri": closing_tri,
+           "bl2h_ix": bl2h_ix,
+           "bs2bl_ix": bs2bl_ix,
+           "n_baselines": n_baselines,
+           "xycoord": mf.xy_coords,
+           "hdr": hdr
+           }
 
     t = time.time() - start_time
     m = t // 60
