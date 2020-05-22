@@ -8,3 +8,7 @@
 # Data relative files
 Saveoifits/
 Simulated_NRM/
+
+# Install files 
+*.txt
+PKG*

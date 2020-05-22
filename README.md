@@ -21,7 +21,7 @@ conda install --file requirements.txt
 conda install -c astropy astroquery
 conda install -c conda-forge uncertainties
 
-# Finally, install PREVIS
+# Finally, install MIAMIS
 pip install .
 ```
 
