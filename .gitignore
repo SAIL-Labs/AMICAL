@@ -1,15 +1,10 @@
+# Development files
 .vscode/
-__pycache__/
-miamis/__pycache__/
-miamis/mf_pipeline/__pycache__/
-Saveoifits/
-.DS_Store
-myexample.py
-testSPHERE.py
-mydata/
+
+# System files
+*__pycache__/
+*.DS_Store
+ 
+# Data relative files
 Saveoifits/
 Simulated_NRM/
-example_cal.py
-Saved*/
-*.pyc
-my*.py
