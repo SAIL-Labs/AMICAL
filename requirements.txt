@@ -3,3 +3,4 @@ astropy
 munch
 scipy
 termcolor
+tqdm
