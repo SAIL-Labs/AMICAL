@@ -88,7 +88,8 @@ def extract_bs_mf(cube, filename, maskname, filtname=None, targetname=None, bs_M
         Return all interferometric observables and informations as a class
         object res (res.v2, v2_sig, cp, cp_sig, u, v, etc.)
     """
-
+    if verbose:
+        cprint("\n-- Starting extraction of observables --", 'cyan')
     start_time = time.time()
 
     # 1. Open the data cube and perform a series of roll (both axis) to avoid
@@ -103,7 +104,8 @@ def extract_bs_mf(cube, filename, maskname, filtname=None, targetname=None, bs_M
             target = targetname
     except KeyError:
         target = targetname  # if cube if a simulated target use target_name
-        cprint("Warning: OBJECT is not in the header, targetname is used.", "green")
+        cprint("Warning: OBJECT is not in the header, targetname is used (%s)." %
+               targetname, "green")
     try:
         instrument = hdr["INSTRUME"]
     except KeyError:
@@ -114,7 +116,8 @@ def extract_bs_mf(cube, filename, maskname, filtname=None, targetname=None, bs_M
         try:
             filtname = hdr["FILTER"]
         except KeyError:
-            cprint("Warning: FILTER is not in the header, filtname is used.", "green")
+            cprint("Warning: FILTER is not in the header, filtname is used (%s)." %
+                   filtname, "green")
             return None
 
     npix = cube.shape[1]
@@ -286,7 +289,7 @@ def extract_bs_mf(cube, filename, maskname, filtname=None, targetname=None, bs_M
         print("\nCalculating V^2 and BS...")
 
     # Start to go through the cube
-    for i in tqdm(range(n_ps), ncols=100, desc='Extracting in the cube', leave=False):
+    for i in tqdm(range(n_ps), ncols=100, desc='Extracting in the cube', leave=True):
         ft_frame = ft_arr[i]
         ps = np.abs(ft_frame) ** 2
 

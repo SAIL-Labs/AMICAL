@@ -13,11 +13,15 @@ implemented yet).
 """
 
 import numpy as np
+from astropy.io import fits
+from astropy.stats import sigma_clip
 from matplotlib import pyplot as plt
 from munch import munchify as dict2class
+from termcolor import cprint
 from uncertainties import ufloat
 
 from miamis.dpfit import leastsqFit
+from miamis.tools import computeUfloatArr
 
 
 def v2varfunc(X, parms):
@@ -103,65 +107,151 @@ def calc_correctionAtm_vis2(data, v2=True, corr_const=1, nf=100, display=False,
     return correction
 
 
-def computeMultiCal(res_c):
-    """ Average calibration factors of visibilities and closure phases over 
-    multiple calibrator files."""
-    if type(res_c) is list:
-        v2_c_all, cp_c_all, e_v2_c_all, e_cp_c_all = [], [], [], []
-        list_res_c = np.array(res_c).copy()
-        for res_c in list_res_c:
-            v2_corr_c = calc_correctionAtm_vis2(res_c)
-            v2_c = res_c.v2/v2_corr_c
-            e_v2_c = res_c.v2_sig/v2_corr_c
-            cp_c = res_c.cp
-            e_cp_c = res_c.cp_sig
+def applySigClip(data, e_data, sig_thres=2, use_var=True, ymin=0, ymax=1.2, var='V2', display=False):
+    """ Apply the sigma-clipping on the dataset and plot some diagnostic plots. """
+    filtered_data = sigma_clip(data, sigma=sig_thres, axis=0)
 
-            v2_c_all.append(v2_c)
-            cp_c_all.append(cp_c)
-            e_v2_c_all.append(e_v2_c)
-            e_cp_c_all.append(e_cp_c)
+    n_files = data.shape[0]
+    n_pts = data.shape[1]
 
-        v2_c_all = np.array(v2_c_all)
-        e_v2_c_all = np.array(e_v2_c_all)
-        cp_c_all = np.array(cp_c_all)
-        e_cp_c_all = np.array(e_cp_c_all)
+    u_data_clip = []
+    for i in range(n_pts):
+        cond = filtered_data[:, i].mask
+        data_clip = data[:, i][~cond]
+        e_data_clip = e_data[:, i][~cond]
+        n_sel = len(data_clip)
+        u_data = []
+        for j in range(n_sel):
+            u_data.append(ufloat(data_clip[j], e_data_clip[j]))
 
-        # Average v2 calibrator over multiple files:
-        v2_c_m = []
-        for bl in range(v2_c_all.shape[1]):
-            u_v2_c = []
-            for ifile in range(v2_c_all.shape[0]):
-                u_v2_c.append(ufloat(v2_c_all[ifile, bl],
-                                     e_v2_c_all[ifile, bl]))
-            u_v2_c = np.array(u_v2_c)
-            v2_c_m.append(np.mean(u_v2_c))
+        if use_var:
+            res = np.mean(u_data)
+        else:
+            res = ufloat(np.mean(data_clip), np.mean(e_data_clip))
+        u_data_clip.append(res)
 
-        # Average cp calibrator over multiple files:
-        cp_c_m = []
-        for bs in range(cp_c_all.shape[1]):
-            u_cp_c = []
-            for ifile in range(cp_c_all.shape[0]):
-                u_cp_c.append(ufloat(cp_c_all[ifile, bs],
-                                     e_cp_c_all[ifile, bs]))
-            u_cp_c = np.array(u_cp_c)
-            cp_c_m.append(np.mean(u_cp_c))
+    data_med = np.median(data, axis=0)
 
-        u_v2_c_m = np.array(v2_c_m)
-        u_cp_c_m = np.array(cp_c_m)
+    if var == 'V2':
+        ylabel = r'Raw V$^2$'
+        xlabel = '# baselines'
     else:
-        v2_corr_c = calc_correctionAtm_vis2(res_c)
-        v2_c = res_c.v2/v2_corr_c
-        v2_err_c = res_c.v2_sig/v2_corr_c
-        cp_c = res_c.cp
-        e_cp_c = res_c.cp_sig
-        u_v2_c_m = np.array([ufloat(v2_c[i], v2_err_c[i])
-                             for i in range(len(v2_c))])
-        u_cp_c_m = np.array([ufloat(cp_c[i], e_cp_c[i])
-                             for i in range(len(cp_c))])
-    return u_v2_c_m, u_cp_c_m
+        ylabel = r'Raw closure Phases $\Phi$ [deg]'
+        xlabel = '# bispectrum'
+        ymin = -ymax
+
+    if display:
+        plt.figure()
+        plt.title('CALIBRATOR')
+        if n_files != 1:
+            plt.plot(data[0], color='grey', alpha=.2, label='Data vs. files')
+            plt.plot(data[1:, :].T, color='grey', alpha=.2)
+        plt.plot(data_med, 'g--', lw=1, label='Median value')
+        for i in range(n_files):
+            data_ind = data[i, :]
+            cond = filtered_data[i, :].mask
+            x = np.arange(len(data_ind))
+            bad = data_ind[cond]
+            x_bad = x[cond]
+            if i == 0:
+                plt.plot(x_bad, bad, 'rx', ms=3,
+                         label=r'Rejected points (>%i$\sigma$)' % sig_thres)
+            else:
+                plt.plot(x_bad, bad, 'rx', ms=3)
+        plt.legend(loc='best', fontsize=9)
+        plt.ylim(ymin, ymax)
+        plt.xlabel(xlabel)
+        plt.ylabel(ylabel)
+        plt.tight_layout()
+    return u_data_clip
 
 
-def calibrate(res_t, res_c, apply_phscorr=False):
+def averageCalibFiles(list_nrm, use_var=True, sig_thres=2, display=False):
+    """ Average NRM data extracted from multiple calibrator files. Additionaly,
+    perform sigma-clipping to reject suspicious dataset.
+
+    Parameters:
+    -----------
+    `list_nrm` : {list}
+        List of classes containing extracted NRM data (see bispect.py) of multiple calibrator files,\n
+    `use_var` : {bool}
+        If True, the uncertainties are computed using the variance (uncertainties package). Else,
+        the error are computed as the average of the uncertainties over the myultiple calibrator
+        files,\n
+    `sig_thres` : {float}
+        Threshold of the sigma clipping (default: 2-sigma around the median is used),\n    
+     """
+    nfiles = len(list_nrm)
+    l_pa = np.zeros(nfiles)
+    cp_vs_file, e_cp_vs_file = [], []
+    vis2_vs_file, e_vis2_vs_file = [], []
+    u_vis2_all, u_cp_all = [], []
+
+    # Fill array containing each vis2 and cp across files.
+
+    for n in range(nfiles):
+        nrm = list_nrm[n]
+        hdu = fits.open(nrm.filename)
+        hdr = hdu[0].header
+        try:
+            # todo: Check parallactic angle param of a real NIRISS header.
+            l_pa[n] = hdr['PARANG']
+        except KeyError:
+            l_pa[n] = 0
+
+        cp = nrm.cp
+        e_cp = nrm.cp_sig
+        vis2 = nrm.v2
+        e_vis2 = nrm.v2_sig
+
+        n_bs = len(cp)
+        n_bl = len(vis2)
+
+        cp_vs_file.append(cp)
+        e_cp_vs_file.append(e_cp)
+        vis2_vs_file.append(vis2)
+        e_vis2_vs_file.append(e_vis2)
+
+        u_vis2_all.append([ufloat(vis2[i], e_vis2[i]) for i in range(n_bl)])
+        u_cp_all.append([ufloat(cp[i], e_cp[i]) for i in range(n_bs)])
+
+    cp_vs_file = np.array(cp_vs_file)
+    e_cp_vs_file = np.array(e_cp_vs_file)
+    vis2_vs_file = np.array(vis2_vs_file)
+    e_vis2_vs_file = np.array(e_vis2_vs_file)
+
+    # Compute averages use variance (uncertainties package) or absolute errors.
+    if use_var:
+        u_vis2 = np.mean(u_vis2_all, axis=0)
+        u_cp = np.mean(u_cp_all, axis=0)
+    else:
+        vis_m = np.mean(vis2_vs_file, axis=0)
+        cp_m = np.mean(cp_vs_file, axis=0)
+        abs_e_vis2 = np.mean(e_vis2_vs_file, axis=0)
+        abs_e_cp = np.mean(e_cp_vs_file, axis=0)
+        u_vis2 = computeUfloatArr(vis_m, abs_e_vis2)
+        u_cp = computeUfloatArr(cp_m, abs_e_cp)
+
+    # Apply sigma clipping on the averages
+    u_vis2_clip = applySigClip(vis2_vs_file, e_vis2_vs_file,
+                               sig_thres=sig_thres, use_var=use_var,
+                               var='V2', display=display)
+    u_cp_clip = applySigClip(cp_vs_file, e_cp_vs_file,
+                             sig_thres=sig_thres, use_var=use_var,
+                             ymax=10,
+                             var='CP', display=display)
+
+    res = {'f_v2_clip': np.array(u_vis2_clip),
+           'f_v2': np.array(u_vis2),
+           'f_cp_clip': np.array(u_cp_clip),
+           'f_cp': np.array(u_cp),
+           'bl': nrm.bl,
+           'pa': l_pa}
+
+    return dict2class(res)
+
+
+def calibrate(res_t, res_c, use_var=False, clip=False, sig_thres=2, apply_phscorr=False, display=False):
     """ Calibrate v2 and cp from a science target and its calibrator.
 
     Parameters
@@ -170,21 +260,44 @@ def calibrate(res_t, res_c, apply_phscorr=False):
         Dictionnary containing extracted NRM data of science target (see bispect.py),\n
     `res_c` : {list or dict}
         Dictionnary or a list of dictionnary containing extracted NRM data of calibrator target,\n
+    `use_var` : {bool}
+        If True, the uncertainties are computed using the variance (uncertainties package). Else,
+        the error are computed as the average of the uncertainties over the myultiple calibrator
+        files,\n
+    `clip` : {bool}
+        If True, sigma clipping is performed over the calibrator files (if any) to reject bad
+        observables due to seeing conditions, centering, etc.,\n
+    `sig_thres` : {float}
+        Threshold of the sigma clipping (default: 2-sigma around the median is used),\n    
     `apply_phscorr` : {bool}, optional
-        If True, apply a phasor correction from seeing and wind shacking issues, by default False
-        *alpha > beta*
+        If True, apply a phasor correction from seeing and wind shacking issues, by default False.\n
+    `display`: {bool}
+        If True, plot figures.
+
 
     Returns
     -------
     `cal`: {class}
         Class of calibrated data, keys are: `v2`, `e_v2` (squared visibities and errors),
-        `cp`, `e_cp` (closure phase and errors), `visamp`, `e_visamp` (visibility 
-        ampliture and errors), `visphi`, `e_visphi` (visibility phase and errors), `u`, `v` 
-        (u-v coordinates), `wl` (wavelength), `raw_t` and `raw_c` (dictionnary of extracted raw 
+        `cp`, `e_cp` (closure phase and errors), `visamp`, `e_visamp` (visibility
+        ampliture and errors), `visphi`, `e_visphi` (visibility phase and errors), `u`, `v`
+        (u-v coordinates), `wl` (wavelength), `raw_t` and `raw_c` (dictionnary of extracted raw
         NRM data, inputs of this function).
     """
 
-    u_v2_c_m, u_cp_c_m = computeMultiCal(res_c)
+    if type(res_c) is not list:
+        res_c = [res_c]
+        if clip:
+            cprint('\nOnly one calibrator file is used: clip set to False.', 'green')
+            clip = False
+
+    calib_tab = averageCalibFiles(
+        res_c, use_var=use_var, sig_thres=sig_thres, display=display)
+
+    if clip:
+        u_v2_c_m, u_cp_c_m = calib_tab.f_v2_clip, calib_tab.f_cp_clip
+    else:
+        u_v2_c_m, u_cp_c_m = calib_tab.f_v2, calib_tab.f_cp
 
     v2_corr_t = calc_correctionAtm_vis2(res_t)
 
