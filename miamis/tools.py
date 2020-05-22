@@ -20,6 +20,7 @@ from matplotlib.colors import PowerNorm
 from munch import munchify as dict2class
 from scipy.signal import medfilt2d
 from termcolor import cprint
+from uncertainties import ufloat
 
 warnings.filterwarnings("ignore", module='astropy.io.votable.tree')
 warnings.filterwarnings("ignore", module='astropy.io.votable.xmlutil')
@@ -380,6 +381,12 @@ def checkRadiusResize(img, isz, r1, dr, pos):
     plt.plot(x0, y0, '+', color='g', ms=10)
     plt.plot([xs1, xs2, xs3, xs4, xs1], [ys1, ys2, ys3, ys4, ys1], 'w--')
     return fig
+
+
+def computeUfloatArr(data, e_data):
+    """ Compute the array containing ufloat format used by uncertainties package. """
+    u_data = np.array([ufloat(data[i], e_data[i]) for i in range(len(data))])
+    return u_data
 
 
 def sanitize_array(dic):
