@@ -122,7 +122,7 @@ def cal2dict(cal, target=None, fake_obj=False, pa=0, del_pa=0, snr=4,
         calib_name = res_c[0].target
     else:
         calib_name = res_c.target
-
+    
     dic = {'OI_VIS2': {'VIS2DATA': cal.vis2,
                        'VIS2ERR': cal.e_vis2,
                        'UCOORD': u1,
@@ -970,8 +970,8 @@ def show(inputList, diffWl=False, vmin=0, vmax=1.05, cmax=180, setlog=False, pa=
     if isclass:
         l_dic = [cal2dict(x, pa=pa, true_flag_v2=true_flag_v2,
                           true_flag_t3=true_flag_t3, snr=snr) for x in inputList]
-        print('Inputs are classes from miamis.calibrate)')
-        print('(Check true_flag_v2, true_flag_t3 and snr parameters)')
+        print('\n -- SHOW -- Inputs are classes from miamis.calibrate:')
+        print('-> (Check true_flag_v2, true_flag_t3 and snr parameters)')
     elif type(inputList[0]) is str:
         l_dic = [load(x) for x in inputList]
         print('Inputs are oifits filename.')
