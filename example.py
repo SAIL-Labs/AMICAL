@@ -20,7 +20,7 @@ cube_c = hdu[0].data
 hdu.close()
 
 params_ami = {"peakmethod": True,
-              "bs_MultiTri": True,
+              "bs_MultiTri": False,
               "naive_err": False,
               "n_blocks": 0,
               "maskname": "g7"
@@ -30,11 +30,11 @@ bs_t = miamis.extract_bs_mf(cube_t, file_t, targetname='fakebinary',
                             **params_ami, display=False)
 
 bs_c = miamis.extract_bs_mf(cube_c, file_c, targetname='fakepsf',
-                            **params_ami, display=True)
+                            **params_ami, display=False)
 
 cal = miamis.calibrate(bs_t, bs_c)
 
 miamis.show(cal, true_flag_t3=False)
-miamis.save(cal, fake_obj=True, verbose=True)
+miamis.save(cal, fake_obj=True, verbose=False)
 
 plt.show()
