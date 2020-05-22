@@ -14,9 +14,11 @@ import warnings
 
 import matplotlib.pyplot as plt
 import numpy as np
+from astropy.io import fits
 from astropy.nddata import Cutout2D
-from scipy.signal import medfilt2d
 from matplotlib.colors import PowerNorm
+from munch import munchify as dict2class
+from scipy.signal import medfilt2d
 from termcolor import cprint
 
 warnings.filterwarnings("ignore", module='astropy.io.votable.tree')
@@ -204,7 +206,8 @@ def gauss_2d_asym(X, param):
     a = (np.cos(theta)**2)/(2*sigma_x**2) + (np.sin(theta)**2)/(2*sigma_y**2)
     b = -(np.sin(2*theta))/(4*sigma_x**2) + (np.sin(2*theta))/(4*sigma_y**2)
     c = (np.sin(theta)**2)/(2*sigma_x**2) + (np.cos(theta)**2)/(2*sigma_y**2)
-    im = amplitude*np.exp(- (a*((x-x0)**2) + 2*b*(x-x0)*(y-y0) + c*((y-y0)**2)))
+    im = amplitude*np.exp(- (a*((x-x0)**2) + 2*b*(x-x0)
+                             * (y-y0) + c*((y-y0)**2)))
     return im
 
 
@@ -314,7 +317,7 @@ def skyCorrection(imA, r1=100, dr=20, verbose=False):
         backgroundC = 0
         cprint('Warning: Background not computed', 'green')
         cprint('-> check the inner and outer radius rings (checkrad option).', 'green')
-    
+
     return imC, backgroundC
 
 
@@ -359,21 +362,99 @@ def checkRadiusResize(img, isz, r1, dr, pos):
     x0 = pos[0]
     y0 = pos[1]
 
-    x1 = r1 * np.cos(theta) + x0 
+    x1 = r1 * np.cos(theta) + x0
     y1 = r1 * np.sin(theta) + y0
-    x2 = r2 * np.cos(theta) + x0 
+    x2 = r2 * np.cos(theta) + x0
     y2 = r2 * np.sin(theta) + y0
 
     xs1, ys1 = x0 + isz//2, y0 + isz//2
     xs2, ys2 = x0 - isz//2, y0 + isz//2
     xs3, ys3 = x0 - isz//2, y0 - isz//2
     xs4, ys4 = x0 + isz//2, y0 - isz//2
-    
+
     max_val = img[y0, x0]
     fig = plt.figure()
-    plt.imshow(img, norm=PowerNorm(.5), cmap='afmhot', vmin=0, vmax=max_val) 
+    plt.imshow(img, norm=PowerNorm(.5), cmap='afmhot', vmin=0, vmax=max_val)
     plt.plot(x1, y1)
     plt.plot(x2, y2)
     plt.plot(x0, y0, '+', color='g', ms=10)
     plt.plot([xs1, xs2, xs3, xs4, xs1], [ys1, ys2, ys3, ys4, ys1], 'w--')
+    return fig
+
+
+def sanitize_array(dic):
+    """ Recursively convert values in a nested dictionnary from np.bool_ to builtin bool type
+    This is required for json serialization.
+    """
+    d2 = dic.copy()
+    for k, v in dic.items():
+        if isinstance(v, np.ndarray):
+            d2[k] = sanitize_array(v)
+        if isinstance(v, list):
+            d2[k] = np.array(v)
+    return d2
+
+
+def checkSeeingCond(list_nrm):
+    """ Extract the seeing conditions, parang, averaged vis2
+    and cp of a list of nrm classes extracted with extract_bs_mf 
+    function (bispect.py).
+
+    Output
+    ------
+    If output is **res**, access to parallactic angle by `res.pa`, or
+    `res.seeing` for the seeing across multiple nrm data (files).
+
+    """
+    l_seeing, l_vis2, l_cp, l_pa, l_mjd = [], [], [], [], []
+    for nrm in list_nrm:
+        hdr = fits.open(nrm.filename)[0].header
+        pa = hdr['PARANG']
+        seeing = nrm.hdr['SEEING']
+        mjd = hdr['MJD-OBS']
+        l_vis2.append(np.mean(nrm.v2))
+        l_cp.append(np.mean(nrm.cp))
+        l_seeing.append(seeing)
+        l_pa.append(pa)
+        l_mjd.append(mjd)
+
+    res = {'pa': l_pa,
+           'seeing': l_seeing,
+           'vis2': l_vis2,
+           'cp': l_cp,
+           'mjd': l_mjd,
+           'target': hdr['OBJECT']}
+
+    return dict2class(sanitize_array(res))
+
+
+def plotSeeingCond(cond_t, cond_c, lim_seeing=None):
+    """ Plot seeing condition between calibrator and target files. """
+    m_mjd = abs(np.min(np.diff(cond_c.mjd)))/2.
+    xmin = np.min([cond_c.mjd.min(), cond_t.mjd.min()])-m_mjd
+    xmax = np.max([cond_c.mjd.max(), cond_t.mjd.max()])+m_mjd
+
+    fig = plt.figure()
+    ax1 = plt.gca()
+    ax1.set_xlabel('mjd [days]')
+    ax2 = ax1.twinx()
+    ax2.set_ylabel('Seeing ["]', color="#c62d42")
+    ax2.tick_params(axis='y', labelcolor="#c62d42")
+    ax1.set_ylabel('Uncalibrated mean V$^2$')
+
+    ax1.plot(cond_t.mjd, cond_t.vis2, '.',
+             color="#20b2aa", label=cond_t.target)
+    ax2.plot(cond_t.mjd, cond_t.seeing, '+', color="#c62d42")
+    ax1.plot(cond_c.mjd, cond_c.vis2, '.',
+             color="#00468c", label="%s (cal)" % cond_c.target)
+    ax2.plot(cond_c.mjd, cond_c.seeing, '+', color="#c62d42", label='Seeing')
+    if lim_seeing is not None:
+        ax2.hlines(lim_seeing, xmin, xmax, color='g', label='Seeing threshold')
+    ax1.set_ylim(0, 1.2)
+    ax2.set_ylim(0.6, 1.8)
+    ax1.set_xlim(xmin, xmax)
+    ax1.grid(alpha=.1, color='grey')
+    ax1.legend(loc='best', fontsize=9)
+    plt.tight_layout()
+    plt.show(block=False)
     return fig
