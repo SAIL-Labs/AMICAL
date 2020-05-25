@@ -18,13 +18,12 @@ All AMI related function, the most important are:
 
 import numpy as np
 from matplotlib import pyplot as plt
-from munch import munchify as dict2class
-from termcolor import cprint
-
 from miamis.dpfit import leastsqFit
 from miamis.getInfosObs import GetMaskPos, GetPixelSize, GetWavelength
 from miamis.mf_pipeline.idl_function import array_coords, dist
 from miamis.tools import linear, plot_circle
+from munch import munchify as dict2class
+from termcolor import cprint
 
 
 def index_mask(n_holes, verbose=False):
