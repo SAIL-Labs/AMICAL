@@ -161,7 +161,8 @@ def cal2dict(cal, target=None, fake_obj=False, pa=0, del_pa=0, snr=4,
                     'ISZ': res_t.isz,
                     'PSCALE': pixscale,
                     'NFILE': nfile,
-                    'xycoord': res_t.xycoord}
+                    'xycoord': res_t.xycoord,
+                    'SEEING': res_t.hdr['SEEING']}
            }
 
     if include_vis:
@@ -440,28 +441,30 @@ def load(filename, target=None, ins=None, mask=None, include_vis=True):
             except KeyError:
                 dic['OI_T3']['BL'] = bl_cp
 
-    dic['info'] = {'MJD': mjd,
-                   }
-    try:
-        dic['info']['TARGET'] = hdr['OBJECT']
-    except KeyError:
-        dic['info']['TARGET'] = target
-    try:
-        dic['info']['OBJECT'] = hdr['OBJECT']
-    except KeyError:
-        dic['info']['OBJECT'] = None
-    try:
-        dic['info']['INSTRUME'] = hdr['INSTRUME']
-    except KeyError:
-        dic['info']['INSTRUME'] = ins
-    try:
-        dic['info']['MASK'] = hdr['MASK']
-    except KeyError:
-        dic['info']['MASK'] = mask
-    try:
-        dic['info']['FILT'] = hdr['FILT']
-    except KeyError:
-        dic['info']['FILT'] = None
+    dic['info'] = {h: hdr[h] for h in hdr}  # {'MJD': mjd,
+    # dic['info']['FILT'] = hdr['FILT']
+
+    #                #}
+    # try:
+    #     dic['info']['TARGET'] = hdr['OBJECT']
+    # except KeyError:
+    #     dic['info']['TARGET'] = target
+    # try:
+    #     dic['info']['OBJECT'] = hdr['OBJECT']
+    # except KeyError:
+    #     dic['info']['OBJECT'] = None
+    # try:
+    #     dic['info']['INSTRUME'] = hdr['INSTRUME']
+    # except KeyError:
+    #     dic['info']['INSTRUME'] = ins
+    # try:
+    #     dic['info']['MASK'] = hdr['MASK']
+    # except KeyError:
+    #     dic['info']['MASK'] = mask
+    # try:
+    #     dic['info']['FILT'] = hdr['FILT']
+    # except KeyError:
+    # dic['info']['FILT'] = None
     return dic
 
 
@@ -566,6 +569,12 @@ def save(cal, oifits_file=None, fake_obj=False,
     hdu.header['FILT'] = dic['info']['FILT']
     hdu.header['MJD'] = dic['info']['MJD']
     hdu.header['MASK'] = dic['info']['MASK']
+    try:
+        hdu.header['SEEING'] = dic['info']['SEEING']
+    except ValueError:
+        hdu.header['SEEING'] = 0.0
+
+    hdu.header['CALIB'] = dic['info']['CALIB']
 
     hdulist.append(hdu)
     # ------------------------------
@@ -1003,15 +1012,17 @@ def show(inputList, diffWl=False, vmin=0, vmax=1.05, cmax=180, setlog=False, pa=
         V = tmp[1]
         band = tmp[10]
         wl = tmp[9]
-        label = '%2.2f $\mu m$ (%s)' % (wl, band)
+        label = '%2.2f $\mu m$ (%s)' % (wl*1e6, band)
         if diffWl:
             c1, c2 = dic_color[band], dic_color[band]
             if band not in l_band_al:
                 label = '%2.2f $\mu m$ (%s)' % (wl*1e6, band)
+                l_band_al.append(band)
+            else:
+                label = ''
         else:
             c1, c2 = '#00adb5', '#fc5185'
         l_bmax.append(tmp[2])
-        l_band_al.append(band)
 
         ax1.scatter(U, V, s=50, c=c1, label=label,
                     edgecolors='#364f6b', marker='o', alpha=1)

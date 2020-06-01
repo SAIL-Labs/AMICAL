@@ -8,10 +8,10 @@ MIAMIS: Multi-Instruments Aperture Masking Interferometry Software
 
 Matched filter sub-pipeline method.
 
-Compute bispectrum for a given fits file (adapted from bispect.pro 
+Compute bispectrum for a given fits file (adapted from bispect.pro
 and calc_bispect.pro).
 
--------------------------------------------------------------------- 
+--------------------------------------------------------------------
 """
 
 import time
@@ -767,9 +767,19 @@ def extract_bs_mf(cube, filename, maskname, filtname=None, targetname=None, bs_M
     except KeyError:
         seeing = np.nan
 
-    hdr = {"INSTRUME": hdr["INSTRUME"], "ORIGFILE": orig,
-           "NRMNAME": maskname, "PIXELSCL": mf.pixelSize,
-           "SEEING": seeing}
+    hdr_new = {"ORIGFILE": orig, "INSTRUME": instrument,
+               "NRMNAME": maskname, "PIXELSCL": mf.pixelSize,
+               "SEEING": seeing}
+
+    # SAVE KEYS OF THE ORIGINAL HEADER (AS NEEDED):
+    add_keys = ['TELESCOP', 'DATE-OBS', 'MJD-OBS', 'OBSERVER']
+
+    if orig != 'SimulatedData': 
+        for keys in add_keys:
+            try:
+                hdr_new[keys] = hdr[keys]
+            except KeyError:
+                print("No %s in the Header." % keys)
 
     res = {"v2": v2,
            "v2_sig": e_v2,
@@ -810,7 +820,7 @@ def extract_bs_mf(cube, filename, maskname, filtname=None, targetname=None, bs_M
            "bs2bl_ix": bs2bl_ix,
            "n_baselines": n_baselines,
            "xycoord": mf.xy_coords,
-           "hdr": hdr
+           "hdr": hdr_new
            }
 
     t = time.time() - start_time
