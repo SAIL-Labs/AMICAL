@@ -21,6 +21,7 @@ from astropy.io import fits
 from astropy.time import Time
 from astroquery.simbad import Simbad
 from matplotlib import pyplot as plt
+from munch import munchify as dict2class
 from termcolor import cprint
 
 from miamis.tools import rad2mas
@@ -348,7 +349,7 @@ def Format_STAINDEX_T3(tab):
     return sta_index
 
 
-def load(filename, target=None, ins=None, mask=None, include_vis=True):
+def load(filename, target=None, ins=None, mask=None, filtname=None, include_vis=True):
     """[summary]
 
     Parameters
@@ -442,6 +443,14 @@ def load(filename, target=None, ins=None, mask=None, include_vis=True):
                 dic['OI_T3']['BL'] = bl_cp
 
     dic['info'] = {h: hdr[h] for h in hdr}  # {'MJD': mjd,
+
+    if 'FILT' not in list(dic['info'].keys()):
+        
+        if filtname is None:
+            print('No filter in info or as input param?')
+        else:
+            dic['info']['FILT'] = filtname
+
     # dic['info']['FILT'] = hdr['FILT']
 
     #                #}
@@ -466,6 +475,41 @@ def load(filename, target=None, ins=None, mask=None, include_vis=True):
     # except KeyError:
     # dic['info']['FILT'] = None
     return dic
+
+
+def loadc(filename):
+    dic = load(filename)
+
+    res = {}
+    # Extract infos
+    res['target'] = dic['info']['OBJECT']
+    res['calib'] = dic['info']['CALIB']
+    res['seeing'] = dic['info']['SEEING']
+    res['mjd'] = dic['info']['MJD']
+
+    # Extract wavelength
+    res['wl'] = dic['OI_WAVELENGTH']['EFF_WAVE']
+    res['e_wl'] = dic['OI_WAVELENGTH']['EFF_BAND']
+
+    # Extract squared visibilities
+    res['vis2'] = dic['OI_VIS2']['VIS2DATA']
+    res['e_vis2'] = dic['OI_VIS2']['VIS2ERR']
+    res['u'] = dic['OI_VIS2']['UCOORD']
+    res['v'] = dic['OI_VIS2']['VCOORD']
+    res['bl'] = dic['OI_VIS2']['BL']
+    res['flag_vis'] = dic['OI_VIS2']['FLAG']
+
+    # Extract closure phases
+    res['cp'] = dic['OI_T3']['T3PHI']
+    res['e_cp'] = dic['OI_T3']['T3PHIERR']
+    res['u1'] = dic['OI_T3']['U1COORD']
+    res['v1'] = dic['OI_T3']['V1COORD']
+    res['u2'] = dic['OI_T3']['U2COORD']
+    res['v2'] = dic['OI_T3']['V2COORD']
+    res['bl_cp'] = dic['OI_T3']['BL']
+    res['flag_cp'] = dic['OI_T3']['FLAG']
+
+    return dict2class(res)
 
 
 def save(cal, oifits_file=None, fake_obj=False,
