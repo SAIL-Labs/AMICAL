@@ -385,8 +385,6 @@ def load(filename, target=None, ins=None, mask=None, filtname=None, include_vis=
                 dic['OI_VIS2']['BL'] = (
                     hdu.data['UCOORD']**2 + hdu.data['VCOORD']**2)**0.5
 
-            mjd = hdu.data['MJD'][0]
-
         if hdu.header['EXTNAME'] == 'OI_VIS':
             dic['OI_VIS'] = {'TARGET_ID': hdu.data['TARGET_ID'],
                              'TIME': hdu.data['TIME'],
@@ -445,35 +443,11 @@ def load(filename, target=None, ins=None, mask=None, filtname=None, include_vis=
     dic['info'] = {h: hdr[h] for h in hdr}  # {'MJD': mjd,
 
     if 'FILT' not in list(dic['info'].keys()):
-        
+
         if filtname is None:
             print('No filter in info or as input param?')
         else:
             dic['info']['FILT'] = filtname
-
-    # dic['info']['FILT'] = hdr['FILT']
-
-    #                #}
-    # try:
-    #     dic['info']['TARGET'] = hdr['OBJECT']
-    # except KeyError:
-    #     dic['info']['TARGET'] = target
-    # try:
-    #     dic['info']['OBJECT'] = hdr['OBJECT']
-    # except KeyError:
-    #     dic['info']['OBJECT'] = None
-    # try:
-    #     dic['info']['INSTRUME'] = hdr['INSTRUME']
-    # except KeyError:
-    #     dic['info']['INSTRUME'] = ins
-    # try:
-    #     dic['info']['MASK'] = hdr['MASK']
-    # except KeyError:
-    #     dic['info']['MASK'] = mask
-    # try:
-    #     dic['info']['FILT'] = hdr['FILT']
-    # except KeyError:
-    # dic['info']['FILT'] = None
     return dic
 
 
