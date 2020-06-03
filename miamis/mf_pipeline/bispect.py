@@ -289,7 +289,7 @@ def extract_bs_mf(cube, filename, maskname, filtname=None, targetname=None, bs_M
         print("\nCalculating V^2 and BS...")
 
     # Start to go through the cube
-    for i in tqdm(range(n_ps), ncols=100, desc='Extracting in the cube', leave=True):
+    for i in tqdm(range(n_ps), ncols=100, desc='Extracting in the cube', leave=False):
         ft_frame = ft_arr[i]
         ps = np.abs(ft_frame) ** 2
 
@@ -774,7 +774,7 @@ def extract_bs_mf(cube, filename, maskname, filtname=None, targetname=None, bs_M
     # SAVE KEYS OF THE ORIGINAL HEADER (AS NEEDED):
     add_keys = ['TELESCOP', 'DATE-OBS', 'MJD-OBS', 'OBSERVER']
 
-    if orig != 'SimulatedData': 
+    if orig != 'SimulatedData':
         for keys in add_keys:
             try:
                 hdr_new[keys] = hdr[keys]
