@@ -7,7 +7,7 @@ MIAMIS: Multi-Instruments Aperture Masking Interferometry Software
 --------------------------------------------------------------------
 
 General tools.
--------------------------------------------------------------------- 
+--------------------------------------------------------------------
 """
 
 import warnings
@@ -161,7 +161,7 @@ def gauss_2d_asym(X, param):
 
     Parameters
     ----------
-    `X` : {list}. 
+    `X` : {list}.
         Input values :
          - `X[0]` : x coordinates [pixels]
          - `X[1]` : y coordinates [pixels]
@@ -261,7 +261,7 @@ def plot_circle(d, x, y, hole_radius, sz=1, display=True):
 
 def cov2cor(cov):
     """
-    Convert the input covariance matrix to a correlation matrix 
+    Convert the input covariance matrix to a correlation matrix
     corr[i,j] = cov[i,j]/sqrt(cov[i,i]*cov[j,j]).
 
     Parameters
@@ -402,9 +402,37 @@ def sanitize_array(dic):
     return d2
 
 
+def wtmn(values, weights):
+    """
+    Return the weighted average and standard deviation.
+
+    values, weights -- Numpy ndarrays with the same shape.
+    """
+    mn = np.average(values, weights=weights, axis=0)
+
+    ndim = values.ndim
+
+    # Fast and numerically precise:
+    variance = np.average((values-mn)**2, weights=weights, axis=0)
+    std = np.sqrt(variance)
+
+    if ndim == 2:
+        e_max = []
+        for i in range(values.shape[1]):
+            e_max.append(np.max(weights[:, i]))
+        std_unbias = []
+        for i in range(values.shape[1]):
+            std_unbias.append(np.max([e_max[i], std[i]]))
+        std_unbias = np.array(std_unbias)
+    else:
+        e_max = weights.copy()
+        std_unbias = np.max([np.max(e_max), std])
+    return (mn, std_unbias)
+
+
 def checkSeeingCond(list_nrm):
     """ Extract the seeing conditions, parang, averaged vis2
-    and cp of a list of nrm classes extracted with extract_bs_mf 
+    and cp of a list of nrm classes extracted with extract_bs_mf
     function (bispect.py).
 
     Output
@@ -435,11 +463,23 @@ def checkSeeingCond(list_nrm):
     return dict2class(sanitize_array(res))
 
 
-def plotSeeingCond(cond_t, cond_c, lim_seeing=None):
+def plotSeeingCond(cond, lim_seeing=None):
     """ Plot seeing condition between calibrator and target files. """
-    m_mjd = abs(np.min(np.diff(cond_c.mjd)))/2.
-    xmin = np.min([cond_c.mjd.min(), cond_t.mjd.min()])-m_mjd
-    xmax = np.max([cond_c.mjd.max(), cond_t.mjd.max()])+m_mjd
+
+    l_xmin, l_xmax = [], []
+    for x in cond:
+        m_mjd = abs(np.min(np.diff(x.mjd)))/2.
+        xmin = np.min([x.mjd.min(), x.mjd.min()])-m_mjd
+        xmax = np.max([x.mjd.max(), x.mjd.max()])+m_mjd
+        l_xmin.append(xmin)
+        l_xmax.append(xmax)
+
+    xmin = np.min(l_xmin)
+    xmax = np.min(l_xmax)
+
+    # m_mjd=abs(np.min(np.diff(cond_t.mjd)))/2.
+    # xmin=np.min([cond_c.mjd.min(), cond_t.mjd.min()])-m_mjd
+    # xmax=np.max([cond_c.mjd.max(), cond_t.mjd.max()])+m_mjd
 
     fig = plt.figure()
     ax1 = plt.gca()
@@ -449,14 +489,16 @@ def plotSeeingCond(cond_t, cond_c, lim_seeing=None):
     ax2.tick_params(axis='y', labelcolor="#c62d42")
     ax1.set_ylabel('Uncalibrated mean V$^2$')
 
-    ax1.plot(cond_t.mjd, cond_t.vis2, '.',
-             color="#20b2aa", label=cond_t.target)
-    ax2.plot(cond_t.mjd, cond_t.seeing, '+', color="#c62d42")
-    ax1.plot(cond_c.mjd, cond_c.vis2, '.',
-             color="#00468c", label="%s (cal)" % cond_c.target)
-    ax2.plot(cond_c.mjd, cond_c.seeing, '+', color="#c62d42", label='Seeing')
+    for x in cond:
+        ax1.plot(x.mjd, x.vis2, '.', label=x.target)  # color="#20b2aa"
+        ax2.plot(x.mjd, x.seeing, '+', color="#c62d42")
+    # ax1.plot(cond_c.mjd, cond_c.vis2, '.',
+    #          label="%s (cal)" % cond_c.target)
+    # ax2.plot(cond_c.mjd, cond_c.seeing, '+',
+    #          color="#c62d42", label='Seeing')
     if lim_seeing is not None:
-        ax2.hlines(lim_seeing, xmin, xmax, color='g', label='Seeing threshold')
+        ax2.hlines(lim_seeing, xmin, xmax, color='g',
+                   label='Seeing threshold')
     ax1.set_ylim(0, 1.2)
     ax2.set_ylim(0.6, 1.8)
     ax1.set_xlim(xmin, xmax)
