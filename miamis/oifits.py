@@ -489,7 +489,7 @@ def loadc(filename):
 def save(cal, oifits_file=None, fake_obj=False,
          pa=0, N_ap=None, include_vis=False,
          true_flag_v2=True, true_flag_t3=False, snr=4,
-         datadir='Saveoifits/', verbose=False):
+         datadir='Saveoifits/', nfile=1, verbose=False):
     """
     Summary:
     --------
@@ -525,7 +525,7 @@ def save(cal, oifits_file=None, fake_obj=False,
 
     if type(cal) != dict:
         dic = cal2dict(cal, pa=pa, include_vis=include_vis,
-                       fake_obj=fake_obj,
+                       fake_obj=fake_obj, nfile=nfile,
                        true_flag_v2=true_flag_v2, true_flag_t3=true_flag_t3)
     else:
         dic = cal.copy()
