@@ -17,6 +17,7 @@ from miamis.tools import mas2rad
 def GetMaskPos(ins, mask):
     """ Return dictionnary containning saved informations about masks. """
 
+    off = 0.3
     dic_mask = {
         'NIRISS': {'g7': np.array([[0, -2.64],
                                    [-2.28631, 0],
@@ -34,7 +35,23 @@ def GetMaskPos(ins, mask):
                                        [-2.2672534, -0.93500012],
                                        [-1.1336313, -1.5895000]
                                        ]),
-
+                   'g7_sb': np.array([[0, -2.64],  # 0
+                                      [-2.28631, 0],  # 1
+                                      [-2.28631+off, 0], 
+                                      [-2.28631-off/np.sqrt(2), 0+off/np.sqrt(2)], 
+                                      [-2.28631-off/np.sqrt(2), 0-off/np.sqrt(2)], 
+                                      [2.28631, -1.32],  # 2
+                                      [-2.28631, 1.32],  # 3
+                                      [-1.14315, 1.98],  # 4
+                                      [-1.14315+off, 1.98], 
+                                      [-1.14315-off/np.sqrt(2), 1.98+off/np.sqrt(2)], 
+                                      [-1.14315-off/np.sqrt(2), 1.98-off/np.sqrt(2)], 
+                                      [2.28631, 1.32],  # 5
+                                      [2.28631+off, 1.32], 
+                                      [2.28631-off/np.sqrt(2), 1.32+off/np.sqrt(2)], 
+                                      [2.28631-off/np.sqrt(2), 1.32-off/np.sqrt(2)], 
+                                      [1.14315, 1.98]  # 6
+                                      ]),
                    },
         'GLINT': {'g4': np.array([[2.725, 2.317],
                                   [-2.812, 1.685],
