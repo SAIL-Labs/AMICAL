@@ -820,7 +820,8 @@ def extract_bs_mf(cube, filename, maskname, filtname=None, targetname=None, bs_M
            "bs2bl_ix": bs2bl_ix,
            "n_baselines": n_baselines,
            "xycoord": mf.xy_coords,
-           "hdr": hdr_new
+           "hdr": hdr_new,
+           'n_holes': n_holes,
            }
 
     t = time.time() - start_time
