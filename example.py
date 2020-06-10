@@ -30,7 +30,7 @@ bs_t = miamis.extract_bs_mf(cube_t, file_t, targetname='fakebinary',
                             **params_ami, display=False)
 
 bs_c = miamis.extract_bs_mf(cube_c, file_c, targetname='fakepsf',
-                            **params_ami, display=False)
+                            **params_ami, display=True)
 
 cal = miamis.calibrate(bs_t, bs_c)
 
