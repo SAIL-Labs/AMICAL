@@ -157,7 +157,7 @@ def applySigClip(data, e_data, sig_thres=2, ymin=0, ymax=1.2, var='V2', display=
     return np.array(mn_data_clip), np.array(std_data_clip)
 
 
-def averageCalibFiles(list_nrm, use_var=True, sig_thres=2, display=False):
+def averageCalibFiles(list_nrm, sig_thres=2, display=False):
     """ Average NRM data extracted from multiple calibrator files. Additionaly,
     perform sigma-clipping to reject suspicious dataset.
 
@@ -165,10 +165,6 @@ def averageCalibFiles(list_nrm, use_var=True, sig_thres=2, display=False):
     -----------
     `list_nrm` : {list}
         List of classes containing extracted NRM data (see bispect.py) of multiple calibrator files,\n
-    `use_var` : {bool}
-        If True, the uncertainties are computed using the variance (uncertainties package). Else,
-        the error are computed as the average of the uncertainties over the myultiple calibrator
-        files,\n
     `sig_thres` : {float}
         Threshold of the sigma clipping (default: 2-sigma around the median is used),\n    
      """
@@ -208,10 +204,10 @@ def averageCalibFiles(list_nrm, use_var=True, sig_thres=2, display=False):
 
     # Apply sigma clipping on the averages
     cmn_vis2_clip, std_vis2_clip = applySigClip(vis2_vs_file, e_vis2_vs_file,
-                                                sig_thres=sig_thres, use_var=use_var,
+                                                sig_thres=sig_thres,
                                                 var='V2', display=display)
     cmn_cp_clip, std_cp_clip = applySigClip(cp_vs_file, e_cp_vs_file,
-                                            sig_thres=sig_thres, use_var=use_var,
+                                            sig_thres=sig_thres,
                                             ymax=10,
                                             var='CP', display=display)
 
@@ -229,7 +225,7 @@ def averageCalibFiles(list_nrm, use_var=True, sig_thres=2, display=False):
     return dict2class(res)
 
 
-def calibrate(res_t, res_c, use_var=False, clip=False, sig_thres=2, apply_phscorr=False, display=False):
+def calibrate(res_t, res_c, clip=False, sig_thres=2, apply_phscorr=False, AddindepCpErr=False, display=False):
     """ Calibrate v2 and cp from a science target and its calibrator.
 
     Parameters
@@ -238,10 +234,6 @@ def calibrate(res_t, res_c, use_var=False, clip=False, sig_thres=2, apply_phscor
         Dictionnary containing extracted NRM data of science target (see bispect.py),\n
     `res_c` : {list or dict}
         Dictionnary or a list of dictionnary containing extracted NRM data of calibrator target,\n
-    `use_var` : {bool}
-        If True, the uncertainties are computed using the variance (uncertainties package). Else,
-        the error are computed as the average of the uncertainties over the multiple calibrator
-        files,\n
     `clip` : {bool}
         If True, sigma clipping is performed over the calibrator files (if any) to reject bad
         observables due to seeing conditions, centering, etc.,\n
@@ -266,8 +258,7 @@ def calibrate(res_t, res_c, use_var=False, clip=False, sig_thres=2, apply_phscor
     if type(res_c) is not list:
         res_c = [res_c]
 
-    calib_tab = averageCalibFiles(
-        res_c, use_var=use_var, sig_thres=sig_thres, display=display)
+    calib_tab = averageCalibFiles(res_c, sig_thres=sig_thres, display=display)
 
     if clip:
         cmn_v2_c, cmn_cp_c, std_v2_c, std_cp_c = (calib_tab.f_v2_clip, calib_tab.f_cp_clip,
@@ -294,10 +285,17 @@ def calibrate(res_t, res_c, use_var=False, clip=False, sig_thres=2, apply_phscor
     vis2_calib = v2_t/cmn_v2_c
     cp_calib = cp_t - cmn_cp_c
 
+    #
+    n_holes = res_t.n_holes
+    if AddindepCpErr:
+        err_scale = np.sqrt(n_holes/3.)
+    else:
+        err_scale = 1
+
     # Quadratic added error due to calibrator dispersion (the average is weightened (see wtmn from miamis.tools)).
     e_vis2_calib = np.sqrt(e_v2_t**2/cmn_v2_c**2 +
                            std_v2_c**2*v2_t**2/cmn_v2_c**4)
-    e_cp_calib = np.sqrt(e_cp_t**2 + std_cp_c**2)
+    e_cp_calib = np.sqrt(e_cp_t**2 + std_cp_c**2) * err_scale
 
     visamp_t = np.abs(res_t.cvis_all)
     visphi_t = np.angle(res_t.cvis_all)
