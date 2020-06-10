@@ -192,7 +192,6 @@ def make_mf(maskname, instrument, filtname, npix,
         xy_coords_tel.append([-2.28631, -1.32])
                 
         xy_coords_tel = np.array(xy_coords_tel)
-        print(xy_coords_tel.shape)
         for i in range(xy_coords.shape[0]):
             plt.scatter(xy_coords[i][0], xy_coords[i][1],
                         s=1e2, c='', edgecolors='navy', marker=marker)
