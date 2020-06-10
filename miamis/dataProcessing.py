@@ -106,10 +106,11 @@ def checkDataCube(cube, clip_fact=0.5, clip=False, verbose=True, display=True):
     else:
         ext = ''
 
+    diffmm = 100*abs(np.max(fluxes) - np.min(fluxes))/med_flux
     if display:
         plt.figure()
-        plt.plot(fluxes, label=r'|$\Delta F$|/$\sigma_F$=%2.0f' %
-                 (med_flux/std_flux))
+        plt.plot(fluxes, label=r'|$\Delta F$|/$\sigma_F$=%2.0f (%2.2f %%)' %
+                 (med_flux/std_flux, diffmm))
         if len(flag_fram) > 0:
             plt.scatter(flag_fram, fluxes[flag_fram],
                         s=52, facecolors='none', edgecolors='r', label='Rejected frames (maximum fluxes)')
@@ -176,7 +177,8 @@ def skyCorrection(imA, r1=100, dr=20, verbose=False):
         backgroundC = 0
         if verbose:
             cprint('Warning: Background not computed', 'green')
-            cprint('-> check the inner and outer radius rings (checkrad option).', 'green')
+            cprint(
+                '-> check the inner and outer radius rings (checkrad option).', 'green')
 
     return imC, backgroundC
 
@@ -204,23 +206,25 @@ def clean_data(data, isz=None, r1=None, dr=None, edge=100, n_show=0, checkrad=Fa
     n_im = data.shape[0]
     if checkrad:
         img0 = data[n_show]
-        img0[:, 0:edge] = 0
-        img0[:, -edge:-1] = 0
-        img0[0:edge, :] = 0
-        img0[-edge:-1, :] = 0
+        if edge != 0:
+            img0[:, 0:edge] = 0
+            img0[:, -edge:-1] = 0
+            img0[0:edge, :] = 0
+            img0[-edge:-1, :] = 0
         ref0_max, pos = crop_max(img0, isz, f=3)
         fig = checkRadiusResize(img0, isz, r1, dr, pos)
         fig.show()
         return None
 
     cube = []
-    for i in tqdm(range(n_im), ncols=100, desc='Cleaning', leave=False):
+    for i in tqdm(range(n_im), ncols=100, desc='Cleaning', leave=True):
         # img0 = applyMaskApod(data[i], r=int(npix//3))
         img0 = data[i]
-        img0[:, 0:edge] = 0
-        img0[:, -edge:-1] = 0
-        img0[0:edge, :] = 0
-        img0[-edge:-1, :] = 0
+        if edge != 0:
+            img0[:, 0:edge] = 0
+            img0[:, -edge:-1] = 0
+            img0[0:edge, :] = 0
+            img0[-edge:-1, :] = 0
         im_rec_max, pos = crop_max(img0, isz, f=3)
         img_biased, bg = skyCorrection(im_rec_max, r1=r1, dr=dr)
 
@@ -266,6 +270,9 @@ def selectCleanData(filename, isz=256, r1=100, dr=10, edge=100, clip=True,
     cube_cleaned = clean_data(cube_patched, isz=isz, r1=r1, edge=edge,
                               dr=dr, n_show=n_show, checkrad=checkrad,
                               verbose=verbose)
+
+    if cube_cleaned is None:
+        return None
 
     cube_final = checkDataCube(cube_cleaned, clip=clip, clip_fact=clip_fact,
                                verbose=verbose, display=display)
