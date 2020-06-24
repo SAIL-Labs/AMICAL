@@ -452,6 +452,7 @@ def load(filename, target=None, ins=None, mask=None, filtname=None, include_vis=
 
 
 def loadc(filename):
+    """ Same as load but provide an easy usable output as a class format (output.v2, or output.cp). """
     dic = load(filename)
 
     res = {}
@@ -499,24 +500,28 @@ def save(cal, oifits_file=None, fake_obj=False,
     Parameters:
     -----------
 
-    cal {class}: 
+    `cal` {class}: 
         Class containing all calibrated interferometric variable extracted using
         calibrate (miamis.core) function,\n
-    oifits_file {str}:
+    `oifits_file` {str}:
         Name of the oifits file, if None a default name using useful 
         information is used (target, instrument, filter, mask, etc.),\n
-    include_vis {bool}:
+    `include_vis` {bool}:
         If True, include OI_VIS table in the oifits,\n
-    fake_obj {bool}:
+    `fake_obj` {bool}:
         If True, observable are extracted from simulated data and so doesn't
         contain real target informations (simbad search is ignored),\n
-    true_flag_v2, true_flag_t3 {bool}:
+    `true_flag_v2`, `true_flag_t3` {bool}:
         if True, the true flag are used using snr,\n
-    snr {float}:
+    `snr` {float}:
         Limit snr used to compute flags (default=4),\n
-    verbose {bool}:
+    `datadir` {str}:
+        Folder name save the oifits files,\n
+    `nfile` {int}:
+        Integer number to include in the oifits file name (easly save 
+        mulitple iterations).\n 
+    `verbose` {bool}:
         If True, print useful informations.
-
     """
 
     if cal is None:

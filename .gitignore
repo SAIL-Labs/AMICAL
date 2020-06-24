@@ -1,6 +1,9 @@
 # Development files
 .vscode/
 
+# Old version
+miamis/old_core.py
+
 # System files
 *__pycache__/
 *.DS_Store

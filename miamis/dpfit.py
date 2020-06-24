@@ -97,7 +97,8 @@ def leastsqFit(func, x, params, y, err=None, fitOnly=None,
     # -- actual fit
     plsq, cov, info, mesg, ier = \
         scipy.optimize.leastsq(_fitFunc, pfit,
-                               args=(fitOnly, x, y, err, func, pfix, verbose, follow,),
+                               args=(fitOnly, x, y, err, func,
+                                     pfix, verbose, follow,),
                                full_output=True, epsfcn=epsfcn, ftol=ftol)
     if isinstance(err, np.ndarray) and len(err.shape) == 2:
         print(cov)
@@ -226,7 +227,8 @@ def ramdomParam(fit, N=1):
     m = np.array([fit['best'][k] for k in fit['fitOnly']])
     res = []
     for k in range(N):
-        p = dict(list(zip(fit['fitOnly'], np.random.multivariate_normal(m, fit['cov']))))
+        p = dict(
+            list(zip(fit['fitOnly'], np.random.multivariate_normal(m, fit['cov']))))
         p.update({fit['best'][k] for k in list(fit['best'].keys()) if k not in
                   fit['fitOnly']})
         res.append(p)
@@ -400,93 +402,3 @@ def _ellParam(sA2, sB2, sAB):
     sma = np.sqrt(1/2.*(sA2+sB2+np.sqrt((sA2-sB2)**2+4*sAB**2)))
 
     return sMa, sma, a
-#
-# def plotCovMatrix(fit, fig=0):
-#    if not fig is None:
-#        plt.figure(fig)
-#        plt.clf()
-#    else:
-#        # overplot
-#        pass
-#
-#    t = np.linspace(0,2*np.pi,100)
-#    if isinstance(fit , dict):
-#        fitOnly = fit['fitOnly']
-#        N = len(fit['fitOnly'])
-#    else:
-#        fitOnly = fit[0]['fitOnly']
-#        N = len(fit[0]['fitOnly'])
-#
-#    for i in range(N):
-#        for j in range(N):
-#            if i!=j:
-#                ax = plt.subplot(N, N, i+j*N+1)
-#                if isinstance(fit , dict):
-#                    sMa, sma, a = _ellParam(fit['cov'][i,i], fit['cov'][j,j], fit['cov'][i,j])
-#                    X,Y = sMa*np.cos(t), sma*np.sin(t)
-#                    X,Y = X*np.cos(a)+Y*np.sin(a),-X*np.sin(a)+Y*np.cos(a)
-#                    plt.errorbar(fit['best'][fitOnly[i]],
-#                                 fit['best'][fitOnly[j]],
-#                                 xerr=np.sqrt(fit['cov'][i,i]),
-#                                 yerr=np.sqrt(fit['cov'][j,j]), color='b',
-#                                 linewidth=1, alpha=0.5, label='single fit')
-#                    plt.plot(fit['best'][fitOnly[i]]+X,
-#                                 fit['best'][fitOnly[j]]+Y,'-b',
-#                                 label='cov. ellipse')
-#                else: ## assumes case of bootstraping
-#                    plt.plot([f['best'][fitOnly[i]] for f in fit],
-#                             [f['best'][fitOnly[j]] for f in fit],
-#                             '.', color='0.5', alpha=0.4, label='bootstrap')
-#                    plt.errorbar(np.mean([f['best'][fitOnly[i]] for f in fit]),
-#                                 np.mean([f['best'][fitOnly[j]] for f in fit]),
-#                                 xerr=np.mean([f['uncer'][fitOnly[i]] for f in fit]),
-#                                 yerr=np.mean([f['uncer'][fitOnly[j]] for f in fit]),
-#                                 color='k', linewidth=1, alpha=0.5,
-#                                 label='boot. avg')
-#                #plt.legend(loc='upper right', prop={'size':7}, numpoints=1)
-#                if not fig is None:
-#                    if isinstance(fit , dict):
-#                        if j==N-1 or j+1==i:
-#                            plt.xlabel(fitOnly[i])
-#                        if i==0 or j+1==i:
-#                            plt.ylabel(fitOnly[j])
-#                    else:
-#                        if j==N-1:
-#                            plt.xlabel(fitOnly[i])
-#                        if i==0:
-#                            plt.ylabel(fitOnly[j])
-#
-#            if i==j and not isinstance(fit , dict):
-#                ax = plt.subplot(N, N, i+j*N+1)
-#                X = [f['best'][fitOnly[i]] for f in fit]
-#                h = plt.hist(X, color='0.8',bins=max(len(fit)/30, 3))
-#                a = {'MU':np.median(X), 'SIGMA':np.std(X), 'AMP':len(X)/10.}
-#                g = leastsqFit(dpfunc.gaussian, 0.5*(h[1][1:]+h[1][:-1]), a, h[0])
-#                plt.plot(0.5*(h[1][1:]+h[1][:-1]), g['model'], 'r')
-#                plt.errorbar(g['best']['MU'], g['best']['AMP']/2,
-#                             xerr=g['best']['SIGMA'], color='r',
-#                             marker='o', label='gauss fit')
-#                plt.text(g['best']['MU'], 1.1*g['best']['AMP'],
-#                         r'%s = %4.2e $\pm$ %4.2e'%(fitOnly[i],
-#                                                g['best']['MU'],
-#                                                g['best']['SIGMA']),
-#                         color='r', va='center', ha='center')
-#                print('%s = %4.2e  +/-  %4.2e'%(fitOnly[i],
-#                                                g['best']['MU'],
-#                                                g['best']['SIGMA']))
-#                plt.ylim(0,max(plt.ylim()[1], 1.2*g['best']['AMP']))
-#                if not fig is None:
-#                    if j==N-1:
-#                        plt.xlabel(fitOnly[i])
-#                    if i==0:
-#                        plt.ylabel(fitOnly[j])
-#                plt.legend(loc='lower center', prop={'size':7},
-#                           numpoints=1)
-#            #--
-#            try:
-#                for item in ([ax.title, ax.xaxis.label, ax.yaxis.label] +
-#                    ax.get_xticklabels() + ax.get_yticklabels()):
-#                    item.set_fontsize(8)
-#            except:
-#                pass
-#    return
