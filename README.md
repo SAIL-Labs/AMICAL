@@ -8,7 +8,7 @@ It is recommended (though not mandatory) to create a separate environment with `
 Then, within your Conda env (`conda activate <env_name>`):
 
 ```bash
-# Firstly, clone PREVIS repository on your computer
+# Firstly, clone MIAMIS repository on your computer
 git clone https://github.com/DrSoulain/MIAMIS.git
 
 cd MIAMIS/
