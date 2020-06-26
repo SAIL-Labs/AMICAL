@@ -3,8 +3,6 @@ from matplotlib import pyplot as plt
 
 import miamis
 
-plt.switch_backend('Qt5Agg')
-
 plt.close("all")
 
 datadir = 'Simulated_NRMdata/'
@@ -35,13 +33,13 @@ cube_c = hdu[0].data
 hdu.close()
 
 # ----------------------------------
-# Additionnal cleaning step is required here for 
+# Additionnal cleaning step is required here for
 # groundbased observations.
 # ----------------------------------
 
 #  AMI parameters (refer to the docstrings of `extract_bs_mf` for details)
 params_ami = {"peakmethod": 'fft',
-              "bs_MultiTri": False,              
+              "bs_MultiTri": False,
               "maskname": "g7",
               "fw_splodge": 0.7,
               }
@@ -62,7 +60,7 @@ cal = miamis.calibrate(bs_t, bs_c)
 miamis.show(cal, true_flag_t3=False, cmax=180)
 s = miamis.save(cal, fake_obj=True, verbose=False)
 
-# We perform some analysis of the extracted V2 and CP using 
+# We perform some analysis of the extracted V2 and CP using
 # CANDID package (developped by A. Merand and A. Gallenne).
 fit = miamis.fit_binary(s[1], step=50, verbose=False)
 
