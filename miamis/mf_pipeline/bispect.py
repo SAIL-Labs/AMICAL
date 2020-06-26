@@ -36,8 +36,8 @@ from .idl_function import dblarr, dist, regress_noc
 warnings.filterwarnings("ignore")
 
 
-def extract_bs_mf(cube, filename, maskname, filtname=None, targetname=None, bs_MultiTri=False, n_blocks=0, peakmethod=True, hole_diam=0.8,
-                  cutoff=1e-4, fw_splodge=0.7, naive_err=False, n_wl=3, verbose=False, display=True,):
+def extract_bs_mf(cube, filename, maskname, filtname=None, targetname=None, bs_MultiTri=False, n_blocks=0, peakmethod='gauss', 
+                  hole_diam=0.8, cutoff=1e-4, fw_splodge=0.7, naive_err=False, n_wl=3, verbose=False, display=True,):
     """Compute bispectrum (bs, v2, cp, etc.) from a data cube.
 
     Parameters:
@@ -61,11 +61,14 @@ def extract_bs_mf(cube, filename, maskname, filtname=None, targetname=None, bs_M
     `n_blocks` {float}:
         Number of separated blocks use to split the data cube and get more
         accurate uncertainties (default: 0, n_blocks = n_ps),\n
-    `peakmethod` {bool}:
-        If True, perform FFTs to compute the peak position in the Fourier
-        space (default). Otherwise, set the u-v peak sampled into 4 pixels,\n
+    `peakmethod` {str}:
+        3 methods are used to sample to u-v space: 'fft' uses fft between individual holes to compute
+        the expected splodge position; 'square' compute the splodge in a square using the expected
+        fraction of pixel to determine its weight; 'gauss' considers a gaussian splodge (with a gaussian
+        weight) to get the same splodge side for each n(n-1)/2 baselines,\n
     `fw_splodge` {float}:
-        Relative size of the splodge used to compute mutliple triangle indices,\n
+        Relative size of the splodge used to compute mutliple triangle indices and the fwhm
+        of the 'gauss' technique,\n
     `naive_err` {bool}:
         If True, the uncertainties are computed using the std of the overall
         cvis or bs array. Otherwise, the uncertainties are computed using
@@ -79,14 +82,12 @@ def extract_bs_mf(cube, filename, maskname, filtname=None, targetname=None, bs_M
         If True, print usefull informations during the process.\n
     `display` {bool}:
         If True, display all figures,\n
-    `zoom` {bool}:
-        If True, display one zoomed splodge of the ps.
 
     Returns:
     --------
     `res` {class object}:
         Return all interferometric observables and informations as a class
-        object res (res.v2, v2_sig, cp, cp_sig, u, v, etc.)
+        object res (res.v2, res.v2_sig, res.cp, res.cp_sig, res.u, res.v, etc.)
     """
     if verbose:
         cprint("\n-- Starting extraction of observables --", 'cyan')
@@ -165,7 +166,7 @@ def extract_bs_mf(cube, filename, maskname, filtname=None, targetname=None, bs_M
     # holes mask positions (mf.xy_coords), centred mf (mf.cpvct, mf.gpvct), etc.
     # ------------------------------------------------------------------------
 
-    mf = make_mf(maskname, instrument, filtname, npix, peakmethod=peakmethod,
+    mf = make_mf(maskname, instrument, filtname, npix, peakmethod=peakmethod, fw_splodge=fw_splodge,
                  n_wl=n_wl, cutoff=cutoff, hole_diam=hole_diam, display=display,)
 
     # 4. Compute indices for the multiple triangle technique (tri_pix function)
@@ -177,7 +178,7 @@ def extract_bs_mf(cube, filename, maskname, filtname=None, targetname=None, bs_M
         sampledisk_r = minbl / 2 / mf.wl * mf.pixelSize * dim1 * 0.9
     else:
         sampledisk_r = minbl / 2 / mf.wl * mf.pixelSize * dim1 * fw_splodge
-
+    
     if bs_MultiTri:
         closing_tri_pix = tri_pix(
             dim1, sampledisk_r, display=display, verbose=verbose)
@@ -185,19 +186,12 @@ def extract_bs_mf(cube, filename, maskname, filtname=None, targetname=None, bs_M
     # 5. Display the power spectrum of the first frame to check the computed
     # positions of the peaks.
     # ------------------------------------------------------------------------
-
-    # plt.figure(figsize=(6, 6))
-    # plt.title("Power spectrum")
-    # plt.imshow(np.fft.fftshift(
-    #     abs(ft_arr[0])), cmap="gist_stern", origin="lower")
-    # plt.tight_layout()
-
     if display:
         plt.figure(figsize=(12, 6))
-        plt.subplot(1, 2, 1)
+        ax1 = plt.subplot(1, 2, 1)
         plt.title("Real part")
         plt.imshow(ft_arr[0].real, cmap="gist_stern", origin="lower")
-        plt.subplot(1, 2, 2)
+        plt.subplot(1, 2, 2, sharex=ax1, sharey=ax1)
         plt.title("Imaginary part")
         plt.imshow(ft_arr[0].imag, cmap="gist_stern", origin="lower")
         plt.tight_layout()
