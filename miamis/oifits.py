@@ -41,7 +41,7 @@ def computeflag(value, sigma, limit=4.):
 
 def cal2dict(cal, target=None, fake_obj=False, pa=0, del_pa=0, snr=4,
              true_flag_v2=True, true_flag_t3=False, include_vis=False,
-             nfile=1):
+             oriented=-1, nfile=1):
     """ Format class containing calibrated data into appropriate dictionnary 
     format to be saved as oifits files.
 
@@ -55,7 +55,7 @@ def cal2dict(cal, target=None, fake_obj=False, pa=0, del_pa=0, snr=4,
         If True, observables extracted from simulated data (celestial
         coordinates are omitted), by default False,\n
     `pa` : {int}, (optional)
-        Parallactic angle, by default 0\n
+        Position angle, by default 0 [deg]\n
     `del_pa` : {int}, (optional)
         Uncertainties of parallactic angle , by default 0\n
     `true_flag_v2` : {bool}, (optional)
@@ -67,6 +67,9 @@ def cal2dict(cal, target=None, fake_obj=False, pa=0, del_pa=0, snr=4,
     `include_vis` : {bool}, (optional)
         If True, include visibility amplitude in the oifits dictionnary,
          by default False,\n
+    `oriented` {float}:
+        If oriented == -1, east assumed to the left in the image, otherwise 
+        oriented == 1 (east to the right); (Default -1),\n
     `nfile` : {int}, (optional)
         Iteration number of the file (used to save multiple oifits file), by default 1.
 
@@ -115,7 +118,7 @@ def cal2dict(cal, target=None, fake_obj=False, pa=0, del_pa=0, snr=4,
         pass
 
     thepa = pa - 0.5 * del_pa
-    u, v = res_t.u, -res_t.v
+    u, v = oriented*res_t.u, res_t.v
     u1 = u*np.cos(np.deg2rad(thepa)) + v*np.sin(np.deg2rad(thepa))
     v1 = -u*np.sin(np.deg2rad(thepa)) + v*np.cos(np.deg2rad(thepa))
 
@@ -488,7 +491,7 @@ def loadc(filename):
 
 
 def save(cal, oifits_file=None, fake_obj=False,
-         pa=0, N_ap=None, include_vis=False,
+         pa=0, include_vis=False,
          true_flag_v2=True, true_flag_t3=False, snr=4,
          datadir='Saveoifits/', nfile=1, verbose=False):
     """
@@ -511,6 +514,8 @@ def save(cal, oifits_file=None, fake_obj=False,
     `fake_obj` {bool}:
         If True, observable are extracted from simulated data and so doesn't
         contain real target informations (simbad search is ignored),\n
+    `pa` {float}:
+        Position angle of the observation (i.e.: north direction) [deg],\n
     `true_flag_v2`, `true_flag_t3` {bool}:
         if True, the true flag are used using snr,\n
     `snr` {float}:
@@ -522,6 +527,14 @@ def save(cal, oifits_file=None, fake_obj=False,
         mulitple iterations).\n 
     `verbose` {bool}:
         If True, print useful informations.
+
+    Returns:
+    --------
+    `dic` {dict}:
+        Oifits formated dictionnary,\n
+    `savedfile` {str}:
+        Name of the saved oifits file.
+
     """
 
     if cal is None:
@@ -934,7 +947,9 @@ def save(cal, oifits_file=None, fake_obj=False,
     hdulist.writeto(datadir + filename, overwrite=True)
     if verbose:
         cprint('\n\n### OIFITS CREATED (%s).' % filename, 'cyan')
-    return dic
+
+    savedfile = datadir+filename
+    return dic, savedfile
 
 
 def ApplyFlag(dic1, unit='arcsec'):
@@ -1003,7 +1018,7 @@ def show(inputList, diffWl=False, vmin=0, vmax=1.05, cmax=180, setlog=False, pa=
         l_dic = [cal2dict(x, pa=pa, true_flag_v2=true_flag_v2,
                           true_flag_t3=true_flag_t3, snr=snr) for x in inputList]
         print('\n -- SHOW -- Inputs are classes from miamis.calibrate:')
-        print('-> (Check true_flag_v2, true_flag_t3 and snr parameters)')
+        print('-> (Check true_flag_v2, true_flag_t3 and snr parameters)\n')
     elif type(inputList[0]) is str:
         l_dic = [load(x) for x in inputList]
         print('Inputs are oifits filename.')
