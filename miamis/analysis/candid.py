@@ -14,7 +14,6 @@ import scipy.stats
 from matplotlib import pyplot as plt
 # from scipy.misc import factorial
 from scipy.special import factorial
-from tqdm import tqdm
 
 # plt.ion()  # interactive mode
 _fitsLoaded = False

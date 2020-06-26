@@ -1,5 +1,4 @@
 import numpy as np
-from munch import munchify as dict2class
 from termcolor import cprint
 from uncertainties import ufloat, umath
 
