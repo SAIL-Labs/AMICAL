@@ -6,7 +6,7 @@ from miamis.analysis import candid
 
 
 def fit_binary(input_data, step=10, rmin=20, rmax=400, diam=0, obs=['cp', 'v2'],
-               doNotFit=['diam*', ], verbose=False):
+               doNotFit=['diam*', ], ncore=1, verbose=False):
     """ This function is an user friendly interface between the users of miamis
     pipeline and the CANDID analysis package (https://github.com/amerand/CANDID).
     
@@ -39,7 +39,7 @@ def fit_binary(input_data, step=10, rmin=20, rmax=400, diam=0, obs=['cp', 'v2'],
 
     o.observables = obs
 
-    o.fitMap(rmax=rmax, rmin=rmin,
+    o.fitMap(rmax=rmax, rmin=rmin, ncore=ncore,
              step=step, addParam={"diam*": diam}, doNotFit=doNotFit, verbose=verbose)
 
     fit = o.bestFit["best"]

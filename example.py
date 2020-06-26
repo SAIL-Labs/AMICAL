@@ -62,6 +62,12 @@ s = miamis.save(cal, fake_obj=True, verbose=False)
 
 # We perform some analysis of the extracted V2 and CP using
 # CANDID package (developped by A. Merand and A. Gallenne).
+
+# WARNING: CANDID uses multiprocessing to compute the grid, and
+# it appeared to be instable in the last version of OSX catalina+ 
+# So we imposed ncore=1 by default (no multiproc), you can
+# try to increase ncore option in fit_binary but it could crash
+# depending on your system (tested on OSX-mojave).
 fit = miamis.fit_binary(s[1], step=50, verbose=False)
 
 plt.show(block=True)

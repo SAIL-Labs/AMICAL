@@ -1604,7 +1604,8 @@ class Open:
         return
     
     
-    def _pool(self, verbose=False):
+    def _pool(self, ncore=1, verbose=False):
+        CONFIG['Ncores'] = ncore
         if CONFIG['Ncores'] is None:
             self.Ncores = max(multiprocessing.cpu_count(),1)
         else:
@@ -1617,9 +1618,9 @@ class Open:
             if verbose:
                 print(' [Pooling %d processors]'%self.Ncores, end='')
             return multiprocessing.Pool(self.Ncores)
-    def _estimateRunTime(self, function, params):
+    def _estimateRunTime(self, function, params, ncore=1):
         # -- estimate how long it will take, in two passes
-        p = self._pool(verbose=True)
+        p = self._pool(ncore=ncore, verbose=True)
         t = time.time()
         if p is None:
             # -- single thread:
@@ -1653,7 +1654,7 @@ class Open:
         return
 
     def chi2Map(self, step=None, fratio=None, addCompanion=None, removeCompanion=None,
-                fig=0, diam=None, rmin=None, rmax=None):
+                fig=0, diam=None, rmin=None, rmax=None, ncore=1):
         """
         Performs a chi2 map between rmin and rmax (should be defined) with step
         "step". The diameter is taken as the best fit UD diameter (biased if
@@ -1730,7 +1731,7 @@ class Open:
                 for _k in self.dwavel.keys():
                     tmp['dwavel;'+_k] = self.dwavel[_k]
                 params.append((tmp,self._chi2Data, self.observables, self.instruments))
-            est = self._estimateRunTime(_chi2Func, params)
+            est = self._estimateRunTime(_chi2Func, params, ncore=ncore)
             est *= np.sum(self.mapChi2>=0)
             print('... it should take about %d seconds'%(int(est)))
             if not CONFIG['long exec warning'] is None and\
@@ -1744,7 +1745,7 @@ class Open:
         # -- done estimating time
 
         # -- compute actual grid:
-        p = self._pool()
+        p = self._pool(ncore=ncore)
 
         for i,x in enumerate(allX):
             for j,y in enumerate(allY):
@@ -1869,7 +1870,7 @@ class Open:
         #     print('!!! I expect a dict!')
         return
 
-    def fitMap(self, step=None,  fig=1, addCompanion=None,
+    def fitMap(self, step=None,  fig=1, addCompanion=None, ncore=1,
                removeCompanion=None, rmin=None, rmax=None, fratio=2.0,
                doNotFit=[], addParam={}, beta=1.0, showNmin=1, verbose=False):
         """
@@ -1997,7 +1998,7 @@ class Open:
             print('')
         print('')
         # -- parallel on N-1 cores
-        p = self._pool()
+        p = self._pool(ncore=ncore)
         k = 0
         #t0 = time.time()
         params = []
@@ -2222,7 +2223,6 @@ class Open:
             result['internal']['nsigma map'] = {'X':_X, 'Y':_Y, 'chi2':n_sigma}
 
         if not fig is None:
-            #plt.close(fig)
             if CONFIG['suptitle']:
                 outout = plt.figure(figsize=(12/1.2,5.5/1.2))
                 plt.subplots_adjust(left=0.1, right=0.99, bottom=0.1, top=0.78,
@@ -2292,7 +2292,7 @@ class Open:
                         size=30, alpha=0.5, ha='center', va='center', rotation=45)
                 plt.text(-self.rmax/2,-self.rmax/2,'!! UNRELIABLE !!', color='r',
                         size=30, alpha=0.5, ha='center', va='center', rotation=45)
-            plt.show(block=False)
+            
 
         # --
         nsmax = np.max([a['nsigma'] for a in allMin])
@@ -2348,27 +2348,28 @@ class Open:
             ef0 = allMin2[i]['uncer']['f']
             s0 = allMin2[i]['nsigma']
 
-            if not fig is None:
-                fs = max(int(12*s0/bestNsigma), 6)
-                # -- draw cross hair
-                for ax in [ax1, ax2]:
-                    ax.plot([x0, x0], [y0-0.05*self.rmax, y0-0.1*self.rmax], '-r',
-                            alpha=fs/12, linewidth=fs/4)
-                    ax.plot([x0, x0], [y0+0.05*self.rmax, y0+0.1*self.rmax], '-r',
-                            alpha=fs/12, linewidth=fs/4)
-                    ax.plot([x0-0.05*self.rmax, x0-0.1*self.rmax], [y0, y0], '-r',
-                            alpha=fs/12, linewidth=fs/4)
-                    ax.plot([x0+0.05*self.rmax, x0+0.1*self.rmax], [y0, y0], '-r',
-                            alpha=fs/12, linewidth=fs/4)
-                # ax1.text(x0, y0, r'%.2e'%(allMin[i]['chi2']/self.chi2_UD), color='r',
-                #         va='bottom', ha='left', fontsize=fs)
-                ax2.text(x0, y0, r'%3.1f$\sigma$'%s0, color='r',
-                        va='bottom', ha='left', fontsize=fs)
+            # if not fig is None:
+            fs = max(int(12*s0/bestNsigma), 6)
+            # -- draw cross hair
+            for ax in [ax1, ax2]:
+                ax.plot([x0, x0], [y0-0.05*self.rmax, y0-0.1*self.rmax], '-r',
+                        alpha=fs/12, linewidth=fs/4)
+                ax.plot([x0, x0], [y0+0.05*self.rmax, y0+0.1*self.rmax], '-r',
+                        alpha=fs/12, linewidth=fs/4)
+                ax.plot([x0-0.05*self.rmax, x0-0.1*self.rmax], [y0, y0], '-r',
+                        alpha=fs/12, linewidth=fs/4)
+                ax.plot([x0+0.05*self.rmax, x0+0.1*self.rmax], [y0, y0], '-r',
+                        alpha=fs/12, linewidth=fs/4)
+            # ax1.text(x0, y0, r'%.2e'%(allMin[i]['chi2']/self.chi2_UD), color='r',
+            #         va='bottom', ha='left', fontsize=fs)
+            ax2.text(x0, y0, r'%3.1f$\sigma$'%s0, color='r',
+                    va='bottom', ha='left', fontsize=fs)
 
 
-        if not fig is None:
-            plt.xlabel(r'E $\leftarrow\, \Delta \alpha$ (mas)')
-            plt.ylabel(r'$\Delta \delta\, \rightarrow$ N (mas)')
+        # if not fig is None:
+        plt.xlabel(r'E $\leftarrow\, \Delta \alpha$ (mas)')
+        plt.ylabel(r'$\Delta \delta\, \rightarrow$ N (mas)')
+        plt.show(block=False)
             #plt.xlim(self.rmax-self.rmax/float(N), -self.rmax+self.rmax/float(N))
             #plt.ylim(-self.rmax+self.rmax/float(N), self.rmax-self.rmax/float(N))
             #ax2.set_aspect('equal', 'datalim')
@@ -2422,7 +2423,7 @@ class Open:
 
     def fitBoot(self, N=None, param=None, fig=2, fitAlso=None, doNotFit=[], useMJD=True,
                 monteCarlo=False, corrSpecCha=None, nSigmaClip=4.5, addCompanion=None,
-                removeCompanion=None):
+                removeCompanion=None, ncore=1):
         """
         boot strap fitting around a single position. By default,
         the position is the best position found by fitMap. It can also been entered
@@ -2493,7 +2494,7 @@ class Open:
                     tmp['dwavel;'+_k] = self.dwavel[_k]
                 params.append((tmp, self._chi2Data, self.observables,
                                 self.instruments))
-            est = self._estimateRunTime(_fitFunc, params)
+            est = self._estimateRunTime(_fitFunc, params, ncore=ncore)
             est *= self.Nfits
             print('... it should take about %d seconds'%(int(est)))
             self.allFits, self._prog = [{} for k in range(N)], 0.0
@@ -2527,7 +2528,7 @@ class Open:
 
         res = {'fit':refFit}
         res['MJD'] = self.allMJD.mean()
-        p = self._pool()
+        p = self._pool(ncore=ncore)
 
         mjds = []
         for d in self._chi2Data:
@@ -2935,7 +2936,7 @@ class Open:
 
     def detectionLimit(self, step=None, diam=None, fig=4, addCompanion=None,
                         removeCompanion=None, drawMaps=True, rmin=None, rmax=None,
-                        methods = ['Absil', 'injection'], fratio=1.):
+                        methods = ['Absil', 'injection'], fratio=1., ncore=1):
         """
         step: number of steps N in the map (map will be NxN)
         drawMaps: display the detection maps in addition to the radial profile (default)
@@ -3004,7 +3005,7 @@ class Open:
                 params.append((tmp, self._chi2Data, self.observables,
                                 self.instruments, self._delta))
             # -- Absil is twice as fast as injection
-            est = 1.5*self._estimateRunTime(_detectLimit, params)
+            est = 1.5*self._estimateRunTime(_detectLimit, params, ncore=ncore)
             est *= N**2
             print('... it should take about %d seconds'%(int(est)))
             if not CONFIG['long exec warning'] is None and\
@@ -3033,7 +3034,7 @@ class Open:
             self._prog = 0.0
             self._progTime = [time.time(), time.time()]
             # -- parallel treatment:
-            p = self._pool()
+            p = self._pool(ncore=ncore)
             for i,x in enumerate(allX):
                 for j,y in enumerate(allY):
                     if self.f3s[j,i]==0:
