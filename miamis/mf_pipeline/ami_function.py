@@ -24,7 +24,7 @@ from termcolor import cprint
 from miamis.dpfit import leastsqFit
 from miamis.getInfosObs import GetMaskPos, GetPixelSize, GetWavelength
 from miamis.mf_pipeline.idl_function import array_coords, dist
-from miamis.tools import linear, plot_circle
+from miamis.tools import gauss_2d_asym, linear, norm_max, plot_circle
 
 
 def index_mask(n_holes, verbose=False):
@@ -141,8 +141,8 @@ def index_mask(n_holes, verbose=False):
 
 
 def make_mf(maskname, instrument, filtname, npix,
-            peakmethod=True, n_wl=3, cutoff=1e-4, D=6.5,
-            hole_diam=0.8, verbose=False,
+            peakmethod='fft', n_wl=3, cutoff=1e-4, D=6.5,
+            hole_diam=0.8, fw_splodge=0.7, verbose=False,
             display=True):
     """
     Parameters:
@@ -184,14 +184,14 @@ def make_mf(maskname, instrument, filtname, npix,
         plt.figure(figsize=(6, 5.5))
         plt.title('%s - mask %s' % (instrument, maskname), fontsize=14)
 
-        xy_coords_tel = list(xy_coords.copy())
-        xy_coords_tel.append([0, 2.64])
-        xy_coords_tel.append([1.14315, -1.98])
-        xy_coords_tel.append([-1.14315, -1.98])
-        xy_coords_tel.append([2.28631, 0])
-        xy_coords_tel.append([-2.28631, -1.32])
-                
-        xy_coords_tel = np.array(xy_coords_tel)
+        # xy_coords_tel = list(xy_coords.copy())
+        # xy_coords_tel.append([0, 2.64])
+        # xy_coords_tel.append([1.14315, -1.98])
+        # xy_coords_tel.append([-1.14315, -1.98])
+        # xy_coords_tel.append([2.28631, 0])
+        # xy_coords_tel.append([-2.28631, -1.32])
+
+        # xy_coords_tel = np.array(xy_coords_tel)
         for i in range(xy_coords.shape[0]):
             plt.scatter(xy_coords[i][0], xy_coords[i][1],
                         s=1e2, c='', edgecolors='navy', marker=marker)
@@ -247,7 +247,7 @@ def make_mf(maskname, instrument, filtname, npix,
         print('\n- Calculating sampling of', n_holes, 'holes array...')
 
     # Why 0.9 and 0.6 factor here ???
-    tmp = dist(npix)  # .ravel()
+    tmp = dist(npix)
     innerpix = np.array(np.array(
         np.where(tmp < (hole_diam/filt[0]*pixelSize*npix)*0.9))*0.6, dtype=int)
 
@@ -256,6 +256,24 @@ def make_mf(maskname, instrument, filtname, npix,
     mfall = []
 
     round_uv_to_pixel = False
+
+    u_real = np.zeros(n_baselines)
+    v_real = np.zeros(n_baselines)
+    for i in range(n_baselines):
+        if not round_uv_to_pixel:
+            u_real[i] = (xy_coords[bl2h_ix[0, i], 0] -
+                         xy_coords[bl2h_ix[1, i], 0])/filt[0]
+            v_real[i] = (xy_coords[bl2h_ix[0, i], 1] -
+                         xy_coords[bl2h_ix[1, i], 1])/filt[0]
+        else:
+            onepix = 1./(npix*pixelSize)
+            onepix_xy = onepix*filt[0]
+            new_xy = (xy_coords/onepix_xy).astype(int)*onepix_xy
+
+            u_real[i] = (new_xy[bl2h_ix[0, i], 0] -
+                         new_xy[bl2h_ix[1, i], 0])/filt[0]
+            v_real[i] = (new_xy[bl2h_ix[0, i], 1] -
+                         new_xy[bl2h_ix[1, i], 1])/filt[0]
 
     for i in range(n_baselines):
 
@@ -276,7 +294,7 @@ def make_mf(maskname, instrument, filtname, npix,
 
         mf = np.zeros([npix, npix])
 
-        if peakmethod:
+        if peakmethod == 'fft':
             sum_xy = np.sum(xy_coords, axis=0)/n_holes
             shift_fact = np.ones([n_holes, 2])
             shift_fact[:, 0] = sum_xy[0]
@@ -285,8 +303,8 @@ def make_mf(maskname, instrument, filtname, npix,
             xy_coords2 -= shift_fact
 
             for j in range(n_wl):
-                xyh = xy_coords2[bl2h_ix[0, i], :]/wl[j]*pixelSize * \
-                    npix + npix//2  # round 5 precision IDL
+                xyh = xy_coords2[bl2h_ix[1, i], :]/wl[j]*pixelSize * \
+                    npix + npix//2 
                 delta = xyh-np.floor(xyh)
                 ap1 = np.zeros([npix, npix])
                 x1 = int(xyh[1])
@@ -298,7 +316,7 @@ def make_mf(maskname, instrument, filtname, npix,
 
                 ap1all.append(np.roll(ap1, 0, axis=0))
 
-                xyh = xy_coords2[bl2h_ix[1, i], :]/wl[j]*pixelSize * \
+                xyh = xy_coords2[bl2h_ix[0, i], :]/wl[j]*pixelSize * \
                     npix + npix//2
                 delta = xyh-np.floor(xyh)
                 ap2 = np.zeros([npix, npix])
@@ -319,7 +337,7 @@ def make_mf(maskname, instrument, filtname, npix,
                 mf = mf+np.real(tmf)
                 mfall.append(mf)
 
-        else:
+        elif peakmethod == 'square':
             uv = np.array([v[i], u[i]])*pixelSize*npix
             uv = (uv + npix) % npix
             uv_int = np.array(np.floor(uv), dtype=int)
@@ -331,7 +349,41 @@ def make_mf(maskname, instrument, filtname, npix,
                 npix] = uv_frac[0]*uv_frac[1]
             mf = np.roll(mf, [0, 0])
 
+        elif peakmethod == 'gauss':
+            l_B = np.sqrt(u_real ** 2 + v_real ** 2)
+            minbl = np.min(l_B)*filt[0]
+
+            if n_holes >= 15:
+                sampledisk_r = minbl / 2 / filt[0] * pixelSize * npix * 0.9
+            else:
+                sampledisk_r = minbl / 2. / \
+                    filt[0] * pixelSize * npix * fw_splodge
+
+            xspot = float(np.round((v[i]*pixelSize*npix + npix/2.)))
+            yspot = float(np.round((u[i]*pixelSize*npix + npix/2.)))
+            mf = plot_circle(mf, xspot, yspot, sampledisk_r, display=False)
+            mf = np.roll(mf, npix//2, axis=0)
+            mf = np.roll(mf, npix//2, axis=1)
+
+            X = [np.arange(npix), np.arange(npix), 1]
+            splodge_fwhm = hole_diam/filt[0]*pixelSize*npix/1.9
+            param = {'A': 1,
+                     'x0': -npix//2 + yspot,
+                     'y0': -npix//2 + xspot,
+                     'fwhm_x': splodge_fwhm,
+                     'fwhm_y': splodge_fwhm,
+                     'theta': 0
+                     }
+            gauss = gauss_2d_asym(X, param)
+            gauss = np.roll(gauss, npix//2, axis=0)
+            gauss = np.roll(gauss, npix//2, axis=1)
+            mfg = gauss/np.sum(gauss)
+
         mf_flat = mf.ravel()
+
+        if peakmethod == 'gauss':
+            mfg_flat = mfg.ravel()
+            mfg_centered = norm_max(np.fft.fftshift(mfg).ravel())
 
         mf_centered = np.fft.fftshift(mf).ravel()
 
@@ -346,18 +398,39 @@ def make_mf(maskname, instrument, filtname, npix,
         mf_centered[innerpix_center] = 0.0
         mf_flat[innerpix] = 0.0
 
+        if peakmethod == 'gauss':
+            mfg_centered[innerpix_center] = 0.0
+
         pixelvector = np.where(mf_flat >= cutoff)[0]
         pixelvector_c = np.where(mf_centered >= cutoff)[0]
 
         # Now normalise the pixel gain, so that using the matched filter
         # on an ideal splodge is equivalent to just looking at the peak...
         if normalize_pixelgain:
-            pixelgain = mf_flat[pixelvector] / np.sum(mf_flat[pixelvector])
-            pixelgain_c = mf_centered[pixelvector_c] / \
-                np.sum(mf_centered[pixelvector_c])
+            if peakmethod == 'gauss':
+                pixelgain = mfg_flat[pixelvector] / \
+                    np.sum(mfg_flat[pixelvector])
+                pixelgain_c = mfg_centered[pixelvector_c] / \
+                    np.sum(mfg_centered[pixelvector_c])
+            else:
+                pixelgain = mf_flat[pixelvector] / np.sum(mf_flat[pixelvector])
+                pixelgain_c = mf_centered[pixelvector_c] / \
+                    np.sum(mf_centered[pixelvector_c])
         else:
-            pixelgain = mf_flat[pixelvector] * \
-                np.max(mf_flat[pixelvector])/np.sum(mf_flat[pixelvector]**2)
+            if peakmethod == 'gauss':
+                pixelgain = mfg_flat[pixelvector] * \
+                    np.max(mfg_flat[pixelvector]) / \
+                    np.sum(mfg_flat[pixelvector]**2)
+                pixelgain_c = mfg_centered[pixelvector_c] * \
+                    np.max(mfg_centered[pixelvector_c]) / \
+                    np.sum(mfg_centered[pixelvector_c]**2)
+            else:
+                pixelgain = mf_flat[pixelvector] * \
+                    np.max(mf_flat[pixelvector]) / \
+                    np.sum(mf_flat[pixelvector]**2)
+                pixelgain_c = mf_centered[pixelvector_c] * \
+                    np.max(mf_centered[pixelvector_c]) / \
+                    np.sum(mf_centered[pixelvector_c]**2)
 
         mf_ix[0, i] = Sum
         Sum = Sum + len(pixelvector)
