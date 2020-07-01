@@ -242,7 +242,7 @@ def clean_data(data, isz=None, r1=None, dr=None, edge=100, n_show=0, checkrad=Fa
 
 
 def selectCleanData(filename, isz=256, r1=100, dr=10, edge=100, clip=True,
-                    clip_fact=0.5, checkrad=False, n_show=0,
+                    clip_fact=0.5, checkrad=False, n_show=0, corr_ghost=True,
                     verbose=False, display=False):
     """ Clean and select good datacube (sigma-clipping using fluxes variations)."""
     hdu = fits.open(filename)
@@ -259,11 +259,12 @@ def selectCleanData(filename, isz=256, r1=100, dr=10, edge=100, clip=True,
         print("%2.2f (start), %2.2f (end), %2.2f (Corrected AirMass)" %
               (seeing_start, seeing_end, seeing))
 
-    if (hdr['INSTRUME'] == 'SPHERE') & (hdr['FILTER'] == 'K1'):
-        cube_patched = ApplyPatchGhost(cube, 392, 360)
-    elif (hdr['INSTRUME'] == 'SPHERE') & (hdr['FILTER'] == 'K2'):
-        cube_patched = ApplyPatchGhost(cube, 378, 311)
-        cube_patched = ApplyPatchGhost(cube_patched, 891, 315)
+    if corr_ghost:
+        if (hdr['INSTRUME'] == 'SPHERE') & (hdr['FILTER'] == 'K1'):
+            cube_patched = ApplyPatchGhost(cube, 392, 360)
+        elif (hdr['INSTRUME'] == 'SPHERE') & (hdr['FILTER'] == 'K2'):
+            cube_patched = ApplyPatchGhost(cube, 378, 311)
+            cube_patched = ApplyPatchGhost(cube_patched, 891, 315)
     else:
         cube_patched = cube.copy()
 

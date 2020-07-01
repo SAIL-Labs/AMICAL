@@ -10,6 +10,7 @@ miamis/old_core.py
  
 # Data relative files
 Saveoifits/
+TestSPHEREData/
 
 # Install files 
 *.txt
