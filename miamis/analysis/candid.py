@@ -15,7 +15,7 @@ from matplotlib import pyplot as plt
 # from scipy.misc import factorial
 from scipy.special import factorial
 
-# plt.ion()  # interactive mode
+plt.ion()  # interactive mode
 _fitsLoaded = False
 try:
     from astropy.io import fits

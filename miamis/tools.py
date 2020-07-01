@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from astropy.io import fits
 from astropy.nddata import Cutout2D
+from astropy.time import Time
 from matplotlib.colors import PowerNorm
 from munch import munchify as dict2class
 from scipy.signal import medfilt2d
@@ -430,6 +431,167 @@ def wtmn(values, weights):
     return (mn, std_unbias)
 
 
+def jd2lst(lng, jd):
+    '''Convert Julian date to LST '''
+    c = [280.46061837, 360.98564736629, 0.000387933, 38710000.0]
+    jd2000 = 2451545.0
+    t0 = jd - jd2000
+    t = t0/36525.
+
+    # Compute GST in seconds.
+    theta = c[0] + (c[1] * t0) + t**2*(c[2] - t / c[3])
+
+    # Compute LST in hours.
+    lst = (theta + lng)/15.0
+    neg = np.where(lst < 0.0)
+    n = neg[0].size
+    if n > 0:
+        lst[neg] = 24.0 + (lst[neg] % 24)
+    lst = lst % 24
+    return lst
+
+
+def sphere_parang(hdr):
+    """
+    Reads the header and creates an array giving the paralactic angle for each frame,
+    taking into account the inital derotator position.
+    The columns of the output array contains:
+    frame_number, frame_time, paralactic_angle
+    """
+
+    r2d = 180/np.pi
+    d2r = np.pi/180
+
+    detector = hdr['HIERARCH ESO DET ID']
+    if detector.strip() == 'IFS':
+        offset = 135.87-100.46  # from the SPHERE manual v4
+    elif detector.strip() == 'IRDIS':
+        # correspond to the difference between the PUPIL tracking ant the FIELD tracking for IRDIS taken here: http://wiki.oamp.fr/sphere/AstrometricCalibration (PUPOFFSET)
+        offset = 135.87
+    else:
+        offset = 0
+        print('WARNING: Unknown instrument in create_parang_list_sphere: '+str(detector))
+
+    try:
+        # Get the correct RA and Dec from the header
+        actual_ra = hdr['HIERARCH ESO INS4 DROT2 RA']
+        actual_dec = hdr['HIERARCH ESO INS4 DROT2 DEC']
+
+        # These values were in weird units: HHMMSS.ssss
+        actual_ra_hr = np.floor(actual_ra/10000.)
+        actual_ra_min = np.floor(actual_ra/100. - actual_ra_hr*100.)
+        actual_ra_sec = (actual_ra - actual_ra_min*100. - actual_ra_hr*10000.)
+
+        ra_deg = (actual_ra_hr + actual_ra_min/60. +
+                  actual_ra_sec/60./60.) * 360./24.
+
+        # the sign makes this complicated, so remove it now and add it back at the end
+        sgn = np.sign(actual_dec)
+        actual_dec *= sgn
+
+        actual_dec_deg = np.floor(actual_dec/10000.)
+        actual_dec_min = np.floor(actual_dec/100. - actual_dec_deg*100.)
+        actual_dec_sec = (actual_dec - actual_dec_min *
+                          100. - actual_dec_deg*10000.)
+
+        dec_deg = (actual_dec_deg + actual_dec_min /
+                   60. + actual_dec_sec/60./60.)*sgn
+        geolat_rad = float(hdr['ESO TEL GEOLAT'])*d2r
+    except Exception:
+        print('WARNING: No RA/Dec Keywords found in header')
+        ra_deg = 0
+        dec_deg = 0
+        geolat_rad = 0
+
+    if 'NAXIS3' in hdr:
+        n_frames = hdr['NAXIS3']
+    else:
+        n_frames = 1
+
+    # We want the exposure time per frame, derived from the total time from when the shutter
+    # opens for the first frame until it closes at the end.
+    # This is what ACC thought should be used
+    # total_exptime = hdr['ESO DET SEQ1 EXPTIME']
+    # This is what the SPHERE DC uses
+    total_exptime = (Time(hdr['HIERARCH ESO DET FRAM UTC']) -
+                     Time(hdr['HIERARCH ESO DET SEQ UTC'])).sec
+    # print total_exptime-total_exptime2
+    delta_dit = total_exptime / n_frames
+    dit = hdr['ESO DET SEQ1 REALDIT']
+
+    # Set up the array to hold the parangs
+    parang_array = np.zeros((n_frames))
+
+    # Output for debugging
+    hour_angles = []
+
+    if ('ESO DET SEQ UTC' in hdr.keys()) and ('ESO TEL GEOLON' in hdr.keys()):
+        # The SPHERE DC method
+        jd_start = Time(hdr['ESO DET SEQ UTC']).jd
+        lst_start = jd2lst(hdr['ESO TEL GEOLON'], jd_start)*3600
+        # Use the old method
+        lst_start = float(hdr['LST'])
+    else:
+        lst_start = 0.
+        print('WARNING: No LST keyword found in header')
+
+    # delta dit and dit are in seconds so we need to multiply them by this factor to add them to an LST
+    time_to_lst = (24.*3600.)/(86164.1)
+
+    if 'ESO INS4 COMB ROT' in hdr.keys() and hdr['ESO INS4 COMB ROT'] == 'PUPIL':
+
+        for i in range(n_frames):
+
+            ha_deg = ((lst_start+i*delta_dit*time_to_lst +
+                       time_to_lst*dit/2.)*15./3600)-ra_deg
+            hour_angles.append(ha_deg)
+
+            # VLT TCS formula
+            f1 = float(np.cos(geolat_rad) * np.sin(d2r*ha_deg))
+            f2 = float(np.sin(geolat_rad) * np.cos(d2r*dec_deg) -
+                       np.cos(geolat_rad) * np.sin(d2r*dec_deg) * np.cos(d2r*ha_deg))
+            pa = -r2d*np.arctan2(-f1, f2)
+
+            pa = pa+offset
+
+            # Also correct for the derotator issues that were fixed on 12 July 2016 (MJD = 57581)
+            if hdr['MJD-OBS'] < 57581:
+                alt = hdr['ESO TEL ALT']
+                drot_begin = hdr['ESO INS4 DROT2 BEGIN']
+                # Formula from Anne-Lise Maire
+                correction = np.arctan(
+                    np.tan((alt-2*drot_begin)*np.pi/180))*180/np.pi
+                pa += correction
+
+            pa = ((pa + 360) % 360)
+            parang_array[i] = pa
+
+    else:
+        if 'ARCFILE' in hdr.keys():
+            print(hdr['ARCFILE']+' does seem to be taken in pupil tracking.')
+        else:
+            print('Data does not seem to be taken in pupil tracking.')
+
+        for i in range(n_frames):
+            parang_array[i] = 0
+
+    # And a sanity check at the end
+    try:
+        # The parang start and parang end refer to the start and end of the sequence, not in the middle of the first and last frame.
+        # So we need to correct for that
+        expected_delta_parang = (hdr['HIERARCH ESO TEL PARANG END'] -
+                                 hdr['HIERARCH ESO TEL PARANG START']) * (n_frames-1)/n_frames
+        delta_parang = (parang_array[-1]-parang_array[0])
+        if np.abs(expected_delta_parang - delta_parang) > 1.:
+            print(
+                "WARNING! Calculated parallactic angle change is >1degree more than expected!")
+
+    except Exception:
+        pass
+
+    return parang_array
+
+
 def checkSeeingCond(list_nrm):
     """ Extract the seeing conditions, parang, averaged vis2
     and cp of a list of nrm classes extracted with extract_bs_mf
@@ -444,7 +606,7 @@ def checkSeeingCond(list_nrm):
     l_seeing, l_vis2, l_cp, l_pa, l_mjd = [], [], [], [], []
     for nrm in list_nrm:
         hdr = fits.open(nrm.filename)[0].header
-        pa = hdr['PARANG']
+        pa = np.mean(sphere_parang(hdr))
         seeing = nrm.hdr['SEEING']
         mjd = hdr['MJD-OBS']
         l_vis2.append(np.mean(nrm.v2))
