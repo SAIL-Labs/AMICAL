@@ -451,6 +451,38 @@ def jd2lst(lng, jd):
     return lst
 
 
+def compute_pa(hdr, verbose=False, display=False):
+
+    list_fct_pa = {'SPHERE': sphere_parang,
+                   }
+
+    nframe = hdr['NAXIS3']
+    instrument = hdr['INSTRUME']
+    if instrument not in list(list_fct_pa.keys()):
+        cprint('Warning: %s not in known pa computation -> set to zero.\n' %
+               instrument, 'green')
+        pa_exist = False
+        l_pa = np.zeros(nframe)
+    else:
+        l_pa = list_fct_pa[instrument](hdr)
+        pa_exist = True
+
+    pa = np.mean(l_pa)
+    std_pa = np.std(l_pa)
+
+    if display and pa_exist:
+        plt.figure(figsize=(4, 3))
+        plt.plot(
+            l_pa, '.-', label='pa=%2.1f, $\sigma_{pa}$=%2.1f deg' % (pa, std_pa))
+        plt.legend(fontsize=7)
+        plt.grid(alpha=.2)
+        plt.xlabel("# frames")
+        plt.ylabel("Position angle [deg]")
+        plt.tight_layout()
+
+    return pa
+
+
 def sphere_parang(hdr):
     """
     Reads the header and creates an array giving the paralactic angle for each frame,

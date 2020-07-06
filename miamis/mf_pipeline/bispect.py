@@ -20,14 +20,13 @@ import warnings
 import numpy as np
 from astropy.io import fits
 from matplotlib import pyplot as plt
+# from miamis.dataProcessing import clean_data
+from miamis.getInfosObs import GetMaskPos
+from miamis.tools import compute_pa, cov2cor
 from munch import munchify as dict2class
 from scipy.optimize import minimize
 from termcolor import cprint
 from tqdm import tqdm
-
-# from miamis.dataProcessing import clean_data
-from miamis.getInfosObs import GetMaskPos
-from miamis.tools import cov2cor
 
 from .ami_function import (GivePeakInfo2d, bs_multiTriangle, index_mask,
                            make_mf, phase_chi2, tri_pix)
@@ -36,7 +35,7 @@ from .idl_function import dblarr, dist, regress_noc
 warnings.filterwarnings("ignore")
 
 
-def extract_bs_mf(cube, filename, maskname, filtname=None, targetname=None, bs_MultiTri=False, n_blocks=0, peakmethod='gauss', 
+def extract_bs_mf(cube, filename, maskname, filtname=None, targetname=None, bs_MultiTri=False, n_blocks=0, peakmethod='gauss',
                   hole_diam=0.8, cutoff=1e-4, fw_splodge=0.7, naive_err=False, n_wl=3, verbose=False, display=True,):
     """Compute bispectrum (bs, v2, cp, etc.) from a data cube.
 
@@ -178,7 +177,7 @@ def extract_bs_mf(cube, filename, maskname, filtname=None, targetname=None, bs_M
         sampledisk_r = minbl / 2 / mf.wl * mf.pixelSize * dim1 * 0.9
     else:
         sampledisk_r = minbl / 2 / mf.wl * mf.pixelSize * dim1 * fw_splodge
-    
+
     if bs_MultiTri:
         closing_tri_pix = tri_pix(
             dim1, sampledisk_r, display=display, verbose=verbose)
@@ -678,10 +677,10 @@ def extract_bs_mf(cube, filename, maskname, filtname=None, targetname=None, bs_M
         if res.success:
             plt.plot(np.rad2deg(find_piston[:-1]), ls="--", color="orange", lw=1,
                      label=method[ii] + " minimisation",)
+            plt.legend()
         plt.grid(alpha=0.1)
         plt.ylabel(r"Mean phase [$\degree$]")
         plt.xlabel("# baselines")
-        plt.legend()
         plt.tight_layout()
 
     # 2) fit to the phase slopes using weighted linear regression.
@@ -761,6 +760,12 @@ def extract_bs_mf(cube, filename, maskname, filtname=None, targetname=None, bs_M
     except KeyError:
         seeing = np.nan
 
+    # 12. Compute the absolute oriention (North-up, East-left)
+    # ------------------------------------------------------------------------
+    pa = compute_pa(hdr, display=display, verbose=verbose)
+
+    # 13. Format class output
+    # ------------------------------------------------------------------------
     hdr_new = {"ORIGFILE": orig, "INSTRUME": instrument,
                "NRMNAME": maskname, "PIXELSCL": mf.pixelSize,
                "SEEING": seeing}
@@ -816,6 +821,7 @@ def extract_bs_mf(cube, filename, maskname, filtname=None, targetname=None, bs_M
            "xycoord": mf.xy_coords,
            "hdr": hdr_new,
            'n_holes': n_holes,
+           "pa": pa
            }
 
     t = time.time() - start_time

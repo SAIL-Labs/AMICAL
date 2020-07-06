@@ -1,4 +1,3 @@
-from astropy.io import fits
 from matplotlib import pyplot as plt
 
 import miamis
@@ -40,10 +39,12 @@ bs_t = miamis.extract_bs_mf(cube_t, file_t, targetname='HD142527',
 bs_c = miamis.extract_bs_mf(cube_c, file_c, targetname='HD142695',
                             **params_ami, display=False)
 
-cond_t = checkSeeingCond([bs_t])
-cond_c = checkSeeingCond([bs_c])
+# In case of multiple files for a same target, you can
+# check the seeing condition and select only the good ones.
 
-pa = cond_t['pa'][0]
+# cond_t = checkSeeingCond([bs_t])
+# cond_c = checkSeeingCond([bs_c])
+# plotSeeingCond([cond_t, cond_c], lim_seeing=1)
 
 
 # Calibrate the raw data to get get calibrated V2 and CP
@@ -52,8 +53,8 @@ pa = cond_t['pa'][0]
 cal = miamis.calibrate(bs_t, bs_c)
 
 # Display and save the results as oifits
-miamis.show(cal, true_flag_t3=False, cmax=180, pa=pa)
-s = miamis.save(cal, fake_obj=True, verbose=False, pa=pa)
+miamis.show(cal, true_flag_t3=False, cmax=180, pa=bs_t.pa)
+s = miamis.save(cal, fake_obj=True, verbose=False, pa=bs_t.pa)
 
 # We perform some analysis of the extracted V2 and CP using
 # CANDID package (developped by A. Merand and A. Gallenne).
