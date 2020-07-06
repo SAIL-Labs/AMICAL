@@ -38,7 +38,7 @@ hdu.close()
 # ----------------------------------
 
 #  AMI parameters (refer to the docstrings of `extract_bs_mf` for details)
-params_ami = {"peakmethod": 'fft',
+params_ami = {"peakmethod": 'gauss',
               "bs_MultiTri": False,
               "maskname": "g7",
               "fw_splodge": 0.7,

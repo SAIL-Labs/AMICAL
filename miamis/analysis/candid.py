@@ -2224,11 +2224,11 @@ class Open:
 
         if not fig is None:
             if CONFIG['suptitle']:
-                outout = plt.figure(figsize=(12/1.2,5.5/1.2))
+                outout = plt.figure(fig, figsize=(12/1.2,5.5/1.2))
                 plt.subplots_adjust(left=0.1, right=0.99, bottom=0.1, top=0.78,
                                     wspace=0.2, hspace=0.2)
             else:
-                outout = plt.figure(figsize=(12/1.2,5./1.2))
+                outout = plt.figure(fig, figsize=(12/1.2,5./1.2))
                 plt.subplots_adjust(left=0.1, right=0.99, bottom=0.1, top=0.9,
                                     wspace=0.2, hspace=0.2)
 
@@ -3141,7 +3141,11 @@ class Open:
             self.f3s[m] = sliding_percentile(r, r_f3s[m],
                                                 self.rmax/float(N), 90)
         plt.show(block=False)
-        return
+        
+        res = {'r': r}
+        for m in methods:
+            res[m] = self.detectionLimitResult[m+'_99_M']
+        return res
 
 
 def sliding_percentile(x, y, dx, percentile=50, smooth=True):

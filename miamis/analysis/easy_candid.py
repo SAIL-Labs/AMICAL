@@ -1,15 +1,15 @@
 import numpy as np
+from matplotlib import pyplot as plt
+from miamis.analysis import candid
 from termcolor import cprint
 from uncertainties import ufloat, umath
-
-from miamis.analysis import candid
 
 
 def fit_binary(input_data, step=10, rmin=20, rmax=400, diam=0, obs=['cp', 'v2'],
                doNotFit=['diam*', ], ncore=1, verbose=False):
     """ This function is an user friendly interface between the users of miamis
     pipeline and the CANDID analysis package (https://github.com/amerand/CANDID).
-    
+
     Parameters:
     -----------
     `input_data` {str or list}:
@@ -26,7 +26,7 @@ def fit_binary(input_data, step=10, rmin=20, rmax=400, diam=0, obs=['cp', 'v2'],
         Parameters not fitted (default: ['diam*']),\n
     `verbose` {boolean}:
         print some informations {default: False}.
-        
+
     Outputs:
     --------
     `res` {dict}:
@@ -39,7 +39,8 @@ def fit_binary(input_data, step=10, rmin=20, rmax=400, diam=0, obs=['cp', 'v2'],
 
     o.observables = obs
 
-    o.fitMap(rmax=rmax, rmin=rmin, ncore=ncore,
+    ifig = plt.gcf().number + 1
+    o.fitMap(rmax=rmax, rmin=rmin, ncore=ncore, fig=ifig,
              step=step, addParam={"diam*": diam}, doNotFit=doNotFit, verbose=verbose)
 
     fit = o.bestFit["best"]
@@ -78,7 +79,21 @@ def fit_binary(input_data, step=10, rmin=20, rmax=400, diam=0, obs=['cp', 'v2'],
                      'theta': posang.std_dev,
                      'sep': s.std_dev},
            'chi2': chi2,
-           'nsigma': nsigma
+           'nsigma': nsigma,
+           'p': o.bestFit["best"]
            }
 
     return res  # dict2class(res)
+
+
+def getContrastLimit(input_data, step=10, rmin=20, rmax=400, diam=0, obs=['cp', 'v2'],
+                     fitComp=None, ncore=1):
+    cprint(' | --- Start CANDID contrast limit --- :', 'green')
+    o = candid.Open(input_data)
+    o.observables = obs
+
+    ifig = plt.gcf().number + 1
+    res = o.detectionLimit(fig=ifig, rmin=rmin, rmax=rmax, step=step, drawMaps=True,
+                           fratio=1, methods=['injection', 'Absil'], removeCompanion=fitComp,
+                           ncore=ncore)
+    return res
