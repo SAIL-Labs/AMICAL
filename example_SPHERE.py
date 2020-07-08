@@ -23,7 +23,7 @@ cube_c = selectCleanData(file_c, clip=True,
                          corr_ghost=False,
                          display=True)[0]
 
-#  AMI parameters (refer to the docstrings of `extract_bs_mf` for details)
+#  AMI parameters (refer to the docstrings of `extract_bs` for details)
 params_ami = {"peakmethod": 'gauss',
               "bs_MultiTri": False,
               "maskname": "g7",
@@ -34,10 +34,10 @@ params_ami = {"peakmethod": 'gauss',
 
 # # Extract raw complex observables for the target and the calibrator:
 # # It's the core of the pipeline (amical/mf_pipeline/bispect.py)
-bs_t = amical.extract_bs_mf(cube_t, file_t, targetname='HD142527',
-                            **params_ami, display=True)
-bs_c = amical.extract_bs_mf(cube_c, file_c, targetname='HD142695',
-                            **params_ami, display=False)
+bs_t = amical.extract_bs(cube_t, file_t, targetname='HD142527',
+                         **params_ami, display=True)
+bs_c = amical.extract_bs(cube_c, file_c, targetname='HD142695',
+                         **params_ami, display=False)
 
 # In case of multiple files for a same target, you can
 # check the seeing condition and select only the good ones.

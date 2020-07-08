@@ -627,7 +627,7 @@ def sphere_parang(hdr):
 
 def checkSeeingCond(list_nrm):
     """ Extract the seeing conditions, parang, averaged vis2
-    and cp of a list of nrm classes extracted with extract_bs_mf
+    and cp of a list of nrm classes extracted with extract_bs
     function (bispect.py).
 
     Output

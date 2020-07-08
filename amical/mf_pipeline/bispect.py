@@ -35,8 +35,8 @@ from .idl_function import dblarr, dist, regress_noc
 warnings.filterwarnings("ignore")
 
 
-def extract_bs_mf(cube, filename, maskname, filtname=None, targetname=None, bs_MultiTri=False, n_blocks=0, peakmethod='gauss',
-                  hole_diam=0.8, cutoff=1e-4, fw_splodge=0.7, naive_err=False, n_wl=3, verbose=False, display=True,):
+def extract_bs(cube, filename, maskname, filtname=None, targetname=None, bs_MultiTri=False, n_blocks=0, peakmethod='gauss',
+               hole_diam=0.8, cutoff=1e-4, fw_splodge=0.7, naive_err=False, n_wl=3, verbose=False, display=True,):
     """Compute bispectrum (bs, v2, cp, etc.) from a data cube.
 
     Parameters:
