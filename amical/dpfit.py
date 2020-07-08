@@ -2,9 +2,9 @@
 """
 @author: Anthony Soulain (University of Sydney)
 
---------------------------------------------------------------------
-MIAMIS: Multi-Instruments Aperture Masking Interferometry Software
---------------------------------------------------------------------
+-------------------------------------------------------------------------
+AMICAL: Aperture Masking Interferometry Calibration and Analysis Library
+-------------------------------------------------------------------------
 
 Fitting tools (developped by A. Merand).
 
@@ -218,26 +218,6 @@ def leastsqFit(func, x, params, y, err=None, fitOnly=None,
     return pfix
 
 
-def ramdomParam(fit, N=1):
-    """
-    get a set of randomized parameters (list of dictionnaries) around the best fited value, using a gaussian probability, taking into account the correlations from the covariance matrix.
-
-    fit is the result of leastsqFit (dictionnary)
-    """
-    m = np.array([fit['best'][k] for k in fit['fitOnly']])
-    res = []
-    for k in range(N):
-        p = dict(
-            list(zip(fit['fitOnly'], np.random.multivariate_normal(m, fit['cov']))))
-        p.update({fit['best'][k] for k in list(fit['best'].keys()) if k not in
-                  fit['fitOnly']})
-        res.append(p)
-    if N == 1:
-        return res[0]
-    else:
-        return res
-
-
 def bootstrap(func, x, params, y, err=None, fitOnly=None,
               verbose=False, doNotFit=[], epsfcn=1e-7,
               ftol=1e-5, fullOutput=True, normalizedUncer=True,
@@ -258,33 +238,6 @@ def bootstrap(func, x, params, y, err=None, fitOnly=None,
     for k in range(Nboot):
         s = np.int_(len(x)*np.random.rand(len(x)))
         fits.append(leastsqFit(func, x[s], params, y[s],
-                               err=err, fitOnly=fitOnly, verbose=False,
-                               doNotFit=doNotFit, epsfcn=epsfcn,
-                               ftol=ftol, fullOutput=True,
-                               normalizedUncer=True))
-    return fits
-
-
-def randomize(func, x, params, y, err=None, fitOnly=None,
-              verbose=False, doNotFit=[], epsfcn=1e-7,
-              ftol=1e-5, fullOutput=True, normalizedUncer=True,
-              follow=None, Nboot=None):
-    """
-    bootstraping, called like leastsqFit. returns a list of fits: the first one
-    is the 'normal' one, the Nboot following one are with ramdomization of data. If
-    Nboot is not given, it is set to 10*len(x).
-    """
-    if Nboot is None:
-        Nboot = 10*len(x)
-    # first fit is the "normal" one
-    fits = [leastsqFit(func, x, params, y,
-                       err=err, fitOnly=fitOnly, verbose=False,
-                       doNotFit=doNotFit, epsfcn=epsfcn,
-                       ftol=ftol, fullOutput=True,
-                       normalizedUncer=True)]
-    for k in range(Nboot):
-        s = err*np.random.randn(len(y))
-        fits.append(leastsqFit(func, x, params, y+s,
                                err=err, fitOnly=fitOnly, verbose=False,
                                doNotFit=doNotFit, epsfcn=epsfcn,
                                ftol=ftol, fullOutput=True,
@@ -377,28 +330,3 @@ def _fitFunc(pfit, pfitKeys, x, y, err=None, func=None,
             except Exception:
                 print('')
     return res
-
-
-def _ellParam(sA2, sB2, sAB):
-    """
-    sA2 is the variance of param A
-    sB2 is the variance of param B
-    sAB = rho*sA*sB the diagonal term (rho: correlation)
-
-    returns the semi-major axis, semi-minor axis and orientation (in rad) of the
-    ellipse.
-
-    sMa, sma, a = ellParam(...)
-
-    t = np.linspace(0,2*np.pi,100)
-    X,Y = sMa*np.cos(t), sma*np.sin(t)
-    X,Y = X*np.cos(a)+Y*np.sin(a), Y*np.cos(a)-X*np.sin(a)
-
-    ref: http://www.scribd.com/doc/50336914/Error-Ellipse-2nd
-    """
-    a = np.arctan2(2*sAB, (sB2-sA2))/2
-
-    sMa = np.sqrt(1/2.*(sA2+sB2-np.sqrt((sA2-sB2)**2+4*sAB**2)))
-    sma = np.sqrt(1/2.*(sA2+sB2+np.sqrt((sA2-sB2)**2+4*sAB**2)))
-
-    return sMa, sma, a

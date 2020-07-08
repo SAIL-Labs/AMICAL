@@ -1,3 +1,16 @@
+"""
+@author: Anthony Soulain (University of Sydney)
+
+-------------------------------------------------------------------------
+AMICAL: Aperture Masking Interferometry Calibration and Analysis Library
+-------------------------------------------------------------------------
+
+Function related to data cleaning (ghost, background correction,
+centering, etc.) and data selection (sigma-clipping, centered flux,).
+
+-------------------------------------------------------------------- 
+"""
+
 import numpy as np
 from astropy.io import fits
 from matplotlib import pyplot as plt
@@ -52,8 +65,9 @@ def ApplyPatchGhost(cube, xc, yc, radius=20, dx=0, dy=-200, method='bg'):
 def checkDataCube(cube, clip_fact=0.5, clip=False, verbose=True, display=True):
     """ Check the cleaned data cube using the position of the maximum in the
     fft image (supposed to be zero). If not in zero position, the fram is 
-    rejected.
-
+    rejected. It can apply a sigma-clipping to select only the frames with the
+    highest total fluxes.
+    
     Parameters:
     -----------
     `cube` {array} -- Data cube,\n

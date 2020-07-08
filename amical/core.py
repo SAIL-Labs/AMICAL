@@ -2,13 +2,12 @@
 """
 @author: Anthony Soulain (University of Sydney)
 
---------------------------------------------------------------------
-MIAMIS: Multi-Instruments Aperture Masking Interferometry Software
---------------------------------------------------------------------
+-------------------------------------------------------------------------
+AMICAL: Aperture Masking Interferometry Calibration and Analysis Library
+-------------------------------------------------------------------------
 
-Core function to reduce NRM data. These functions are independant of 
-the used method: mf method from Sydney code and xara method (not 
-implemented yet).
+Core function to reduce NRM data.
+
 -------------------------------------------------------------------- 
 """
 
@@ -292,7 +291,7 @@ def calibrate(res_t, res_c, clip=False, sig_thres=2, apply_phscorr=False, Addind
     else:
         err_scale = 1
 
-    # Quadratic added error due to calibrator dispersion (the average is weightened (see wtmn from miamis.tools)).
+    # Quadratic added error due to calibrator dispersion (the average is weightened (see wtmn from amical.tools)).
     e_vis2_calib = np.sqrt(e_v2_t**2/cmn_v2_c**2 +
                            std_v2_c**2*v2_t**2/cmn_v2_c**4)
     e_cp_calib = np.sqrt(e_cp_t**2 + std_cp_c**2) * err_scale

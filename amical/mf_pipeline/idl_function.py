@@ -2,13 +2,13 @@
 """
 @author: Anthony Soulain (University of Sydney)
 
---------------------------------------------------------------------
-MIAMIS: Multi-Instruments Aperture Masking Interferometry Software
---------------------------------------------------------------------
+-------------------------------------------------------------------------
+AMICAL: Aperture Masking Interferometry Calibration and Analysis Library
+-------------------------------------------------------------------------
 
 Matched filter sub-pipeline method.
 
-All IDL function translated into python.
+All required IDL function translated into python.
 
 -------------------------------------------------------------------- 
 """

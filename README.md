@@ -2,7 +2,7 @@
 
 (**A**perture **M**asking **I**nterferometry **C**alibration and **A**nalysis **L**ibrary)
 
-[![version](http://img.shields.io/badge/MIAMIS-v0.2dev-orange.svg?style=flat)](https://github.com/SydneyAstrophotonicInstrumentationLab/MIAMIS.git)
+[![version](http://img.shields.io/badge/AMICAL-v0.3dev-orange.svg?style=flat)](https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL.git)
 
 ## Install from source (for conda-based systems)
 
@@ -11,11 +11,11 @@ Then, within your Conda env (`conda activate <env_name>`):
 
 ```bash
 # Firstly, clone AMICAL repository on your computer
-git clone https://github.com/SydneyAstrophotonicInstrumentationLab/MIAMIS.git
+git clone https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL.git
 
 cd AMICAL/
 
-# Install MIAMIS
+# Install AMICAL
 pip install .
 ```
 

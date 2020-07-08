@@ -2,11 +2,12 @@
 """
 @author: Anthony Soulain (University of Sydney)
 
---------------------------------------------------------------------
-MIAMIS: Multi-Instruments Aperture Masking Interferometry Software
---------------------------------------------------------------------
+-------------------------------------------------------------------------
+AMICAL: Aperture Masking Interferometry Calibration and Analysis Library
+-------------------------------------------------------------------------
 
 General tools.
+
 --------------------------------------------------------------------
 """
 
