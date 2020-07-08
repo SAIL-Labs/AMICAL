@@ -13,6 +13,7 @@ OIFITS related function.
 
 import datetime
 import os
+from pathlib import Path
 
 import numpy as np
 from astropy import units as u
@@ -352,6 +353,16 @@ def Format_STAINDEX_T3(tab):
     return sta_index
 
 
+def sanitize_oifits_file(oifits_file):
+    assert isinstance(oifits_file, (str, os.PathLike))
+    oifits_file = Path(oifits_file)
+
+    if oifits_file.suffix == '':
+        oifits_file = oifits_file.with_suffix(".oifits")
+
+    return oifits_file
+
+
 def load(filename, target=None, ins=None, mask=None, filtname=None, include_vis=True):
     """[summary]
 
@@ -360,7 +371,8 @@ def load(filename, target=None, ins=None, mask=None, filtname=None, include_vis=
     filename : [type]
         [description]
     """
-    fitsHandler = fits.open(filename)
+    oifits_file = sanitize_oifits_file(filename)
+    fitsHandler = fits.open(oifits_file)
     hdr = fitsHandler[0].header
 
     dic = {}

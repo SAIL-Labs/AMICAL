@@ -105,10 +105,18 @@ def GetWavelength(ins, filtname):
                           'F430': [4.3, 0.01]
                           }
                 }
-    return np.array(dic_filt[ins][filtname]) * 1e-6
+    try:
+        wl = np.array(dic_filt[ins][filtname]) * 1e-6
+    except KeyError:
+        wl = None
+    return wl
 
 
 def GetPixelSize(ins):
     saved_pixel_detector = {'NIRISS': 65.6,
                             'SPHERE': 12.27}
-    return mas2rad(saved_pixel_detector[ins])
+    try:
+        p = mas2rad(saved_pixel_detector[ins])
+    except KeyError:
+        p = np.NaN
+    return p
