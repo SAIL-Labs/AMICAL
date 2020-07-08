@@ -217,7 +217,7 @@ def clean_data(data, isz=None, r1=None, dr=None, edge=100, n_show=0, checkrad=Fa
         return None
 
     cube = []
-    for i in tqdm(range(n_im), ncols=100, desc='Cleaning', leave=True):
+    for i in tqdm(range(n_im), ncols=100, desc='Cleaning', leave=False):
         # img0 = applyMaskApod(data[i], r=int(npix//3))
         img0 = data[i]
         if edge != 0:

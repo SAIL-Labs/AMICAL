@@ -68,6 +68,6 @@ s = miamis.save(cal, fake_obj=True, verbose=False)
 # So we imposed ncore=1 by default (no multiproc), you can
 # try to increase ncore option in fit_binary but it could crash
 # depending on your system (tested on OSX-mojave).
-fit = miamis.fit_binary(s[1], step=50, verbose=False)
+fit = miamis.fit_binary(s[1], step=50, verbose=False, ncore=12)
 
 plt.show(block=True)

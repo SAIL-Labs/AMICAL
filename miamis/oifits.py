@@ -457,7 +457,6 @@ def load(filename, target=None, ins=None, mask=None, filtname=None, include_vis=
 def loadc(filename):
     """ Same as load but provide an easy usable output as a class format (output.v2, or output.cp). """
     dic = load(filename)
-
     res = {}
     # Extract infos
     res['target'] = dic['info']['OBJECT']
