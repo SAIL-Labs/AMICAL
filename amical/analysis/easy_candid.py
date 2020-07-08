@@ -8,7 +8,7 @@ from amical.analysis import candid
 
 def fit_binary(input_data, step=10, rmin=20, rmax=400, diam=0, obs=['cp', 'v2'],
                doNotFit=['diam*', ], ncore=1, verbose=False):
-    """ This function is an user friendly interface between the users of miamis
+    """ This function is an user friendly interface between the users of amical
     pipeline and the CANDID analysis package (https://github.com/amerand/CANDID).
 
     Parameters:

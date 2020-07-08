@@ -188,7 +188,7 @@ def cal2dict(cal, target=None, fake_obj=False, pa=0, del_pa=0, snr=4,
 
 def data2obs(data, use_flag=True, cond_wl=False, cond_uncer=False, rel_max=None, wl_min=None, wl_max=None, verbose=True):
     """
-    Convert and select data from the dict format (miamis.load or miamis.cal2dict).
+    Convert and select data from the dict format (amical.load or amical.cal2dict).
 
     Parameters:
     -----------
@@ -504,7 +504,7 @@ def save(cal, oifits_file=None, fake_obj=False,
 
     `cal` {class}: 
         Class containing all calibrated interferometric variable extracted using
-        calibrate (miamis.core) function,\n
+        calibrate (amical.core) function,\n
     `oifits_file` {str}:
         Name of the oifits file, if None a default name using useful 
         information is used (target, instrument, filter, mask, etc.),\n
@@ -995,13 +995,13 @@ def show(inputList, diffWl=False, vmin=0, vmax=1.05, cmax=180, setlog=False, pa=
     `unit_cp` {str}:
         Unit of the closure phases (default: 'deg'),\n
     `true_flag_v2` {bool}:
-        If inputs are classes from miamis.calibrate, compute the true flag of vis2 
+        If inputs are classes from amical.calibrate, compute the true flag of vis2 
         using snr parameter (default: True).\n
     `true_flag_t3` {bool}:
-        If inputs are classes from miamis.calibrate, compute the true flag of cp 
+        If inputs are classes from amical.calibrate, compute the true flag of cp 
         using snr parameter (default: True),\n
     `snr` {float}:
-        If inputs are classes from miamis.calibrate, use snr param to compute flag,
+        If inputs are classes from amical.calibrate, use snr param to compute flag,
     """
 
     if type(inputList) is not list:
@@ -1016,14 +1016,14 @@ def show(inputList, diffWl=False, vmin=0, vmax=1.05, cmax=180, setlog=False, pa=
     if isclass:
         l_dic = [cal2dict(x, pa=pa, true_flag_v2=true_flag_v2,
                           true_flag_t3=true_flag_t3, snr=snr) for x in inputList]
-        print('\n -- SHOW -- Inputs are classes from miamis.calibrate:')
+        print('\n -- SHOW -- Inputs are classes from amical.calibrate:')
         print('-> (Check true_flag_v2, true_flag_t3 and snr parameters)\n')
     elif type(inputList[0]) is str:
         l_dic = [load(x) for x in inputList]
         print('Inputs are oifits filename.')
     elif type(inputList[0]) is dict:
         l_dic = inputList
-        print('Inputs are dict from miamis.load.')
+        print('Inputs are dict from amical.load.')
 
     # return None
 

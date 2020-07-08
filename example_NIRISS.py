@@ -45,7 +45,7 @@ params_ami = {"peakmethod": 'gauss',
               }
 
 # Extract raw complex observables for the target and the calibrator:
-# It's the core of the pipeline (miamis/mf_pipeline/bispect.py)
+# It's the core of the pipeline (amical/mf_pipeline/bispect.py)
 bs_t = amical.extract_bs_mf(cube_t, file_t, targetname='fakebinary',
                             **params_ami, display=True)
 bs_c = amical.extract_bs_mf(cube_c, file_c, targetname='fakepsf',
@@ -53,7 +53,7 @@ bs_c = amical.extract_bs_mf(cube_c, file_c, targetname='fakepsf',
 
 # Calibrate the raw data to get get calibrated V2 and CP
 # bs_c can be a single calibrator result or a list of calibrator.
-# (see miamis/core.py for details).
+# (see amical/core.py for details).
 cal = amical.calibrate(bs_t, bs_c)
 
 # Display and save the results as oifits

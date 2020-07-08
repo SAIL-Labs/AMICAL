@@ -2,7 +2,7 @@
 .vscode/
 
 # Old version
-miamis/old_core.py
+amical/old_core.py
 
 # System files
 *__pycache__/

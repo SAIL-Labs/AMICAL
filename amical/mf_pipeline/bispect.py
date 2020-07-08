@@ -20,7 +20,7 @@ import warnings
 import numpy as np
 from astropy.io import fits
 from matplotlib import pyplot as plt
-# from miamis.dataProcessing import clean_data
+# from amical.dataProcessing import clean_data
 from amical.getInfosObs import GetMaskPos
 from amical.tools import compute_pa, cov2cor
 from munch import munchify as dict2class
