@@ -21,7 +21,7 @@ pip install .
 
 ## What can AMICAL do for you ?
 
-See [example.py](example.py).
+See [example_NIRISS.py](example_NIRISS.py).
 
 ## Acknowledgements
 
