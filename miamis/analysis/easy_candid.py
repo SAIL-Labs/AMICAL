@@ -1,8 +1,9 @@
 import numpy as np
 from matplotlib import pyplot as plt
-from miamis.analysis import candid
 from termcolor import cprint
 from uncertainties import ufloat, umath
+
+from miamis.analysis import candid
 
 
 def fit_binary(input_data, step=10, rmin=20, rmax=400, diam=0, obs=['cp', 'v2'],
@@ -87,13 +88,13 @@ def fit_binary(input_data, step=10, rmin=20, rmax=400, diam=0, obs=['cp', 'v2'],
 
 
 def getContrastLimit(input_data, step=10, rmin=20, rmax=400, diam=0, obs=['cp', 'v2'],
-                     fitComp=None, ncore=1):
+                     fitComp=None, ncore=1, methods=['injection']):
     cprint(' | --- Start CANDID contrast limit --- :', 'green')
     o = candid.Open(input_data)
     o.observables = obs
 
     ifig = plt.gcf().number + 1
     res = o.detectionLimit(fig=ifig, rmin=rmin, rmax=rmax, step=step, drawMaps=True,
-                           fratio=1, methods=['injection', 'Absil'], removeCompanion=fitComp,
+                           fratio=1, methods=methods, removeCompanion=fitComp,
                            ncore=ncore)
     return res
