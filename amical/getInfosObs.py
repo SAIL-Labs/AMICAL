@@ -10,7 +10,7 @@ Instruments and mask informations.
 -------------------------------------------------------------------- 
 """
 import numpy as np
-from miamis.tools import mas2rad
+from amical.tools import mas2rad
 
 
 def GetMaskPos(ins, mask):

@@ -1,8 +1,8 @@
 from matplotlib import pyplot as plt
 
-import miamis
-from miamis.dataProcessing import selectCleanData
-from miamis.tools import checkSeeingCond, plotSeeingCond
+import amical
+from amical.dataProcessing import selectCleanData
+from amical.tools import checkSeeingCond, plotSeeingCond
 
 plt.close("all")
 
@@ -34,9 +34,9 @@ params_ami = {"peakmethod": 'gauss',
 
 # # Extract raw complex observables for the target and the calibrator:
 # # It's the core of the pipeline (miamis/mf_pipeline/bispect.py)
-bs_t = miamis.extract_bs_mf(cube_t, file_t, targetname='HD142527',
+bs_t = amical.extract_bs_mf(cube_t, file_t, targetname='HD142527',
                             **params_ami, display=True)
-bs_c = miamis.extract_bs_mf(cube_c, file_c, targetname='HD142695',
+bs_c = amical.extract_bs_mf(cube_c, file_c, targetname='HD142695',
                             **params_ami, display=False)
 
 # In case of multiple files for a same target, you can
@@ -50,11 +50,11 @@ bs_c = miamis.extract_bs_mf(cube_c, file_c, targetname='HD142695',
 # Calibrate the raw data to get get calibrated V2 and CP
 # bs_c can be a single calibrator result or a list of calibrator.
 # (see miamis/core.py for details).
-cal = miamis.calibrate(bs_t, bs_c)
+cal = amical.calibrate(bs_t, bs_c)
 
 # Display and save the results as oifits
-miamis.show(cal, true_flag_t3=False, cmax=180, pa=bs_t.pa)
-s = miamis.save(cal, fake_obj=True, verbose=False, pa=bs_t.pa)
+amical.show(cal, true_flag_t3=False, cmax=180, pa=bs_t.pa)
+s = amical.save(cal, fake_obj=True, verbose=False, pa=bs_t.pa)
 
 # We perform some analysis of the extracted V2 and CP using
 # CANDID package (developped by A. Merand and A. Gallenne).
@@ -64,6 +64,6 @@ s = miamis.save(cal, fake_obj=True, verbose=False, pa=bs_t.pa)
 # So we imposed ncore=1 by default (no multiproc), you can
 # try to increase ncore option in fit_binary but it could crash
 # depending on your system (tested on OSX-mojave).
-fit = miamis.fit_binary(s[1], step=20, rmax=150, diam=20, doNotFit=[])
+fit = amical.fit_binary(s[1], step=20, rmax=150, diam=20, doNotFit=[])
 
 plt.show(block=True)

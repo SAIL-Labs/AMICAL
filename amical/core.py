@@ -18,8 +18,8 @@ from astropy.stats import sigma_clip
 from matplotlib import pyplot as plt
 from munch import munchify as dict2class
 
-from miamis.dpfit import leastsqFit
-from miamis.tools import wtmn
+from amical.dpfit import leastsqFit
+from amical.tools import wtmn
 
 
 def v2varfunc(X, parms):

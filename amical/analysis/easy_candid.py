@@ -3,7 +3,7 @@ from matplotlib import pyplot as plt
 from termcolor import cprint
 from uncertainties import ufloat, umath
 
-from miamis.analysis import candid
+from amical.analysis import candid
 
 
 def fit_binary(input_data, step=10, rmin=20, rmax=400, diam=0, obs=['cp', 'v2'],

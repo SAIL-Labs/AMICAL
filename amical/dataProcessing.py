@@ -5,7 +5,7 @@ from matplotlib.colors import PowerNorm
 from termcolor import cprint
 from tqdm import tqdm
 
-from miamis.tools import applyMaskApod, checkRadiusResize, crop_max
+from amical.tools import applyMaskApod, checkRadiusResize, crop_max
 
 
 def ApplyPatchGhost(cube, xc, yc, radius=20, dx=0, dy=-200, method='bg'):

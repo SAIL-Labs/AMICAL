@@ -4,3 +4,4 @@ munch
 scipy
 termcolor
 tqdm
+emcee

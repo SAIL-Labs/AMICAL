@@ -21,10 +21,10 @@ from matplotlib import pyplot as plt
 from munch import munchify as dict2class
 from termcolor import cprint
 
-from miamis.dpfit import leastsqFit
-from miamis.getInfosObs import GetMaskPos, GetPixelSize, GetWavelength
-from miamis.mf_pipeline.idl_function import array_coords, dist
-from miamis.tools import gauss_2d_asym, linear, norm_max, plot_circle
+from amical.dpfit import leastsqFit
+from amical.getInfosObs import GetMaskPos, GetPixelSize, GetWavelength
+from amical.mf_pipeline.idl_function import array_coords, dist
+from amical.tools import gauss_2d_asym, linear, norm_max, plot_circle
 
 
 def index_mask(n_holes, verbose=False):

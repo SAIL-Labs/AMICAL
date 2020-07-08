@@ -1,6 +1,7 @@
-# MIAMIS
+# AMICAL
 
 (**M**ulti-**I**nstruments **A**perture **M**asking **I**nterferometric **S**oftware)
+(**A**perture **M**asking **I**nterferometry **C**alibration and **A**nalysis **L**ibrary)
 
 [![version](http://img.shields.io/badge/MIAMIS-v0.2dev-orange.svg?style=flat)](https://github.com/SydneyAstrophotonicInstrumentationLab/MIAMIS.git)
 
@@ -10,16 +11,16 @@ It is recommended (though not mandatory) to create a separate environment with `
 Then, within your Conda env (`conda activate <env_name>`):
 
 ```bash
-# Firstly, clone MIAMIS repository on your computer
+# Firstly, clone AMICAL repository on your computer
 git clone https://github.com/SydneyAstrophotonicInstrumentationLab/MIAMIS.git
 
-cd MIAMIS/
+cd AMICAL/
 
 # Install MIAMIS
 pip install .
 ```
 
-## What can MIAMIS do for you ?
+## What can AMICAL do for you ?
 
 See [example.py](example.py).
 

@@ -2,11 +2,11 @@
 
 from setuptools import find_packages, setup
 
-project_name = "miamis"
+project_name = "amical"
 
 setup(
     name=project_name,
-    version=0.1,  # __import__(project_name).__version__,
+    version=0.3,  # __import__(project_name).__version__,
     packages=find_packages(),
     author='Anthony Soulain',
     author_email='anthony.soulain@sydney.edu.au.com',
@@ -16,7 +16,7 @@ setup(
         'Topic :: High Angular Resolution Astronomy :: Interferometry',
         'Programming Language :: Python :: 3.7'
     ],
-    install_requires=["matplotlib", "munch", "numpy",
+    install_requires=["matplotlib", "munch", "numpy", "emcee",
                       "astropy", "scipy", "termcolor", "tqdm",
                       "uncertainties", "astroquery"],
 

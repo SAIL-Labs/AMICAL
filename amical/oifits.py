@@ -24,7 +24,7 @@ from matplotlib import pyplot as plt
 from munch import munchify as dict2class
 from termcolor import cprint
 
-from miamis.tools import rad2mas
+from amical.tools import rad2mas
 
 list_color = ['#00a7b5', '#afd1de', '#055c63', '#ce0058', '#8a8d8f', '#f1b2dc']
 
