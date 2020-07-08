@@ -2,7 +2,7 @@ from matplotlib import pyplot as plt
 
 import amical
 from amical.dataProcessing import selectCleanData
-from amical.tools import checkSeeingCond, plotSeeingCond
+# from amical.tools import checkSeeingCond, plotSeeingCond
 
 plt.close("all")
 
@@ -41,7 +41,6 @@ bs_c = amical.extract_bs_mf(cube_c, file_c, targetname='HD142695',
 
 # In case of multiple files for a same target, you can
 # check the seeing condition and select only the good ones.
-
 # cond_t = checkSeeingCond([bs_t])
 # cond_c = checkSeeingCond([bs_c])
 # plotSeeingCond([cond_t, cond_c], lim_seeing=1)
