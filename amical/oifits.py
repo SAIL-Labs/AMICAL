@@ -446,7 +446,6 @@ def load(filename, target=None, ins=None, mask=None, filtname=None, include_vis=
     dic['info'] = {h: hdr[h] for h in hdr}  # {'MJD': mjd,
 
     if 'FILT' not in list(dic['info'].keys()):
-
         if filtname is None:
             print('No filter in info or as input param?')
         else:
@@ -460,9 +459,21 @@ def loadc(filename):
     res = {}
     # Extract infos
     res['target'] = dic['info']['OBJECT']
-    res['calib'] = dic['info']['CALIB']
-    res['seeing'] = dic['info']['SEEING']
-    res['mjd'] = dic['info']['MJD']
+    try:
+        res['calib'] = dic['info']['CALIB']
+    except KeyError:
+        pass
+    try:
+        res['seeing'] = dic['info']['SEEING']
+    except KeyError:
+        pass
+    try:
+        res['mjd'] = dic['info']['MJD']
+    except KeyError:
+        try:
+            res['mjd'] = dic['info']['MJD-OBS']
+        except KeyError:
+            pass
 
     # Extract wavelength
     res['wl'] = dic['OI_WAVELENGTH']['EFF_WAVE']
