@@ -1,6 +1,5 @@
 # AMICAL
 
-(**M**ulti-**I**nstruments **A**perture **M**asking **I**nterferometric **S**oftware)
 (**A**perture **M**asking **I**nterferometry **C**alibration and **A**nalysis **L**ibrary)
 
 [![version](http://img.shields.io/badge/MIAMIS-v0.2dev-orange.svg?style=flat)](https://github.com/SydneyAstrophotonicInstrumentationLab/MIAMIS.git)
