@@ -184,23 +184,10 @@ def make_mf(maskname, instrument, filtname, npix,
         plt.figure(figsize=(6, 5.5))
         plt.title('%s - mask %s' % (instrument, maskname), fontsize=14)
 
-        # xy_coords_tel = list(xy_coords.copy())
-        # xy_coords_tel.append([0, 2.64])
-        # xy_coords_tel.append([1.14315, -1.98])
-        # xy_coords_tel.append([-1.14315, -1.98])
-        # xy_coords_tel.append([2.28631, 0])
-        # xy_coords_tel.append([-2.28631, -1.32])
-
-        # xy_coords_tel = np.array(xy_coords_tel)
         for i in range(xy_coords.shape[0]):
             plt.scatter(xy_coords[i][0], xy_coords[i][1],
                         s=1e2, c='', edgecolors='navy', marker=marker)
             plt.text(xy_coords[i][0]+0.1, xy_coords[i][1]+0.1, i)
-
-        # if instrument == 'NIRISS':
-        #     for i in range(len(xy_coords_tel)):
-        #         plt.scatter(xy_coords_tel[i][0], xy_coords_tel[i][1],
-        #                     s=5.3e3, c='', edgecolors='k', marker=marker)
 
         plt.xlabel('Aperture x-coordinate [m]', fontsize=12)
         plt.ylabel('Aperture y-coordinate [m]', fontsize=12)

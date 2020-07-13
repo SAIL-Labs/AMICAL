@@ -297,7 +297,7 @@ def extract_bs(cube, filename, maskname, filtname=None, targetname=None, bs_Mult
         aveps += ps  # Cumulate ps to perform an average at the end
 
         # Extract complex visibilities of each fringe peak (each indices are
-        # computed using make_mf function above)
+        # computed using make_mf function)
         for j in range(n_baselines):
             pix = List_peak[j][:, 0].astype(
                 int), List_peak[j][:, 1].astype(int)
