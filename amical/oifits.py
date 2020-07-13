@@ -42,7 +42,7 @@ def computeflag(value, sigma, limit=4.):
 
 def cal2dict(cal, target=None, fake_obj=False, pa=0, del_pa=0, snr=4,
              true_flag_v2=True, true_flag_t3=False, include_vis=False,
-             oriented=-1, nfile=1):
+             oriented=-1, nfile=1, ind_hole=None):
     """ Format class containing calibrated data into appropriate dictionnary 
     format to be saved as oifits files.
 
@@ -128,6 +128,13 @@ def cal2dict(cal, target=None, fake_obj=False, pa=0, del_pa=0, snr=4,
     else:
         calib_name = res_c.target
 
+    if ind_hole is not None:
+        cprint('Select only independant CP using common hole #%i.' %
+               ind_hole, 'green')
+        sel_ind_cp = peak1holeCP(cal.raw_t, ind_hole)
+    else:
+        sel_ind_cp = np.arange(len(cal.cp))
+
     dic = {'OI_VIS2': {'VIS2DATA': cal.vis2,
                        'VIS2ERR': cal.e_vis2,
                        'UCOORD': u1,
@@ -141,18 +148,18 @@ def cal2dict(cal, target=None, fake_obj=False, pa=0, del_pa=0, snr=4,
                        'BL': (u1**2+v1**2)**0.5},
            'OI_T3': {'MJD': t.mjd,
                      'INT_TIME': exp_time,
-                     'T3PHI': cal.cp,
-                     'T3PHIERR': cal.e_cp,
+                     'T3PHI': cal.cp[sel_ind_cp],
+                     'T3PHIERR': cal.e_cp[sel_ind_cp],
                      'TIME': 0,
-                     'T3AMP': np.zeros(len(cal.cp)),
-                     'T3AMPERR': np.zeros(len(cal.cp)),
-                     'U1COORD': u1[bs2bl_ix[0, :]],
-                     'V1COORD': v1[bs2bl_ix[0, :]],
-                     'U2COORD': u1[bs2bl_ix[1, :]],
-                     'V2COORD': v1[bs2bl_ix[1, :]],
-                     'STA_INDEX': res_t.closing_tri,
-                     'FLAG': flagCP,
-                     'BL': res_t.bl_cp
+                     'T3AMP': np.zeros(len(cal.cp))[sel_ind_cp],
+                     'T3AMPERR': np.zeros(len(cal.cp))[sel_ind_cp],
+                     'U1COORD': u1[bs2bl_ix[0, :]][sel_ind_cp],
+                     'V1COORD': v1[bs2bl_ix[0, :]][sel_ind_cp],
+                     'U2COORD': u1[bs2bl_ix[1, :]][sel_ind_cp],
+                     'V2COORD': v1[bs2bl_ix[1, :]][sel_ind_cp],
+                     'STA_INDEX': list(np.array(res_t.closing_tri)[sel_ind_cp]),
+                     'FLAG': flagCP[sel_ind_cp],
+                     'BL': res_t.bl_cp[sel_ind_cp]
                      },
            'OI_WAVELENGTH': {'EFF_WAVE': np.array([res_t.wl]),
                              'EFF_BAND': np.array([res_t.e_wl])},
@@ -328,6 +335,19 @@ def data2obs(data, use_flag=True, cond_wl=False, cond_uncer=False, rel_max=None,
             print(r'-> Restriction on uncertainties: %s < %2.1f %%' %
                   (chr(949), rel_max))
     return Obs
+
+
+def peak1holeCP(bs, ihole=0):
+    """ Get the indices of each CP including the given hole."""
+    bs2bl_ix = bs.bs2bl_ix
+    bl2h_ix = bs.bl2h_ix
+    sel_ind = []
+    for i, x in enumerate(bs2bl_ix.T):
+        cpi = [bl2h_ix.T[y] for y in x]
+        if ((ihole in cpi[0]) or (ihole in cpi[1]) or (ihole in cpi[2])):
+            sel_ind.append(i)
+    sel_ind = np.array(sel_ind)
+    return sel_ind
 
 
 def Format_STAINDEX_V2(tab):
@@ -513,7 +533,7 @@ def loadc(filename):
 
 
 def save(cal, oifits_file=None, fake_obj=False,
-         pa=0, include_vis=False,
+         pa=0, include_vis=False, ind_hole=None,
          true_flag_v2=True, true_flag_t3=False, snr=4,
          datadir='Saveoifits/', nfile=1, verbose=False):
     """
@@ -528,6 +548,10 @@ def save(cal, oifits_file=None, fake_obj=False,
     `cal` {class}: 
         Class containing all calibrated interferometric variable extracted using
         calibrate (amical.core) function,\n
+    `ind_hole` {int}:
+        By default, ind_hole is None, all the CP are considered ncp = N(N-1)(N-2)/6. If 
+        ind_hole is set, save only the independant CP including the given hole 
+        ncp = (N-1)(N-2)/2.\n
     `oifits_file` {str}:
         Name of the oifits file, if None a default name using useful 
         information is used (target, instrument, filter, mask, etc.),\n
@@ -560,13 +584,14 @@ def save(cal, oifits_file=None, fake_obj=False,
     """
 
     if cal is None:
-        cprint('\nError NRMtoOifits2 : Wrong data format!', on_color='on_red')
+        cprint('\nError save : Wrong data format!', on_color='on_red')
         return None
 
     if type(cal) != dict:
         dic = cal2dict(cal, pa=pa, include_vis=include_vis,
                        fake_obj=fake_obj, nfile=nfile,
-                       true_flag_v2=true_flag_v2, true_flag_t3=true_flag_t3)
+                       true_flag_v2=true_flag_v2, true_flag_t3=true_flag_t3,
+                       ind_hole=ind_hole)
     else:
         dic = cal.copy()
 
@@ -909,7 +934,6 @@ def save(cal, oifits_file=None, fake_obj=False,
         print('-> Including OI T3 table...')
 
     data = dic['OI_T3']
-
     try:
         check_oi = type(float(data['MJD']))
     except TypeError:
@@ -929,7 +953,6 @@ def save(cal, oifits_file=None, fake_obj=False,
         intTime = data['INT_TIME']
 
     staIndex = Format_STAINDEX_T3(data['STA_INDEX'])
-
     hdu = fits.BinTableHDU.from_columns(fits.ColDefs((
         fits.Column(name='TARGET_ID', format='1I', array=targetId),
         fits.Column(name='TIME', format='1D', unit='SECONDS', array=time),
@@ -999,7 +1022,7 @@ def ApplyFlag(dic1, unit='arcsec'):
     return U, V, bmax, V2, e_V2, cp, e_cp, sp_freq_vis, sp_freq_cp, wl[0], dic1['info']['FILT']
 
 
-def show(inputList, diffWl=False, vmin=0, vmax=1.05, cmax=180, setlog=False, pa=0,
+def show(inputList, diffWl=False, ind_hole=None, vmin=0, vmax=1.05, cmax=180, setlog=False, pa=0,
          unit='arcsec', unit_cp='deg', snr=3, true_flag_v2=True, true_flag_t3=False):
     """ Show oifits data of a multiple dataset (loaded with oifits.load or oifits filename).
 
@@ -1007,6 +1030,10 @@ def show(inputList, diffWl=False, vmin=0, vmax=1.05, cmax=180, setlog=False, pa=
     -----------
     `diffWl` {bool}:
         If True, differentiate the file (wavelenghts) by color,\n
+    `ind_hole` {int}:
+        By default, ind_hole is None, all the CP are considered ncp = N(N-1)(N-2)/6. If 
+        ind_hole is set, show only the independant CP including the given hole 
+        ncp = (N-1)(N-2)/2.\n
     `vmin`, `vmax` {float}:
         Minimum and maximum visibilities (default: 0, 1.05),\n
     `cmax` {float}:
@@ -1037,7 +1064,7 @@ def show(inputList, diffWl=False, vmin=0, vmax=1.05, cmax=180, setlog=False, pa=
         isclass = False
 
     if isclass:
-        l_dic = [cal2dict(x, pa=pa, true_flag_v2=true_flag_v2,
+        l_dic = [cal2dict(x, pa=pa, true_flag_v2=true_flag_v2, ind_hole=ind_hole,
                           true_flag_t3=true_flag_t3, snr=snr) for x in inputList]
         print('\n -- SHOW -- Inputs are classes from amical.calibrate:')
         print('-> (Check true_flag_v2, true_flag_t3 and snr parameters)\n')
