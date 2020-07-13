@@ -10,10 +10,11 @@ Instruments and mask informations.
 -------------------------------------------------------------------- 
 """
 import numpy as np
+
 from amical.tools import mas2rad
 
 
-def GetMaskPos(ins, mask):
+def GetMaskPos(ins, mask, first=0):
     """ Return dictionnary containning saved informations about masks. """
 
     off = 0.3
@@ -81,7 +82,14 @@ def GetMaskPos(ins, mask):
                                         [0, -3.04]
                                         ])}
     }
-    return dic_mask[ins][mask]
+
+    xycoords = dic_mask[ins][mask]
+    nrand = [first]
+    for x in np.arange(len(xycoords)):
+        if x not in nrand:
+            nrand.append(x)
+    xycoords_sel = xycoords[nrand]
+    return xycoords_sel
 
 
 def GetWavelength(ins, filtname):
