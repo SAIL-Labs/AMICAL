@@ -34,7 +34,7 @@ hdu.close()
 
 # ----------------------------------
 # Additionnal cleaning step is required here for
-# groundbased observations.
+# groundbased observations (see example_SPHERE.py).
 # ----------------------------------
 
 #  AMI parameters (refer to the docstrings of `extract_bs` for details)
@@ -51,7 +51,7 @@ bs_t = amical.extract_bs(cube_t, file_t, targetname='fakebinary',
 bs_c = amical.extract_bs(cube_c, file_c, targetname='fakepsf',
                          **params_ami, display=False)
 
-# Calibrate the raw data to get get calibrated V2 and CP
+# Calibrate the raw data to get calibrated V2 and CP.
 # bs_c can be a single calibrator result or a list of calibrator.
 # (see amical/core.py for details).
 cal = amical.calibrate(bs_t, bs_c)
@@ -64,7 +64,7 @@ s = amical.save(cal, fake_obj=True, verbose=False)
 # CANDID package (developped by A. Merand and A. Gallenne).
 
 # WARNING: CANDID uses multiprocessing to compute the grid, and
-# it appeared to be instable in the last version of OSX catalina+
+# it appeared to be unstable in the last version of OSX catalina+
 # So we imposed ncore=1 by default (no multiproc), you can
 # try to increase ncore option in fit_binary but it could crash
 # depending on your system (tested on OSX-mojave).
