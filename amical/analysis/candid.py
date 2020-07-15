@@ -1992,7 +1992,7 @@ class Open:
         #     print('!!! I expect a dict!')
         return
 
-    def fitMap(self, step=None,  fig=1, addCompanion=None, ncore=1,
+    def fitMap(self, step=None, fig=1, addCompanion=None, ncore=1,
                removeCompanion=None, rmin=None, rmax=None, fratio=2.0,
                doNotFit=[], addParam={}, beta=1.0, showNmin=1, verbose=False):
         """
@@ -2179,46 +2179,6 @@ class Open:
             f['dist'] = np.sqrt((f['init']['x']-f['best']['x'])**2 +
                                 (f['init']['y']-f['best']['y'])**2)
 
-        if False:
-            plt.close(99)
-            plt.figure(99)
-            Rp = [np.sqrt(f['init']['x']**2+f['init']['y']**2)
-                  for f in self.allFits]
-            Rp = np.array(Rp)
-            Rf = [np.sqrt(f['best']['x']**2+f['best']['y']**2)
-                  for f in self.allFits]
-            Rf = np.array(Rf)
-            D = [f['dist'] for f in self.allFits]
-            D = np.array(D)
-            # -- dist to closest minimum
-            D2c = []
-            for f in self.allFits:
-                d = 1e6
-                for g in self.allFits:
-                    tmp = (f['best']['x']-g['best']['x'])**2 + \
-                          (f['best']['y']-g['best']['y'])**2
-                    if tmp > 0.5**2 and tmp < d:
-                        d = tmp
-                D2c.append(np.sqrt(d))
-            D2c = np.array(D2c)
-
-            mD, mD2c = [], []
-            for i, r in enumerate(R):
-                mD2c.append(np.median(D2c[np.abs(Rf-r) <= np.gradient(R)[i]]))
-                mD.append(np.median(D[np.abs(Rp-r) <= np.gradient(R)[i]]))
-
-            C2 = [f['chi2'] for f in self.allFits]
-            plt.plot(Rp, D, 'xr', label='fit displacement', alpha=0.5)
-            plt.plot(Rf, D2c, '+b', label='dist. to closest min')
-
-            plt.plot(R, np.gradient(R), '-k', label='grid pitch')
-            plt.plot(R, np.gradient(R)/2, '--k', label='grid pitch/2')
-            plt.plot(R, mD, '-r', label='median displ.', linewidth=3)
-            plt.plot(R, mD2c, '-b', label='median dist', linewidth=3)
-            plt.xlabel('radial position mas')
-            plt.ylabel('mas')
-            plt.legend()
-
         # -- count number of unique minima, start with first one, add N sigma:
         allMin = [self.allFits[0]]
         allMin[0]['nsigma'] = _nSigmas(
@@ -2369,11 +2329,11 @@ class Open:
 
         if not fig is None:
             if CONFIG['suptitle']:
-                outout = plt.figure(fig, figsize=(12/1.2, 5.5/1.2))
+                outout = plt.figure(figsize=(12/1.2, 5.5/1.2))
                 plt.subplots_adjust(left=0.1, right=0.99, bottom=0.1, top=0.78,
                                     wspace=0.2, hspace=0.2)
             else:
-                outout = plt.figure(fig, figsize=(12/1.2, 5./1.2))
+                outout = plt.figure(figsize=(12/1.2, 5./1.2))
                 plt.subplots_adjust(left=0.1, right=0.99, bottom=0.1, top=0.9,
                                     wspace=0.2, hspace=0.2)
 
@@ -3030,8 +2990,8 @@ class Open:
                                              and c[0].split(';')[1] in self.instruments,
                                              self._chi2Data)), param)
         # print(_meas.shape)
-        plt.close(fig)
-        plt.figure(fig, figsize=(7, 7))
+        # plt.close(fig)
+        plt.figure(figsize=(7, 7))
         plt.clf()
         N = len(set(_types))
         for i, t in enumerate(set(_types)):  # for each observables
@@ -3257,7 +3217,7 @@ class Open:
             vmin, vmax = None, None
             plt.close(fig)
             if CONFIG['suptitle']:
-                plt.figure(fig, figsize=(8, 7))
+                plt.figure(figsize=(8, 7))
                 plt.subplots_adjust(top=0.85, bottom=0.08,
                                     left=0.08, right=0.97)
                 title = "CANDID: flux ratio for 3$\sigma$ detection, "
@@ -3323,7 +3283,7 @@ class Open:
             plt.ylim(plt.ylim()[1], plt.ylim()[0])  # -- rreverse plot
             plt.legend(loc='upper center')
 
-            plt.xlabel('Radius (mas)')
+            plt.xlabel('Separation [mas]')
             plt.grid()
 
         # -- store radial profile of detection limit:
@@ -3336,6 +3296,8 @@ class Open:
         res = {'r': r}
         for m in methods:
             res[m] = self.detectionLimitResult[m+'_99_M']
+            
+        res['cr_limit'] = self.detectionLimitResult[m+'_99_M']
         return res
 
 
