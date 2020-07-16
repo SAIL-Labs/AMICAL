@@ -31,6 +31,7 @@ from tqdm import tqdm
 from .ami_function import (GivePeakInfo2d, bs_multiTriangle, index_mask,
                            make_mf, phase_chi2, tri_pix)
 from .idl_function import dblarr, dist, regress_noc
+import sys
 
 warnings.filterwarnings("ignore")
 
@@ -282,7 +283,7 @@ def extract_bs(cube, filename, maskname, filtname=None, targetname=None, bs_Mult
         print("\nCalculating V^2 and BS...")
 
     # Start to go through the cube
-    for i in tqdm(range(n_ps), ncols=100, desc='Extracting in the cube', leave=False):
+    for i in tqdm(range(n_ps), ncols=100, desc='Extracting in the cube', leave=False, file=sys.stdout):
         ft_frame = ft_arr[i]
         ps = np.abs(ft_frame) ** 2
 
