@@ -12,8 +12,8 @@ datadir = 'Simulated_NRMdata/'
 # - < λ/D: sep = 147.7, theta = 46.6 #
 # - > λ/D: sep = 302.0, theta = 260.9
 
-sep = 302.0  # binary separation [mas]
-theta = 260.9  # position angle (pa) [deg]
+sep = 147.7  # binary separation [mas]
+theta = 46.6  # position angle (pa) [deg]
 dm = 6.0  # contrast ratio [mag]
 
 file_t = datadir + \
@@ -38,16 +38,16 @@ hdu.close()
 # ----------------------------------
 
 #  AMI parameters (refer to the docstrings of `extract_bs` for details)
-params_ami = {"peakmethod": 'gauss',
+params_ami = {"peakmethod": 'fft',
               "bs_MultiTri": False,
               "maskname": "g7",
               "fw_splodge": 0.7,
               }
 
 # Extract raw complex observables for the target and the calibrator:
-# It's the core of the pipeline (amical/mf_pipeline/bispect.py)
+# It's the core of the pipeline(amical/mf_pipeline/bispect.py)
 bs_t = amical.extract_bs(cube_t, file_t, targetname='fakebinary',
-                         **params_ami, display=True)
+                         **params_ami)
 bs_c = amical.extract_bs(cube_c, file_c, targetname='fakepsf',
                          **params_ami, display=False)
 
@@ -57,18 +57,7 @@ bs_c = amical.extract_bs(cube_c, file_c, targetname='fakepsf',
 cal = amical.calibrate(bs_t, bs_c)
 
 # Display and save the results as oifits
-amical.show(cal, true_flag_t3=False, cmax=180)
-s = amical.save(cal, fake_obj=True, verbose=False)
-
-# We perform some analysis of the extracted V2 and CP using
-# CANDID package (developped by A. Merand and A. Gallenne).
-
-# WARNING: CANDID uses multiprocessing to compute the grid, and
-# it appeared to be unstable in the last version of OSX catalina+
-# So we imposed ncore=1 by default (no multiproc), you can
-# try to increase ncore option in fit_binary but it could crash
-# depending on your system (tested on OSX-mojave).
-if False:
-    fit = amical.fit_binary(s[1], step=50, verbose=False, ncore=1)
+amical.show(cal)
+amical.save(cal, fake_obj=True)
 
 plt.show(block=True)

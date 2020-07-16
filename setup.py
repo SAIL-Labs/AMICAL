@@ -18,6 +18,7 @@ setup(
     ],
     install_requires=["matplotlib", "munch", "numpy", "emcee",
                       "astropy", "scipy", "termcolor", "tqdm",
-                      "uncertainties", "astroquery"],
+                      "uncertainties", "astroquery",
+                      "corner"],
 
 )

@@ -1714,11 +1714,11 @@ class Open:
 
         if ncore == 1:
             if verbose:
-                print('single processor', end=' ')
+                print('(single processor)', end=' ')
             return None
         else:
             if verbose:
-                print(' [Pooling %d processors]' % ncore, end='')
+                print('(Pooling %d processors):' % ncore, end=' ')
             return multiprocessing.Pool(ncore)
 
     def _estimateRunTime(self, function, params, ncore=1):
@@ -1735,7 +1735,7 @@ class Open:
                 p.apply_async(function, m)
             p.close()
             p.join()
-        return (time.time()-t)/len(params)
+        return (time.time()-t)/len(params)/2
 
     def _cb_chi2Map(self, r):
         """
@@ -1746,14 +1746,12 @@ class Open:
             # -- completed / to be computed
             f = np.sum(self.mapChi2 > 0)/float(np.sum(self.mapChi2 >= 0))
             if f > self._prog and CONFIG['progress bar']:
-                n = int(50*f)
-                print('\033[F', end=' ')
-                print('|'+'='*(n+1)+' '*(50-n)+'|', end=' ')
-                print('%2d%%' % (int(100*f)), end=' ')
+                n = int(60*f)
                 self._progTime[1] = time.time()
-                print('%3d s remaining' %
-                      (int((self._progTime[1]-self._progTime[0])/f*(1-f))))
-                self._prog = max(self._prog+0.01, f+0.01)
+                rmtime = int((self._progTime[1]-self._progTime[0])/f*(1-f))
+                sys.stdout.write("\r [%-60s] %d%%, %5d s (remaining)" % ('='*n, int(100*f), rmtime))
+                sys.stdout.flush()
+                self._prog = max(self._prog+0.0, f+0.0)
         except:
             print('did not work')
         return
@@ -1976,23 +1974,21 @@ class Open:
         if '_k' in r.keys():
             self.allFits[r['_k']] = r
             f = np.sum([0 if a == {} else 1 for a in self.allFits]) / \
-                float(self.Nfits)
-            if f > self._prog and CONFIG['progress bar']:
+                (float(self.Nfits)-20)
+            if f >= self._prog and CONFIG['progress bar']:
                 n = int(60*f)
-                print('\033[F', end=' ')
-                print('|'+'='*(n+1)+' '*(60-n)+'|', end=' ')
-                print('%3d%%' % (int(100*f)), end=' ')
                 self._progTime[1] = time.time()
                 rmtime = int((self._progTime[1]-self._progTime[0])/f*(1-f))
-                print('%5d s (remaining)' % (rmtime))
-                self._prog = max(self._prog+0.01, f+0.01)
+                sys.stdout.write("\r [%-60s] %d%%, %5d s (remaining)" % ('='*n, int(100*f), rmtime))
+                sys.stdout.flush()
+                self._prog = max(self._prog+0.0, f)
         else:
             print('!!! r should have key "_k"')
         # except:
         #     print('!!! I expect a dict!')
         return
 
-    def fitMap(self, step=None,  fig=1, addCompanion=None, ncore=1,
+    def fitMap(self, step=None, fig=1, addCompanion=None, ncore=1,
                removeCompanion=None, rmin=None, rmax=None, fratio=2.0,
                doNotFit=[], addParam={}, beta=1.0, showNmin=1, verbose=False):
         """
@@ -2040,7 +2036,7 @@ class Open:
 
         try:
             N = int(np.ceil(2*self.rmax/step))
-        except:
+        except Exception:
             print('ERROR: you should define rmax first!')
 
         #self.rmin = max(step, self.rmin)
@@ -2100,7 +2096,7 @@ class Open:
         self._progTime = [time.time(), time.time()]
         self.Nfits = len(XY)
 
-        print(' | Grid Fitting on %d starting points:' % (len(XY)), end=' ')
+        print(' | Grid Fitting on %d starting points' % (len(XY)), end=' ')
         # -- estimate how long it will take, in two passes
         if not CONFIG['long exec warning'] is None:
             params, Ntest = [], 2*max(multiprocessing.cpu_count()-1, 1)
@@ -2113,9 +2109,9 @@ class Open:
                     tmp['dwavel;'+_k] = self.dwavel[_k]
                 params.append((tmp, self._chi2Data, self.observables,
                                self.instruments))
-            est = self._estimateRunTime(_fitFunc, params, ncore=ncore)
+            est = 1.5*self._estimateRunTime(_fitFunc, params, ncore=ncore)
             est *= self.Nfits
-            print('... (it should take about %d seconds)' % (int(est)))
+            print('... (it should take about %d seconds)\n' % (int(est)), end=' ')
             if not CONFIG['long exec warning'] is None and\
                     est > CONFIG['long exec warning']:
                 print(" > WARNING: this will take too long. ")
@@ -2128,7 +2124,7 @@ class Open:
                 return
         else:
             print('')
-        print('')
+        # print('')
         # -- parallel on N-1 cores
         p = self._pool(ncore=ncore)
         k = 0
@@ -2159,7 +2155,7 @@ class Open:
             p.close()
             p.join()
         if True:
-            print(' | Grid of fit took %.1f seconds' % (time.time()-t0))
+            print('\n | Grid of fit took %.1f seconds' % (time.time()-t0))
         if verbose:
             print(' | Computing map of interpolated Chi2 minima')
 
@@ -2178,46 +2174,6 @@ class Open:
             # -- distance from start to finish of the fit
             f['dist'] = np.sqrt((f['init']['x']-f['best']['x'])**2 +
                                 (f['init']['y']-f['best']['y'])**2)
-
-        if False:
-            plt.close(99)
-            plt.figure(99)
-            Rp = [np.sqrt(f['init']['x']**2+f['init']['y']**2)
-                  for f in self.allFits]
-            Rp = np.array(Rp)
-            Rf = [np.sqrt(f['best']['x']**2+f['best']['y']**2)
-                  for f in self.allFits]
-            Rf = np.array(Rf)
-            D = [f['dist'] for f in self.allFits]
-            D = np.array(D)
-            # -- dist to closest minimum
-            D2c = []
-            for f in self.allFits:
-                d = 1e6
-                for g in self.allFits:
-                    tmp = (f['best']['x']-g['best']['x'])**2 + \
-                          (f['best']['y']-g['best']['y'])**2
-                    if tmp > 0.5**2 and tmp < d:
-                        d = tmp
-                D2c.append(np.sqrt(d))
-            D2c = np.array(D2c)
-
-            mD, mD2c = [], []
-            for i, r in enumerate(R):
-                mD2c.append(np.median(D2c[np.abs(Rf-r) <= np.gradient(R)[i]]))
-                mD.append(np.median(D[np.abs(Rp-r) <= np.gradient(R)[i]]))
-
-            C2 = [f['chi2'] for f in self.allFits]
-            plt.plot(Rp, D, 'xr', label='fit displacement', alpha=0.5)
-            plt.plot(Rf, D2c, '+b', label='dist. to closest min')
-
-            plt.plot(R, np.gradient(R), '-k', label='grid pitch')
-            plt.plot(R, np.gradient(R)/2, '--k', label='grid pitch/2')
-            plt.plot(R, mD, '-r', label='median displ.', linewidth=3)
-            plt.plot(R, mD2c, '-b', label='median dist', linewidth=3)
-            plt.xlabel('radial position mas')
-            plt.ylabel('mas')
-            plt.legend()
 
         # -- count number of unique minima, start with first one, add N sigma:
         allMin = [self.allFits[0]]
@@ -2369,11 +2325,11 @@ class Open:
 
         if not fig is None:
             if CONFIG['suptitle']:
-                outout = plt.figure(fig, figsize=(12/1.2, 5.5/1.2))
+                outout = plt.figure(figsize=(12/1.2, 5.5/1.2))
                 plt.subplots_adjust(left=0.1, right=0.99, bottom=0.1, top=0.78,
                                     wspace=0.2, hspace=0.2)
             else:
-                outout = plt.figure(fig, figsize=(12/1.2, 5./1.2))
+                outout = plt.figure(figsize=(12/1.2, 5./1.2))
                 plt.subplots_adjust(left=0.1, right=0.99, bottom=0.1, top=0.9,
                                     wspace=0.2, hspace=0.2)
 
@@ -3030,8 +2986,8 @@ class Open:
                                              and c[0].split(';')[1] in self.instruments,
                                              self._chi2Data)), param)
         # print(_meas.shape)
-        plt.close(fig)
-        plt.figure(fig, figsize=(7, 7))
+        # plt.close(fig)
+        plt.figure(figsize=(7, 7))
         plt.clf()
         N = len(set(_types))
         for i, t in enumerate(set(_types)):  # for each observables
@@ -3102,14 +3058,12 @@ class Open:
             # -- completed / to be computed
             f = np.sum(self.f3s > 0)/float(np.sum(self.f3s >= 0))
             if f > self._prog and CONFIG['progress bar']:
-                n = int(50*f)
-                print('\033[F', end=' ')
-                print('|'+'='*(n+1)+' '*(50-n)+'|', end=' ')
-                print('%2d%%' % (int(100*f)), end=' ')
+                n = int(60*f)
                 self._progTime[1] = time.time()
-                print('%3d s remaining' %
-                      (int((self._progTime[1]-self._progTime[0])/f*(1-f))))
-                self._prog = max(self._prog+0.01, f+0.01)
+                rmtime = int((self._progTime[1]-self._progTime[0])/f*(1-f))
+                sys.stdout.write("\r [%-60s] %d%%, %5d s (remaining)" % ('='*n, int(100*f), rmtime))
+                sys.stdout.flush()
+                self._prog = max(self._prog+0.0, f+0.0)
         except:
             print('did not work')
         return
@@ -3215,7 +3169,6 @@ class Open:
         self.allf3s = {}  # flux at 3 sigma (%)
         for method in methods:
             print(" | Method:", method)
-            print('')
             self.f3s = np.zeros((N, N))
             self.f3s[allX[None, :]**2+allY[:, None]**2 > self.rmax**2] = -1
             self.f3s[allX[None, :]**2+allY[:, None]**2 < self.rmin**2] = -1
@@ -3251,13 +3204,13 @@ class Open:
         X, Y = np.meshgrid(allX, allY)
         vmin = min([np.min(self.allf3s[m]) for m in methods]),
         vmax = max([np.max(self.allf3s[m]) for m in methods]),
-
+        print('')
         if drawMaps and not fig is None:
             # -- draw the detection maps
             vmin, vmax = None, None
             plt.close(fig)
             if CONFIG['suptitle']:
-                plt.figure(fig, figsize=(8, 7))
+                plt.figure(figsize=(8, 7))
                 plt.subplots_adjust(top=0.85, bottom=0.08,
                                     left=0.08, right=0.97)
                 title = "CANDID: flux ratio for 3$\sigma$ detection, "
@@ -3323,7 +3276,7 @@ class Open:
             plt.ylim(plt.ylim()[1], plt.ylim()[0])  # -- rreverse plot
             plt.legend(loc='upper center')
 
-            plt.xlabel('Radius (mas)')
+            plt.xlabel('Separation [mas]')
             plt.grid()
 
         # -- store radial profile of detection limit:
@@ -3336,6 +3289,8 @@ class Open:
         res = {'r': r}
         for m in methods:
             res[m] = self.detectionLimitResult[m+'_99_M']
+            
+        res['cr_limit'] = self.detectionLimitResult[m+'_99_M']
         return res
 
 

@@ -53,16 +53,6 @@ cal = amical.calibrate(bs_t, bs_c)
 
 # Display and save the results as oifits
 amical.show(cal, true_flag_t3=False, cmax=180, pa=bs_t.pa)
-s = amical.save(cal, fake_obj=True, verbose=False, pa=bs_t.pa)
-
-# We perform some analysis of the extracted V2 and CP using
-# CANDID package (developped by A. Merand and A. Gallenne).
-
-# WARNING: CANDID uses multiprocessing to compute the grid, and
-# it appeared to be instable in the last version of OSX catalina+
-# So we imposed ncore=1 by default (no multiproc), you can
-# try to increase ncore option in fit_binary but it could crash
-# depending on your system (tested on OSX-mojave).
-fit = amical.fit_binary(s[1], step=20, rmax=150, diam=20, doNotFit=[])
+amical.save(cal, fake_obj=True, verbose=False, pa=bs_t.pa)
 
 plt.show(block=True)

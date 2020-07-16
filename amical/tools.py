@@ -460,8 +460,9 @@ def compute_pa(hdr, verbose=False, display=False):
     nframe = hdr['NAXIS3']
     instrument = hdr['INSTRUME']
     if instrument not in list(list_fct_pa.keys()):
-        cprint('Warning: %s not in known pa computation -> set to zero.\n' %
-               instrument, 'green')
+        if verbose:
+            cprint('Warning: %s not in known pa computation -> set to zero.\n' %
+                   instrument, 'green')
         pa_exist = False
         l_pa = np.zeros(nframe)
     else:

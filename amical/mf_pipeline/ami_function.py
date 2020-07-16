@@ -291,7 +291,7 @@ def make_mf(maskname, instrument, filtname, npix,
 
             for j in range(n_wl):
                 xyh = xy_coords2[bl2h_ix[1, i], :]/wl[j]*pixelSize * \
-                    npix + npix//2 
+                    npix + npix//2
                 delta = xyh-np.floor(xyh)
                 ap1 = np.zeros([npix, npix])
                 x1 = int(xyh[1])
@@ -585,8 +585,7 @@ def GivePeakInfo2d(mf, n_baselines, dim1, dim2):
         peak = [[int(l_y[k]), int(l_x[k]), g[k]] for k in range(len(l_x))]
 
         List_peak.append(np.array(peak))
-
-    return np.array(List_peak)
+    return np.array(List_peak, dtype=object)
 
 
 def clos_unique(closing_tri_pix):
@@ -832,8 +831,8 @@ def find_bad_holes(res_c, n_holes, bl2h_ix, bmax=6, verbose=False, display=False
         plt.grid(alpha=.1)
         plt.legend()
         plt.xlim(0, xm.max()/1e6)
-        plt.ylabel('$\log(V^2)$ (calibrator)')
-        plt.xlabel('Sp. Freq. [M$\lambda$]')
+        plt.ylabel(r'$\log(V^2)$ (calibrator)')
+        plt.xlabel(r'Sp. Freq. [M$\lambda$]')
         plt.tight_layout()
 
     bad_holes = []
