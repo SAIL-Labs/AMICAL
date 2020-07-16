@@ -1974,7 +1974,7 @@ class Open:
         if '_k' in r.keys():
             self.allFits[r['_k']] = r
             f = np.sum([0 if a == {} else 1 for a in self.allFits]) / \
-                (float(self.Nfits)-20)
+                (float(self.Nfits))
             if f >= self._prog and CONFIG['progress bar']:
                 n = int(60*f)
                 self._progTime[1] = time.time()
@@ -2109,7 +2109,7 @@ class Open:
                     tmp['dwavel;'+_k] = self.dwavel[_k]
                 params.append((tmp, self._chi2Data, self.observables,
                                self.instruments))
-            est = 1.5*self._estimateRunTime(_fitFunc, params, ncore=ncore)
+            est = self._estimateRunTime(_fitFunc, params, ncore=ncore)
             est *= self.Nfits
             print('... (it should take about %d seconds)\n' % (int(est)), end=' ')
             if not CONFIG['long exec warning'] is None and\
