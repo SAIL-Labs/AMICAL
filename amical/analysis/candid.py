@@ -1714,11 +1714,11 @@ class Open:
 
         if ncore == 1:
             if verbose:
-                print('single processor', end=' ')
+                print('(single processor)', end=' ')
             return None
         else:
             if verbose:
-                print(' [Pooling %d processors]' % ncore, end='')
+                print('(Pooling %d processors):' % ncore, end=' ')
             return multiprocessing.Pool(ncore)
 
     def _estimateRunTime(self, function, params, ncore=1):
@@ -1735,7 +1735,7 @@ class Open:
                 p.apply_async(function, m)
             p.close()
             p.join()
-        return (time.time()-t)/len(params)
+        return (time.time()-t)/len(params)/2
 
     def _cb_chi2Map(self, r):
         """
@@ -1746,14 +1746,12 @@ class Open:
             # -- completed / to be computed
             f = np.sum(self.mapChi2 > 0)/float(np.sum(self.mapChi2 >= 0))
             if f > self._prog and CONFIG['progress bar']:
-                n = int(50*f)
-                print('\033[F', end=' ')
-                print('|'+'='*(n+1)+' '*(50-n)+'|', end=' ')
-                print('%2d%%' % (int(100*f)), end=' ')
+                n = int(60*f)
                 self._progTime[1] = time.time()
-                print('%3d s remaining' %
-                      (int((self._progTime[1]-self._progTime[0])/f*(1-f))))
-                self._prog = max(self._prog+0.01, f+0.01)
+                rmtime = int((self._progTime[1]-self._progTime[0])/f*(1-f))
+                sys.stdout.write("\r [%-60s] %d%%, %5d s (remaining)" % ('='*n, int(100*f), rmtime))
+                sys.stdout.flush()
+                self._prog = max(self._prog+0.0, f+0.0)
         except:
             print('did not work')
         return
@@ -1976,16 +1974,14 @@ class Open:
         if '_k' in r.keys():
             self.allFits[r['_k']] = r
             f = np.sum([0 if a == {} else 1 for a in self.allFits]) / \
-                float(self.Nfits)
-            if f > self._prog and CONFIG['progress bar']:
+                (float(self.Nfits)-20)
+            if f >= self._prog and CONFIG['progress bar']:
                 n = int(60*f)
-                print('\033[F', end=' ')
-                print('|'+'='*(n+1)+' '*(60-n)+'|', end=' ')
-                print('%3d%%' % (int(100*f)), end=' ')
                 self._progTime[1] = time.time()
                 rmtime = int((self._progTime[1]-self._progTime[0])/f*(1-f))
-                print('%5d s (remaining)' % (rmtime))
-                self._prog = max(self._prog+0.01, f+0.01)
+                sys.stdout.write("\r [%-60s] %d%%, %5d s (remaining)" % ('='*n, int(100*f), rmtime))
+                sys.stdout.flush()
+                self._prog = max(self._prog+0.0, f)
         else:
             print('!!! r should have key "_k"')
         # except:
@@ -2040,7 +2036,7 @@ class Open:
 
         try:
             N = int(np.ceil(2*self.rmax/step))
-        except:
+        except Exception:
             print('ERROR: you should define rmax first!')
 
         #self.rmin = max(step, self.rmin)
@@ -2100,7 +2096,7 @@ class Open:
         self._progTime = [time.time(), time.time()]
         self.Nfits = len(XY)
 
-        print(' | Grid Fitting on %d starting points:' % (len(XY)), end=' ')
+        print(' | Grid Fitting on %d starting points' % (len(XY)), end=' ')
         # -- estimate how long it will take, in two passes
         if not CONFIG['long exec warning'] is None:
             params, Ntest = [], 2*max(multiprocessing.cpu_count()-1, 1)
@@ -2113,9 +2109,9 @@ class Open:
                     tmp['dwavel;'+_k] = self.dwavel[_k]
                 params.append((tmp, self._chi2Data, self.observables,
                                self.instruments))
-            est = self._estimateRunTime(_fitFunc, params, ncore=ncore)
+            est = 1.5*self._estimateRunTime(_fitFunc, params, ncore=ncore)
             est *= self.Nfits
-            print('... (it should take about %d seconds)' % (int(est)))
+            print('... (it should take about %d seconds)\n' % (int(est)), end=' ')
             if not CONFIG['long exec warning'] is None and\
                     est > CONFIG['long exec warning']:
                 print(" > WARNING: this will take too long. ")
@@ -2128,7 +2124,7 @@ class Open:
                 return
         else:
             print('')
-        print('')
+        # print('')
         # -- parallel on N-1 cores
         p = self._pool(ncore=ncore)
         k = 0
@@ -2159,7 +2155,7 @@ class Open:
             p.close()
             p.join()
         if True:
-            print(' | Grid of fit took %.1f seconds' % (time.time()-t0))
+            print('\n | Grid of fit took %.1f seconds' % (time.time()-t0))
         if verbose:
             print(' | Computing map of interpolated Chi2 minima')
 
@@ -3062,14 +3058,12 @@ class Open:
             # -- completed / to be computed
             f = np.sum(self.f3s > 0)/float(np.sum(self.f3s >= 0))
             if f > self._prog and CONFIG['progress bar']:
-                n = int(50*f)
-                print('\033[F', end=' ')
-                print('|'+'='*(n+1)+' '*(50-n)+'|', end=' ')
-                print('%2d%%' % (int(100*f)), end=' ')
+                n = int(60*f)
                 self._progTime[1] = time.time()
-                print('%3d s remaining' %
-                      (int((self._progTime[1]-self._progTime[0])/f*(1-f))))
-                self._prog = max(self._prog+0.01, f+0.01)
+                rmtime = int((self._progTime[1]-self._progTime[0])/f*(1-f))
+                sys.stdout.write("\r [%-60s] %d%%, %5d s (remaining)" % ('='*n, int(100*f), rmtime))
+                sys.stdout.flush()
+                self._prog = max(self._prog+0.0, f+0.0)
         except:
             print('did not work')
         return
@@ -3175,7 +3169,6 @@ class Open:
         self.allf3s = {}  # flux at 3 sigma (%)
         for method in methods:
             print(" | Method:", method)
-            print('')
             self.f3s = np.zeros((N, N))
             self.f3s[allX[None, :]**2+allY[:, None]**2 > self.rmax**2] = -1
             self.f3s[allX[None, :]**2+allY[:, None]**2 < self.rmin**2] = -1
@@ -3211,7 +3204,7 @@ class Open:
         X, Y = np.meshgrid(allX, allY)
         vmin = min([np.min(self.allf3s[m]) for m in methods]),
         vmax = max([np.max(self.allf3s[m]) for m in methods]),
-
+        print('')
         if drawMaps and not fig is None:
             # -- draw the detection maps
             vmin, vmax = None, None
