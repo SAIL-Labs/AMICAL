@@ -376,12 +376,13 @@ def checkRadiusResize(img, isz, r1, dr, pos):
     xs4, ys4 = x0 + isz//2, y0 - isz//2
 
     max_val = img[y0, x0]
-    fig = plt.figure()
+    fig = plt.figure(figsize=(6, 6))
     plt.imshow(img, norm=PowerNorm(.5), cmap='afmhot', vmin=0, vmax=max_val)
     plt.plot(x1, y1)
     plt.plot(x2, y2)
     plt.plot(x0, y0, '+', color='g', ms=10)
     plt.plot([xs1, xs2, xs3, xs4, xs1], [ys1, ys2, ys3, ys4, ys1], 'w--')
+    plt.tight_layout()
     return fig
 
 
