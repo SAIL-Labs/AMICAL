@@ -263,7 +263,6 @@ def make_mf(maskname, instrument, filtname, npix,
                          new_xy[bl2h_ix[1, i], 1])/filt[0]
 
     for i in range(n_baselines):
-
         if not round_uv_to_pixel:
             u[i] = (xy_coords[bl2h_ix[0, i], 0] -
                     xy_coords[bl2h_ix[1, i], 0])/filt[0]

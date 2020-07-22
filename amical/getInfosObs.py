@@ -116,7 +116,7 @@ def GetWavelength(ins, filtname):
     try:
         wl = np.array(dic_filt[ins][filtname]) * 1e-6
     except KeyError:
-        wl = None
+        wl = np.Nan
     return wl
 
 
