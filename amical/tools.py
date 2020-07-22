@@ -378,10 +378,12 @@ def checkRadiusResize(img, isz, r1, dr, pos):
     max_val = img[y0, x0]
     fig = plt.figure(figsize=(6, 6))
     plt.imshow(img, norm=PowerNorm(.5), cmap='afmhot', vmin=0, vmax=max_val)
-    plt.plot(x1, y1)
-    plt.plot(x2, y2)
-    plt.plot(x0, y0, '+', color='g', ms=10)
-    plt.plot([xs1, xs2, xs3, xs4, xs1], [ys1, ys2, ys3, ys4, ys1], 'w--')
+    plt.plot(x1, y1, label='Inner radius for sky subtraction')
+    plt.plot(x2, y2, label='Outer radius for sky subtraction')
+    plt.plot(x0, y0, '+', color='g', ms=10, label='Centering position')
+    plt.plot([xs1, xs2, xs3, xs4, xs1], [ys1, ys2, ys3, ys4, ys1], 'w--',
+             label='Resized image')
+    plt.legend(fontsize=9)
     plt.tight_layout()
     return fig
 
