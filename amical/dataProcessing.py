@@ -291,4 +291,4 @@ def selectCleanData(filename, isz=256, r1=100, dr=10, edge=100, clip=True,
 
     cube_final = checkDataCube(cube_cleaned, clip=clip, clip_fact=clip_fact,
                                verbose=verbose, display=display)
-    return cube_final, cube_cleaned
+    return cube_final  # , cube_cleaned

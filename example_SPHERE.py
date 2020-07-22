@@ -2,6 +2,7 @@ from matplotlib import pyplot as plt
 
 import amical
 from amical.dataProcessing import selectCleanData
+
 # from amical.tools import checkSeeingCond, plotSeeingCond
 
 plt.close("all")
@@ -18,10 +19,11 @@ file_c = datadir + 'HD142695_IRD_SCIENCE_DBI_LEFT_CUBE.fits'
 # ----------------------------------
 cube_t = selectCleanData(file_t, clip=True,
                          corr_ghost=False,
-                         display=True)[0]
+                         display=True)
+
 cube_c = selectCleanData(file_c, clip=True,
                          corr_ghost=False,
-                         display=True)[0]
+                         display=True)
 
 #  AMI parameters (refer to the docstrings of `extract_bs` for details)
 params_ami = {"peakmethod": 'gauss',
