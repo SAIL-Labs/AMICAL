@@ -21,7 +21,7 @@ from tqdm import tqdm
 from amical.tools import applyMaskApod, checkRadiusResize, crop_max
 
 
-def ApplyPatchGhost(cube, xc, yc, radius=20, dx=0, dy=-200, method='bg'):
+def applyPatchGhost(cube, xc, yc, radius=20, dx=0, dy=-200, method='bg'):
     """Apply a patch on an eventual artifacts/ghosts on the spectral filter (i.e.
     K1 filter of SPHERE presents an artifact/ghost at (392, 360)).
 
@@ -275,10 +275,10 @@ def selectCleanData(filename, isz=256, r1=100, dr=10, edge=100, clip=True,
 
     if corr_ghost:
         if (hdr['INSTRUME'] == 'SPHERE') & (hdr['FILTER'] == 'K1'):
-            cube_patched = ApplyPatchGhost(cube, 392, 360)
+            cube_patched = applyPatchGhost(cube, 392, 360)
         elif (hdr['INSTRUME'] == 'SPHERE') & (hdr['FILTER'] == 'K2'):
-            cube_patched = ApplyPatchGhost(cube, 378, 311)
-            cube_patched = ApplyPatchGhost(cube_patched, 891, 315)
+            cube_patched = applyPatchGhost(cube, 378, 311)
+            cube_patched = applyPatchGhost(cube_patched, 891, 315)
     else:
         cube_patched = cube.copy()
 
@@ -291,4 +291,4 @@ def selectCleanData(filename, isz=256, r1=100, dr=10, edge=100, clip=True,
 
     cube_final = checkDataCube(cube_cleaned, clip=clip, clip_fact=clip_fact,
                                verbose=verbose, display=display)
-    return cube_final  # , cube_cleaned
+    return cube_final
