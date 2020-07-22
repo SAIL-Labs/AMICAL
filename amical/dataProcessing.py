@@ -258,7 +258,27 @@ def clean_data(data, isz=None, r1=None, dr=None, edge=100, n_show=0, checkrad=Fa
 def selectCleanData(filename, isz=256, r1=100, dr=10, edge=100, clip=True,
                     clip_fact=0.5, checkrad=False, n_show=0, corr_ghost=True,
                     verbose=False, display=False):
-    """ Clean and select good datacube (sigma-clipping using fluxes variations)."""
+    """ Clean and select good datacube (sigma-clipping using fluxes variations).
+    
+    Parameters:
+    -----------
+
+    `filename` {str}: filename containing the datacube,\n
+    `isz` {int}: Size of the cropped image (default: 256)\n
+    `r1` {int}: Radius of the rings to compute background sky (default: 100)\n
+    `dr` {int}: Outer radius to compute sky (default: 10)\n
+    `edge` {int}: Patch the edges of the image (VLT/SPHERE artifact, default: {100}),\n
+    `clip` {bool}: If True, sigma-clipping is used to reject frames with low integrated flux,\n
+    `clip_fact` {float}: Relative sigma if rejecting frames by sigma-clipping 
+    (default=0.5),\n
+    `checkrad` {bool}: If True, check the resizing and sky substraction parameters (default: {False})\n
+    `n_show` {int}: If `checkrad`==True, the nth (=n_show) frame is shown,\n
+    `corr_ghost` {bool}: If True, a patch is applied to remove SPHERE ghost,\n
+    
+    Returns:
+    --------
+    `cube_final` {np.array}: Cleaned and selected datacube.
+    """
     hdu = fits.open(filename)
     cube = hdu[0].data
     hdr = hdu[0].header
