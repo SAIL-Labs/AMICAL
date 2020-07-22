@@ -136,8 +136,11 @@ def index_mask(n_holes, verbose=False):
 
     if verbose:
         print(bscov2bs_ix.T)
-
-    return n_baselines, n_bispect, n_cov, h2bl_ix, bl2h_ix, bs2bl_ix, bl2bs_ix, bscov2bs_ix
+        
+    indices_mask = dict2class({'n_baselines': n_baselines, 'n_bispect': n_bispect, 'n_cov': n_cov,
+                               'h2bl_ix': h2bl_ix, 'bl2h_ix': bl2h_ix, 'bs2bl_ix': bs2bl_ix,
+                               'bl2bs_ix': bl2bs_ix, 'bscov2bs_ix': bscov2bs_ix})
+    return indices_mask
 
 
 def make_mf(maskname, instrument, filtname, npix,
@@ -205,9 +208,12 @@ def make_mf(maskname, instrument, filtname, npix,
     # ----------------------------------------------------------
 
     n_holes = xy_coords.shape[0]
-
-    n_baselines, n_bispect, n_cov, h2bl_ix, bl2h_ix, bs2bl_ix, bl2bs_ix, bscov2bs_ix = index_mask(
-        n_holes)
+    
+    computed_index_mask = index_mask(n_holes)
+    n_baselines = computed_index_mask.n_baselines
+    n_bispect = computed_index_mask.n_bispect
+    n_cov = computed_index_mask.n_cov
+    bl2h_ix = computed_index_mask.bl2h_ix
 
     ncp_i = int((n_holes - 1)*(n_holes - 2)/2)
     if verbose:

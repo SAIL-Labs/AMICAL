@@ -143,15 +143,15 @@ def extract_bs(cube, filename, maskname, filtname=None, targetname=None, bs_Mult
     # covariance matrices (cov) and associates each holes as couple for bl or
     # triplet for bs (or cp) using index_mask function (see AMI_function.py).
     # ------------------------------------------------------------------------
-    ind_mask_res = index_mask(n_holes)
+    computed_index_mask = index_mask(n_holes)
 
-    n_baselines = ind_mask_res[0]
-    n_bispect = ind_mask_res[1]
-    n_cov = ind_mask_res[2]
-    bl2h_ix = ind_mask_res[4]
-    bs2bl_ix = ind_mask_res[5]
-    bl2bs_ix = ind_mask_res[6]
-    bscov2bs_ix = ind_mask_res[7]
+    n_baselines = computed_index_mask.n_baselines
+    n_bispect = computed_index_mask.n_bispect
+    n_cov = computed_index_mask.n_cov
+    bl2h_ix = computed_index_mask.bl2h_ix
+    bs2bl_ix = computed_index_mask.bs2bl_ix
+    bl2bs_ix = computed_index_mask.bl2bs_ix
+    bscov2bs_ix = computed_index_mask.bscov2bs_ix
 
     closing_tri = []
     for i_bs in range(len(bs2bl_ix.T)):
