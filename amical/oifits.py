@@ -392,7 +392,7 @@ def loadc(filename):
 def save(cal, oifits_file=None, fake_obj=False,
          pa=0, include_vis=False, ind_hole=None,
          true_flag_v2=True, true_flag_t3=False, snr=4,
-         datadir='Saveoifits/', nfile=1, verbose=False):
+         datadir='Saveoifits', nfile=1, verbose=False):
     """
     Summary:
     --------
@@ -831,11 +831,11 @@ def save(cal, oifits_file=None, fake_obj=False,
     # ------------------------------
     #          Save file
     # ------------------------------
-    hdulist.writeto(datadir + filename, overwrite=True)
+    savedfile = os.path.join(datadir, filename)
+    hdulist.writeto(savedfile, overwrite=True)
     if verbose:
         cprint('\n\n### OIFITS CREATED (%s).' % filename, 'cyan')
 
-    savedfile = os.path.join(datadir, filename)  # datadir+filename
     return dic, savedfile
 
 

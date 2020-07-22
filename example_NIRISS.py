@@ -1,11 +1,12 @@
 from astropy.io import fits
 from matplotlib import pyplot as plt
+import os
 
 import amical
 
 plt.close("all")
 
-datadir = 'Simulated_NRMdata/'
+datadir = 'Simulated_NRMdata'
 
 # This example comes with 2 NIRISS simulated dataset representing
 # a relativily faint binary star (dm = 6) @ 4.3 μm :
@@ -16,12 +17,10 @@ sep = 147.7  # binary separation [mas]
 theta = 46.6  # position angle (pa) [deg]
 dm = 6.0  # contrast ratio [mag]
 
-file_t = datadir + \
-    't_binary_s=%2.1fmas_mag=6.0_dm=%2.1f_posang=%2.1f__F430M_81_flat_x11__00.fits' % (
-        sep, dm, theta)
-file_c = datadir + \
-    'c_binary_s=%2.1fmas_mag=6.0_dm=%2.1f_posang=%2.1f__F430M_81_flat_x11__00.fits' % (
-        sep, dm, theta)
+file_t = os.path.join(datadir, 't_binary_s=%2.1fmas_mag=6.0_dm=%2.1f_posang=%2.1f__F430M_81_flat_x11__00.fits' % (
+    sep, dm, theta))
+file_c = os.path.join(datadir, 'c_binary_s=%2.1fmas_mag=6.0_dm=%2.1f_posang=%2.1f__F430M_81_flat_x11__00.fits' % (
+    sep, dm, theta))
 
 # Firslty, open fits files as cube: _t is for target (astronomical scene) and _c for calibrator (point source)
 hdu = fits.open(file_t)
