@@ -194,149 +194,6 @@ def cal2dict(cal, target=None, fake_obj=False, pa=0, del_pa=0, snr=4,
     return dic
 
 
-def data2obs(data, use_flag=True, cond_wl=False, cond_uncer=False, rel_max=None, wl_min=None, wl_max=None, verbose=True):
-    """
-    Convert and select data from the dict format (amical.load or amical.cal2dict).
-
-    Parameters:
-    -----------
-
-    data: {dict}
-        Dictionnary containing all the data.
-    use_flag: {boolean}
-        If True, use flag from the original oifits file.
-    cond_wl: {boolean}
-        If True, apply wavelenght restriction between wl_min and wl_max.
-    wl_min, wl_max: {float}
-        if cond_wl, limits of the wavelength domain [µm]
-    cond_uncer: {boolean}
-        If True, select the best data according their relative uncertainties (rel_max).
-    rel_max: {float}
-        if cond_uncer, maximum sigma uncertainties allowed [%].
-    verbose: {boolean}
-        If True, display useful information about the data selection.
-
-
-    Return:
-    -------
-
-    Obs: {tuple}
-        Tuple containing all the selected data in an appropriate format to perform the fit.
-
-    """
-    nbl = len(data['OI_VIS2']['VIS2DATA'])
-    ncp = len(data['OI_T3']['T3PHI'])
-    nwl = len(data['OI_WAVELENGTH']['EFF_WAVE'])
-
-    vis2_data = data['OI_VIS2']['VIS2DATA'].flatten()
-    e_vis2_data = data['OI_VIS2']['VIS2ERR'].flatten()
-    flag_V2 = data['OI_VIS2']['FLAG'].flatten()
-
-    cp_data = data['OI_T3']['T3PHI'].flatten()
-    e_cp_data = data['OI_T3']['T3PHIERR'].flatten()
-    flag_CP = data['OI_T3']['FLAG'].flatten()
-
-    if not use_flag:
-        flag_V2 = [False]*len(vis2_data)
-        flag_CP = [False]*len(cp_data)
-
-    u_data, v_data = [], []
-    u1_data, v1_data, u2_data, v2_data = [], [], [], []
-
-    for i in range(nbl):
-        for j in range(nwl):
-            u_data.append(data['OI_VIS2']['UCOORD'][i])
-            v_data.append(data['OI_VIS2']['VCOORD'][i])
-
-    for i in range(ncp):
-        for j in range(nwl):
-            u1_data.append(data['OI_T3']['U1COORD'][i])
-            v1_data.append(data['OI_T3']['V1COORD'][i])
-            u2_data.append(data['OI_T3']['U2COORD'][i])
-            v2_data.append(data['OI_T3']['V2COORD'][i])
-
-    u_data, v_data = np.array(u_data), np.array(v_data)
-    u1_data = np.array(u1_data)
-    v1_data = np.array(v1_data)
-    u2_data = np.array(u2_data)
-    v2_data = np.array(v2_data)
-
-    wl_data = np.array(list(data['OI_WAVELENGTH']['EFF_WAVE'])*nbl)
-    wl_data_cp = np.array(list(data['OI_WAVELENGTH']['EFF_WAVE'])*ncp)
-
-    obs = []
-    for i in range(nbl*nwl):
-        if not (flag_V2[i] & use_flag):
-            if not cond_wl:
-                tmp = [u_data[i], v_data[i], wl_data[i]]
-                typ = 'V2'
-                obser = vis2_data[i]
-                err = e_vis2_data[i]
-                if cond_uncer:
-                    if (err/obser <= rel_max*1e-2):
-                        obs.append([tmp, typ, obser, err])
-                else:
-                    obs.append([tmp, typ, obser, err])
-
-            else:
-                if (wl_data[i] >= wl_min*1e-6) & (wl_data[i] <= wl_max*1e-6):
-                    tmp = [u_data[i], v_data[i], wl_data[i]]
-                    typ = 'V2'
-                    obser = vis2_data[i]
-                    err = e_vis2_data[i]
-                    if cond_uncer:
-                        if (err/obser <= rel_max*1e-2):
-                            obs.append([tmp, typ, obser, err])
-                    else:
-                        obs.append([tmp, typ, obser, err])
-
-    N_v2_rest = len(obs)
-
-    for i in range(ncp*nwl):
-        if not flag_CP[i]:
-            if not cond_wl:
-                tmp = [u1_data[i], u2_data[i], -(u1_data[i]+u2_data[i]), v1_data[i], v2_data[i],
-                       -(v1_data[i]+v2_data[i]), wl_data_cp[i]]
-                typ = 'CP'
-                obser = cp_data[i]
-                err = e_cp_data[i]
-                if cond_uncer:
-                    if (err/obser <= rel_max*1e-2):
-                        obs.append([tmp, typ, obser, err])
-                else:
-                    obs.append([tmp, typ, obser, err])
-            else:
-                if (wl_data_cp[i] >= wl_min*1e-6) & (wl_data_cp[i] <= wl_max*1e-6):
-                    tmp = [u1_data[i], u2_data[i], -(u1_data[i]+u2_data[i]), v1_data[i], v2_data[i],
-                           -(v1_data[i]+v2_data[i]), wl_data_cp[i]]
-                    typ = 'CP'
-                    obser = cp_data[i]
-                    err = e_cp_data[i]
-                    if cond_uncer:
-                        if (err/obser <= rel_max*1e-2):
-                            obs.append([tmp, typ, obser, err])
-                        else:
-                            pass
-                    else:
-                        obs.append([tmp, typ, obser, err])
-
-    N_cp_rest = len(obs) - N_v2_rest
-
-    Obs = np.array(obs)
-    if verbose:
-        print('\nTotal # of data points: %i (%i V2, %i CP)' %
-              (len(Obs), N_v2_rest, N_cp_rest))
-        if use_flag:
-            print('-> Flag in oifits files used.')
-        if cond_wl:
-            print(r'-> Restriction on wavelenght: %2.2f < %s < %2.2f µm' %
-                  (wl_min, chr(955), wl_max))
-        if cond_uncer:
-            print(r'-> Restriction on uncertainties: %s < %2.1f %%' %
-                  (chr(949), rel_max))
-    return Obs
-
-
 def peak1holeCP(bs, ihole=0):
     """ Get the indices of each CP including the given hole."""
     bs2bl_ix = bs.bs2bl_ix
@@ -597,7 +454,7 @@ def save(cal, oifits_file=None, fake_obj=False,
 
     if not os.path.exists(datadir):
         print('### Create %s directory to save all requested Oifits ###' % datadir)
-        os.system('mkdir %s' % datadir)
+        os.mkdir(datadir)
 
     if type(oifits_file) == str:
         filename = oifits_file
@@ -627,27 +484,12 @@ def save(cal, oifits_file=None, fake_obj=False,
         format='%F')  # , 'Creation date'
     hdu.header['ORIGIN'] = 'Sydney University'
     hdu.header['CONTENT'] = 'OIFITS2'
-    try:
-        hdu.header['DATE-OBS'] = hdr['DATE-OBS']
-    except KeyError:
-        hdu.header['DATE-OBS'] = ''
-    try:
-        hdu.header['TELESCOP'] = hdr['TELESCOP']
-    except KeyError:
-        hdu.header['TELESCOP'] = 'JWST'
-    try:
-        hdu.header['INSTRUME'] = hdr['INSTRUME']
-    except KeyError:
-        hdu.header['INSTRUME'] = 'NIRISS'
-    try:
-        hdu.header['OBSERVER'] = hdr['OBSERVER']
-    except KeyError:
-        hdu.header['OBSERVER'] = 'me'
-    try:
-        hdu.header['OBJECT'] = hdr['OBJECT']
-    except KeyError:
-        hdu.header['OBJECT'] = dic['info']['TARGET']
-
+    
+    hdu.header['DATE-OBS'] = hdr.get('DATE-OBS', '')
+    hdu.header['TELESCOP'] = hdr.get('TELESCOP', '')
+    hdu.header['INSTRUME'] = hdr.get('INSTRUME', '')
+    hdu.header['OBSERVER'] = hdr.get('OBSERVER', '')
+    hdu.header['OBJECT'] = hdr.get('OBJECT', dic['info']['TARGET'])
     hdu.header['INSMODE'] = 'NRM'
     hdu.header['FILT'] = dic['info']['FILT']
     hdu.header['MJD'] = dic['info']['MJD']
@@ -754,7 +596,7 @@ def save(cal, oifits_file=None, fake_obj=False,
     if verbose:
         print('-> Including OI Array table...')
 
-    if 'xycoord' in list(dic['info'].keys()):
+    if 'xycoord' in dic['info']:
         staxy = dic['info']['xycoord']
         N_ap = len(staxy)
         telName = ['A%i' % x for x in np.arange(N_ap)+1]
@@ -940,14 +782,14 @@ def save(cal, oifits_file=None, fake_obj=False,
         check_oi = int
 
     if check_oi == float:
-        npts = len(dic['OI_T3']['T3AMP'])
-        targetId = [1]*npts
-        time = [0]*npts
+        t3phi = dic['OI_T3']['T3AMP']
+        targetId = np.ones_like(t3phi)
+        time = np.zeros_like(t3phi)
         mjd = [data['MJD']]*npts
         intTime = [data['INT_TIME']]*npts
     else:
         npts = 1
-        targetId = [1]*len(data['T3AMP'])
+        targetId = np.ones_like(data['T3AMP'])
         time = data['TIME']
         mjd = data['MJD']
         intTime = data['INT_TIME']
@@ -993,33 +835,46 @@ def save(cal, oifits_file=None, fake_obj=False,
     if verbose:
         cprint('\n\n### OIFITS CREATED (%s).' % filename, 'cyan')
 
-    savedfile = datadir+filename
+    savedfile = os.path.join(datadir, filename)  # datadir+filename
     return dic, savedfile
 
 
-def ApplyFlag(dic1, unit='arcsec'):
+def ApplyFlag(dict_calibrated, unit='arcsec'):
     """ Apply flag and convert to appropriete units."""
 
-    wl = dic1['OI_WAVELENGTH']['EFF_WAVE']
+    wl = dict_calibrated['OI_WAVELENGTH']['EFF_WAVE']
     uv_scale = {'m': 1,
                 'rad': 1/wl,
                 'arcsec': 1/wl/rad2mas(1e-3),
                 'lambda': 1/wl/1e6}
 
-    U = dic1['OI_VIS2']['UCOORD']*uv_scale[unit]
-    V = dic1['OI_VIS2']['VCOORD']*uv_scale[unit]
+    U = dict_calibrated['OI_VIS2']['UCOORD']*uv_scale[unit]
+    V = dict_calibrated['OI_VIS2']['VCOORD']*uv_scale[unit]
 
-    flag_v2 = np.invert(dic1['OI_VIS2']['FLAG'])
-    V2 = dic1['OI_VIS2']['VIS2DATA'][flag_v2]
-    e_V2 = dic1['OI_VIS2']['VIS2ERR'][flag_v2] * 1
-    sp_freq_vis = dic1['OI_VIS2']['BL'][flag_v2] * uv_scale[unit]
-    flag_cp = np.invert(dic1['OI_T3']['FLAG'])
-    cp = dic1['OI_T3']['T3PHI'][flag_cp]
-    e_cp = dic1['OI_T3']['T3PHIERR'][flag_cp]
-    sp_freq_cp = dic1['OI_T3']['BL'][flag_cp] * uv_scale[unit]
+    flag_v2 = np.invert(dict_calibrated['OI_VIS2']['FLAG'])
+    V2 = dict_calibrated['OI_VIS2']['VIS2DATA'][flag_v2]
+    e_V2 = dict_calibrated['OI_VIS2']['VIS2ERR'][flag_v2] * 1
+    sp_freq_vis = dict_calibrated['OI_VIS2']['BL'][flag_v2] * uv_scale[unit]
+    flag_cp = np.invert(dict_calibrated['OI_T3']['FLAG'])
+    cp = dict_calibrated['OI_T3']['T3PHI'][flag_cp]
+    e_cp = dict_calibrated['OI_T3']['T3PHIERR'][flag_cp]
+    sp_freq_cp = dict_calibrated['OI_T3']['BL'][flag_cp] * uv_scale[unit]
     bmax = 1.2*np.max(np.sqrt(U**2+V**2))
+    
+    cal_flagged = dict2class({'U': U,
+                              'V': V,
+                              'bmax': bmax,
+                              'vis2': V2,
+                              'e_vis2': e_V2,
+                              'cp': cp,
+                              'e_cp': e_cp,
+                              'sp_freq_vis': sp_freq_vis,
+                              'sp_freq_cp': sp_freq_cp,
+                              'wl': wl[0],
+                              'band': dict_calibrated['info']['FILT']
+                              })
 
-    return U, V, bmax, V2, e_V2, cp, e_cp, sp_freq_vis, sp_freq_cp, wl[0], dic1['info']['FILT']
+    return cal_flagged
 
 
 def show(inputList, diffWl=False, ind_hole=None, vmin=0, vmax=1.05, cmax=180, setlog=False, pa=0,
@@ -1095,10 +950,10 @@ def show(inputList, diffWl=False, ind_hole=None, vmin=0, vmax=1.05, cmax=180, se
     l_bmax, l_band_al = [], []
     for dic in l_dic:
         tmp = ApplyFlag(dic)
-        U = tmp[0]
-        V = tmp[1]
-        band = tmp[10]
-        wl = tmp[9]
+        U = tmp.U 
+        V = tmp.V
+        band = tmp.band
+        wl = tmp.wl
         label = '%2.2f $\mu m$ (%s)' % (wl*1e6, band)
         if diffWl:
             c1, c2 = dic_color[band], dic_color[band]
@@ -1109,7 +964,7 @@ def show(inputList, diffWl=False, ind_hole=None, vmin=0, vmax=1.05, cmax=180, se
                 label = ''
         else:
             c1, c2 = '#00adb5', '#fc5185'
-        l_bmax.append(tmp[2])
+        l_bmax.append(tmp.bmax)
 
         ax1.scatter(U, V, s=50, c=c1, label=label,
                     edgecolors='#364f6b', marker='o', alpha=1)
@@ -1147,11 +1002,11 @@ def show(inputList, diffWl=False, ind_hole=None, vmin=0, vmax=1.05, cmax=180, se
     max_f_vis = []
     for dic in l_dic:
         tmp = ApplyFlag(dic, unit='arcsec')
-        V2 = tmp[3]
-        e_V2 = tmp[4]
-        sp_freq_vis = tmp[7]
+        V2 = tmp.vis2 
+        e_V2 = tmp.e_vis2  
+        sp_freq_vis = tmp.sp_freq_vis 
         max_f_vis.append(np.max(sp_freq_vis))
-        band = tmp[10]
+        band = tmp.band  
         if diffWl:
             mfc = dic_color[band]
         else:
@@ -1195,11 +1050,11 @@ def show(inputList, diffWl=False, ind_hole=None, vmin=0, vmax=1.05, cmax=180, se
     max_f_cp = []
     for dic in l_dic:
         tmp = ApplyFlag(dic, unit='arcsec')
-        cp = tmp[5]*conv_cp
-        e_cp = tmp[6]*conv_cp
-        sp_freq_cp = tmp[8]
+        cp = tmp.cp*conv_cp 
+        e_cp = tmp.e_cp*conv_cp  
+        sp_freq_cp = tmp.sp_freq_cp
         max_f_cp.append(np.max(sp_freq_cp))
-        band = tmp[10]
+        band = tmp.band  
         if diffWl:
             mfc = dic_color[band]
         else:
