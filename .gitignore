@@ -7,6 +7,7 @@ amical/old_core.py
 # System files
 *__pycache__/
 *.DS_Store
+Simulated_NRMdata/.DS_Store
  
 # Data relative files
 Saveoifits/
