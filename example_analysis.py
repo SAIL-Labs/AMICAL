@@ -11,7 +11,7 @@ their AMI data in the best possible way. We included with AMICAL two additional
 (and independant) packages to perform this purposes.
 
 CANDID developed by A. Merand & A. Gallenne (https://github.com/amerand/CANDID) and
-Pymask developed by B. Pope, A. Cheetham (https://github.com/AnthonyCheetham/pymask).
+Pymask developed by B. Pope & A. Cheetham (https://github.com/AnthonyCheetham/pymask).
 
 With AMICAL, we provide some easy interface between these codes and the outputs 
 of our extraction pipeline. We give below some example to analyze and 
@@ -94,7 +94,7 @@ if use_candid & use_pymask:
              label='CANDID', alpha=.5, lw=3)
     plt.plot(cr_pymask['r'], cr_pymask['cr_limit'],
              label='Pymask', alpha=.5, lw=3)
-    plt.ylim(plt.ylim()[1], plt.ylim()[0])  # -- rreverse plot
+    plt.ylim(plt.ylim()[1], plt.ylim()[0])  # -- reverse plot
     plt.xlabel('Separation [mas]')
     plt.ylabel('$\Delta \mathrm{Mag}_{3\sigma}$')
     plt.legend(loc='best')

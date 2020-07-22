@@ -1,9 +1,6 @@
 from matplotlib import pyplot as plt
 
 import amical
-from amical.dataProcessing import selectCleanData
-
-# from amical.tools import checkSeeingCond, plotSeeingCond
 
 plt.close("all")
 
@@ -17,16 +14,16 @@ file_c = datadir + 'HD142695_IRD_SCIENCE_DBI_LEFT_CUBE.fits'
 # ----------------------------------
 # Cleaning step
 # ----------------------------------
-cube_t = selectCleanData(file_t, clip=True,
-                         corr_ghost=False,
-                         display=True)
+cube_t = amical.selectCleanData(file_t, clip=True,
+                                corr_ghost=False,
+                                display=True)
 
-cube_c = selectCleanData(file_c, clip=True,
-                         corr_ghost=False,
-                         display=True)
+cube_c = amical.selectCleanData(file_c, clip=True,
+                                corr_ghost=False,
+                                display=True)
 
 #  AMI parameters (refer to the docstrings of `extract_bs` for details)
-params_ami = {"peakmethod": 'gauss',
+params_ami = {"peakmethod": 'fft',
               "bs_MultiTri": False,
               "maskname": "g7",
               "fw_splodge": 0.7,
@@ -41,6 +38,7 @@ bs_t = amical.extract_bs(cube_t, file_t, targetname='HD142527',
 bs_c = amical.extract_bs(cube_c, file_c, targetname='HD142695',
                          **params_ami, display=False)
 
+# (from amical.tools import checkSeeingCond, plotSeeingCond)
 # In case of multiple files for a same target, you can
 # check the seeing condition and select only the good ones.
 # cond_t = checkSeeingCond([bs_t])
