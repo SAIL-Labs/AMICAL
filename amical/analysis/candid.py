@@ -1939,7 +1939,7 @@ class Open:
         plt.ylim(-self.rmax, self.rmax)
 
         ax2 = plt.subplot(122, sharex=ax1, sharey=ax1)
-        ax2.set_aspect('equal')
+        # ax2.set_aspect('equal')
 
         plt.title('detection ($\sigma$)')
         plt.pcolormesh(X, Y,
@@ -1952,7 +1952,7 @@ class Open:
 
         plt.xlim(self.rmax, -self.rmax)
         plt.ylim(-self.rmax, self.rmax)
-        ax1.set_aspect('equal', )  # 'datalim')
+        # ax1.set_aspect('equal', )  # 'datalim')
         # -- make a crosshair around the minimum:
         plt.plot([x0, x0], [y0-0.05*self.rmax, y0-0.1*self.rmax],
                  '-r', alpha=0.5, linewidth=2)
