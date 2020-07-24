@@ -257,7 +257,7 @@ def clean_data(data, isz=None, r1=None, dr=None, edge=100, n_show=0, checkrad=Fa
 
 def selectCleanData(filename, isz=256, r1=100, dr=10, edge=100, clip=True,
                     clip_fact=0.5, checkrad=False, n_show=0, corr_ghost=True,
-                    verbose=False, display=False):
+                    verbose=False, ihdu=0, display=False):
     """ Clean and select good datacube (sigma-clipping using fluxes variations).
     
     Parameters:
@@ -280,7 +280,7 @@ def selectCleanData(filename, isz=256, r1=100, dr=10, edge=100, clip=True,
     `cube_final` {np.array}: Cleaned and selected datacube.
     """
     hdu = fits.open(filename)
-    cube = hdu[0].data
+    cube = hdu[ihdu].data
     hdr = hdu[0].header
 
     if hdr['INSTRUME'] == 'SPHERE':
