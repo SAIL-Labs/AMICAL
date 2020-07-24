@@ -27,7 +27,7 @@ import amical
 # Your inputdata is an oifits file or a list of oifits.
 inputdata = 'Saveoifits/fakebinary_NIRISS_g7_F430M_58886_1.oifits'
 
-use_candid = False
+use_candid = True
 use_pymask = False
 
 # Analysis with CANDID package
@@ -35,20 +35,14 @@ use_pymask = False
 if use_candid:
     param_candid = {'rmin': 20,  # inner radius of the grid
                     'rmax': 250,  # outer radius of the grid
-                    'step': 20,  # grid sampling
-                    'ncore': 12  # core for multiprocessing (see warning below)
+                    'step': 50,  # grid sampling
+                    'ncore': 4  # core for multiprocessing
                     }
 
     fit1 = amical.candidGrid(inputdata, **param_candid)
 
     cr_candid = amical.candidCRlimit(
         inputdata, **param_candid, fitComp=fit1['comp'])
-
-# WARNING: the use of multiprocessing appeared
-# to be unstable in the last version of OSX catalina+
-# So we imposed ncore=1 by default (no multiproc), you can
-# try to increase ncore option but it could crash
-# depending on your system (tested on OSX-mojave).
 
 # Analysis with PYMASK package
 # ----------------------------
