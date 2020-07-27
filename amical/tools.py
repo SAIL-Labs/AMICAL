@@ -383,7 +383,7 @@ def checkRadiusResize(img, isz, r1, dr, pos):
     plt.plot(x0, y0, '+', color='g', ms=10, label='Centering position')
     plt.plot([xs1, xs2, xs3, xs4, xs1], [ys1, ys2, ys3, ys4, ys1], 'w--',
              label='Resized image')
-    plt.legend(fontsize=9)
+    plt.legend(fontsize=9, loc=1)
     plt.tight_layout()
     return fig
 

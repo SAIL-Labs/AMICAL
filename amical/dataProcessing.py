@@ -299,6 +299,8 @@ def selectCleanData(filename, isz=256, r1=100, dr=10, edge=100, clip=True,
         elif (hdr['INSTRUME'] == 'SPHERE') & (hdr['FILTER'] == 'K2'):
             cube_patched = applyPatchGhost(cube, 378, 311)
             cube_patched = applyPatchGhost(cube_patched, 891, 315)
+        else:
+            cube_patched = cube.copy()
     else:
         cube_patched = cube.copy()
 
