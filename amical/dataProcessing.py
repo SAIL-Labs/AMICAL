@@ -17,8 +17,9 @@ from matplotlib import pyplot as plt
 from matplotlib.colors import PowerNorm
 from termcolor import cprint
 from tqdm import tqdm
+from astropy.convolution import Gaussian2DKernel, interpolate_replace_nans
 
-from amical.tools import applyMaskApod, checkRadiusResize, crop_max
+from amical.tools import applyMaskApod, crop_max
 
 
 def applyPatchGhost(cube, xc, yc, radius=20, dx=0, dy=-200, method='bg'):
@@ -62,12 +63,12 @@ def applyPatchGhost(cube, xc, yc, radius=20, dx=0, dy=-200, method='bg'):
     return cube_corrected
 
 
-def checkDataCube(cube, clip_fact=0.5, clip=False, verbose=True, display=True):
+def select_data(cube, clip_fact=0.5, clip=False, verbose=True, display=True):
     """ Check the cleaned data cube using the position of the maximum in the
     fft image (supposed to be zero). If not in zero position, the fram is 
     rejected. It can apply a sigma-clipping to select only the frames with the
     highest total fluxes.
-    
+
     Parameters:
     -----------
     `cube` {array} -- Data cube,\n
@@ -154,6 +155,7 @@ def checkDataCube(cube, clip_fact=0.5, clip=False, verbose=True, display=True):
         plt.subplot(2, 2, 4)
         plt.imshow(np.fft.fftshift(fft_fram[worst_fr]), cmap='gist_stern')
         plt.tight_layout()
+        plt.show(block=False)
     if verbose:
         n_good = len(cube_cleaned_checked)
         n_bad = len(cube) - n_good
@@ -197,8 +199,86 @@ def skyCorrection(imA, r1=100, dr=20, verbose=False):
     return imC, backgroundC
 
 
-def clean_data(data, isz=None, r1=None, dr=None, edge=100, n_show=0, checkrad=False, verbose=False):
-    """ Clean data (if not simulated data).
+def fixBadPixels(image, bad_map, add_bad=[], x_stddev=1):
+    """ Replace bad pixels with values interpolated from their neighbors (interpolation
+    is made with a gaussian kernel convolution)."""
+    if len(add_bad) != 0:
+        for j in range(len(add_bad)):
+            bad_map[add_bad[j][0], add_bad[j][1]] = 1
+
+    img_nan = image.copy()
+    img_nan[bad_map == 1] = np.nan
+    kernel = Gaussian2DKernel(x_stddev=x_stddev)
+    fixed_image = interpolate_replace_nans(img_nan, kernel)
+    return fixed_image
+
+
+def check_data_params(filename, isz, r1, dr, bad_map=None, add_bad=[],
+                      edge=0, remove_bad=True, nframe=0, ihdu=0):
+    """ """
+    data = fits.open(filename)[ihdu].data
+    img0 = data[nframe]
+    if edge != 0:
+        img0[:, 0:edge] = 0
+        img0[:, -edge:-1] = 0
+        img0[0:edge, :] = 0
+        img0[-edge:-1, :] = 0
+    if (bad_map is not None) & (remove_bad):
+        img1 = fixBadPixels(img0, bad_map, add_bad=add_bad)
+    else:
+        img1 = img0.copy()
+    cropped_infos = crop_max(img1, isz, f=3)
+    pos = cropped_infos[1]
+
+    noBadPixel = False
+    if (bad_map is not None) & (len(add_bad) != 0):
+        for j in range(len(add_bad)):
+            bad_map[add_bad[j][0], add_bad[j][1]] = 1
+        bad_pix = np.where(bad_map == 1)
+        bad_pix_x = bad_pix[0]
+        bad_pix_y = bad_pix[1]
+    else:
+        noBadPixel = True
+
+    r2 = r1 + dr
+    theta = np.linspace(0, 2*np.pi, 100)
+    x0 = pos[0]
+    y0 = pos[1]
+
+    x1 = r1 * np.cos(theta) + x0
+    y1 = r1 * np.sin(theta) + y0
+    x2 = r2 * np.cos(theta) + x0
+    y2 = r2 * np.sin(theta) + y0
+
+    xs1, ys1 = x0 + isz//2, y0 + isz//2
+    xs2, ys2 = x0 - isz//2, y0 + isz//2
+    xs3, ys3 = x0 - isz//2, y0 - isz//2
+    xs4, ys4 = x0 + isz//2, y0 - isz//2
+
+    max_val = img1[y0, x0]
+    fig = plt.figure(figsize=(6, 6))
+    plt.imshow(img1, norm=PowerNorm(.5), cmap='afmhot', vmin=0, vmax=max_val)
+    plt.plot(x1, y1, label='Inner radius for sky subtraction')
+    plt.plot(x2, y2, label='Outer radius for sky subtraction')
+    plt.plot(x0, y0, '+', color='g', ms=10, label='Centering position')
+    plt.plot([xs1, xs2, xs3, xs4, xs1], [ys1, ys2, ys3, ys4, ys1], 'w--',
+             label='Resized image')
+    if not noBadPixel:
+        if remove_bad:
+            label = 'Fixed hot/bad pixels'
+        else:
+            label = 'Hot/bad pixels'
+        plt.scatter(bad_pix_y, bad_pix_x, color='', marker='s',
+                    edgecolors='r', s=20, label=label)
+
+    plt.legend(fontsize=7, loc=1)
+    plt.tight_layout()
+    return fig
+
+
+def clean_data(data, isz=None, r1=None, dr=None, edge=0,
+               bad_map=None, add_bad=[], verbose=False):
+    """ Clean data.
 
     Parameters:
     -----------
@@ -218,48 +298,38 @@ def clean_data(data, isz=None, r1=None, dr=None, edge=100, n_show=0, checkrad=Fa
         data = np.array([im[:-1, :-1] for im in data])
 
     n_im = data.shape[0]
-    if checkrad:
-        img0 = data[n_show]
-        if edge != 0:
-            img0[:, 0:edge] = 0
-            img0[:, -edge:-1] = 0
-            img0[0:edge, :] = 0
-            img0[-edge:-1, :] = 0
-        ref0_max, pos = crop_max(img0, isz, f=3)
-        fig = checkRadiusResize(img0, isz, r1, dr, pos)
-        fig.show()
-        return None
-
-    cube = []
+    cube_cleaned = np.zeros([n_im, isz, isz])
     for i in tqdm(range(n_im), ncols=100, desc='Cleaning', leave=False):
-        # img0 = applyMaskApod(data[i], r=int(npix//3))
         img0 = data[i]
         if edge != 0:
             img0[:, 0:edge] = 0
             img0[:, -edge:-1] = 0
             img0[0:edge, :] = 0
             img0[-edge:-1, :] = 0
-        im_rec_max, pos = crop_max(img0, isz, f=3)
-        img_biased, bg = skyCorrection(im_rec_max, r1=r1, dr=dr)
+        if bad_map is not None:
+            img1 = fixBadPixels(img0, bad_map, add_bad=add_bad)
+        else:
+            img1 = img0.copy()
+        im_rec_max = crop_max(img1, isz, f=3)[0]
+        img_biased = skyCorrection(im_rec_max, r1=r1, dr=dr)[0]
+        img_biased[img_biased < 0] = 0  # Remove negative pixels
 
-        try:
-            img = applyMaskApod(img_biased, r=isz//3)
-            cube.append(img)
-        except ValueError:
-            if verbose:
-                cprint(
-                    'Error: problem with centering process -> check isz/r1/dr parameters.', 'red')
-                cprint(i, 'red')
+        if img_biased.shape[0] != img_biased.shape[1]:
+            cprint(
+                '\nCropped image do not have same X, Y dimensions -> check isz', 'red')
+            return None
 
-    cube = np.array(cube)
-    return cube
+        img = applyMaskApod(img_biased, r=isz//3)
+        cube_cleaned[i] = img
+    return cube_cleaned
 
 
-def selectCleanData(filename, isz=256, r1=100, dr=10, edge=100, clip=True,
-                    clip_fact=0.5, checkrad=False, n_show=0, corr_ghost=True,
+def selectCleanData(filename, isz=256, r1=100, dr=10, edge=0,
+                    clip=True, bad_map=None, add_bad=[],
+                    clip_fact=0.5, corr_ghost=True,
                     verbose=False, ihdu=0, display=False):
     """ Clean and select good datacube (sigma-clipping using fluxes variations).
-    
+
     Parameters:
     -----------
 
@@ -271,10 +341,8 @@ def selectCleanData(filename, isz=256, r1=100, dr=10, edge=100, clip=True,
     `clip` {bool}: If True, sigma-clipping is used to reject frames with low integrated flux,\n
     `clip_fact` {float}: Relative sigma if rejecting frames by sigma-clipping 
     (default=0.5),\n
-    `checkrad` {bool}: If True, check the resizing and sky substraction parameters (default: {False})\n
-    `n_show` {int}: If `checkrad`==True, the nth (=n_show) frame is shown,\n
     `corr_ghost` {bool}: If True, a patch is applied to remove SPHERE ghost,\n
-    
+
     Returns:
     --------
     `cube_final` {np.array}: Cleaned and selected datacube.
@@ -288,10 +356,10 @@ def selectCleanData(filename, isz=256, r1=100, dr=10, edge=100, clip=True,
         seeing = float(hdr['HIERARCH ESO TEL IA FWHM'])
         seeing_end = float(hdr['HIERARCH ESO TEL AMBI FWHM END'])
 
-    if verbose:
-        print('\n----- Seeing conditions -----')
-        print("%2.2f (start), %2.2f (end), %2.2f (Corrected AirMass)" %
-              (seeing_start, seeing_end, seeing))
+        if verbose:
+            print('\n----- Seeing conditions -----')
+            print("%2.2f (start), %2.2f (end), %2.2f (Corrected AirMass)" %
+                  (seeing_start, seeing_end, seeing))
 
     if corr_ghost:
         if (hdr['INSTRUME'] == 'SPHERE') & (hdr['FILTER'] == 'K1'):
@@ -305,12 +373,13 @@ def selectCleanData(filename, isz=256, r1=100, dr=10, edge=100, clip=True,
         cube_patched = cube.copy()
 
     cube_cleaned = clean_data(cube_patched, isz=isz, r1=r1, edge=edge,
-                              dr=dr, n_show=n_show, checkrad=checkrad,
+                              bad_map=bad_map, add_bad=add_bad,
+                              dr=dr,
                               verbose=verbose)
 
     if cube_cleaned is None:
         return None
 
-    cube_final = checkDataCube(cube_cleaned, clip=clip, clip_fact=clip_fact,
-                               verbose=verbose, display=display)
+    cube_final = select_data(cube_cleaned, clip=clip, clip_fact=clip_fact,
+                             verbose=verbose, display=display)
     return cube_final
