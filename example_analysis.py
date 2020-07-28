@@ -13,11 +13,11 @@ their AMI data in the best possible way. We included with AMICAL two additional
 CANDID developed by A. Merand & A. Gallenne (https://github.com/amerand/CANDID) and
 Pymask developed by B. Pope & A. Cheetham (https://github.com/AnthonyCheetham/pymask).
 
-With AMICAL, we provide some easy interface between these codes and the outputs 
-of our extraction pipeline. We give below some example to analyze and 
+With AMICAL, we provide some easy interface between these codes and the outputs
+of our extraction pipeline. We give below some example to analyze and
 extract the quantitative values of our simulated binary.
 
--------------------------------------------------------------------- 
+--------------------------------------------------------------------
 """
 
 from matplotlib import pyplot as plt
