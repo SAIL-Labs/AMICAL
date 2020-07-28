@@ -18,7 +18,6 @@ import numpy as np
 from astropy.io import fits
 from astropy.nddata import Cutout2D
 from astropy.time import Time
-from matplotlib.colors import PowerNorm
 from munch import munchify as dict2class
 from scipy.signal import medfilt2d
 from termcolor import cprint
