@@ -763,7 +763,7 @@ def extract_bs(cube, filename, maskname, filtname=None, targetname=None, bs_Mult
 
     # 12. Compute the absolute oriention (North-up, East-left)
     # ------------------------------------------------------------------------
-    pa = compute_pa(hdr, display=display, verbose=verbose)
+    pa = compute_pa(hdr, n_ps, display=display, verbose=verbose)
 
     # 13. Format class output
     # ------------------------------------------------------------------------
