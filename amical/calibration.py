@@ -21,7 +21,7 @@ from amical.dpfit import leastsqFit
 from amical.tools import wtmn
 
 
-def v2varfunc(X, parms):
+def _v2varfunc(X, parms):
     """
     This is a function to be fed to leastfit for fitting to normv2var
     to a 5-parameter windshake-seeing function.
@@ -42,69 +42,7 @@ def v2varfunc(X, parms):
     return Y
 
 
-def calc_correctionAtm_vis2(data, v2=True, corr_const=1, nf=100, display=False,
-                            verbose=False, normalizedUncer=False):
-    """
-    This function corrects V^2 for seeing and windshake. Use this on source and 
-    cal before division. Returns a multiplicative correction to the V^2.
-
-    Parameters:
-    -----------
-    `data` {class}:
-        class like containting results from Extract_bispect function,
-
-    `corr_const` {float}: 
-        Correction constant (0.4 is good for V for NIRC experiment).
-    Returns:
-    --------
-    `correction` {array}:
-        Correction factor to apply.
-
-    """
-
-    vis = data.v2
-    avar = data.avar
-    u = data.u
-    v = data.v
-
-    err_avar = data.err_avar
-    err_vis = data.v2_sig
-
-    w = np.where((vis == 0) | (avar == 0))
-
-    if len(w) == 0:
-        print('Cannot continue - divide by zero imminent...')
-        correction = None
-
-    normvar = avar/vis**2
-    w0 = np.where(u**2+v**2 >= 0)
-
-    param = {'a': 0, 'b': 0, 'c': 0, 'd': 0, 'e': 0}
-
-    if (len(err_avar) == 0):
-        err_avar = normvar*2.0/np.sqrt(nf)
-    if (len(err_vis) != 0):
-        err_avar = abs(normvar)*np.sqrt(err_avar**2 /
-                                        avar**2 + 2.0*err_vis**2/vis**2)
-
-    X = [u[w0], v[w0]]
-    fit = leastsqFit(v2varfunc, X, param, normvar[w0], err_avar[w0],
-                     verbose=verbose, normalizedUncer=normalizedUncer)
-
-    correction = np.ones(vis.shape)
-    correction[w0] = np.exp(fit['model'] * corr_const)
-
-    if display:
-        plt.figure()
-        plt.errorbar((X[0]**2+X[1]**2)**0.5, normvar[w0], yerr=err_avar[w0],
-                     ls='None', ecolor='lightgray', marker='.', label='data')
-        plt.plot((X[0]**2+X[1]**2)**0.5, fit['model'], 'rs')
-        plt.show(block=False)
-
-    return correction
-
-
-def applySigClip(data, e_data, sig_thres=2, ymin=0, ymax=1.2, var='V2', display=False):
+def _apply_sig_clip(data, e_data, sig_thres=2, ymin=0, ymax=1.2, var='V2', display=False):
     """ Apply the sigma-clipping on the dataset and plot some diagnostic plots. """
     filtered_data = sigma_clip(data, sigma=sig_thres, axis=0)
 
@@ -156,7 +94,68 @@ def applySigClip(data, e_data, sig_thres=2, ymin=0, ymax=1.2, var='V2', display=
     return np.array(mn_data_clip), np.array(std_data_clip)
 
 
-def averageCalibFiles(list_nrm, sig_thres=2, display=False):
+def _calc_correction_atm_vis2(data, corr_const=1, nf=100, display=False,
+                              verbose=False, normalizedUncer=False):
+    """
+    This function corrects V^2 for seeing and windshake. Use this on source and 
+    cal before division. Returns a multiplicative correction to the V^2.
+
+    Parameters:
+    -----------
+    `data` {class}:
+        class like containting results from extract_bs function,
+    `corr_const` {float}: 
+        Correction constant (0.4 is good for V for NIRC experiment).
+    Returns:
+    --------
+    `correction` {array}:
+        Correction factor to apply.
+
+    """
+
+    vis = data.v2
+    avar = data.avar
+    u = data.u
+    v = data.v
+
+    err_avar = data.err_avar
+    err_vis = data.v2_sig
+
+    w = np.where((vis == 0) | (avar == 0))
+
+    if len(w) == 0:
+        print('Cannot continue - divide by zero imminent...')
+        correction = None
+
+    normvar = avar/vis**2
+    w0 = np.where(u**2+v**2 >= 0)
+
+    param = {'a': 0, 'b': 0, 'c': 0, 'd': 0, 'e': 0}
+
+    if (len(err_avar) == 0):
+        err_avar = normvar*2.0/np.sqrt(nf)
+    if (len(err_vis) != 0):
+        err_avar = abs(normvar)*np.sqrt(err_avar**2 /
+                                        avar**2 + 2.0*err_vis**2/vis**2)
+
+    X = [u[w0], v[w0]]
+    fit = leastsqFit(_v2varfunc, X, param, normvar[w0], err_avar[w0],
+                     verbose=verbose, normalizedUncer=normalizedUncer)
+
+    correction = np.ones(vis.shape)
+    correction[w0] = np.exp(fit['model'] * corr_const)
+
+    if display:
+        plt.figure()
+        plt.errorbar((X[0]**2+X[1]**2)**0.5, normvar[w0], yerr=err_avar[w0],
+                     ls='None', ecolor='lightgray', marker='.', label='data')
+        plt.plot((X[0]**2+X[1]**2)**0.5, fit['model'], 'rs')
+        plt.show(block=False)
+
+    return correction
+
+
+def average_calib_files(list_nrm, sig_thres=2, display=False):
     """ Average NRM data extracted from multiple calibrator files. Additionaly,
     perform sigma-clipping to reject suspicious dataset.
 
@@ -193,6 +192,8 @@ def averageCalibFiles(list_nrm, sig_thres=2, display=False):
         vis2_vs_file.append(vis2)
         e_vis2_vs_file.append(e_vis2)
 
+    bl = list_nrm[0].bl
+
     cp_vs_file = np.array(cp_vs_file)
     e_cp_vs_file = np.array(e_cp_vs_file)
     vis2_vs_file = np.array(vis2_vs_file)
@@ -202,13 +203,13 @@ def averageCalibFiles(list_nrm, sig_thres=2, display=False):
     cmn_cp, std_cp = wtmn(cp_vs_file, e_cp_vs_file)
 
     # Apply sigma clipping on the averages
-    cmn_vis2_clip, std_vis2_clip = applySigClip(vis2_vs_file, e_vis2_vs_file,
-                                                sig_thres=sig_thres,
-                                                var='V2', display=display)
-    cmn_cp_clip, std_cp_clip = applySigClip(cp_vs_file, e_cp_vs_file,
-                                            sig_thres=sig_thres,
-                                            ymax=10,
-                                            var='CP', display=display)
+    cmn_vis2_clip, std_vis2_clip = _apply_sig_clip(vis2_vs_file, e_vis2_vs_file,
+                                                   sig_thres=sig_thres,
+                                                   var='V2', display=display)
+    cmn_cp_clip, std_cp_clip = _apply_sig_clip(cp_vs_file, e_cp_vs_file,
+                                               sig_thres=sig_thres,
+                                               ymax=10,
+                                               var='CP', display=display)
 
     res = {'f_v2_clip': np.array(cmn_vis2_clip),
            'f_v2': np.array(cmn_vis2),
@@ -218,7 +219,7 @@ def averageCalibFiles(list_nrm, sig_thres=2, display=False):
            'f_cp': np.array(cmn_cp),
            'std_cp_clip': np.array(std_cp_clip),
            'std_cp': np.array(std_cp),
-           'bl': nrm.bl,
+           'bl': bl,
            'pa': l_pa}
 
     return dict2class(res)
@@ -257,7 +258,8 @@ def calibrate(res_t, res_c, clip=False, sig_thres=2, apply_phscorr=False, Addind
     if type(res_c) is not list:
         res_c = [res_c]
 
-    calib_tab = averageCalibFiles(res_c, sig_thres=sig_thres, display=display)
+    calib_tab = average_calib_files(
+        res_c, sig_thres=sig_thres, display=display)
 
     if clip:
         cmn_v2_c, cmn_cp_c, std_v2_c, std_cp_c = (calib_tab.f_v2_clip, calib_tab.f_cp_clip,
@@ -266,7 +268,7 @@ def calibrate(res_t, res_c, clip=False, sig_thres=2, apply_phscorr=False, Addind
         cmn_v2_c, cmn_cp_c, std_v2_c, std_cp_c = (calib_tab.f_v2, calib_tab.f_cp,
                                                   calib_tab.std_vis2, calib_tab.std_cp)
 
-    v2_corr_t = calc_correctionAtm_vis2(res_t)
+    v2_corr_t = _calc_correction_atm_vis2(res_t)
 
     if apply_phscorr:
         v2_corr_t *= res_t.phs_v2corr
