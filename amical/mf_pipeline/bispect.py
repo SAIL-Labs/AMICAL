@@ -21,7 +21,7 @@ import numpy as np
 from astropy.io import fits
 from matplotlib import pyplot as plt
 # from amical.dataProcessing import clean_data
-from amical.getInfosObs import GetMaskPos
+from amical.get_infos_obs import get_mask
 from amical.tools import compute_pa, cov2cor
 from munch import munchify as dict2class
 from scipy.optimize import minimize
@@ -137,7 +137,7 @@ def extract_bs(cube, filename, maskname, filtname=None, targetname=None, bs_Mult
     dim2 = i_ps[2]
 
     # Number of aperture in the mask
-    n_holes = len(GetMaskPos(instrument, maskname))
+    n_holes = len(get_mask(instrument, maskname))
 
     # 2. Determine the number of different baselines (bl), bispectrums (bs) or
     # covariance matrices (cov) and associates each holes as couple for bl or

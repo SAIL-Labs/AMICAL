@@ -14,7 +14,7 @@ import numpy as np
 from amical.tools import mas2rad
 
 
-def GetMaskPos(ins, mask, first=0):
+def get_mask(ins, mask, first=0):
     """ Return dictionnary containning saved informations about masks. """
 
     off = 0.3
@@ -92,7 +92,7 @@ def GetMaskPos(ins, mask, first=0):
     return xycoords_sel
 
 
-def GetWavelength(ins, filtname):
+def get_wavelength(ins, filtname):
     """ Return dictionnary containning saved informations about filters. """
 
     dic_filt = {'NIRISS': {'F277W': [2.776, 0.715],
@@ -120,7 +120,7 @@ def GetWavelength(ins, filtname):
     return wl
 
 
-def GetPixelSize(ins):
+def get_pixel_size(ins):
     saved_pixel_detector = {'NIRISS': 65.6,
                             'SPHERE': 12.27}
     try:

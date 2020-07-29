@@ -22,7 +22,7 @@ from munch import munchify as dict2class
 from termcolor import cprint
 
 from amical.dpfit import leastsqFit
-from amical.getInfosObs import GetMaskPos, GetPixelSize, GetWavelength
+from amical.get_infos_obs import get_mask, get_pixel_size, get_wavelength
 from amical.mf_pipeline.idl_function import array_coords, dist
 from amical.tools import gauss_2d_asym, linear, norm_max, plot_circle
 
@@ -173,10 +173,10 @@ def make_mf(maskname, instrument, filtname, npix,
 
     # Get detector, filter and mask informations
     # ------------------------------------------
-    pixelSize = GetPixelSize(instrument)  # Pixel size of the detector [rad]
+    pixelSize = get_pixel_size(instrument)  # Pixel size of the detector [rad]
     # Wavelength of the filter (filt[0]: central, filt[1]: width)
-    filt = GetWavelength(instrument, filtname)
-    xy_coords = GetMaskPos(instrument, maskname)  # mask coordinates
+    filt = get_wavelength(instrument, filtname)
+    xy_coords = get_mask(instrument, maskname)  # mask coordinates
 
     if display:
         if instrument == 'NIRISS':

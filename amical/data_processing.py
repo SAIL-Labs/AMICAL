@@ -22,7 +22,7 @@ from astropy.convolution import Gaussian2DKernel, interpolate_replace_nans
 from amical.tools import applyMaskApod, crop_max
 
 
-def applyPatchGhost(cube, xc, yc, radius=20, dx=0, dy=-200, method='bg'):
+def apply_patch_ghost(cube, xc, yc, radius=20, dx=0, dy=-200, method='bg'):
     """Apply a patch on an eventual artifacts/ghosts on the spectral filter (i.e.
     K1 filter of SPHERE presents an artifact/ghost at (392, 360)).
 
@@ -168,7 +168,7 @@ def select_data(cube, clip_fact=0.5, clip=False, verbose=True, display=True):
     return cube_cleaned_checked
 
 
-def skyCorrection(imA, r1=100, dr=20, verbose=False):
+def sky_correction(imA, r1=100, dr=20, verbose=False):
     """
     Perform background sky correction to be as close to zero as possible.
     """
@@ -199,7 +199,7 @@ def skyCorrection(imA, r1=100, dr=20, verbose=False):
     return imC, backgroundC
 
 
-def fixBadPixels(image, bad_map, add_bad=[], x_stddev=1):
+def fix_bad_pixels(image, bad_map, add_bad=[], x_stddev=1):
     """ Replace bad pixels with values interpolated from their neighbors (interpolation
     is made with a gaussian kernel convolution)."""
     if len(add_bad) != 0:
@@ -307,11 +307,11 @@ def clean_data(data, isz=None, r1=None, dr=None, edge=0,
             img0[0:edge, :] = 0
             img0[-edge:-1, :] = 0
         if bad_map is not None:
-            img1 = fixBadPixels(img0, bad_map, add_bad=add_bad)
+            img1 = fix_bad_pixels(img0, bad_map, add_bad=add_bad)
         else:
             img1 = img0.copy()
         im_rec_max = crop_max(img1, isz, f=3)[0]
-        img_biased = skyCorrection(im_rec_max, r1=r1, dr=dr)[0]
+        img_biased = sky_correction(im_rec_max, r1=r1, dr=dr)[0]
         img_biased[img_biased < 0] = 0  # Remove negative pixels
 
         if img_biased.shape[0] != img_biased.shape[1]:
@@ -324,7 +324,7 @@ def clean_data(data, isz=None, r1=None, dr=None, edge=0,
     return cube_cleaned
 
 
-def selectCleanData(filename, isz=256, r1=100, dr=10, edge=0,
+def select_clean_data(filename, isz=256, r1=100, dr=10, edge=0,
                     clip=True, bad_map=None, add_bad=[],
                     clip_fact=0.5, corr_ghost=True,
                     verbose=False, ihdu=0, display=False):

@@ -13,13 +13,13 @@ file_c = os.path.join(datadir, 'HD142695_IRD_SCIENCE_DBI_LEFT_CUBE.fits')
 # ----------------------------------
 # Cleaning step
 # ----------------------------------
-cube_t = amical.selectCleanData(file_t, clip=True,
-                                corr_ghost=False,
-                                display=True)
+cube_t = amical.select_clean_data(file_t, clip=True,
+                                  corr_ghost=False,
+                                  display=True)
 
-cube_c = amical.selectCleanData(file_c, clip=True,
-                                corr_ghost=False,
-                                display=True)
+cube_c = amical.select_clean_data(file_c, clip=True,
+                                  corr_ghost=False,
+                                  display=True)
 
 #  AMI parameters (refer to the docstrings of `extract_bs` for details)
 params_ami = {"peakmethod": 'fft',
