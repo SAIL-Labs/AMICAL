@@ -52,6 +52,7 @@ cal = amical.calibrate(bs_t, bs_c)
 
 # Display and save the results as oifits
 amical.show(cal, true_flag_t3=False, cmax=180, pa=bs_t.pa)
-amical.save(cal, fake_obj=True, verbose=False, pa=bs_t.pa)
+amical.save(cal, oifits_file='example_HD142527_SPHERE.oifits',
+            fake_obj=True, verbose=False, pa=bs_t.pa)
 
 plt.show(block=True)
