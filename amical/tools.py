@@ -610,6 +610,8 @@ def checkSeeingCond(list_nrm):
 
     """
     l_seeing, l_vis2, l_cp, l_pa, l_mjd = [], [], [], [], []
+    
+    hdr = fits.open(list_nrm[0].filename)[0].header
     for nrm in list_nrm:
         hdr = fits.open(nrm.filename)[0].header
         pa = np.mean(sphere_parang(hdr))
