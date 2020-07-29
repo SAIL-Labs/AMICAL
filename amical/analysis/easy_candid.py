@@ -5,8 +5,8 @@ from uncertainties import ufloat, umath
 from amical.analysis import candid
 
 
-def candidGrid(input_data, step=10, rmin=20, rmax=400, diam=0, obs=['cp', 'v2'],
-               doNotFit=['diam*', ], ncore=1, verbose=False):
+def candid_grid(input_data, step=10, rmin=20, rmax=400, diam=0, obs=['cp', 'v2'],
+                doNotFit=['diam*', ], ncore=1, verbose=False):
     """ This function is an user friendly interface between the users of amical
     pipeline and the CANDID analysis package (https://github.com/amerand/CANDID).
 
@@ -39,8 +39,8 @@ def candidGrid(input_data, step=10, rmin=20, rmax=400, diam=0, obs=['cp', 'v2'],
 
     o.observables = obs
 
-    #ifig = plt.gcf().number + 1 
-    #if (ifig == 2):
+    #ifig = plt.gcf().number + 1
+    # if (ifig == 2):
     #    ifig = 1
     o.fitMap(rmax=rmax, rmin=rmin, ncore=ncore, fig=0,
              step=step, addParam={"diam*": diam}, doNotFit=doNotFit, verbose=verbose)
@@ -91,8 +91,8 @@ def candidGrid(input_data, step=10, rmin=20, rmax=400, diam=0, obs=['cp', 'v2'],
     return res  # dict2class(res)
 
 
-def candidCRlimit(input_data, step=10, rmin=20, rmax=400, diam=0, obs=['cp', 'v2'],
-                  fitComp=None, ncore=1, methods=['injection']):
+def candid_cr_limit(input_data, step=10, rmin=20, rmax=400, diam=0, obs=['cp', 'v2'],
+                    fitComp=None, ncore=1, methods=['injection']):
     cprint(' | --- Start CANDID contrast limit --- :', 'green')
     o = candid.Open(input_data)
     o.observables = obs

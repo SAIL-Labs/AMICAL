@@ -25,7 +25,7 @@ from matplotlib import pyplot as plt
 import amical
 
 # Your inputdata is an oifits file or a list of oifits.
-inputdata = 'Saveoifits/fakebinary_NIRISS_g7_F430M_58886_1.oifits'
+inputdata = 'Saveoifits/example_fakebinary_NIRISS.oifits'
 
 use_candid = True
 use_pymask = False
@@ -39,9 +39,9 @@ if use_candid:
                     'ncore': 4  # core for multiprocessing
                     }
 
-    fit1 = amical.candidGrid(inputdata, **param_candid)
+    fit1 = amical.candid_grid(inputdata, **param_candid)
 
-    cr_candid = amical.candidCRlimit(
+    cr_candid = amical.candid_cr_limit(
         inputdata, **param_candid, fitComp=fit1['comp'])
 
 # Analysis with PYMASK package
@@ -70,17 +70,17 @@ if use_pymask:
     # ** Note that if you used only a subset of CP (by selecting one common hole to
     # save the oifits, see amical.save for details), this additional `err_scale` is unusable.
 
-    fit2 = amical.pymaskGrid(inputdata, **param_pymask)
+    fit2 = amical.pymask_grid(inputdata, **param_pymask)
 
     param_mcmc = {'niters': 800,
                   'walkers': 100,
                   'initial_guess': [146, 47, 244],
                   'burn_in': 100}
 
-    fit3 = amical.pymaskMcmc(inputdata, **param_pymask, **param_mcmc)
+    fit3 = amical.pymask_mcmc(inputdata, **param_pymask, **param_mcmc)
 
-    cr_pymask = amical.pymaskCRlimit(inputdata, nsim=500, ncore=12, smax=250,
-                                     nsep=100, cmax=5000, nth=30, ncrat=60)
+    cr_pymask = amical.pymask_cr_limit(inputdata, nsim=500, ncore=12, smax=250,
+                                       nsep=100, cmax=5000, nth=30, ncrat=60)
 
 if use_candid & use_pymask:
     plt.figure()

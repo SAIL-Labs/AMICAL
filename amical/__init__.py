@@ -1,5 +1,5 @@
-from .analysis.easy_candid import candidGrid, candidCRlimit
-from .analysis.easy_pymask import pymaskGrid, pymaskCRlimit, pymaskMcmc
+from .analysis.easy_candid import candid_grid, candid_cr_limit
+from .analysis.easy_pymask import pymask_grid, pymask_cr_limit, pymask_mcmc
 from .core import calibrate
 from .mf_pipeline.ami_function import make_mf
 from .mf_pipeline.bispect import extract_bs
