@@ -296,40 +296,13 @@ def calibrate(res_t, res_c, clip=False, sig_thres=2, apply_phscorr=False, Addind
                            std_v2_c**2*v2_t**2/cmn_v2_c**4)
     e_cp_calib = np.sqrt(e_cp_t**2 + std_cp_c**2) * err_scale
 
-    visamp_t = np.abs(res_t.cvis_all)
-    visphi_t = np.angle(res_t.cvis_all)
-
-    if type(res_c) == list:
-        visamp_c = np.abs(res_c[0].cvis_all)
-        visphi_c = np.angle(res_c[0].cvis_all)
-
-        fact_calib_visamp = np.mean(visamp_c, axis=0)
-        fact_calib_visphi = np.mean(visphi_c, axis=0)
-    else:
-        visamp_c = np.abs(res_c.cvis_all)
-        visphi_c = np.angle(res_c.cvis_all)
-
-        fact_calib_visamp = np.mean(visamp_c, axis=0)
-        fact_calib_visphi = np.mean(visphi_c, axis=0)
-
-    visamp_calibrated = visamp_t/fact_calib_visamp
-    visphi_calibrated = visphi_t - fact_calib_visphi
-
-    visamp = np.mean(visamp_calibrated, axis=0)
-    e_visamp = np.std(visamp_calibrated, axis=0)
-
-    visphi = np.mean(visphi_calibrated, axis=0)
-    e_visphi = np.std(visphi_calibrated, axis=0)
-
     u1 = res_t.u[res_t.bs2bl_ix[0, :]]
     v1 = res_t.v[res_t.bs2bl_ix[0, :]]
     u2 = res_t.u[res_t.bs2bl_ix[1, :]]
     v2 = res_t.v[res_t.bs2bl_ix[1, :]]
 
     cal = {'vis2': vis2_calib, 'e_vis2': e_vis2_calib, 'cp': cp_calib, 'e_cp': e_cp_calib,
-           'visamp': visamp, 'e_visamp': e_visamp, 'visphi': visphi,
-           'e_visphi': e_visphi, 'u': res_t.u, 'v': res_t.v, 'wl': res_t.wl,
+           'u': res_t.u, 'v': res_t.v, 'wl': res_t.wl,
            'u1': u1, 'v1': v1, 'u2': u2, 'v2': v2,
            'raw_t': res_t, 'raw_c': res_c}
-
     return dict2class(cal)

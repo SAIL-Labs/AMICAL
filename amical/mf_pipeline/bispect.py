@@ -759,7 +759,7 @@ def extract_bs(cube, filename, maskname, filtname=None, targetname=None, bs_Mult
         seeing_end = float(hdr['HIERARCH ESO TEL AMBI FWHM END'])
         seeing = np.mean([seeing_start, seeing_end])
     except KeyError:
-        seeing = np.nan
+        seeing = 0
 
     # 12. Compute the absolute oriention (North-up, East-left)
     # ------------------------------------------------------------------------
