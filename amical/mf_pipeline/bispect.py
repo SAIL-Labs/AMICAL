@@ -14,24 +14,24 @@ and calc_bispect.pro).
 --------------------------------------------------------------------
 """
 
+import sys
 import time
 import warnings
 
 import numpy as np
 from astropy.io import fits
 from matplotlib import pyplot as plt
-# from amical.dataProcessing import clean_data
-from amical.get_infos_obs import get_mask
-from amical.tools import compute_pa, cov2cor
 from munch import munchify as dict2class
 from scipy.optimize import minimize
 from termcolor import cprint
 from tqdm import tqdm
 
-from .ami_function import (GivePeakInfo2d, bs_multiTriangle, index_mask,
+from amical.get_infos_obs import get_mask
+from amical.tools import compute_pa, cov2cor
+
+from .ami_function import (bs_multiTriangle, give_peak_info2d, index_mask,
                            make_mf, phase_chi2, tri_pix)
 from .idl_function import dblarr, dist, regress_noc
-import sys
 
 warnings.filterwarnings("ignore")
 
@@ -208,9 +208,6 @@ def extract_bs(cube, filename, maskname, filtname=None, targetname=None, bs_Mult
 
         # Compute determined peak position in the PS
         lX, lY, lC = [], [], []
-
-        # l_peak = GivePeakInfo2d(mf, n_baselines, dim1, dim2)
-
         for j in range(n_baselines):
             l_x = X.ravel()[mf.pvct[mf.ix[0, j]: mf.ix[1, j]]]
             l_y = Y.ravel()[mf.pvct[mf.ix[0, j]: mf.ix[1, j]]]
@@ -277,7 +274,7 @@ def extract_bs(cube, filename, maskname, filtname=None, targetname=None, bs_Mult
     # ------------------------------------------------------------------------
     dark_ps = np.zeros([dim1, dim2])
 
-    List_peak = GivePeakInfo2d(mf, n_baselines, dim1, dim2)
+    List_peak = give_peak_info2d(mf, n_baselines, dim1, dim2)
 
     if verbose:
         print("\nCalculating V^2 and BS...")

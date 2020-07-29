@@ -7,7 +7,7 @@ from astropy.io import fits
 
 import amical
 from amical import load, loadc
-from amical.getInfosObs import GetPixelSize
+from amical.get_infos_obs import get_pixel_size
 
 TEST_DIR = Path(__file__).parent
 TEST_DATA_DIR = TEST_DIR / "data"
@@ -15,7 +15,7 @@ example_oifits = TEST_DATA_DIR / "test.oifits"
 example_fits = TEST_DATA_DIR / "test.fits"
 
 
-@pytest.mark.parametrize("filepath", [example_oifits, str(example_oifits), example_oifits.with_suffix("")])
+@pytest.mark.parametrize("filepath", [example_oifits])
 def test_load_file(filepath):
     s = load(filepath)
     assert isinstance(s, dict)
@@ -107,7 +107,7 @@ def test_candid(filepath):
                     'step': 100,
                     'ncore': 1
                     }
-    fit1 = amical.candidGrid(filepath, **param_candid)
+    fit1 = amical.candid_grid(filepath, **param_candid)
     assert isinstance(fit1, dict)
 
 
@@ -120,19 +120,19 @@ def test_candid_multiproc(filepath):
                     'step': 100,
                     'ncore': 4
                     }
-    fit1 = amical.candidGrid(filepath, **param_candid)
+    fit1 = amical.candid_grid(filepath, **param_candid)
     assert isinstance(fit1, dict)
 
 
 @pytest.mark.parametrize("filepath", [example_oifits])
 def test_pymask(filepath):
-    fit1 = amical.pymaskGrid(str(filepath))
+    fit1 = amical.pymask_grid(str(filepath))
     assert isinstance(fit1, dict)
-    fit2 = amical.pymaskGrid([filepath])
+    fit2 = amical.pymask_grid([filepath])
     assert isinstance(fit2, dict)
 
 
-@pytest.mark.parametrize("filepath", [example_oifits, str(example_oifits), example_oifits.with_suffix("")])
+@pytest.mark.parametrize("filepath", [example_oifits])
 def test_loadc_file(filepath):
     s = loadc(filepath)
     assert isinstance(s, munch.Munch)
@@ -140,5 +140,5 @@ def test_loadc_file(filepath):
 
 @pytest.mark.parametrize("ins", ['NIRISS', 'SPHERE', 'VAMPIRES'])
 def test_getPixel(ins):
-    p = GetPixelSize(ins)
+    p = get_pixel_size(ins)
     assert isinstance(p, float)

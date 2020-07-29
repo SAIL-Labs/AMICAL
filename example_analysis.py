@@ -36,13 +36,13 @@ if use_candid:
     param_candid = {'rmin': 20,  # inner radius of the grid
                     'rmax': 250,  # outer radius of the grid
                     'step': 50,  # grid sampling
-                    'ncore': 4  # core for multiprocessing
+                    'ncore': 12  # core for multiprocessing
                     }
 
-    fit1 = amical.candid_grid(inputdata, **param_candid)
+    fit1 = amical.candid_grid(inputdata, **param_candid, diam=20, doNotFit=[])
 
-    cr_candid = amical.candid_cr_limit(
-        inputdata, **param_candid, fitComp=fit1['comp'])
+    # cr_candid = amical.candid_cr_limit(
+    #    inputdata, **param_candid, fitComp=fit1['comp'])
 
 # Analysis with PYMASK package
 # ----------------------------

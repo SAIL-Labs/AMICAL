@@ -4,13 +4,16 @@ Created on Mon Aug 25 13:17:03 2014
 
 @author: anthony
 """
-import numpy as np
-import matplotlib.pyplot as plt
 import time
 from multiprocessing import Pool
-from .cp_tools import cp_model,rad2mas,cp_loglikelihood,cp_loglikelihood_proj,mas2rad,project_cps
-from matplotlib.cm import register_cmap, cmap_d
+
+import matplotlib.pyplot as plt
+import numpy as np
 import scipy.interpolate as interp
+from matplotlib.cm import cmap_d, register_cmap
+
+from .cp_tools import (cp_loglikelihood, cp_loglikelihood_proj, cp_model,
+                       mas2rad, project_cps, rad2mas)
 
 try:
     import ds9cool

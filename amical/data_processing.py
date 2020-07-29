@@ -12,12 +12,12 @@ centering, etc.) and data selection (sigma-clipping, centered flux,).
 """
 
 import numpy as np
+from astropy.convolution import Gaussian2DKernel, interpolate_replace_nans
 from astropy.io import fits
 from matplotlib import pyplot as plt
 from matplotlib.colors import PowerNorm
 from termcolor import cprint
 from tqdm import tqdm
-from astropy.convolution import Gaussian2DKernel, interpolate_replace_nans
 
 from amical.tools import applyMaskApod, crop_max
 

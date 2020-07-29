@@ -1,13 +1,16 @@
-import matplotlib
-import numpy as np
-from mpl_toolkits.mplot3d import Axes3D
-import oifits
-import warnings
 import copy
+import warnings
+
+import matplotlib
 import matplotlib.pyplot as plt
-from matplotlib.transforms import offset_copy
+import numpy as np
 from matplotlib.patches import Rectangle
-from numpy import sqrt, pi, arctan, sort
+from matplotlib.transforms import offset_copy
+from mpl_toolkits.mplot3d import Axes3D
+from numpy import arctan, pi, sort, sqrt
+
+import oifits
+
 
 def match_wavelength(template, oifitsobj):
 
