@@ -4,8 +4,8 @@ from matplotlib import pyplot as plt
 from amical.analysis import pymask
 
 
-def pymaskGrid(input_data, ngrid=40, pa_prior=[0, 360], sep_prior=[0, 100], cr_prior=[1, 150],
-               err_scale=1., extra_error=0., ncore=1, verbose=False):
+def pymask_grid(input_data, ngrid=40, pa_prior=[0, 360], sep_prior=[0, 100], cr_prior=[1, 150],
+                err_scale=1., extra_error=0., ncore=1, verbose=False):
     cpo = pymask.cpo(input_data)
     like_grid = pymask.coarse_grid(cpo, nsep=ngrid, nth=ngrid, ncon=ngrid, thmin=pa_prior[0], thmax=pa_prior[1],
                                    smin=sep_prior[0], smax=sep_prior[1], cmin=cr_prior[0], cmax=cr_prior[1],
@@ -13,9 +13,9 @@ def pymaskGrid(input_data, ngrid=40, pa_prior=[0, 360], sep_prior=[0, 100], cr_p
     return like_grid
 
 
-def pymaskMcmc(input_data, initial_guess, niters=1000, pa_prior=[0, 360], sep_prior=[0, 100], cr_prior=[1, 150],
-               err_scale=1, extra_error=0, ncore=1, burn_in=500, walkers=100, display=True,
-               verbose=True):
+def pymask_mcmc(input_data, initial_guess, niters=1000, pa_prior=[0, 360], sep_prior=[0, 100], cr_prior=[1, 150],
+                err_scale=1, extra_error=0, ncore=1, burn_in=500, walkers=100, display=True,
+                verbose=True):
     cpo = pymask.cpo(input_data)
     hammer_data = pymask.hammer(cpo, ivar=initial_guess, niters=niters, model='constant', nwalcps=walkers,
                                 sep_prior=sep_prior, pa_prior=pa_prior, crat_prior=cr_prior,
@@ -67,8 +67,8 @@ def pymaskMcmc(input_data, initial_guess, niters=1000, pa_prior=[0, 360], sep_pr
     return res_corner
 
 
-def pymaskCRlimit(input_data, nsim=100, err_scale=1, extra_error=0, ncore=1, cmax=500,
-                  nsep=60, ncrat=60, nth=30, smax=250, ):
+def pymask_cr_limit(input_data, nsim=100, err_scale=1, extra_error=0, ncore=1, cmax=500,
+                    nsep=60, ncrat=60, nth=30, smax=250, ):
     cpo = pymask.cpo(input_data)
     lims_data = pymask.detec_limits(cpo, threads=ncore, nsim=nsim,
                                     nsep=nsep, ncon=ncrat, nth=nth,

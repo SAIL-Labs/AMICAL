@@ -9,9 +9,7 @@ from termcolor import cprint
 
 # import pymask.oifits
 from . import oifits
-
 from .cp_tools import project_cps
-
 
 '''------------------------------------------------------------------------
 cpo.py - Python class for manipulating oifits format closure phase data.
@@ -210,7 +208,6 @@ class icpo():
                                    idl_masking_dir='/Users/cheetham/code/masking/'):
         ''' Import the closure phase data from the IDL pipeline directly
         from the bispectrum (bs) files'''
-
         # Get all of the bispectrum files
         bs_files = glob.glob(analysis_dir+'bs*.idlvar')
         bs_files.sort()

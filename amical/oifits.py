@@ -13,7 +13,6 @@ OIFITS related function.
 
 import datetime
 import os
-from pathlib import Path
 
 import numpy as np
 from astropy import units as u
@@ -30,7 +29,7 @@ from amical.tools import rad2mas
 list_color = ['#00a7b5', '#afd1de', '#055c63', '#ce0058', '#8a8d8f', '#f1b2dc']
 
 
-def computeflag(value, sigma, limit=4.):
+def _compute_flag(value, sigma, limit=4.):
     """ Compute flag array using snr (snr < 4 by default). """
     npts = len(value)
     flag = np.array([False] * npts)
@@ -40,16 +39,90 @@ def computeflag(value, sigma, limit=4.):
     return flag
 
 
-def cal2dict(cal, target=None, fake_obj=False, pa=0, del_pa=0, snr=4,
+def _peak1hole_cp(bs, ihole=0):
+    """ Get the indices of each CP including the given hole."""
+    bs2bl_ix = bs.bs2bl_ix
+    bl2h_ix = bs.bl2h_ix
+    sel_ind = []
+    for i, x in enumerate(bs2bl_ix.T):
+        cpi = [bl2h_ix.T[y] for y in x]
+        if ((ihole in cpi[0]) or (ihole in cpi[1]) or (ihole in cpi[2])):
+            sel_ind.append(i)
+    sel_ind = np.array(sel_ind)
+    return sel_ind
+
+
+def _format_staindex_v2(tab):
+    """ Format the sta_index of v2 to save as oifits. """
+    sta_index = []
+    for x in tab:
+        ap1 = int(x[0])
+        ap2 = int(x[1])
+        line = np.array([ap1, ap2]) + 1
+        sta_index.append(line)
+    return sta_index
+
+
+def _format_staindex_t3(tab):
+    """ Format the sta_index of cp to save as oifits. """
+    sta_index = []
+    for x in tab:
+        ap1 = int(x[0])
+        ap2 = int(x[1])
+        ap3 = int(x[2])
+        line = np.array([ap1, ap2, ap3]) + 1
+        sta_index.append(line)
+    return sta_index
+
+
+def _apply_flag(dict_calibrated, unit='arcsec'):
+    """ Apply flag and convert to appropriete units."""
+
+    wl = dict_calibrated['OI_WAVELENGTH']['EFF_WAVE']
+    uv_scale = {'m': 1,
+                'rad': 1/wl,
+                'arcsec': 1/wl/rad2mas(1e-3),
+                'lambda': 1/wl/1e6}
+
+    U = dict_calibrated['OI_VIS2']['UCOORD']*uv_scale[unit]
+    V = dict_calibrated['OI_VIS2']['VCOORD']*uv_scale[unit]
+
+    flag_v2 = np.invert(dict_calibrated['OI_VIS2']['FLAG'])
+    V2 = dict_calibrated['OI_VIS2']['VIS2DATA'][flag_v2]
+    e_V2 = dict_calibrated['OI_VIS2']['VIS2ERR'][flag_v2] * 1
+    sp_freq_vis = dict_calibrated['OI_VIS2']['BL'][flag_v2] * uv_scale[unit]
+    flag_cp = np.invert(dict_calibrated['OI_T3']['FLAG'])
+    cp = dict_calibrated['OI_T3']['T3PHI'][flag_cp]
+    e_cp = dict_calibrated['OI_T3']['T3PHIERR'][flag_cp]
+    sp_freq_cp = dict_calibrated['OI_T3']['BL'][flag_cp] * uv_scale[unit]
+    bmax = 1.2*np.max(np.sqrt(U**2+V**2))
+
+    cal_flagged = dict2class({'U': U,
+                              'V': V,
+                              'bmax': bmax,
+                              'vis2': V2,
+                              'e_vis2': e_V2,
+                              'cp': cp,
+                              'e_cp': e_cp,
+                              'sp_freq_vis': sp_freq_vis,
+                              'sp_freq_cp': sp_freq_cp,
+                              'wl': wl[0],
+                              'band': dict_calibrated['info']['FILT']
+                              })
+
+    return cal_flagged
+
+
+def cal2dict(cal, target=None, pa=0, del_pa=0, snr=4,
              true_flag_v2=True, true_flag_t3=False, include_vis=False,
-             oriented=-1, nfile=1, ind_hole=None):
+             oriented=-1, ind_hole=None):
     """ Format class containing calibrated data into appropriate dictionnary 
     format to be saved as oifits files.
 
     Parameters
     ----------
     `cal` : {class}
-        Class returned by calib_v2_cp function (see oifits.py),\n
+        Class returned by amical.calibrate function (see core.py),\n
     `target` : {str}, (optional),
         Name of the science target, by default '',\n
     `fake_obj` : {bool}, (optional),
@@ -71,8 +144,6 @@ def cal2dict(cal, target=None, fake_obj=False, pa=0, del_pa=0, snr=4,
     `oriented` {float}:
         If oriented == -1, east assumed to the left in the image, otherwise 
         oriented == 1 (east to the right); (Default -1),\n
-    `nfile` : {int}, (optional)
-        Iteration number of the file (used to save multiple oifits file), by default 1.
 
     Returns
     -------
@@ -99,12 +170,12 @@ def cal2dict(cal, target=None, fake_obj=False, pa=0, del_pa=0, snr=4,
     t = Time(date, format='isot', scale='utc')
 
     if true_flag_v2:
-        flagV2 = computeflag(cal.vis2, cal.e_vis2, limit=snr)
+        flagV2 = _compute_flag(cal.vis2, cal.e_vis2, limit=snr)
     else:
         flagV2 = np.array([False] * n_baselines)
 
     if true_flag_t3:
-        flagCP = computeflag(cal.cp, cal.e_cp, limit=snr)
+        flagCP = _compute_flag(cal.cp, cal.e_cp, limit=snr)
     else:
         flagCP = np.array([False] * n_bs)
 
@@ -115,8 +186,6 @@ def cal2dict(cal, target=None, fake_obj=False, pa=0, del_pa=0, snr=4,
 
     if target is None:
         target = res_t.target
-    else:
-        pass
 
     thepa = pa - 0.5 * del_pa
     u, v = oriented*res_t.u, res_t.v
@@ -131,7 +200,7 @@ def cal2dict(cal, target=None, fake_obj=False, pa=0, del_pa=0, snr=4,
     if ind_hole is not None:
         cprint('Select only independant CP using common hole #%i.' %
                ind_hole, 'green')
-        sel_ind_cp = peak1holeCP(cal.raw_t, ind_hole)
+        sel_ind_cp = _peak1hole_cp(cal.raw_t, ind_hole)
     else:
         sel_ind_cp = np.arange(len(cal.cp))
 
@@ -172,7 +241,6 @@ def cal2dict(cal, target=None, fake_obj=False, pa=0, del_pa=0, snr=4,
                     'HDR': res_t.hdr,
                     'ISZ': res_t.isz,
                     'PSCALE': pixscale,
-                    'NFILE': nfile,
                     'xycoord': res_t.xycoord,
                     'SEEING': res_t.hdr['SEEING']}
            }
@@ -194,62 +262,23 @@ def cal2dict(cal, target=None, fake_obj=False, pa=0, del_pa=0, snr=4,
     return dic
 
 
-def peak1holeCP(bs, ihole=0):
-    """ Get the indices of each CP including the given hole."""
-    bs2bl_ix = bs.bs2bl_ix
-    bl2h_ix = bs.bl2h_ix
-    sel_ind = []
-    for i, x in enumerate(bs2bl_ix.T):
-        cpi = [bl2h_ix.T[y] for y in x]
-        if ((ihole in cpi[0]) or (ihole in cpi[1]) or (ihole in cpi[2])):
-            sel_ind.append(i)
-    sel_ind = np.array(sel_ind)
-    return sel_ind
-
-
-def Format_STAINDEX_V2(tab):
-    """ Format the sta_index of v2 to save as oifits. """
-    sta_index = []
-    for x in tab:
-        ap1 = int(x[0])
-        ap2 = int(x[1])
-        line = np.array([ap1, ap2]) + 1
-        sta_index.append(line)
-    return sta_index
-
-
-def Format_STAINDEX_T3(tab):
-    """ Format the sta_index of cp to save as oifits. """
-    sta_index = []
-    for x in tab:
-        ap1 = int(x[0])
-        ap2 = int(x[1])
-        ap3 = int(x[2])
-        line = np.array([ap1, ap2, ap3]) + 1
-        sta_index.append(line)
-    return sta_index
-
-
-def sanitize_oifits_file(oifits_file):
-    assert isinstance(oifits_file, (str, os.PathLike))
-    oifits_file = Path(oifits_file)
-
-    if oifits_file.suffix == '':
-        oifits_file = oifits_file.with_suffix(".oifits")
-
-    return oifits_file
-
-
-def load(filename, target=None, ins=None, mask=None, filtname=None, include_vis=True):
-    """[summary]
+def load(filename, filtname=None,):
+    """ Load an oifits file format and store it as dictionnary. The different keys are
+    representative of the oifits standard structure ('OI_WAVELENGTH', 'OI_VIS2', etc.)
 
     Parameters
     ----------
-    filename : [type]
-        [description]
+    filename {str}:
+        Name of the oifits file,\n
+    filtname {str}:
+        Name of the filter used if not included in the header (default: None)
+
+    Output:
+    -------
+    dic {dict}:
+        Dictionnary containing the oifits file data.
     """
-    oifits_file = sanitize_oifits_file(filename)
-    fitsHandler = fits.open(oifits_file)
+    fitsHandler = fits.open(filename)
     hdr = fitsHandler[0].header
 
     dic = {}
@@ -348,21 +377,12 @@ def loadc(filename):
     res = {}
     # Extract infos
     res['target'] = dic['info']['OBJECT']
-    try:
-        res['calib'] = dic['info']['CALIB']
-    except KeyError:
-        pass
-    try:
-        res['seeing'] = dic['info']['SEEING']
-    except KeyError:
-        pass
-    try:
-        res['mjd'] = dic['info']['MJD']
-    except KeyError:
-        try:
-            res['mjd'] = dic['info']['MJD-OBS']
-        except KeyError:
-            pass
+
+    res['calib'] = dic['info'].get('CALIB')
+    res['seeing'] = dic['info'].get('SEEING')
+    res['mjd'] = dic['info'].get('MJD')
+    if res['mjd'] is None:
+        res['mjd'] = dic['info'].get('MJD-OBS')
 
     # Extract wavelength
     res['wl'] = dic['OI_WAVELENGTH']['EFF_WAVE']
@@ -389,10 +409,10 @@ def loadc(filename):
     return dict2class(res)
 
 
-def save(cal, oifits_file=None, fake_obj=False,
-         pa=0, include_vis=False, ind_hole=None,
-         true_flag_v2=True, true_flag_t3=False, snr=4,
-         datadir='Saveoifits', nfile=1, verbose=False):
+def save(cal, oifits_file=None, datadir='Saveoifits',
+         pa=0, ind_hole=None, fake_obj=False,
+         include_vis=False, true_flag_v2=True, true_flag_t3=False,
+         snr=4, verbose=False):
     """
     Summary:
     --------
@@ -410,8 +430,7 @@ def save(cal, oifits_file=None, fake_obj=False,
         ind_hole is set, save only the independant CP including the given hole 
         ncp = (N-1)(N-2)/2.\n
     `oifits_file` {str}:
-        Name of the oifits file, if None a default name using useful 
-        information is used (target, instrument, filter, mask, etc.),\n
+        Name of the oifits file,\n
     `include_vis` {bool}:
         If True, include OI_VIS table in the oifits,\n
     `fake_obj` {bool}:
@@ -425,9 +444,6 @@ def save(cal, oifits_file=None, fake_obj=False,
         Limit snr used to compute flags (default=4),\n
     `datadir` {str}:
         Folder name save the oifits files,\n
-    `nfile` {int}:
-        Integer number to include in the oifits file name (easly save 
-        mulitple iterations).\n 
     `verbose` {bool}:
         If True, print useful informations.
 
@@ -444,11 +460,14 @@ def save(cal, oifits_file=None, fake_obj=False,
         cprint('\nError save : Wrong data format!', on_color='on_red')
         return None
 
+    if oifits_file is None:
+        print('Error: oifits filename is not given, please specify oifits_file.')
+        return None
+
     if type(cal) != dict:
         dic = cal2dict(cal, pa=pa, include_vis=include_vis,
-                       fake_obj=fake_obj, nfile=nfile,
                        true_flag_v2=true_flag_v2, true_flag_t3=true_flag_t3,
-                       ind_hole=ind_hole)
+                       ind_hole=ind_hole, snr=snr)
     else:
         dic = cal.copy()
 
@@ -456,35 +475,22 @@ def save(cal, oifits_file=None, fake_obj=False,
         print('### Create %s directory to save all requested Oifits ###' % datadir)
         os.mkdir(datadir)
 
-    if type(oifits_file) == str:
-        filename = oifits_file
-    else:
-        filename = '%s_%s_%s_%s_%2.0f_%i.oifits' % (dic['info']['TARGET'],
-                                                    dic['info']['INSTRUME'], dic['info']['MASK'],
-                                                    dic['info']['FILT'], dic['info']['MJD'],
-                                                    dic['info']['NFILE'])
-
     # ------------------------------
     #       Creation OIFITS
     # ------------------------------
     if verbose:
-        print("\n\n### Init creation of OI_FITS (%s) :" % (filename))
+        print("\n\n### Init creation of OI_FITS (%s) :" % (oifits_file))
 
     refdate = datetime.datetime(2000, 1, 1)  # Unix time reference
-
     hdulist = fits.HDUList()
 
-    try:
-        hdr = dic['info']['HDR']
-    except KeyError:
-        hdr = {}
-
+    hdr = dic['info'].get('HDR', {})
     hdu = fits.PrimaryHDU()
     hdu.header['DATE'] = datetime.datetime.now().strftime(
         format='%F')  # , 'Creation date'
     hdu.header['ORIGIN'] = 'Sydney University'
     hdu.header['CONTENT'] = 'OIFITS2'
-    
+
     hdu.header['DATE-OBS'] = hdr.get('DATE-OBS', '')
     hdu.header['TELESCOP'] = hdr.get('TELESCOP', '')
     hdu.header['INSTRUME'] = hdr.get('INSTRUME', '')
@@ -494,11 +500,7 @@ def save(cal, oifits_file=None, fake_obj=False,
     hdu.header['FILT'] = dic['info']['FILT']
     hdu.header['MJD'] = dic['info']['MJD']
     hdu.header['MASK'] = dic['info']['MASK']
-    try:
-        hdu.header['SEEING'] = dic['info']['SEEING']
-    except ValueError:
-        hdu.header['SEEING'] = 0.0
-
+    hdu.header['SEEING'] = dic['info'].get('SEEING', '')
     hdu.header['CALIB'] = dic['info']['CALIB']
 
     hdulist.append(hdu)
@@ -539,18 +541,13 @@ def save(cal, oifits_file=None, fake_obj=False,
 
     # Add information from Simbad:
     if fake_obj:
-        ra = [0]
-        dec = [0]
+        ra = pmra = dec = pmdec = plx = [0]
         spectyp = ['fake']
-        pmra = [0]
-        pmdec = [0]
-        plx = [0]
     else:
         try:
             query = customSimbad.query_object(name_star)
             coord = SkyCoord(query['RA'][0]+' '+query['DEC']
                              [0], unit=(u.hourangle, u.deg))
-
             ra = [coord.ra.deg]
             dec = [coord.dec.deg]
             spectyp = query['SP_TYPE']
@@ -558,12 +555,8 @@ def save(cal, oifits_file=None, fake_obj=False,
             pmdec = query['PMDEC']
             plx = query['PLX_VALUE']
         except Exception:
-            ra = [0]
-            dec = [0]
+            ra = pmra = dec = pmdec = plx = [0]
             spectyp = ['fake']
-            pmra = [0]
-            pmdec = [0]
-            plx = [0]
 
     hdu = fits.BinTableHDU.from_columns(fits.ColDefs((
         fits.Column(name='TARGET_ID', format='1I', array=[1]),
@@ -596,52 +589,30 @@ def save(cal, oifits_file=None, fake_obj=False,
     if verbose:
         print('-> Including OI Array table...')
 
-    if 'xycoord' in dic['info']:
-        staxy = dic['info']['xycoord']
-        N_ap = len(staxy)
-        telName = ['A%i' % x for x in np.arange(N_ap)+1]
-        staName = telName
-        diameter = [0] * N_ap
+    staxy = dic['info']['xycoord']
+    N_ap = len(staxy)
+    telName = ['A%i' % x for x in np.arange(N_ap)+1]
+    staName = telName
+    diameter = [0] * N_ap
 
-        staxyz = []
-        for x in staxy:
-            a = list(x)
-            line = [a[0], a[1], 0]
-            staxyz.append(line)
+    staxyz = []
+    for x in staxy:
+        a = list(x)
+        line = [a[0], a[1], 0]
+        staxyz.append(line)
 
-        staIndex = np.arange(N_ap) + 1
+    staIndex = np.arange(N_ap) + 1
 
-        pscale = dic['info']['PSCALE']/1000.  # arcsec
-        isz = dic['info']['ISZ']  # Size of the image to extract NRM data
-        fov = [pscale * isz] * N_ap
-        fovtype = ['RADIUS'] * N_ap
-    else:
-        if N_ap is None:
-            cprint(
-                'Mask coordinates not included but are necessary to create oifits file:', 'red')
-            cprint(
-                '-> give the number of apertures of the mask (N_ap) as input.', 'red')
-            return None
-        telName = ['A%i' % x for x in np.arange(N_ap)+1]
-        staName = ['A%i' % x for x in np.arange(N_ap)+1]
-        diameter = [0] * N_ap
-        staIndex = np.arange(N_ap) + 1
-        staxyz = []
-        for x in np.arange(N_ap):
-            line = [x, x, 0]
-            staxyz.append(line)
-        try:
-            pscale = dic['info']['PSCALE']/1000.  # arcsec
-        except KeyError:
-            pscale = 0
-        fov = [0] * N_ap
-        fovtype = ['RADIUS'] * N_ap
+    pscale = dic['info']['PSCALE']/1000.  # arcsec
+    isz = dic['info']['ISZ']  # Size of the image to extract NRM data
+    fov = [pscale * isz] * N_ap
+    fovtype = ['RADIUS'] * N_ap
 
     hdu = fits.BinTableHDU.from_columns(fits.ColDefs((
         fits.Column(name='TEL_NAME', format='16A',
-                    array=telName),  # ['dummy']),
+                    array=telName),
         fits.Column(name='STA_NAME', format='16A',
-                    array=staName),  # ['dummy']),
+                    array=staName),
         fits.Column(name='STA_INDEX', format='1I', array=staIndex),
         fits.Column(name='DIAMETER', unit='METERS',
                     format='1E', array=diameter),
@@ -657,13 +628,11 @@ def save(cal, oifits_file=None, fake_obj=False,
     hdu.header['ARRNAME'] = dic['info']['MASK']
     hdu.header['FRAME'] = 'SKY'
     hdu.header['OI_REVN'] = 2, 'Revision number of the table definition'
-
     hdulist.append(hdu)
 
     # ------------------------------
     #           OI VIS
     # ------------------------------
-
     if include_vis:
         if verbose:
             print('-> Including OI Vis table...')
@@ -674,7 +643,7 @@ def save(cal, oifits_file=None, fake_obj=False,
         else:
             npts = 1
 
-        staIndex = Format_STAINDEX_V2(data['STA_INDEX'])
+        staIndex = _format_staindex_v2(data['STA_INDEX'])
         if type(data['MJD']) is not float:
             mjd = data['MJD'][0]
         else:
@@ -711,19 +680,16 @@ def save(cal, oifits_file=None, fake_obj=False,
         hdu.header['DATE-OBS'] = refdate.strftime(
             '%F'), 'Zero-point for table (UTC)'
         hdulist.append(hdu)
-    # except:
-        # pass
 
     # ------------------------------
     #           OI VIS2
     # ------------------------------
-
     if verbose:
         print('-> Including OI Vis2 table...')
 
     data = dic['OI_VIS2']
     if type(data['TARGET_ID']) != np.array:
-        npts = len(dic['OI_VIS2']['VIS2DATA'])
+        npts = len(data['VIS2DATA'])
     else:
         npts = 1
 
@@ -740,7 +706,7 @@ def save(cal, oifits_file=None, fake_obj=False,
         mjd = data['MJD']
         intTime = data['INT_TIME']
 
-    staIndex = Format_STAINDEX_V2(data['STA_INDEX'])
+    staIndex = _format_staindex_v2(data['STA_INDEX'])
 
     hdu = fits.BinTableHDU.from_columns(fits.ColDefs([
         fits.Column(name='TARGET_ID', format='1I',
@@ -794,7 +760,7 @@ def save(cal, oifits_file=None, fake_obj=False,
         mjd = data['MJD']
         intTime = data['INT_TIME']
 
-    staIndex = Format_STAINDEX_T3(data['STA_INDEX'])
+    staIndex = _format_staindex_t3(data['STA_INDEX'])
     hdu = fits.BinTableHDU.from_columns(fits.ColDefs((
         fits.Column(name='TARGET_ID', format='1I', array=targetId),
         fits.Column(name='TIME', format='1D', unit='SECONDS', array=time),
@@ -831,54 +797,15 @@ def save(cal, oifits_file=None, fake_obj=False,
     # ------------------------------
     #          Save file
     # ------------------------------
-    savedfile = os.path.join(datadir, filename)
+    savedfile = os.path.join(datadir, oifits_file)
     hdulist.writeto(savedfile, overwrite=True)
     if verbose:
-        cprint('\n\n### OIFITS CREATED (%s).' % filename, 'cyan')
-
+        cprint('\n\n### OIFITS CREATED (%s).' % oifits_file, 'cyan')
     return dic, savedfile
 
 
-def ApplyFlag(dict_calibrated, unit='arcsec'):
-    """ Apply flag and convert to appropriete units."""
-
-    wl = dict_calibrated['OI_WAVELENGTH']['EFF_WAVE']
-    uv_scale = {'m': 1,
-                'rad': 1/wl,
-                'arcsec': 1/wl/rad2mas(1e-3),
-                'lambda': 1/wl/1e6}
-
-    U = dict_calibrated['OI_VIS2']['UCOORD']*uv_scale[unit]
-    V = dict_calibrated['OI_VIS2']['VCOORD']*uv_scale[unit]
-
-    flag_v2 = np.invert(dict_calibrated['OI_VIS2']['FLAG'])
-    V2 = dict_calibrated['OI_VIS2']['VIS2DATA'][flag_v2]
-    e_V2 = dict_calibrated['OI_VIS2']['VIS2ERR'][flag_v2] * 1
-    sp_freq_vis = dict_calibrated['OI_VIS2']['BL'][flag_v2] * uv_scale[unit]
-    flag_cp = np.invert(dict_calibrated['OI_T3']['FLAG'])
-    cp = dict_calibrated['OI_T3']['T3PHI'][flag_cp]
-    e_cp = dict_calibrated['OI_T3']['T3PHIERR'][flag_cp]
-    sp_freq_cp = dict_calibrated['OI_T3']['BL'][flag_cp] * uv_scale[unit]
-    bmax = 1.2*np.max(np.sqrt(U**2+V**2))
-    
-    cal_flagged = dict2class({'U': U,
-                              'V': V,
-                              'bmax': bmax,
-                              'vis2': V2,
-                              'e_vis2': e_V2,
-                              'cp': cp,
-                              'e_cp': e_cp,
-                              'sp_freq_vis': sp_freq_vis,
-                              'sp_freq_cp': sp_freq_cp,
-                              'wl': wl[0],
-                              'band': dict_calibrated['info']['FILT']
-                              })
-
-    return cal_flagged
-
-
 def show(inputList, diffWl=False, ind_hole=None, vmin=0, vmax=1.05, cmax=180, setlog=False, pa=0,
-         unit='arcsec', unit_cp='deg', snr=3, true_flag_v2=True, true_flag_t3=False):
+         unit='arcsec', unit_cp='deg', snr=4, true_flag_v2=True, true_flag_t3=False):
     """ Show oifits data of a multiple dataset (loaded with oifits.load or oifits filename).
 
     Parameters:
@@ -929,8 +856,9 @@ def show(inputList, diffWl=False, ind_hole=None, vmin=0, vmax=1.05, cmax=180, se
     elif type(inputList[0]) is dict:
         l_dic = inputList
         print('Inputs are dict from amical.load.')
-
-    # return None
+    else:
+        print('Wrong input format.')
+        return None
 
     dic_color = {}
     i_c = 0
@@ -949,8 +877,8 @@ def show(inputList, diffWl=False, ind_hole=None, vmin=0, vmax=1.05, cmax=180, se
     # -------
     l_bmax, l_band_al = [], []
     for dic in l_dic:
-        tmp = ApplyFlag(dic)
-        U = tmp.U 
+        tmp = _apply_flag(dic)
+        U = tmp.U
         V = tmp.V
         band = tmp.band
         wl = tmp.wl
@@ -1001,12 +929,12 @@ def show(inputList, diffWl=False, ind_hole=None, vmin=0, vmax=1.05, cmax=180, se
     # -------
     max_f_vis = []
     for dic in l_dic:
-        tmp = ApplyFlag(dic, unit='arcsec')
-        V2 = tmp.vis2 
-        e_V2 = tmp.e_vis2  
-        sp_freq_vis = tmp.sp_freq_vis 
+        tmp = _apply_flag(dic, unit='arcsec')
+        V2 = tmp.vis2
+        e_V2 = tmp.e_vis2
+        sp_freq_vis = tmp.sp_freq_vis
         max_f_vis.append(np.max(sp_freq_vis))
-        band = tmp.band  
+        band = tmp.band
         if diffWl:
             mfc = dic_color[band]
         else:
@@ -1029,7 +957,6 @@ def show(inputList, diffWl=False, ind_hole=None, vmin=0, vmax=1.05, cmax=180, se
     ax2.patch.set_alpha(1)
     ax2.xaxis.set_ticks_position('none')
     ax2.yaxis.set_ticks_position('none')
-    # ax2.set_xticklabels([])
 
     if setlog:
         ax2.set_yscale('log')
@@ -1037,7 +964,6 @@ def show(inputList, diffWl=False, ind_hole=None, vmin=0, vmax=1.05, cmax=180, se
 
     # Plot CP
     # -------
-
     if unit_cp == 'rad':
         conv_cp = np.pi/180.
         h1 = np.pi
@@ -1049,12 +975,12 @@ def show(inputList, diffWl=False, ind_hole=None, vmin=0, vmax=1.05, cmax=180, se
 
     max_f_cp = []
     for dic in l_dic:
-        tmp = ApplyFlag(dic, unit='arcsec')
-        cp = tmp.cp*conv_cp 
-        e_cp = tmp.e_cp*conv_cp  
+        tmp = _apply_flag(dic, unit='arcsec')
+        cp = tmp.cp*conv_cp
+        e_cp = tmp.e_cp*conv_cp
         sp_freq_cp = tmp.sp_freq_cp
         max_f_cp.append(np.max(sp_freq_cp))
-        band = tmp.band  
+        band = tmp.band
         if diffWl:
             mfc = dic_color[band]
         else:

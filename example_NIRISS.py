@@ -57,6 +57,6 @@ cal = amical.calibrate(bs_t, bs_c)
 
 # Display and save the results as oifits
 amical.show(cal)
-amical.save(cal, fake_obj=True)
+amical.save(cal, oifits_file='example_fakebinary_NIRISS.oifits', fake_obj=True)
 
 plt.show(block=True)

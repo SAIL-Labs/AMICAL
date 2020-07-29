@@ -18,7 +18,6 @@ import numpy as np
 from astropy.io import fits
 from astropy.nddata import Cutout2D
 from astropy.time import Time
-from matplotlib.colors import PowerNorm
 from munch import munchify as dict2class
 from scipy.signal import medfilt2d
 from termcolor import cprint
@@ -79,11 +78,8 @@ def crop_max(img, dim, filtmed=True, f=3):
     pos_max = np.where(im_med == im_med.max())
     X = pos_max[1][0]
     Y = pos_max[0][0]
-
-    position = (X, Y)
-
-    cutout = Cutout2D(img, position, dim)
-    return cutout.data, position
+    cutout = Cutout2D(img, (X, Y), dim)
+    return cutout.data, (X, Y)
 
 
 def norm_max(tab):
@@ -358,36 +354,6 @@ def applyMaskApod(img, r=80, sig=10):
     return img_apod
 
 
-def checkRadiusResize(img, isz, r1, dr, pos):
-    # isz = len(img)
-    r2 = r1 + dr
-    theta = np.linspace(0, 2*np.pi, 100)
-    x0 = pos[0]
-    y0 = pos[1]
-
-    x1 = r1 * np.cos(theta) + x0
-    y1 = r1 * np.sin(theta) + y0
-    x2 = r2 * np.cos(theta) + x0
-    y2 = r2 * np.sin(theta) + y0
-
-    xs1, ys1 = x0 + isz//2, y0 + isz//2
-    xs2, ys2 = x0 - isz//2, y0 + isz//2
-    xs3, ys3 = x0 - isz//2, y0 - isz//2
-    xs4, ys4 = x0 + isz//2, y0 - isz//2
-
-    max_val = img[y0, x0]
-    fig = plt.figure(figsize=(6, 6))
-    plt.imshow(img, norm=PowerNorm(.5), cmap='afmhot', vmin=0, vmax=max_val)
-    plt.plot(x1, y1, label='Inner radius for sky subtraction')
-    plt.plot(x2, y2, label='Outer radius for sky subtraction')
-    plt.plot(x0, y0, '+', color='g', ms=10, label='Centering position')
-    plt.plot([xs1, xs2, xs3, xs4, xs1], [ys1, ys2, ys3, ys4, ys1], 'w--',
-             label='Resized image')
-    plt.legend(fontsize=9, loc=1)
-    plt.tight_layout()
-    return fig
-
-
 def computeUfloatArr(data, e_data):
     """ Compute the array containing ufloat format used by uncertainties package. """
     u_data = np.array([ufloat(data[i], e_data[i]) for i in range(len(data))])
@@ -455,14 +421,17 @@ def jd2lst(lng, jd):
     return lst
 
 
-def compute_pa(hdr, verbose=False, display=False):
+def compute_pa(hdr, n_ps, verbose=False, display=False):
 
     list_fct_pa = {'SPHERE': sphere_parang,
                    }
 
-    nframe = hdr['NAXIS3']
     instrument = hdr['INSTRUME']
     if instrument not in list(list_fct_pa.keys()):
+        try:
+            nframe = hdr['NAXIS3']
+        except KeyError:
+            nframe = n_ps
         if verbose:
             cprint('Warning: %s not in known pa computation -> set to zero.\n' %
                    instrument, 'green')
@@ -641,6 +610,8 @@ def checkSeeingCond(list_nrm):
 
     """
     l_seeing, l_vis2, l_cp, l_pa, l_mjd = [], [], [], [], []
+    
+    hdr = fits.open(list_nrm[0].filename)[0].header
     for nrm in list_nrm:
         hdr = fits.open(nrm.filename)[0].header
         pa = np.mean(sphere_parang(hdr))

@@ -12,7 +12,6 @@ import scipy.interpolate as interp
 from scipy.optimize import leastsq
 from tqdm import tqdm
 
-
 '''------------------------------------------------------------------------
 cp_tools.py - a collection of functions useful for closure phase analysis
 in Python. This includes mas2rad, rad2mas and phase_binary from pysco;

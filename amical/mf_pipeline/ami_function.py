@@ -22,125 +22,9 @@ from munch import munchify as dict2class
 from termcolor import cprint
 
 from amical.dpfit import leastsqFit
-from amical.getInfosObs import GetMaskPos, GetPixelSize, GetWavelength
+from amical.get_infos_obs import get_mask, get_pixel_size, get_wavelength
 from amical.mf_pipeline.idl_function import array_coords, dist
 from amical.tools import gauss_2d_asym, linear, norm_max, plot_circle
-
-
-def index_mask(n_holes, verbose=False):
-    """
-    This function generates index arrays for an N-hole mask.
-
-    Parameters:
-    -----------
-
-    `n_holes`: int
-       number of holes in the array.
-
-    Returns:
-    --------
-
-    `n_baselines`: int
-        The number of different baselines (n_holes*(n_holes-1)/2),\n
-    `n_bispect`: int
-        The number of bispectrum elements (n_holes*(n_holes-1)*(n_holes-2)/6),\n
-    `n_cov`: int
-        The number of bispectrum covariance
-        (n_holes*(n_holes-1)*(n_holes-2)*(n_holes-3)/4),\n
-    `h2bl_ix`: numpy.array
-        Holes to baselines index,\n
-    `bl2h_ix`: numpy.array
-                Baselines to holes index,\n
-    `bs2bl_ix`: numpy.array
-        Bispectrum to baselines index,\n
-    `bl2bs_ix`	: numpy.array
-        Baselines to bispectrum index,\n
-    `bscov2bs_ix`: numpy.array,
-        Bispectrum covariance to bispectrum index.
-
-    """
-
-    n_baselines = int(n_holes*(n_holes-1)/2)
-    n_bispect = int(n_holes*(n_holes-1)*(n_holes-2)/6)
-    n_cov = int(n_holes*(n_holes-1)*(n_holes-2)*(n_holes-3)/4)
-
-    # Given a pair of holes i,j h2bl_ix(i,j) gives the number of the baseline
-    h2bl_ix = np.zeros([n_holes, n_holes], dtype=int)
-    count = 0
-    for i in range(n_holes-1):
-        for j in np.arange(i+1, n_holes):
-            h2bl_ix[i, j] = int(count)
-            count = count+1
-
-    if verbose:
-        print(h2bl_ix.T)  # transpose to display as IDL
-
-    # Given a baseline, bl2h_ix gives the 2 holes that go to make it up
-    bl2h_ix = np.zeros([2, n_baselines], dtype=int)
-
-    count = 0
-    for i in range(n_holes-1):
-        for j in np.arange(i+1, n_holes):
-            bl2h_ix[0, count] = int(i)
-            bl2h_ix[1, count] = int(j)
-            count = count + 1
-
-    if verbose:
-        print(bl2h_ix.T)  # transpose to display as IDL
-
-    # Given a point in the bispectrum, bs2bl_ix gives the 3 baselines which
-    # make the triangle. bl2bs_ix gives the index of all points in the
-    # bispectrum containing a given baseline.
-
-    bs2bl_ix = np.zeros([3, n_bispect], dtype=int)
-    temp = np.zeros([n_baselines], dtype=int)  # N_baselines * a count variable
-
-    if verbose:
-        print('Indexing bispectrum...')
-
-    bl2bs_ix = np.zeros([n_baselines, n_holes-2], dtype=int)
-    count = 0
-
-    for i in range(n_holes-2):
-        for j in np.arange(i+1, n_holes-1):
-            for k in np.arange(j+1, n_holes):
-                bs2bl_ix[0, count] = int(h2bl_ix[i, j])
-                bs2bl_ix[1, count] = int(h2bl_ix[j, k])
-                bs2bl_ix[2, count] = int(h2bl_ix[i, k])
-                bl2bs_ix[bs2bl_ix[0, count], temp[bs2bl_ix[0, count]]] = count
-                bl2bs_ix[bs2bl_ix[1, count], temp[bs2bl_ix[1, count]]] = count
-                bl2bs_ix[bs2bl_ix[2, count], temp[bs2bl_ix[2, count]]] = count
-                temp[bs2bl_ix[0, count]] = temp[bs2bl_ix[0, count]]+1
-                temp[bs2bl_ix[1, count]] = temp[bs2bl_ix[1, count]]+1
-                temp[bs2bl_ix[2, count]] = temp[bs2bl_ix[2, count]]+1
-                count += 1
-
-    if verbose:
-        print(bl2bs_ix.T)  # transpose to display as IDL
-        print('Indexing the bispectral covariance...')
-
-    bscov2bs_ix = np.zeros([2, n_cov], dtype=int)
-
-    count = 0
-
-    for i in range(n_bispect-1):
-        for j in np.arange(i+1, n_bispect):
-            if ((bs2bl_ix[0, i] == bs2bl_ix[0, j]) or (bs2bl_ix[1, i] == bs2bl_ix[0, j]) or
-                (bs2bl_ix[2, i] == bs2bl_ix[0, j]) or (bs2bl_ix[0, i] == bs2bl_ix[1, j]) or
-                (bs2bl_ix[1, i] == bs2bl_ix[1, j]) or (bs2bl_ix[2, i] == bs2bl_ix[1, j]) or
-                (bs2bl_ix[0, i] == bs2bl_ix[2, j]) or (bs2bl_ix[1, i] == bs2bl_ix[2, j]) or
-                    (bs2bl_ix[2, i] == bs2bl_ix[2, j])):
-                bscov2bs_ix[0, count] = i
-                bscov2bs_ix[1, count] = j
-                count += 1
-
-    if verbose:
-        print(bscov2bs_ix.T)
-        
-    indices_mask = dict2class({'n_baselines': n_baselines, 'n_bispect': n_bispect, 'n_cov': n_cov,
-                               'h2bl_ix': h2bl_ix, 'bl2h_ix': bl2h_ix, 'bs2bl_ix': bs2bl_ix,
-                               'bl2bs_ix': bl2bs_ix, 'bscov2bs_ix': bscov2bs_ix})
-    return indices_mask
 
 
 def make_mf(maskname, instrument, filtname, npix,
@@ -173,10 +57,10 @@ def make_mf(maskname, instrument, filtname, npix,
 
     # Get detector, filter and mask informations
     # ------------------------------------------
-    pixelSize = GetPixelSize(instrument)  # Pixel size of the detector [rad]
+    pixelSize = get_pixel_size(instrument)  # Pixel size of the detector [rad]
     # Wavelength of the filter (filt[0]: central, filt[1]: width)
-    filt = GetWavelength(instrument, filtname)
-    xy_coords = GetMaskPos(instrument, maskname)  # mask coordinates
+    filt = get_wavelength(instrument, filtname)
+    xy_coords = get_mask(instrument, maskname)  # mask coordinates
 
     if display:
         if instrument == 'NIRISS':
@@ -208,7 +92,7 @@ def make_mf(maskname, instrument, filtname, npix,
     # ----------------------------------------------------------
 
     n_holes = xy_coords.shape[0]
-    
+
     computed_index_mask = index_mask(n_holes)
     n_baselines = computed_index_mask.n_baselines
     n_bispect = computed_index_mask.n_bispect
@@ -556,7 +440,123 @@ def make_mf(maskname, instrument, filtname, npix,
     return dict2class(out)
 
 
-def GivePeakInfo2d(mf, n_baselines, dim1, dim2):
+def index_mask(n_holes, verbose=False):
+    """
+    This function generates index arrays for an N-hole mask.
+
+    Parameters:
+    -----------
+
+    `n_holes`: int
+       number of holes in the array.
+
+    Returns:
+    --------
+
+    `n_baselines`: int
+        The number of different baselines (n_holes*(n_holes-1)/2),\n
+    `n_bispect`: int
+        The number of bispectrum elements (n_holes*(n_holes-1)*(n_holes-2)/6),\n
+    `n_cov`: int
+        The number of bispectrum covariance
+        (n_holes*(n_holes-1)*(n_holes-2)*(n_holes-3)/4),\n
+    `h2bl_ix`: numpy.array
+        Holes to baselines index,\n
+    `bl2h_ix`: numpy.array
+                Baselines to holes index,\n
+    `bs2bl_ix`: numpy.array
+        Bispectrum to baselines index,\n
+    `bl2bs_ix`	: numpy.array
+        Baselines to bispectrum index,\n
+    `bscov2bs_ix`: numpy.array,
+        Bispectrum covariance to bispectrum index.
+
+    """
+
+    n_baselines = int(n_holes*(n_holes-1)/2)
+    n_bispect = int(n_holes*(n_holes-1)*(n_holes-2)/6)
+    n_cov = int(n_holes*(n_holes-1)*(n_holes-2)*(n_holes-3)/4)
+
+    # Given a pair of holes i,j h2bl_ix(i,j) gives the number of the baseline
+    h2bl_ix = np.zeros([n_holes, n_holes], dtype=int)
+    count = 0
+    for i in range(n_holes-1):
+        for j in np.arange(i+1, n_holes):
+            h2bl_ix[i, j] = int(count)
+            count = count+1
+
+    if verbose:
+        print(h2bl_ix.T)  # transpose to display as IDL
+
+    # Given a baseline, bl2h_ix gives the 2 holes that go to make it up
+    bl2h_ix = np.zeros([2, n_baselines], dtype=int)
+
+    count = 0
+    for i in range(n_holes-1):
+        for j in np.arange(i+1, n_holes):
+            bl2h_ix[0, count] = int(i)
+            bl2h_ix[1, count] = int(j)
+            count = count + 1
+
+    if verbose:
+        print(bl2h_ix.T)  # transpose to display as IDL
+
+    # Given a point in the bispectrum, bs2bl_ix gives the 3 baselines which
+    # make the triangle. bl2bs_ix gives the index of all points in the
+    # bispectrum containing a given baseline.
+
+    bs2bl_ix = np.zeros([3, n_bispect], dtype=int)
+    temp = np.zeros([n_baselines], dtype=int)  # N_baselines * a count variable
+
+    if verbose:
+        print('Indexing bispectrum...')
+
+    bl2bs_ix = np.zeros([n_baselines, n_holes-2], dtype=int)
+    count = 0
+
+    for i in range(n_holes-2):
+        for j in np.arange(i+1, n_holes-1):
+            for k in np.arange(j+1, n_holes):
+                bs2bl_ix[0, count] = int(h2bl_ix[i, j])
+                bs2bl_ix[1, count] = int(h2bl_ix[j, k])
+                bs2bl_ix[2, count] = int(h2bl_ix[i, k])
+                bl2bs_ix[bs2bl_ix[0, count], temp[bs2bl_ix[0, count]]] = count
+                bl2bs_ix[bs2bl_ix[1, count], temp[bs2bl_ix[1, count]]] = count
+                bl2bs_ix[bs2bl_ix[2, count], temp[bs2bl_ix[2, count]]] = count
+                temp[bs2bl_ix[0, count]] = temp[bs2bl_ix[0, count]]+1
+                temp[bs2bl_ix[1, count]] = temp[bs2bl_ix[1, count]]+1
+                temp[bs2bl_ix[2, count]] = temp[bs2bl_ix[2, count]]+1
+                count += 1
+
+    if verbose:
+        print(bl2bs_ix.T)  # transpose to display as IDL
+        print('Indexing the bispectral covariance...')
+
+    bscov2bs_ix = np.zeros([2, n_cov], dtype=int)
+
+    count = 0
+
+    for i in range(n_bispect-1):
+        for j in np.arange(i+1, n_bispect):
+            if ((bs2bl_ix[0, i] == bs2bl_ix[0, j]) or (bs2bl_ix[1, i] == bs2bl_ix[0, j]) or
+                (bs2bl_ix[2, i] == bs2bl_ix[0, j]) or (bs2bl_ix[0, i] == bs2bl_ix[1, j]) or
+                (bs2bl_ix[1, i] == bs2bl_ix[1, j]) or (bs2bl_ix[2, i] == bs2bl_ix[1, j]) or
+                (bs2bl_ix[0, i] == bs2bl_ix[2, j]) or (bs2bl_ix[1, i] == bs2bl_ix[2, j]) or
+                    (bs2bl_ix[2, i] == bs2bl_ix[2, j])):
+                bscov2bs_ix[0, count] = i
+                bscov2bs_ix[1, count] = j
+                count += 1
+
+    if verbose:
+        print(bscov2bs_ix.T)
+
+    indices_mask = dict2class({'n_baselines': n_baselines, 'n_bispect': n_bispect, 'n_cov': n_cov,
+                               'h2bl_ix': h2bl_ix, 'bl2h_ix': bl2h_ix, 'bs2bl_ix': bs2bl_ix,
+                               'bl2bs_ix': bl2bs_ix, 'bscov2bs_ix': bscov2bs_ix})
+    return indices_mask
+
+
+def give_peak_info2d(mf, n_baselines, dim1, dim2):
     """ 
     Transform mf.pvct indices from flatten 1-D array to 2-D coordinates and the
     associated gains.

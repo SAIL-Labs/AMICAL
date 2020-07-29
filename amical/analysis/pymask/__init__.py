@@ -21,15 +21,17 @@
 
 #!/usr/bin/env python
 
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.cm as cm
-import astropy.io.fits as pf
 import copy
-import pickle
 import os
-import sys
 import pdb
+import pickle
+import sys
+
+import astropy.io.fits as pf
+import matplotlib.cm as cm
+import matplotlib.pyplot as plt
+import numpy as np
+
 # import oifits
 
 shift = np.fft.fftshift
@@ -40,14 +42,11 @@ dtor = np.pi/180.0
 
 # import .cp_tools
 from .cp_tools import *
-
 # import cpo
 # from cpo import *
 from .cpo import *
-
 # import pol_tools
 from .pol_tools import *
-
 # import x_y_plot
 from .x_y_plot import *
 
