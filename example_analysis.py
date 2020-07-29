@@ -41,8 +41,8 @@ if use_candid:
 
     fit1 = amical.candid_grid(inputdata, **param_candid, diam=20, doNotFit=[])
 
-    # cr_candid = amical.candid_cr_limit(
-    #    inputdata, **param_candid, fitComp=fit1['comp'])
+    cr_candid = amical.candid_cr_limit(
+        inputdata, **param_candid, fitComp=fit1['comp'])
 
 # Analysis with PYMASK package
 # ----------------------------
