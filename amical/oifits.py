@@ -41,8 +41,8 @@ def _compute_flag(value, sigma, limit=4.):
 
 def _peak1hole_cp(bs, ihole=0):
     """ Get the indices of each CP including the given hole."""
-    bs2bl_ix = bs.bs2bl_ix
-    bl2h_ix = bs.bl2h_ix
+    bs2bl_ix = bs.mask.bs2bl_ix
+    bl2h_ix = bs.mask.bl2h_ix
     sel_ind = []
     for i, x in enumerate(bs2bl_ix.T):
         cpi = [bl2h_ix.T[y] for y in x]
@@ -152,17 +152,17 @@ def cal2dict(cal, target=None, pa=0, del_pa=0, snr=4,
     """
     res_t = cal.raw_t
     res_c = cal.raw_c
-    n_baselines = res_t.n_baselines
+    n_baselines = res_t.mask.n_baselines
     n_bs = len(cal.cp)
-    bl2h_ix = res_t.bl2h_ix
-    bs2bl_ix = res_t.bs2bl_ix
+    bl2h_ix = res_t.mask.bl2h_ix
+    bs2bl_ix = res_t.mask.bs2bl_ix
 
     date = '2020-02-07T00:54:11'
     exp_time = 0.8
     try:
-        ins = res_t.hdr['INSTRUME']
-        nrmnamr = res_t.hdr['NRMNAME']
-        pixscale = res_t.hdr['PIXELSCL']
+        ins = res_t.infos.instrument
+        maskname = res_t.infos.maskname
+        pixscale = res_t.infos.pixscale
     except KeyError:
         cprint("Error: 'INSTRUME', 'NRMNAME' or 'PIXELSCL' are not in the header.", 'red')
         return None
@@ -185,7 +185,7 @@ def cal2dict(cal, target=None, pa=0, del_pa=0, snr=4,
     sta_index_v2 = np.array(sta_index_v2)
 
     if target is None:
-        target = res_t.target
+        target = res_t.infos.target
 
     thepa = pa - 0.5 * del_pa
     u, v = oriented*res_t.u, res_t.v
@@ -193,9 +193,9 @@ def cal2dict(cal, target=None, pa=0, del_pa=0, snr=4,
     v1 = -u*np.sin(np.deg2rad(thepa)) + v*np.cos(np.deg2rad(thepa))
 
     if type(res_c) is list:
-        calib_name = res_c[0].target
+        calib_name = res_c[0].infos.target
     else:
-        calib_name = res_c.target
+        calib_name = res_c.infos.target
 
     if ind_hole is not None:
         cprint('Select only independant CP using common hole #%i.' %
@@ -226,7 +226,7 @@ def cal2dict(cal, target=None, pa=0, del_pa=0, snr=4,
                      'V1COORD': v1[bs2bl_ix[0, :]][sel_ind_cp],
                      'U2COORD': u1[bs2bl_ix[1, :]][sel_ind_cp],
                      'V2COORD': v1[bs2bl_ix[1, :]][sel_ind_cp],
-                     'STA_INDEX': list(np.array(res_t.closing_tri)[sel_ind_cp]),
+                     'STA_INDEX': list(np.array(res_t.mask.closing_tri)[sel_ind_cp]),
                      'FLAG': flagCP[sel_ind_cp],
                      'BL': res_t.bl_cp[sel_ind_cp]
                      },
@@ -234,15 +234,15 @@ def cal2dict(cal, target=None, pa=0, del_pa=0, snr=4,
                              'EFF_BAND': np.array([res_t.e_wl])},
            'info': {'TARGET': target,
                     'CALIB': calib_name,
-                    'FILT': res_t.filtname,
+                    'FILT': res_t.infos.filtname,
                     'INSTRUME': ins,
-                    'MASK': nrmnamr,
+                    'MASK': maskname,
                     'MJD': t.mjd,
-                    'HDR': res_t.hdr,
-                    'ISZ': res_t.isz,
+                    'HDR': res_t.infos,
+                    'ISZ': res_t.infos.isz,
                     'PSCALE': pixscale,
-                    'xycoord': res_t.xycoord,
-                    'SEEING': res_t.hdr['SEEING']}
+                    'xycoord': res_t.mask.xycoord,
+                    'SEEING': res_t.infos.seeing}
            }
 
     if include_vis:
@@ -748,14 +748,15 @@ def save(cal, oifits_file=None, datadir='Saveoifits',
         check_oi = int
 
     if check_oi == float:
-        t3phi = dic['OI_T3']['T3AMP']
+        t3phi = dic['OI_T3']['T3PHI']
+        npts = len(t3phi)
         targetId = np.ones_like(t3phi)
         time = np.zeros_like(t3phi)
         mjd = [data['MJD']]*npts
         intTime = [data['INT_TIME']]*npts
     else:
         npts = 1
-        targetId = np.ones_like(data['T3AMP'])
+        targetId = np.ones_like(data['T3PHI'])
         time = data['TIME']
         mjd = data['MJD']
         intTime = data['INT_TIME']

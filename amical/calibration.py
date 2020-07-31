@@ -113,13 +113,13 @@ def _calc_correction_atm_vis2(data, corr_const=1, nf=100, display=False,
 
     """
 
-    vis = data.v2
-    avar = data.avar
+    vis = data.vis2
+    avar = data.matrix.avar
     u = data.u
     v = data.v
 
-    err_avar = data.err_avar
-    err_vis = data.v2_sig
+    err_avar = data.matrix.err_avar
+    err_vis = data.e_vis2
 
     w = np.where((vis == 0) | (avar == 0))
 
@@ -174,7 +174,7 @@ def average_calib_files(list_nrm, sig_thres=2, display=False):
     # Fill array containing each vis2 and cp across files.
     for n in range(nfiles):
         nrm = list_nrm[n]
-        hdu = fits.open(nrm.filename)
+        hdu = fits.open(nrm.infos.filename)
         hdr = hdu[0].header
         try:
             # todo: Check parallactic angle param of a real NIRISS header.
@@ -183,9 +183,9 @@ def average_calib_files(list_nrm, sig_thres=2, display=False):
             l_pa[n] = 0
 
         cp = nrm.cp
-        e_cp = nrm.cp_sig
-        vis2 = nrm.v2
-        e_vis2 = nrm.v2_sig
+        e_cp = nrm.e_cp
+        vis2 = nrm.vis2
+        e_vis2 = nrm.e_vis2
 
         cp_vs_file.append(cp)
         e_cp_vs_file.append(e_cp)
@@ -274,12 +274,12 @@ def calibrate(res_t, res_c, clip=False, sig_thres=2, apply_phscorr=False, Addind
         v2_corr_t *= res_t.phs_v2corr
 
     # Raw V2 target (corrected from atm correction and phasors.)
-    v2_t = res_t.v2/v2_corr_t
-    e_v2_t = res_t.v2_sig/v2_corr_t
+    v2_t = res_t.vis2/v2_corr_t
+    e_v2_t = res_t.e_vis2/v2_corr_t
 
     # Raw CP target
     cp_t = res_t.cp
-    e_cp_t = res_t.cp_sig
+    e_cp_t = res_t.e_cp
 
     # Calibration by the weighted averages and taking into accound the std of the calibrators.
     # ---------------------------------------------
@@ -287,7 +287,7 @@ def calibrate(res_t, res_c, clip=False, sig_thres=2, apply_phscorr=False, Addind
     cp_calib = cp_t - cmn_cp_c
 
     #
-    n_holes = res_t.n_holes
+    n_holes = res_t.mask.n_holes
     if AddindepCpErr:
         err_scale = np.sqrt(n_holes/3.)
     else:
@@ -298,10 +298,10 @@ def calibrate(res_t, res_c, clip=False, sig_thres=2, apply_phscorr=False, Addind
                            std_v2_c**2*v2_t**2/cmn_v2_c**4)
     e_cp_calib = np.sqrt(e_cp_t**2 + std_cp_c**2) * err_scale
 
-    u1 = res_t.u[res_t.bs2bl_ix[0, :]]
-    v1 = res_t.v[res_t.bs2bl_ix[0, :]]
-    u2 = res_t.u[res_t.bs2bl_ix[1, :]]
-    v2 = res_t.v[res_t.bs2bl_ix[1, :]]
+    u1 = res_t.u[res_t.mask.bs2bl_ix[0, :]]
+    v1 = res_t.v[res_t.mask.bs2bl_ix[0, :]]
+    u2 = res_t.u[res_t.mask.bs2bl_ix[1, :]]
+    v2 = res_t.v[res_t.mask.bs2bl_ix[1, :]]
 
     cal = {'vis2': vis2_calib, 'e_vis2': e_vis2_calib, 'cp': cp_calib, 'e_cp': e_cp_calib,
            'u': res_t.u, 'v': res_t.v, 'wl': res_t.wl,

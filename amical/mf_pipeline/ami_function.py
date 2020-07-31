@@ -32,6 +32,14 @@ def make_mf(maskname, instrument, filtname, npix,
             hole_diam=0.8, fw_splodge=0.7, verbose=False,
             display=True):
     """
+    Summary:
+    --------
+
+    Compute the match filter mf which give the indices of the peak positions (mf.pvct)
+    and the associated gains (mf.gvct) in the image. Contains also the u-v coordinates,
+    wavelengths informations, holes mask positions (mf.xy_coords), centred mf (mf.cpvct,
+    mf.gpvct), etc.
+
     Parameters:
     -----------
     `maskname`: str
@@ -93,11 +101,11 @@ def make_mf(maskname, instrument, filtname, npix,
 
     n_holes = xy_coords.shape[0]
 
-    computed_index_mask = index_mask(n_holes)
-    n_baselines = computed_index_mask.n_baselines
-    n_bispect = computed_index_mask.n_bispect
-    n_cov = computed_index_mask.n_cov
-    bl2h_ix = computed_index_mask.bl2h_ix
+    index_mask = compute_index_mask(n_holes)
+    n_baselines = index_mask.n_baselines
+    n_bispect = index_mask.n_bispect
+    n_cov = index_mask.n_cov
+    bl2h_ix = index_mask.bl2h_ix
 
     ncp_i = int((n_holes - 1)*(n_holes - 2)/2)
     if verbose:
@@ -440,7 +448,7 @@ def make_mf(maskname, instrument, filtname, npix,
     return dict2class(out)
 
 
-def index_mask(n_holes, verbose=False):
+def compute_index_mask(n_holes, verbose=False):
     """
     This function generates index arrays for an N-hole mask.
 
@@ -552,7 +560,7 @@ def index_mask(n_holes, verbose=False):
 
     indices_mask = dict2class({'n_baselines': n_baselines, 'n_bispect': n_bispect, 'n_cov': n_cov,
                                'h2bl_ix': h2bl_ix, 'bl2h_ix': bl2h_ix, 'bs2bl_ix': bs2bl_ix,
-                               'bl2bs_ix': bl2bs_ix, 'bscov2bs_ix': bscov2bs_ix})
+                               'bl2bs_ix': bl2bs_ix, 'bscov2bs_ix': bscov2bs_ix, 'n_holes': n_holes})
     return indices_mask
 
 
@@ -697,7 +705,7 @@ def tri_pix(array_size, sampledisk_r, itrip=1, verbose=True, display=True):
     return closing_tri_pix
 
 
-def bs_multiTriangle(i, bs_arr, ft_frame, bs2bl_ix, mf, closing_tri_pix):
+def bs_multi_triangle(i, bs_arr, ft_frame, bs2bl_ix, mf, closing_tri_pix):
     """
     Compute the bispectrum using the multiple triangle technique
 

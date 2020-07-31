@@ -29,7 +29,7 @@ from tqdm import tqdm
 from amical.get_infos_obs import get_mask
 from amical.tools import compute_pa, cov2cor
 
-from .ami_function import (bs_multiTriangle, give_peak_info2d, index_mask,
+from .ami_function import (bs_multi_triangle, give_peak_info2d, compute_index_mask,
                            make_mf, phase_chi2, tri_pix)
 from .idl_function import dblarr, dist, regress_noc
 
@@ -143,15 +143,15 @@ def extract_bs(cube, filename, maskname, filtname=None, targetname=None, bs_Mult
     # covariance matrices (cov) and associates each holes as couple for bl or
     # triplet for bs (or cp) using index_mask function (see AMI_function.py).
     # ------------------------------------------------------------------------
-    computed_index_mask = index_mask(n_holes)
+    index_mask = compute_index_mask(n_holes)
 
-    n_baselines = computed_index_mask.n_baselines
-    n_bispect = computed_index_mask.n_bispect
-    n_cov = computed_index_mask.n_cov
-    bl2h_ix = computed_index_mask.bl2h_ix
-    bs2bl_ix = computed_index_mask.bs2bl_ix
-    bl2bs_ix = computed_index_mask.bl2bs_ix
-    bscov2bs_ix = computed_index_mask.bscov2bs_ix
+    n_baselines = index_mask.n_baselines
+    n_bispect = index_mask.n_bispect
+    n_cov = index_mask.n_cov
+    bl2h_ix = index_mask.bl2h_ix
+    bs2bl_ix = index_mask.bs2bl_ix
+    bl2bs_ix = index_mask.bl2bs_ix
+    bscov2bs_ix = index_mask.bscov2bs_ix
 
     closing_tri = []
     for i_bs in range(len(bs2bl_ix.T)):
@@ -536,6 +536,9 @@ def extract_bs(cube, filename, maskname, filtname=None, targetname=None, bs_Mult
             denom = abs(bs[i]) ** 2 * abs(bs[j]) ** 2 * (n_ps - 1) * n_ps
             cp_cov[i, j] = np.sum(np.imag(temp1) * np.imag(temp2)) / denom
 
+    plt.figure()
+    plt.plot(v2)
+    
     if display:
         plt.figure(figsize=(3, 6))
         plt.title("Cov matrix BS vs. $V^2$")
