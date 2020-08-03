@@ -38,7 +38,7 @@ def test_extraction(filepath):
     method = ['fft', 'gauss', 'square']
     for m in method:
         params_ami = {"peakmethod": m,
-                      "bs_MultiTri": False,
+                      "bs_multi_tri": False,
                       "maskname": "g7",
                       "fw_splodge": 0.7,
                       }
@@ -54,7 +54,7 @@ def test_calibration(filepath):
     cube = hdu[0].data
     hdu.close()
     params_ami = {"peakmethod": 'fft',
-                  "bs_MultiTri": False,
+                  "bs_multi_tri": False,
                   "maskname": "g7",
                   "fw_splodge": 0.7,
                   }
@@ -71,7 +71,7 @@ def test_show(filepath):
     cube = hdu[0].data
     hdu.close()
     params_ami = {"peakmethod": 'fft',
-                  "bs_MultiTri": False,
+                  "bs_multi_tri": False,
                   "maskname": "g7",
                   "fw_splodge": 0.7,
                   }
@@ -88,7 +88,7 @@ def test_save(filepath):
     cube = hdu[0].data
     hdu.close()
     params_ami = {"peakmethod": 'fft',
-                  "bs_MultiTri": False,
+                  "bs_multi_tri": False,
                   "maskname": "g7",
                   "fw_splodge": 0.7,
                   }

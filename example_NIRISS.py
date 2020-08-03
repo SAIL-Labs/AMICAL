@@ -38,7 +38,7 @@ hdu.close()
 
 #  AMI parameters (refer to the docstrings of `extract_bs` for details)
 params_ami = {"peakmethod": 'fft',
-              "bs_MultiTri": False,
+              "bs_multi_tri": False,
               "maskname": "g7",
               "fw_splodge": 0.7,
               }
