@@ -113,6 +113,7 @@ def select_data(cube, clip_fact=0.5, clip=False, verbose=True, display=True):
         cube_cleaned_checked = cube[cond_clip]
         ind_clip = np.where(fluxes <= limit_flux)[0]
     else:
+        ind_clip = []
         cube_cleaned_checked = np.array(good_fram)
 
     ind_clip2 = np.where(fluxes <= limit_flux)[0]
@@ -224,13 +225,14 @@ def check_data_params(filename, isz, r1, dr, bad_map=None, add_bad=[],
         img0[0:edge, :] = 0
         img0[-edge:-1, :] = 0
     if (bad_map is not None) & (remove_bad):
-        img1 = fixBadPixels(img0, bad_map, add_bad=add_bad)
+        img1 = fix_bad_pixels(img0, bad_map, add_bad=add_bad)
     else:
         img1 = img0.copy()
     cropped_infos = crop_max(img1, isz, f=3)
     pos = cropped_infos[1]
 
     noBadPixel = False
+    bad_pix_x, bad_pix_y = [], []
     if (bad_map is not None) & (len(add_bad) != 0):
         for j in range(len(add_bad)):
             bad_map[add_bad[j][0], add_bad[j][1]] = 1
@@ -325,9 +327,9 @@ def clean_data(data, isz=None, r1=None, dr=None, edge=0,
 
 
 def select_clean_data(filename, isz=256, r1=100, dr=10, edge=0,
-                    clip=True, bad_map=None, add_bad=[],
-                    clip_fact=0.5, corr_ghost=True,
-                    verbose=False, ihdu=0, display=False):
+                      clip=True, bad_map=None, add_bad=[],
+                      clip_fact=0.5, corr_ghost=True,
+                      verbose=False, ihdu=0, display=False):
     """ Clean and select good datacube (sigma-clipping using fluxes variations).
 
     Parameters:
@@ -363,10 +365,10 @@ def select_clean_data(filename, isz=256, r1=100, dr=10, edge=0,
 
     if corr_ghost:
         if (hdr['INSTRUME'] == 'SPHERE') & (hdr['FILTER'] == 'K1'):
-            cube_patched = applyPatchGhost(cube, 392, 360)
+            cube_patched = apply_patch_ghost(cube, 392, 360)
         elif (hdr['INSTRUME'] == 'SPHERE') & (hdr['FILTER'] == 'K2'):
-            cube_patched = applyPatchGhost(cube, 378, 311)
-            cube_patched = applyPatchGhost(cube_patched, 891, 315)
+            cube_patched = apply_patch_ghost(cube, 378, 311)
+            cube_patched = apply_patch_ghost(cube_patched, 891, 315)
         else:
             cube_patched = cube.copy()
     else:
