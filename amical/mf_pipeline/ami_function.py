@@ -10,7 +10,6 @@ Matched filter sub-pipeline method.
 
 All AMI related function, the most important are:
 - make_mf: compute splodge positions for a given mask,
-- bs_multiTriangle: compute bispectrum using multiple triangle method,
 - tri_pix: compute unique closing triangle for a given splodge.
 
 --------------------------------------------------------------------
@@ -27,6 +26,247 @@ from amical.mf_pipeline.idl_function import array_coords, dist
 from amical.tools import gauss_2d_asym, linear, norm_max, plot_circle
 
 
+def _plot_mask_coord(xy_coords, maskname, instrument):
+    if instrument == 'NIRISS':
+        marker = 'H'
+        D = 6.5
+    else:
+        D = 8.
+        marker = 'o'
+
+    fig = plt.figure(figsize=(6, 5.5))
+    plt.title('%s - mask %s' % (instrument, maskname), fontsize=14)
+
+    for i in range(xy_coords.shape[0]):
+        plt.scatter(xy_coords[i][0], xy_coords[i][1],
+                    s=1e2, c='', edgecolors='navy', marker=marker)
+        plt.text(xy_coords[i][0]+0.1, xy_coords[i][1]+0.1, i)
+
+    plt.xlabel('Aperture x-coordinate [m]', fontsize=12)
+    plt.ylabel('Aperture y-coordinate [m]', fontsize=12)
+    plt.axis([-D/2., D/2., -D/2., D/2.])
+    plt.tight_layout()
+    plt.show(block=False)
+    return fig
+
+
+def _compute_uv_coord(xy_coords, index_mask, filt, pixelSize, npix,
+                      round_uv_to_pixel=False):
+    """ Compute the expected u-v coordinated on the detector. If `round_uv_to_pixel`
+    is True, the closest integer position is used. """
+    n_baselines = index_mask.n_baselines
+    bl2h_ix = index_mask.bl2h_ix
+
+    u_real = np.zeros(n_baselines)
+    v_real = np.zeros(n_baselines)
+    for i in range(n_baselines):
+        if not round_uv_to_pixel:
+            u_real[i] = (xy_coords[bl2h_ix[0, i], 0] -
+                         xy_coords[bl2h_ix[1, i], 0])/filt[0]
+            v_real[i] = (xy_coords[bl2h_ix[0, i], 1] -
+                         xy_coords[bl2h_ix[1, i], 1])/filt[0]
+        else:
+            onepix = 1./(npix*pixelSize)
+            onepix_xy = onepix*filt[0]
+            new_xy = (xy_coords/onepix_xy).astype(int)*onepix_xy
+
+            u_real[i] = (new_xy[bl2h_ix[0, i], 0] -
+                         new_xy[bl2h_ix[1, i], 0])/filt[0]
+            v_real[i] = (new_xy[bl2h_ix[0, i], 1] -
+                         new_xy[bl2h_ix[1, i], 1])/filt[0]
+    return u_real, v_real
+
+
+def _peak_fft_method(i, npix, xy_coords, wl, index_mask, pixelsize,
+                     innerpix, innerpix_center):
+
+    mf = np.zeros([npix, npix])
+    n_holes = index_mask.n_holes
+    bl2h_ix = index_mask.bl2h_ix
+    npix = mf.shape[0]
+
+    sum_xy = np.sum(xy_coords, axis=0)/n_holes
+    shift_fact = np.ones([n_holes, 2])
+    shift_fact[:, 0] = sum_xy[0]
+    shift_fact[:, 1] = sum_xy[1]
+    xy_coords2 = xy_coords.copy()
+    xy_coords2 -= shift_fact
+
+    for j in range(len(wl)):
+        xyh = xy_coords2[bl2h_ix[1, i], :]/wl[j]*pixelsize * \
+            npix + npix//2
+        delta = xyh-np.floor(xyh)
+        ap1 = np.zeros([npix, npix])
+        x1 = int(xyh[1])
+        y1 = int(xyh[0])
+        ap1[x1, y1] = (1.-delta[0]) * (1.-delta[1])
+        ap1[x1, y1+1] = delta[0]*(1.-delta[1])
+        ap1[x1+1, y1] = (1.-delta[0])*delta[1]
+        ap1[x1+1, y1+1] = delta[0]*delta[1]
+
+        xyh = xy_coords2[bl2h_ix[0, i], :]/wl[j]*pixelsize * \
+            npix + npix//2
+        delta = xyh-np.floor(xyh)
+        ap2 = np.zeros([npix, npix])
+        x2 = int(xyh[1])
+        y2 = int(xyh[0])
+        ap2[x2, y2] = (1.-delta[0])*(1.-delta[1])
+        ap2[x2, y2+1] = delta[0]*(1.-delta[1])
+        ap2[x2+1, y2] = (1.-delta[0])*delta[1]
+        ap2[x2+1, y2+1] = delta[0]*delta[1]
+
+        n_elts = npix**2
+
+        tmf = (np.fft.fft2(ap1)/n_elts *
+               np.conj(np.fft.fft2(ap2)/n_elts))
+        tmf = np.fft.fft2(tmf)
+        mf = mf+np.real(tmf)
+
+    mf_flat = norm_max(mf.ravel())
+    mf_centered = norm_max(np.fft.fftshift(mf).ravel())
+
+    mf_centered[innerpix_center] = 0.0
+    mf_flat[innerpix] = 0.0
+
+    dic_mf = {'flat': mf_flat,
+              'centered': mf_centered}
+    return dic_mf
+
+
+def _peak_square_method(i, npix, u, v, pixelsize, innerpix, innerpix_center):
+    mf = np.zeros([npix, npix])
+    uv = np.array([v[i], u[i]])*pixelsize*npix
+    uv = (uv + npix) % npix
+    uv_int = np.array(np.floor(uv), dtype=int)
+    uv_frac = uv - uv_int
+    mf[uv_int[0], uv_int[1]] = (1-uv_frac[0])*(1-uv_frac[1])
+    mf[uv_int[0], (uv_int[1]+1) % npix] = (1-uv_frac[0])*uv_frac[1]
+    mf[(uv_int[0]+1) % npix, uv_int[1]] = uv_frac[0]*(1-uv_frac[1])
+    mf[(uv_int[0]+1) % npix, (uv_int[1]+1) %
+        npix] = uv_frac[0]*uv_frac[1]
+    mf = np.roll(mf, [0, 0])
+    mf_flat = norm_max(mf.ravel())
+    mf_centered = norm_max(np.fft.fftshift(mf).ravel())
+    mf_flat[innerpix] = 0.0
+    mf_centered[innerpix_center] = 0.0
+    dic_mf = {'flat': mf_flat,
+              'centered': mf_centered}
+    return dic_mf
+
+
+def _peak_gauss_method(i, npix, u, v, filt, index_mask, pixelsize,
+                       innerpix, innerpix_center, fw_splodge=0.7,
+                       hole_diam=0.8):
+    mf = np.zeros([npix, npix])
+    n_holes = index_mask.n_holes
+
+    l_B = np.sqrt(u ** 2 + v ** 2)
+    minbl = np.min(l_B)*filt[0]
+    if n_holes >= 15:
+        sampledisk_r = minbl / 2 / filt[0] * pixelsize * npix * 0.9
+    else:
+        sampledisk_r = minbl / 2. / \
+            filt[0] * pixelsize * npix * fw_splodge
+
+    xspot = float(np.round((v[i]*pixelsize*npix + npix/2.)))
+    yspot = float(np.round((u[i]*pixelsize*npix + npix/2.)))
+    mf = plot_circle(mf, xspot, yspot, sampledisk_r, display=False)
+    mf = np.roll(mf, npix//2, axis=0)
+    mf = np.roll(mf, npix//2, axis=1)
+
+    X = [np.arange(npix), np.arange(npix), 1]
+    splodge_fwhm = hole_diam/filt[0]*pixelsize*npix/1.9
+    param = {'A': 1,
+             'x0': -npix//2 + yspot,
+             'y0': -npix//2 + xspot,
+             'fwhm_x': splodge_fwhm,
+             'fwhm_y': splodge_fwhm,
+             'theta': 0
+             }
+    gauss = gauss_2d_asym(X, param)
+    gauss = np.roll(gauss, npix//2, axis=0)
+    gauss = np.roll(gauss, npix//2, axis=1)
+    mfg = gauss/np.sum(gauss)
+    mf_gain_flat = mfg.ravel()
+    mf_gain_centered = norm_max(np.fft.fftshift(mfg).ravel())
+    mf_flat = norm_max(mf.ravel())
+    mf_centered = norm_max(np.fft.fftshift(mf).ravel())
+
+    mf_flat[innerpix] = 0.
+    mf_gain_flat[innerpix] = 0.
+    mf_centered[innerpix_center] = 0.
+    mf_gain_centered[innerpix_center] = 0.
+
+    mf = {'flat': mf_flat,
+          'centered': mf_centered,
+          'gain_f': mf_gain_flat,
+          'gain_c': mf_gain_centered}
+    return dict2class(mf)
+
+
+def _normalize_gain(mf_flat, mf_centered, pixelvector,
+                    pixelvector_c, normalize_pixelgain=True):
+
+    if normalize_pixelgain:
+        pixelgain = mf_flat[pixelvector] / np.sum(mf_flat[pixelvector])
+        pixelgain_c = mf_centered[pixelvector_c] / \
+            np.sum(mf_centered[pixelvector_c])
+    else:
+        pixelgain = mf_flat[pixelvector] * \
+            np.max(mf_flat[pixelvector]) / \
+            np.sum(mf_flat[pixelvector]**2)
+        pixelgain_c = mf_centered[pixelvector_c] * \
+            np.max(mf_centered[pixelvector_c]) / \
+            np.sum(mf_centered[pixelvector_c]**2)
+    return pixelgain, pixelgain_c
+
+
+def _compute_center_splodge(npix, pixelsize, filt, hole_diam=0.8,):
+    tmp = dist(npix)
+    innerpix = np.array(np.array(
+        np.where(tmp < (hole_diam/filt[0]*pixelsize*npix)*0.9))*0.6, dtype=int)
+
+    x, y = np.meshgrid(npix, npix)
+    dist_c = np.sqrt((x-npix//2)**2 + (y-npix//2)**2)
+    inner_pos = np.array(
+        np.where(dist_c < (hole_diam/filt[0]*pixelsize*npix)*0.9))
+    innerpix_center = np.array(inner_pos*0.6, dtype=int)
+    return innerpix, innerpix_center
+
+
+def _make_overlap_mat(mf, n_baselines, display=False):
+    overmat = np.zeros([n_baselines, n_baselines], dtype=[('real', float),
+                                                          ('imag', float)])
+    # Now find the overlap matrices
+    for i in range(n_baselines):
+        pix_on = np.where(mf['norm'][:, :, i] != 0.0)
+        for j in range(n_baselines):
+            t1 = np.sum(mf['norm'][:, :, i][pix_on]
+                        * mf['norm'][:, :, j][pix_on])
+            t2 = np.sum(mf['norm'][:, :, i][pix_on]
+                        * mf['conj'][:, :, j][pix_on])
+            overmat['real'][i, j] = t1 + t2
+            overmat['imag'][i, j] = t1 - t2
+
+    mf_rmat = np.linalg.inv(overmat['real'])
+    mf_imat = np.linalg.inv(overmat['imag'])
+    mf_rmat[np.where(mf_rmat < 1e-6)] = 0.0
+    mf_imat[np.where(mf_imat < 1e-6)] = 0.0
+    mf_rmat[mf_rmat >= 2] = 2
+    mf_imat[mf_imat >= 2] = 2
+    mf_imat[mf_imat <= -2] = -2
+
+    if display:
+        plt.figure(figsize=(6, 6))
+        plt.title('Overlap matrix', fontsize=14)
+        plt.imshow(mf_imat, cmap='gray', origin='upper')
+        plt.ylabel('# baselines', fontsize=12)
+        plt.xlabel('# baselines', fontsize=12)
+        plt.tight_layout()
+
+    return mf_rmat, mf_imat
+
+
 def make_mf(maskname, instrument, filtname, npix,
             peakmethod='fft', n_wl=3, cutoff=1e-4, D=6.5,
             hole_diam=0.8, fw_splodge=0.7, verbose=False,
@@ -37,7 +277,7 @@ def make_mf(maskname, instrument, filtname, npix,
 
     Compute the match filter mf which give the indices of the peak positions (mf.pvct)
     and the associated gains (mf.gvct) in the image. Contains also the u-v coordinates,
-    wavelengths informations, holes mask positions (mf.xy_coords), centred mf (mf.cpvct,
+    wavelengths informations, holes mask positions (mf.xy_coords), centered mf (mf.cpvct,
     mf.gpvct), etc.
 
     Parameters:
@@ -65,47 +305,19 @@ def make_mf(maskname, instrument, filtname, npix,
 
     # Get detector, filter and mask informations
     # ------------------------------------------
-    pixelSize = get_pixel_size(instrument)  # Pixel size of the detector [rad]
+    pixelsize = get_pixel_size(instrument)  # Pixel size of the detector [rad]
     # Wavelength of the filter (filt[0]: central, filt[1]: width)
     filt = get_wavelength(instrument, filtname)
     xy_coords = get_mask(instrument, maskname)  # mask coordinates
 
     if display:
-        if instrument == 'NIRISS':
-            marker = 'H'
-        else:
-            marker = 'o'
-
-        plt.figure(figsize=(6, 5.5))
-        plt.title('%s - mask %s' % (instrument, maskname), fontsize=14)
-
-        for i in range(xy_coords.shape[0]):
-            plt.scatter(xy_coords[i][0], xy_coords[i][1],
-                        s=1e2, c='', edgecolors='navy', marker=marker)
-            plt.text(xy_coords[i][0]+0.1, xy_coords[i][1]+0.1, i)
-
-        plt.xlabel('Aperture x-coordinate [m]', fontsize=12)
-        plt.ylabel('Aperture y-coordinate [m]', fontsize=12)
-        plt.axis([-D/2., D/2., -D/2., D/2.])
-        plt.tight_layout()
-        plt.show(block=False)
-
-    # Normalize total( mf[pixelgain] ) = 1
-    # (Unnecessary for calibrated amplitudes, necessary for uncalibrated amplitudes.)
-    # ---------------------------------------
-    normalize_pixelgain = True
-
-    # ----------------------------------------------------------
-    # Automatic from here
-    # ----------------------------------------------------------
+        _plot_mask_coord(xy_coords, maskname, instrument)
 
     n_holes = xy_coords.shape[0]
 
     index_mask = compute_index_mask(n_holes)
     n_baselines = index_mask.n_baselines
     n_bispect = index_mask.n_bispect
-    n_cov = index_mask.n_cov
-    bl2h_ix = index_mask.bl2h_ix
 
     ncp_i = int((n_holes - 1)*(n_holes - 2)/2)
     if verbose:
@@ -114,14 +326,11 @@ def make_mf(maskname, instrument, filtname, npix,
                (instrument.upper(), filtname, n_holes), 'cyan')
         cprint('---------------------------', 'cyan')
         cprint('nbl = %i, nbs = %i, ncp_i = %i, ncov = %i' %
-               (n_baselines, n_bispect, ncp_i, n_cov), 'cyan')
+               (n_baselines, n_bispect, ncp_i, index_mask.n_cov), 'cyan')
 
     # Consider the filter to be made up of n_wl wavelengths
     wl = np.arange(n_wl)/n_wl*filt[1]
     wl = wl - np.mean(wl) + filt[0]
-
-    u = np.zeros(n_baselines)
-    v = np.zeros(n_baselines)
 
     Sum, Sum_c = 0, 0
 
@@ -131,190 +340,44 @@ def make_mf(maskname, instrument, filtname, npix,
     if verbose:
         print('\n- Calculating sampling of', n_holes, 'holes array...')
 
-    # Why 0.9 and 0.6 factor here ???
-    tmp = dist(npix)
-    innerpix = np.array(np.array(
-        np.where(tmp < (hole_diam/filt[0]*pixelSize*npix)*0.9))*0.6, dtype=int)
+    innerpix, innerpix_center = _compute_center_splodge(npix, pixelsize, filt)
 
-    ap1all = []
-    ap2all = []
-    mfall = []
+    u, v = _compute_uv_coord(xy_coords, index_mask, filt, pixelsize, npix,
+                             round_uv_to_pixel=False)
 
-    round_uv_to_pixel = False
-
-    u_real = np.zeros(n_baselines)
-    v_real = np.zeros(n_baselines)
-    for i in range(n_baselines):
-        if not round_uv_to_pixel:
-            u_real[i] = (xy_coords[bl2h_ix[0, i], 0] -
-                         xy_coords[bl2h_ix[1, i], 0])/filt[0]
-            v_real[i] = (xy_coords[bl2h_ix[0, i], 1] -
-                         xy_coords[bl2h_ix[1, i], 1])/filt[0]
-        else:
-            onepix = 1./(npix*pixelSize)
-            onepix_xy = onepix*filt[0]
-            new_xy = (xy_coords/onepix_xy).astype(int)*onepix_xy
-
-            u_real[i] = (new_xy[bl2h_ix[0, i], 0] -
-                         new_xy[bl2h_ix[1, i], 0])/filt[0]
-            v_real[i] = (new_xy[bl2h_ix[0, i], 1] -
-                         new_xy[bl2h_ix[1, i], 1])/filt[0]
+    mf_pvct = mf_gvct = mfc_pvct = mfc_gvct = None
 
     for i in range(n_baselines):
-        if not round_uv_to_pixel:
-            u[i] = (xy_coords[bl2h_ix[0, i], 0] -
-                    xy_coords[bl2h_ix[1, i], 0])/filt[0]
-            v[i] = (xy_coords[bl2h_ix[0, i], 1] -
-                    xy_coords[bl2h_ix[1, i], 1])/filt[0]
-        else:
-            onepix = 1./(npix*pixelSize)
-            onepix_xy = onepix*filt[0]
-            new_xy = (xy_coords/onepix_xy).astype(int)*onepix_xy
-
-            u[i] = (new_xy[bl2h_ix[0, i], 0] -
-                    new_xy[bl2h_ix[1, i], 0])/filt[0]
-            v[i] = (new_xy[bl2h_ix[0, i], 1] -
-                    new_xy[bl2h_ix[1, i], 1])/filt[0]
-
-        mf = np.zeros([npix, npix])
+        args = {'i': i, 'npix': npix, 'pixelsize': pixelsize,
+                'innerpix': innerpix, 'innerpix_center': innerpix_center}
 
         if peakmethod == 'fft':
-            sum_xy = np.sum(xy_coords, axis=0)/n_holes
-            shift_fact = np.ones([n_holes, 2])
-            shift_fact[:, 0] = sum_xy[0]
-            shift_fact[:, 1] = sum_xy[1]
-            xy_coords2 = xy_coords.copy()
-            xy_coords2 -= shift_fact
-
-            for j in range(n_wl):
-                xyh = xy_coords2[bl2h_ix[1, i], :]/wl[j]*pixelSize * \
-                    npix + npix//2
-                delta = xyh-np.floor(xyh)
-                ap1 = np.zeros([npix, npix])
-                x1 = int(xyh[1])
-                y1 = int(xyh[0])
-                ap1[x1, y1] = (1.-delta[0]) * (1.-delta[1])
-                ap1[x1, y1+1] = delta[0]*(1.-delta[1])
-                ap1[x1+1, y1] = (1.-delta[0])*delta[1]
-                ap1[x1+1, y1+1] = delta[0]*delta[1]
-
-                ap1all.append(np.roll(ap1, 0, axis=0))
-
-                xyh = xy_coords2[bl2h_ix[0, i], :]/wl[j]*pixelSize * \
-                    npix + npix//2
-                delta = xyh-np.floor(xyh)
-                ap2 = np.zeros([npix, npix])
-                x2 = int(xyh[1])
-                y2 = int(xyh[0])
-                ap2[x2, y2] = (1.-delta[0])*(1.-delta[1])
-                ap2[x2, y2+1] = delta[0]*(1.-delta[1])
-                ap2[x2+1, y2] = (1.-delta[0])*delta[1]
-                ap2[x2+1, y2+1] = delta[0]*delta[1]
-
-                ap2all.append(np.roll(ap2, [0, 0]))
-
-                n_elts = npix**2
-
-                tmf = (np.fft.fft2(ap1)/n_elts *
-                       np.conj(np.fft.fft2(ap2)/n_elts))
-                tmf = np.fft.fft2(tmf)
-                mf = mf+np.real(tmf)
-                mfall.append(mf)
+            ind_peak = _peak_fft_method(xy_coords=xy_coords, wl=wl, index_mask=index_mask,
+                                        **args)
 
         elif peakmethod == 'square':
-            uv = np.array([v[i], u[i]])*pixelSize*npix
-            uv = (uv + npix) % npix
-            uv_int = np.array(np.floor(uv), dtype=int)
-            uv_frac = uv - uv_int
-            mf[uv_int[0], uv_int[1]] = (1-uv_frac[0])*(1-uv_frac[1])
-            mf[uv_int[0], (uv_int[1]+1) % npix] = (1-uv_frac[0])*uv_frac[1]
-            mf[(uv_int[0]+1) % npix, uv_int[1]] = uv_frac[0]*(1-uv_frac[1])
-            mf[(uv_int[0]+1) % npix, (uv_int[1]+1) %
-                npix] = uv_frac[0]*uv_frac[1]
-            mf = np.roll(mf, [0, 0])
+            ind_peak = _peak_square_method(u=u, v=v, **args)
 
         elif peakmethod == 'gauss':
-            l_B = np.sqrt(u_real ** 2 + v_real ** 2)
-            minbl = np.min(l_B)*filt[0]
+            ind_peak = _peak_gauss_method(u=u, v=v, filt=filt, index_mask=index_mask,
+                                          fw_splodge=fw_splodge, **args)
+        else:
+            cprint(
+                "Error: choose the extraction method 'gauss', 'fft' or 'square'.", 'red')
+            return None
 
-            if n_holes >= 15:
-                sampledisk_r = minbl / 2 / filt[0] * pixelSize * npix * 0.9
-            else:
-                sampledisk_r = minbl / 2. / \
-                    filt[0] * pixelSize * npix * fw_splodge
-
-            xspot = float(np.round((v[i]*pixelSize*npix + npix/2.)))
-            yspot = float(np.round((u[i]*pixelSize*npix + npix/2.)))
-            mf = plot_circle(mf, xspot, yspot, sampledisk_r, display=False)
-            mf = np.roll(mf, npix//2, axis=0)
-            mf = np.roll(mf, npix//2, axis=1)
-
-            X = [np.arange(npix), np.arange(npix), 1]
-            splodge_fwhm = hole_diam/filt[0]*pixelSize*npix/1.9
-            param = {'A': 1,
-                     'x0': -npix//2 + yspot,
-                     'y0': -npix//2 + xspot,
-                     'fwhm_x': splodge_fwhm,
-                     'fwhm_y': splodge_fwhm,
-                     'theta': 0
-                     }
-            gauss = gauss_2d_asym(X, param)
-            gauss = np.roll(gauss, npix//2, axis=0)
-            gauss = np.roll(gauss, npix//2, axis=1)
-            mfg = gauss/np.sum(gauss)
-
-        mf_flat = mf.ravel()
-
-        if peakmethod == 'gauss':
-            mfg_flat = mfg.ravel()
-            mfg_centered = norm_max(np.fft.fftshift(mfg).ravel())
-
-        mf_centered = np.fft.fftshift(mf).ravel()
-
-        mf_flat = mf_flat/np.max(mf_flat)  # normalize for cutoff purposes...
-        mf_centered = mf_centered/np.max(mf_centered)
-
-        x, y = np.meshgrid(npix, npix)
-        dist_c = np.sqrt((x-npix//2)**2 + (y-npix//2)**2)
-        innerpix_center = np.array(np.array(
-            np.where(dist_c < (hole_diam/filt[0]*pixelSize*npix)*0.9))*0.6, dtype=int)
-
-        mf_centered[innerpix_center] = 0.0
-        mf_flat[innerpix] = 0.0
-
-        if peakmethod == 'gauss':
-            mfg_centered[innerpix_center] = 0.0
-
-        pixelvector = np.where(mf_flat >= cutoff)[0]
-        pixelvector_c = np.where(mf_centered >= cutoff)[0]
+        # Compute the cutoff limit before saving the gain map
+        pixelvector = np.where(ind_peak['flat'] >= cutoff)[0]
+        pixelvector_c = np.where(ind_peak['centered'] >= cutoff)[0]
 
         # Now normalise the pixel gain, so that using the matched filter
         # on an ideal splodge is equivalent to just looking at the peak...
-        if normalize_pixelgain:
-            if peakmethod == 'gauss':
-                pixelgain = mfg_flat[pixelvector] / \
-                    np.sum(mfg_flat[pixelvector])
-                pixelgain_c = mfg_centered[pixelvector_c] / \
-                    np.sum(mfg_centered[pixelvector_c])
-            else:
-                pixelgain = mf_flat[pixelvector] / np.sum(mf_flat[pixelvector])
-                pixelgain_c = mf_centered[pixelvector_c] / \
-                    np.sum(mf_centered[pixelvector_c])
+        if peakmethod == 'gauss':
+            pixelgain, pixelgain_c = _normalize_gain(ind_peak['gain_f'], ind_peak['gain_c'],
+                                                     pixelvector, pixelvector_c)
         else:
-            if peakmethod == 'gauss':
-                pixelgain = mfg_flat[pixelvector] * \
-                    np.max(mfg_flat[pixelvector]) / \
-                    np.sum(mfg_flat[pixelvector]**2)
-                pixelgain_c = mfg_centered[pixelvector_c] * \
-                    np.max(mfg_centered[pixelvector_c]) / \
-                    np.sum(mfg_centered[pixelvector_c]**2)
-            else:
-                pixelgain = mf_flat[pixelvector] * \
-                    np.max(mf_flat[pixelvector]) / \
-                    np.sum(mf_flat[pixelvector]**2)
-                pixelgain_c = mf_centered[pixelvector_c] * \
-                    np.max(mf_centered[pixelvector_c]) / \
-                    np.sum(mf_centered[pixelvector_c]**2)
+            pixelgain, pixelgain_c = _normalize_gain(ind_peak['flat'], ind_peak['centered'],
+                                                     pixelvector, pixelvector_c)
 
         mf_ix[0, i] = Sum
         Sum = Sum + len(pixelvector)
@@ -335,84 +398,45 @@ def make_mf(maskname, instrument, filtname, npix,
             mfc_pvct.extend(list(pixelvector_c))
             mfc_gvct.extend(list(pixelgain_c))
 
-    mf = np.zeros([npix, npix, n_baselines])
-    mf_c = np.zeros([npix, npix, n_baselines])
+    mf = np.zeros([npix, npix, n_baselines], dtype=[('norm', float), ('conj', float),
+                                                    ('norm_c', float), ('conj_c', float)])
 
-    mf_conj = np.zeros([npix, npix, n_baselines])
-    mf_conj_c = np.zeros([npix, npix, n_baselines])
-
-    mf_rmat = np.zeros([n_baselines, n_baselines])
-    mf_imat = np.zeros([n_baselines, n_baselines])
-
-    if verbose:
-        print('- Compute matched filters...')
-    # ;Now fill-in the huge matched-filter cube (to be released later)
     for i in range(n_baselines):
-        mf_temp = np.zeros([npix, npix])
-        mf_temp_c = np.zeros([npix, npix])
+        mf_tmp = np.zeros([npix, npix])
+        mf_tmp_c = np.zeros([npix, npix])
 
         ind = mf_pvct[mf_ix[0, i]:mf_ix[1, i]]
         ind_c = mfc_pvct[mf_ix_c[0, i]:mf_ix_c[1, i]]
 
-        mf_temp.ravel()[ind] = mf_gvct[mf_ix[0, i]:mf_ix[1, i]]
-        mf_temp_c.ravel()[ind_c] = mfc_gvct[mf_ix_c[0, i]:mf_ix_c[1, i]]
+        mf_tmp.ravel()[ind] = mf_gvct[mf_ix[0, i]:mf_ix[1, i]]
+        mf_tmp_c.ravel()[ind_c] = mfc_gvct[mf_ix_c[0, i]:mf_ix_c[1, i]]
 
-        mf_temp2 = mf_temp.reshape([npix, npix])
-        mf_temp2_c = mf_temp_c.reshape([npix, npix])
+        mf_tmp = mf_tmp.reshape([npix, npix])
+        mf_tmp_c = mf_tmp_c.reshape([npix, npix])
 
-        mf[:, :, i] = np.roll(mf_temp2, 0, axis=1)
-        mf_c[:, :, i] = np.roll(mf_temp2_c, 0, axis=1)
+        mf['norm'][:, :, i] = np.roll(mf_tmp, 0, axis=1)
+        mf['norm_c'][:, :, i] = np.roll(mf_tmp_c, 0, axis=1)
 
-        mf_temp2_rot = np.roll(
-            np.roll(np.rot90(np.rot90(mf_temp2)), 1, axis=0), 1, axis=1)
-        mf_temp2_rot_c = np.roll(
-            np.roll(np.rot90(np.rot90(mf_temp2_c)), 1, axis=0), 1, axis=1)
+        mf_temp_rot = np.roll(
+            np.roll(np.rot90(np.rot90(mf_tmp)), 1, axis=0), 1, axis=1)
+        mf_temp_rot_c = np.roll(
+            np.roll(np.rot90(np.rot90(mf_tmp_c)), 1, axis=0), 1, axis=1)
 
-        mf_conj[:, :, i] = mf_temp2_rot
-        mf_conj_c[:, :, i] = mf_temp2_rot_c
+        mf['conj'][:, :, i] = mf_temp_rot
+        mf['conj_c'][:, :, i] = mf_temp_rot_c
 
-        norm = np.sqrt(np.sum(mf[:, :, i]**2))
+        norm = np.sqrt(np.sum(mf['norm'][:, :, i]**2))
 
-        mf[:, :, i] = mf[:, :, i]/norm
-        mf_conj[:, :, i] = mf_conj[:, :, i]/norm
+        mf['norm'][:, :, i] = mf['norm'][:, :, i]/norm
+        mf['conj'][:, :, i] = mf['conj'][:, :, i]/norm
 
-        mf_c[:, :, i] = mf_c[:, :, i]/norm
-        mf_conj_c[:, :, i] = mf_conj_c[:, :, i]/norm
+        mf['norm_c'][:, :, i] = mf['norm_c'][:, :, i]/norm
+        mf['conj_c'][:, :, i] = mf['conj_c'][:, :, i]/norm
 
-    # Now find the overlap matrices
-    for i in range(n_baselines):
-        pix_on = np.where(mf[:, :, i] != 0.0)
-        for j in range(n_baselines):
-            t1 = np.sum(mf[:, :, i][pix_on]*mf[:, :, j][pix_on])
-            t2 = np.sum(mf[:, :, i][pix_on]*mf_conj[:, :, j][pix_on])
-            mf_rmat[i, j] = t1 + t2
-            mf_imat[i, j] = t1 - t2
+    rmat, imat = _make_overlap_mat(mf, n_baselines, display=display)
 
-    if display:
-        plt.figure(figsize=(6, 6))
-        plt.title('Overlap matrix', fontsize=14)
-        plt.imshow(mf_imat, cmap='gray')
-        plt.ylabel('# baselines', fontsize=12)
-        plt.xlabel('# baselines', fontsize=12)
-        plt.tight_layout()
-
-    # This next big is for diagnostics...
-    mf_tot = np.sum(mf, axis=2) + np.sum(mf_conj, axis=2)
-    mf_tot_m = np.sum(mf, axis=2) - np.sum(mf_conj, axis=2)
-
-    w = np.where(mf_tot == 0)
-    mask = np.zeros([npix, npix])
-    mask[w] = 1.0
-
-    if verbose:
-        print('- Inverting Matrices.')
-    mf_rmat = np.linalg.inv(mf_rmat)
-    mf_imat = np.linalg.inv(mf_imat)
-    mf_rmat[np.where(mf_rmat < 1e-6)] = 0.0
-    mf_imat[np.where(mf_imat < 1e-6)] = 0.0
-    mf_rmat[mf_rmat >= 2] = 2
-    mf_imat[mf_imat >= 2] = 2
-    mf_imat[mf_imat <= -2] = -2
+    mf_tot = np.sum(mf['norm'], axis=2) + np.sum(mf['conj'], axis=2)
+    mf_tot_m = np.sum(mf['norm'], axis=2) - np.sum(mf['conj'], axis=2)
 
     im_uv = np.roll(np.fft.fftshift(mf_tot), 1, axis=1)
 
@@ -426,9 +450,9 @@ def make_mf(maskname, instrument, filtname, npix,
         plt.xlabel('X [pix]', fontsize=12)
         plt.tight_layout()
 
-    out = {'cube': mf,
-           'imat': mf_imat,
-           'rmat': mf_rmat,
+    out = {'cube': mf['norm'],
+           'imat': imat,
+           'rmat': rmat,
            'uv': im_uv,
            'tot': mf_tot,
            'tot_m': mf_tot_m,
@@ -441,7 +465,7 @@ def make_mf(maskname, instrument, filtname, npix,
            'v': v*filt[0],
            'wl': filt[0],
            'e_wl': filt[1],
-           'pixelSize': pixelSize,
+           'pixelSize': pixelsize,
            'xy_coords': xy_coords
            }
 
@@ -938,3 +962,8 @@ def phase_chi2(p, fitmat, ph_mn, ph_err):
     arg = (np.array(tmp - piston) * 1j)
     phase_chi2 = np.sum(np.abs(1 - np.exp(arg))**2/e_tmp)
     return phase_chi2
+
+
+# mf = make_mf('g7', 'NIRISS', 'F430M', 80, peakmethod='gauss')
+
+# plt.show(block=True)
