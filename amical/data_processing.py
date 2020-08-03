@@ -22,7 +22,7 @@ from tqdm import tqdm
 from amical.tools import applyMaskApod, crop_max
 
 
-def apply_patch_ghost(cube, xc, yc, radius=20, dx=0, dy=-200, method='bg'):
+def _apply_patch_ghost(cube, xc, yc, radius=20, dx=0, dy=-200, method='bg'):
     """Apply a patch on an eventual artifacts/ghosts on the spectral filter (i.e.
     K1 filter of SPHERE presents an artifact/ghost at (392, 360)).
 
@@ -328,8 +328,7 @@ def clean_data(data, isz=None, r1=None, dr=None, edge=0,
 
 def select_clean_data(filename, isz=256, r1=100, dr=10, edge=0,
                       clip=True, bad_map=None, add_bad=[],
-                      clip_fact=0.5, corr_ghost=True,
-                      verbose=False, ihdu=0, display=False):
+                      clip_fact=0.5, verbose=False, ihdu=0, display=False):
     """ Clean and select good datacube (sigma-clipping using fluxes variations).
 
     Parameters:
@@ -343,7 +342,6 @@ def select_clean_data(filename, isz=256, r1=100, dr=10, edge=0,
     `clip` {bool}: If True, sigma-clipping is used to reject frames with low integrated flux,\n
     `clip_fact` {float}: Relative sigma if rejecting frames by sigma-clipping 
     (default=0.5),\n
-    `corr_ghost` {bool}: If True, a patch is applied to remove SPHERE ghost,\n
 
     Returns:
     --------
@@ -363,18 +361,7 @@ def select_clean_data(filename, isz=256, r1=100, dr=10, edge=0,
             print("%2.2f (start), %2.2f (end), %2.2f (Corrected AirMass)" %
                   (seeing_start, seeing_end, seeing))
 
-    if corr_ghost:
-        if (hdr['INSTRUME'] == 'SPHERE') & (hdr['FILTER'] == 'K1'):
-            cube_patched = apply_patch_ghost(cube, 392, 360)
-        elif (hdr['INSTRUME'] == 'SPHERE') & (hdr['FILTER'] == 'K2'):
-            cube_patched = apply_patch_ghost(cube, 378, 311)
-            cube_patched = apply_patch_ghost(cube_patched, 891, 315)
-        else:
-            cube_patched = cube.copy()
-    else:
-        cube_patched = cube.copy()
-
-    cube_cleaned = clean_data(cube_patched, isz=isz, r1=r1, edge=edge,
+    cube_cleaned = clean_data(cube, isz=isz, r1=r1, edge=edge,
                               bad_map=bad_map, add_bad=add_bad,
                               dr=dr,
                               verbose=verbose)
