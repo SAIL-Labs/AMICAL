@@ -19,7 +19,7 @@ from matplotlib.colors import PowerNorm
 from termcolor import cprint
 from tqdm import tqdm
 
-from amical.tools import applyMaskApod, crop_max
+from amical.tools import apply_mask_apod, crop_max
 
 
 def _apply_patch_ghost(cube, xc, yc, radius=20, dx=0, dy=-200, method='bg'):
@@ -216,7 +216,22 @@ def fix_bad_pixels(image, bad_map, add_bad=[], x_stddev=1):
 
 def check_data_params(filename, isz, r1, dr, bad_map=None, add_bad=[],
                       edge=0, remove_bad=True, nframe=0, ihdu=0):
-    """ """
+    """ Check the input parameters for the cleaning.
+
+    Parameters:
+    -----------
+
+    `filename` {str}: filename containing the datacube,\n
+    `isz` {int}: Size of the cropped image (default: 256)\n
+    `r1` {int}: Radius of the rings to compute background sky (default: 100)\n
+    `dr` {int}: Outer radius to compute sky (default: 10)\n
+    `bad_map` {array}: Bad pixel map with 0 and 1 where 1 set for a bad pixel (default: None),\n
+    `add_bad` {list}: List of 2d coordinates of bad pixels/cosmic rays (default: []),\n
+    `edge` {int}: Number of pixel to be removed on the edge of the image (SPHERE),\n
+    `remove_bad` {bool}: If True, the bad pixels are removed using a gaussian interpolation,\n
+    `nframe` {int}: Frame number to be shown (default: 0),\n
+    `ihdu` {int}: Hdu number of the fits file. Normally 1 for NIRISS and 0 for SPHERE (default: 0).
+    """
     data = fits.open(filename)[ihdu].data
     img0 = data[nframe]
     if edge != 0:
@@ -321,7 +336,7 @@ def clean_data(data, isz=None, r1=None, dr=None, edge=0,
                 '\nCropped image do not have same X, Y dimensions -> check isz', 'red')
             return None
 
-        img = applyMaskApod(img_biased, r=isz//3)
+        img = apply_mask_apod(img_biased, r=isz//3)
         cube_cleaned[i] = img
     return cube_cleaned
 
