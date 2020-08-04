@@ -153,7 +153,6 @@ def test_show(filepath):
     amical.show(cal)
 
 
-@pytest.mark.slow
 @pytest.mark.parametrize("filepath", [example_fits])
 def test_save(filepath):
     hdu = fits.open(filepath)
@@ -167,7 +166,22 @@ def test_save(filepath):
     bs = amical.extract_bs(cube, filepath, targetname='test',
                            **params_ami, display=False)
     cal = amical.calibrate(bs, bs)
-    amical.save(cal, fake_obj=True)
+    assert isinstance(cal, munch.Munch)
+
+    dic, savefile = amical.save(cal, oifits_file='test.oifits', fake_obj=True)
+    v2 = dic['OI_VIS2']['VIS2DATA']
+    cp = dic['OI_T3']['T3PHI']
+
+    expected_v2 = 0.9999591731687147
+    expected_cp = 0.
+    assert isinstance(dic, dict)
+    assert isinstance(savefile, str)
+    assert(isinstance(v2, np.ndarray))
+    assert(isinstance(cp, np.ndarray))
+    assert(len(v2) == 21)
+    assert(len(cp) == 35)
+    assert(v2[0] == expected_v2)
+    assert(cp[0] == expected_cp)
 
 
 @pytest.mark.slow
