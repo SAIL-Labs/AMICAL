@@ -291,7 +291,7 @@ def cov2cor(cov):
     return cor, sigma
 
 
-def skyCorrection(imA, r1=100, dr=20, verbose=False):
+def sky_correction(imA, r1=100, dr=20, verbose=False):
     """
     Perform background sky correction to be as close to zero as possible.
     """
@@ -320,7 +320,7 @@ def skyCorrection(imA, r1=100, dr=20, verbose=False):
     return imC, backgroundC
 
 
-def applyMaskApod(img, r=80, sig=10):
+def apply_mask_apod(img, r=80, sig=10):
     isz = len(img)
 
     X = [np.arange(isz), np.arange(isz), 1]
@@ -354,7 +354,7 @@ def applyMaskApod(img, r=80, sig=10):
     return img_apod
 
 
-def computeUfloatArr(data, e_data):
+def compute_ufloat_arr(data, e_data):
     """ Compute the array containing ufloat format used by uncertainties package. """
     u_data = np.array([ufloat(data[i], e_data[i]) for i in range(len(data))])
     return u_data
@@ -598,7 +598,7 @@ def sphere_parang(hdr):
     return parang_array
 
 
-def checkSeeingCond(list_nrm):
+def check_seeing_cond(list_nrm):
     """ Extract the seeing conditions, parang, averaged vis2
     and cp of a list of nrm classes extracted with extract_bs
     function (bispect.py).
@@ -633,7 +633,7 @@ def checkSeeingCond(list_nrm):
     return dict2class(sanitize_array(res))
 
 
-def plotSeeingCond(cond, lim_seeing=None):
+def plot_seeing_cond(cond, lim_seeing=None):
     """ Plot seeing condition between calibrator and target files. """
 
     l_xmin, l_xmax = [], []

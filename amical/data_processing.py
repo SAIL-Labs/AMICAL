@@ -19,10 +19,10 @@ from matplotlib.colors import PowerNorm
 from termcolor import cprint
 from tqdm import tqdm
 
-from amical.tools import applyMaskApod, crop_max
+from amical.tools import apply_mask_apod, crop_max
 
 
-def apply_patch_ghost(cube, xc, yc, radius=20, dx=0, dy=-200, method='bg'):
+def _apply_patch_ghost(cube, xc, yc, radius=20, dx=0, dy=-200, method='bg'):
     """Apply a patch on an eventual artifacts/ghosts on the spectral filter (i.e.
     K1 filter of SPHERE presents an artifact/ghost at (392, 360)).
 
@@ -113,6 +113,7 @@ def select_data(cube, clip_fact=0.5, clip=False, verbose=True, display=True):
         cube_cleaned_checked = cube[cond_clip]
         ind_clip = np.where(fluxes <= limit_flux)[0]
     else:
+        ind_clip = []
         cube_cleaned_checked = np.array(good_fram)
 
     ind_clip2 = np.where(fluxes <= limit_flux)[0]
@@ -215,7 +216,22 @@ def fix_bad_pixels(image, bad_map, add_bad=[], x_stddev=1):
 
 def check_data_params(filename, isz, r1, dr, bad_map=None, add_bad=[],
                       edge=0, remove_bad=True, nframe=0, ihdu=0):
-    """ """
+    """ Check the input parameters for the cleaning.
+
+    Parameters:
+    -----------
+
+    `filename` {str}: filename containing the datacube,\n
+    `isz` {int}: Size of the cropped image (default: 256)\n
+    `r1` {int}: Radius of the rings to compute background sky (default: 100)\n
+    `dr` {int}: Outer radius to compute sky (default: 10)\n
+    `bad_map` {array}: Bad pixel map with 0 and 1 where 1 set for a bad pixel (default: None),\n
+    `add_bad` {list}: List of 2d coordinates of bad pixels/cosmic rays (default: []),\n
+    `edge` {int}: Number of pixel to be removed on the edge of the image (SPHERE),\n
+    `remove_bad` {bool}: If True, the bad pixels are removed using a gaussian interpolation,\n
+    `nframe` {int}: Frame number to be shown (default: 0),\n
+    `ihdu` {int}: Hdu number of the fits file. Normally 1 for NIRISS and 0 for SPHERE (default: 0).
+    """
     data = fits.open(filename)[ihdu].data
     img0 = data[nframe]
     if edge != 0:
@@ -224,13 +240,14 @@ def check_data_params(filename, isz, r1, dr, bad_map=None, add_bad=[],
         img0[0:edge, :] = 0
         img0[-edge:-1, :] = 0
     if (bad_map is not None) & (remove_bad):
-        img1 = fixBadPixels(img0, bad_map, add_bad=add_bad)
+        img1 = fix_bad_pixels(img0, bad_map, add_bad=add_bad)
     else:
         img1 = img0.copy()
     cropped_infos = crop_max(img1, isz, f=3)
     pos = cropped_infos[1]
 
     noBadPixel = False
+    bad_pix_x, bad_pix_y = [], []
     if (bad_map is not None) & (len(add_bad) != 0):
         for j in range(len(add_bad)):
             bad_map[add_bad[j][0], add_bad[j][1]] = 1
@@ -319,15 +336,14 @@ def clean_data(data, isz=None, r1=None, dr=None, edge=0,
                 '\nCropped image do not have same X, Y dimensions -> check isz', 'red')
             return None
 
-        img = applyMaskApod(img_biased, r=isz//3)
+        img = apply_mask_apod(img_biased, r=isz//3)
         cube_cleaned[i] = img
     return cube_cleaned
 
 
 def select_clean_data(filename, isz=256, r1=100, dr=10, edge=0,
-                    clip=True, bad_map=None, add_bad=[],
-                    clip_fact=0.5, corr_ghost=True,
-                    verbose=False, ihdu=0, display=False):
+                      clip=True, bad_map=None, add_bad=[],
+                      clip_fact=0.5, verbose=False, ihdu=0, display=False):
     """ Clean and select good datacube (sigma-clipping using fluxes variations).
 
     Parameters:
@@ -341,7 +357,6 @@ def select_clean_data(filename, isz=256, r1=100, dr=10, edge=0,
     `clip` {bool}: If True, sigma-clipping is used to reject frames with low integrated flux,\n
     `clip_fact` {float}: Relative sigma if rejecting frames by sigma-clipping 
     (default=0.5),\n
-    `corr_ghost` {bool}: If True, a patch is applied to remove SPHERE ghost,\n
 
     Returns:
     --------
@@ -361,18 +376,7 @@ def select_clean_data(filename, isz=256, r1=100, dr=10, edge=0,
             print("%2.2f (start), %2.2f (end), %2.2f (Corrected AirMass)" %
                   (seeing_start, seeing_end, seeing))
 
-    if corr_ghost:
-        if (hdr['INSTRUME'] == 'SPHERE') & (hdr['FILTER'] == 'K1'):
-            cube_patched = applyPatchGhost(cube, 392, 360)
-        elif (hdr['INSTRUME'] == 'SPHERE') & (hdr['FILTER'] == 'K2'):
-            cube_patched = applyPatchGhost(cube, 378, 311)
-            cube_patched = applyPatchGhost(cube_patched, 891, 315)
-        else:
-            cube_patched = cube.copy()
-    else:
-        cube_patched = cube.copy()
-
-    cube_cleaned = clean_data(cube_patched, isz=isz, r1=r1, edge=edge,
+    cube_cleaned = clean_data(cube, isz=isz, r1=r1, edge=edge,
                               bad_map=bad_map, add_bad=add_bad,
                               dr=dr,
                               verbose=verbose)
