@@ -6,4 +6,4 @@ from .mf_pipeline.ami_function import make_mf
 from .mf_pipeline.bispect import extract_bs
 from .oifits import cal2dict, load, loadc, save, show
 
-__version__ = "0.4dev"
+__version__ = "0.5dev"
