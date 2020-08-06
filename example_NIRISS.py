@@ -59,5 +59,4 @@ cal = amical.calibrate(bs_t, bs_c)
 amical.show(cal)
 dic = amical.save(cal, oifits_file='example_fakebinary_NIRISS.oifits', fake_obj=True)
 
-print(dic[0].keys())
 plt.show(block=True)

@@ -271,7 +271,7 @@ def calibrate(res_t, res_c, clip=False, sig_thres=2, apply_phscorr=False, Addind
     v2_corr_t = _calc_correction_atm_vis2(res_t)
 
     if apply_phscorr:
-        v2_corr_t *= res_t.phs_v2corr
+        v2_corr_t *= res_t.matrix.phs_v2corr
 
     # Raw V2 target (corrected from atm correction and phasors.)
     v2_t = res_t.vis2/v2_corr_t

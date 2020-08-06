@@ -196,7 +196,6 @@ def sky_correction(imA, r1=100, dr=20, verbose=False):
             cprint('Warning: Background not computed', 'green')
             cprint(
                 '-> check the inner and outer radius rings (checkrad option).', 'green')
-
     return imC, backgroundC
 
 
@@ -248,7 +247,7 @@ def check_data_params(filename, isz, r1, dr, bad_map=None, add_bad=[],
 
     noBadPixel = False
     bad_pix_x, bad_pix_y = [], []
-    if (bad_map is not None) & (len(add_bad) != 0):
+    if (bad_map is not None) or (len(add_bad) != 0):
         for j in range(len(add_bad)):
             bad_map[add_bad[j][0], add_bad[j][1]] = 1
         bad_pix = np.where(bad_map == 1)
@@ -328,7 +327,7 @@ def clean_data(data, isz=None, r1=None, dr=None, edge=0,
         else:
             img1 = img0.copy()
         im_rec_max = crop_max(img1, isz, f=3)[0]
-        img_biased = sky_correction(im_rec_max, r1=r1, dr=dr)[0]
+        img_biased = sky_correction(im_rec_max, r1=r1, dr=dr, verbose=verbose)[0]
         img_biased[img_biased < 0] = 0  # Remove negative pixels
 
         if img_biased.shape[0] != img_biased.shape[1]:
