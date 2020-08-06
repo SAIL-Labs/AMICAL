@@ -14,16 +14,14 @@ file_c = os.path.join(datadir, 'HD142695_IRD_SCIENCE_DBI_LEFT_CUBE.fits')
 # Cleaning step
 # ----------------------------------
 cube_t = amical.select_clean_data(file_t, clip=True,
-                                  corr_ghost=False,
                                   display=True)
 
 cube_c = amical.select_clean_data(file_c, clip=True,
-                                  corr_ghost=False,
                                   display=True)
 
 #  AMI parameters (refer to the docstrings of `extract_bs` for details)
 params_ami = {"peakmethod": 'fft',
-              "bs_MultiTri": False,
+              "bs_multi_tri": False,
               "maskname": "g7",
               "fw_splodge": 0.7,
               "filtname": 'K1'
@@ -51,8 +49,8 @@ bs_c = amical.extract_bs(cube_c, file_c, targetname='HD142695',
 cal = amical.calibrate(bs_t, bs_c)
 
 # Display and save the results as oifits
-amical.show(cal, true_flag_t3=False, cmax=180, pa=bs_t.pa)
+amical.show(cal, true_flag_t3=False, cmax=180, pa=bs_t.infos.pa)
 amical.save(cal, oifits_file='example_HD142527_SPHERE.oifits',
-            fake_obj=True, verbose=False, pa=bs_t.pa)
+            fake_obj=True, verbose=False, pa=bs_t.infos.pa)
 
 plt.show(block=True)
