@@ -260,9 +260,9 @@ def hammer(cpo, ivar=[52., 192., 1.53], ndim='Default', nwalcps=50, plot=False,
 
     # Starting parameters for the walkers
     p0 = []
-    scatter = np.zeros(ndim) + 0.75
-    scatter[0] = 0.1
-    scatter[1] = 0.1
+    scatter = np.zeros(ndim) + 0.01
+    scatter[0] = 0.05
+    scatter[1] = 0.05
     for walker_ix in range(nwalcps):
         p0.append(ivar+ivar*scatter*np.random.rand(ndim))
 #    p0 = [ivar + 0.1*ivar*np.random.rand(ndim) for i in range(nwalcps)] # initialise walcps in a ball
@@ -298,7 +298,8 @@ def hammer(cpo, ivar=[52., 192., 1.53], ndim='Default', nwalcps=50, plot=False,
 
     seps = chain[:, 0]
     ths = chain[:, 1]
-    cs = chain[:, 2:]
+    cs = chain[:, 2:][:, 0]
+
 
     # Now introduce the prior, by ignoring values outside of the range
     if sep_prior is not None:
@@ -312,12 +313,17 @@ def hammer(cpo, ivar=[52., 192., 1.53], ndim='Default', nwalcps=50, plot=False,
         ths = ths[wh]
         cs = cs[wh]
     if crat_prior is not None:
-        for ix in range(ndim-2):
-            c = cs[:, ix]
-            wh = (c >= crat_prior[0]) & (c <= crat_prior[1])
-            seps = seps[wh]
-            ths = ths[wh]
-            cs = cs[wh, :]
+        wh = (cs >= crat_prior[0]) & (cs <= crat_prior[1])
+        seps = seps[wh]
+        ths = ths[wh]
+        cs = cs[wh]
+    # if crat_prior is not None:
+    #     #     for ix in range(ndim-2):
+    #     #         c = cs[:, ix]
+    #     wh = (cs[:, 0] >= crat_prior[0]) & (cs[:, 0] <= crat_prior[1])
+    #     seps = seps[wh]
+    #     ths = ths[wh]
+    #     cs = cs[wh, :]
 
     # check that there are still some points left!
     if seps.size > 0:
@@ -325,7 +331,7 @@ def hammer(cpo, ivar=[52., 192., 1.53], ndim='Default', nwalcps=50, plot=False,
         chain = np.zeros((ngood, ndim))
         chain[:, 0] = seps
         chain[:, 1] = ths
-        chain[:, 2:] = cs
+        chain[:, 2] = cs
     else:
         print('WARNING: Your priors eliminated all points!')
 
@@ -356,7 +362,7 @@ def hammer(cpo, ivar=[52., 192., 1.53], ndim='Default', nwalcps=50, plot=False,
 
         paramdims = ['(mas)', '(deg)', 'Ratio']
         for ix, par in enumerate(extra_pars):
-            #paramnames.append(par)
+            # paramnames.append(par)
             paramdims.append(extra_dims[ix])
 
         res_p, err_p, err_m = [], [], []
@@ -368,6 +374,24 @@ def hammer(cpo, ivar=[52., 192., 1.53], ndim='Default', nwalcps=50, plot=False,
             err_p.append(q[1])
 
     if plot:
+
+        plt.figure(figsize=(5, 7))
+        plt.subplot(3, 1, 1)
+        plt.plot(sampler.chain[:, :, 0].T, color='grey', alpha=.5)
+        # plt.plot(len(chain_sep), sep, marker='*', color='#0085ca', zorder=1e3)
+        plt.ylabel('Separation [mas]')
+        plt.subplot(3, 1, 2)
+        plt.plot(sampler.chain[:, :, 1].T, color='grey', alpha=.5)
+        # plt.plot(len(chain_sep), pa, marker='*', color='#0085ca', zorder=1e3)
+        plt.ylabel('PA [deg]')
+        plt.subplot(3, 1, 3)
+        plt.plot(sampler.chain[:, :, 2].T, color='grey', alpha=.2)
+        # plt.plot(len(chain_sep), cr, marker='*', color='#0085ca', zorder=1e3)
+        plt.xlabel('Step')
+        plt.ylabel('CR')
+        plt.tight_layout()
+        plt.show(block=False)
+
         fig = corner.corner(chain, labels=['SEP [mas]', 'PA [deg]', 'CONTRAST'],
                             quantiles=(0.16, 0.84),
                             show_titles=True, title_kwargs={"fontsize": 10},
