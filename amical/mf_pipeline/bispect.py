@@ -22,6 +22,7 @@ import numpy as np
 from astropy.io import fits
 from matplotlib import pyplot as plt
 from munch import munchify as dict2class
+from numpy.lib.twodim_base import triu_indices
 from scipy.optimize import minimize
 from termcolor import cprint
 from tqdm import tqdm
@@ -110,6 +111,7 @@ def _compute_complex_bs(ft_arr, index_mask, fringe_peak, mf, dark_ps=None,
         aveps += ps  # Cumulate ps to perform an average at the end
 
         fluxes[i] = abs(ft_frame[0, 0]) - np.sqrt(dps[0, 0])
+
         # Extract complex visibilities of each fringe peak (each indices are
         # computed using make_mf function)
         cvis = np.zeros(n_baselines).astype(complex)
@@ -398,7 +400,7 @@ def _compute_corr_noise(complex_bs, ft_arr, fringe_peak):
     # Compute the distance map centered on each corners (origin in the fft)
     corner_dist_map = dist(npix)
 
-    # Indicate signal if the central peak
+    # Indicate signal in the central peak
     signal_map[corner_dist_map < npix / 16.0] = 1.0
 
     bias, dark_bias = 0, 0
@@ -480,7 +482,7 @@ def _compute_v2_quantities(v2_arr, bias_arr, n_blocks):
 
 
 def _compute_bs_quantities(bs_arr, v2, fluxes, index_mask, n_blocks,
-                           subtract_bs_bias=False):
+                           subtract_bs_bias=True):
     """ Compute the bispectrum quantities: - average ('bs') over the 
     cube, - covariance ('bs_cov') and - variance ('bs_var'). """
     n_cov = index_mask.n_cov
@@ -497,10 +499,11 @@ def _compute_bs_quantities(bs_arr, v2, fluxes, index_mask, n_blocks,
 
     # Unbias bispectrum if required (suppose normalised mf filter)
     if subtract_bs_bias:
-        bs_bias = (v2[bs2bl_ix[0, :]]
-                   + v2[bs2bl_ix[1, :]]
-                   + v2[bs2bl_ix[2, :]]
-                   + np.mean(fluxes))
+        a = 1  # Computed values for non-amplified detector
+        b = 2
+        bs_bias = a*(v2[bs2bl_ix[0, :]] + v2[bs2bl_ix[1, :]] +
+                     v2[bs2bl_ix[2, :]]) - b*np.mean(fluxes)
+        # bs_bias = (v2[bs2bl_ix[0, :]] + v2[bs2bl_ix[1, :]] + v2[bs2bl_ix[2, :]] + np.mean(fluxes))
         bs = bs - bs_bias
 
     bs_var = _compute_bs_var(bs_arr, bs, n_blocks)
