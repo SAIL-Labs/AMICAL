@@ -277,12 +277,12 @@ def cov2cor(cov):
     sigma = np.sqrt(np.diag(cov))
     for ix in range(cov.shape[0]):
         cxx = cov[ix, ix]
-        if cxx <= 0.0:
+        if cxx < 0.0:
             str_err = "diagonal cov[%d,%d]=%e is not positive" % (ix, ix, cxx)
             raise ValueError(str_err)
         for iy in range(cov.shape[1]):
             cyy = cov[iy, iy]
-            if cyy <= 0.0:
+            if cyy < 0.0:
                 str_err = "diagonal cov[%d,%d]=%e is not positive" % (iy, iy,
                                                                       cyy)
                 raise ValueError(str_err)

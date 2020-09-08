@@ -214,7 +214,8 @@ def fix_bad_pixels(image, bad_map, add_bad=[], x_stddev=1):
 
 
 def check_data_params(filename, isz, r1, dr, bad_map=None, add_bad=[],
-                      edge=0, remove_bad=True, nframe=0, ihdu=0):
+                      edge=0, remove_bad=True, nframe=0, ihdu=0,
+                      apod=False,):
     """ Check the input parameters for the cleaning.
 
     Parameters:
@@ -293,7 +294,8 @@ def check_data_params(filename, isz, r1, dr, bad_map=None, add_bad=[],
 
 
 def clean_data(data, isz=None, r1=None, dr=None, edge=0,
-               bad_map=None, add_bad=[], verbose=False):
+               bad_map=None, add_bad=[], apod=True,
+               sky=True, verbose=False):
     """ Clean data.
 
     Parameters:
@@ -310,8 +312,9 @@ def clean_data(data, isz=None, r1=None, dr=None, edge=0,
     --------
     `cube` {np.array} -- Cleaned datacube.
     """
-    if data.shape[1] % 2 == 1:
-        data = np.array([im[:-1, :-1] for im in data])
+    # print(data.shape[1])
+    # if data.shape[1] % 2 == 1:
+    #     data = np.array([im[:-1, :-1] for im in data])
 
     n_im = data.shape[0]
     cube_cleaned = np.zeros([n_im, isz, isz])
@@ -327,7 +330,11 @@ def clean_data(data, isz=None, r1=None, dr=None, edge=0,
         else:
             img1 = img0.copy()
         im_rec_max = crop_max(img1, isz, f=3)[0]
-        img_biased = sky_correction(im_rec_max, r1=r1, dr=dr, verbose=verbose)[0]
+        if sky:
+            img_biased = sky_correction(im_rec_max, r1=r1, dr=dr,
+                                        verbose=verbose)[0]
+        else:
+            img_biased = im_rec_max.copy()
         img_biased[img_biased < 0] = 0  # Remove negative pixels
 
         if img_biased.shape[0] != img_biased.shape[1]:
@@ -335,14 +342,18 @@ def clean_data(data, isz=None, r1=None, dr=None, edge=0,
                 '\nCropped image do not have same X, Y dimensions -> check isz', 'red')
             return None
 
-        img = apply_mask_apod(img_biased, r=isz//3)
+        if apod:
+            img = apply_mask_apod(img_biased, r=isz//3)
+        else:
+            img = img_biased.copy()
         cube_cleaned[i] = img
     return cube_cleaned
 
 
 def select_clean_data(filename, isz=256, r1=100, dr=10, edge=0,
                       clip=True, bad_map=None, add_bad=[],
-                      clip_fact=0.5, verbose=False, ihdu=0, display=False):
+                      clip_fact=0.5, apod=True, sky=True,
+                      verbose=False, ihdu=0, display=False):
     """ Clean and select good datacube (sigma-clipping using fluxes variations).
 
     Parameters:
@@ -375,9 +386,14 @@ def select_clean_data(filename, isz=256, r1=100, dr=10, edge=0,
             print("%2.2f (start), %2.2f (end), %2.2f (Corrected AirMass)" %
                   (seeing_start, seeing_end, seeing))
 
+    raw_size = cube.shape[1]
+    if isz > raw_size:
+        raise ValueError(
+            'Reshape factor is larger than the data size (choose a smaller isz).')
+
     cube_cleaned = clean_data(cube, isz=isz, r1=r1, edge=edge,
                               bad_map=bad_map, add_bad=add_bad,
-                              dr=dr,
+                              dr=dr, sky=sky, apod=apod,
                               verbose=verbose)
 
     if cube_cleaned is None:
