@@ -1105,8 +1105,9 @@ def _detectLimit(param, chi2Data, observables, instruments, delta=None, method='
 class Open:
     global CONFIG, _ff2_data
 
-    def __init__(self, filename, rmin=None, rmax=None,  reducePoly=None,
-                 wlOffset=0.0, alpha=0.0, v2bias=1., instruments=None, largeCP=False):
+    def __init__(self, filename, rmin=None, rmax=None, reducePoly=None,
+                 wlOffset=0.0, alpha=0.0, v2bias=1., instruments=None, largeCP=False,
+                 err_scale=1, extra_error=0, extra_error_v2=0):
         """
         - filename: an OIFITS file
         - rmin, rmax: minimum and maximum radius (in mas) for plots and search
@@ -1125,7 +1126,9 @@ class Open:
             for i, f in enumerate(filename):
                 print(' | file %d/%d: %s' % (i+1, len(filename), f))
                 # try:
-                self._loadOifitsData(f, reducePoly=reducePoly, largeCP=largeCP)
+                self._loadOifitsData(f, reducePoly=reducePoly, largeCP=largeCP,
+                                     err_scale=err_scale, extra_error=extra_error,
+                                     extra_error_v2=extra_error_v2)
                 # except:
                 #    print('   -> ERROR! could not read', f)
             self.filename = filename
@@ -1145,7 +1148,9 @@ class Open:
                 print(' | file %d/%d: %s' % (i+1, len(files), f))
                 try:
                     self._loadOifitsData(os.path.join(
-                        filename, f), reducePoly=reducePoly, largeCP=largeCP)
+                        filename, f), reducePoly=reducePoly, largeCP=largeCP,
+                        err_scale=err_scale, extra_error=extra_error,
+                        extra_error_v2=extra_error_v2)
                 except:
                     print('   -> ERROR! could not read',
                           os.path.join(filename, f))
@@ -1157,8 +1162,9 @@ class Open:
             self.filename = filename
             self.titleFilename = os.path.basename(filename)
             self._initOiData()
-            self._loadOifitsData(
-                filename, reducePoly=reducePoly, largeCP=largeCP)
+            self._loadOifitsData(filename, reducePoly=reducePoly, largeCP=largeCP,
+                                 err_scale=err_scale, extra_error=extra_error,
+                                 extra_error_v2=extra_error_v2)
 
         if verbose:
             print(' | compute aux data for companion injection')
@@ -1306,7 +1312,8 @@ class Open:
         """
         return [[x if i == 0 else x.copy() for i, x in enumerate(d)] for d in self._rawData]
 
-    def _loadOifitsData(self, filename, reducePoly=None, largeCP=False):
+    def _loadOifitsData(self, filename, reducePoly=None, largeCP=False,
+                        extra_error=0, extra_error_v2=0, err_scale=1, ):
         """
         Note that CP are stored in radians, not degrees like in the OIFITS!
 
@@ -1379,9 +1386,14 @@ class Open:
                 data[hdu.data['T3PHIERR'] > 1e8] = np.nan
                 if len(data.shape) == 1:
                     data = np.array([np.array([d]) for d in data])
+
                 err = hdu.data['T3PHIERR']*np.pi/180
+                err = np.sqrt(err**2 + np.deg2rad(extra_error)**2)
+                err *= err_scale
+
                 if len(err.shape) == 1:
                     err = np.array([np.array([e]) for e in err])
+                    
                 if 'AMBER' in ins:
                     print(' | !!AMBER: rejecting CP WL<%3.1fum' % amberWLmin)
                     print(' | !!AMBER: rejecting CP WL<%3.1fum' % amberWLmax)
@@ -1533,6 +1545,8 @@ class Open:
                 if len(data.shape) == 1:
                     data = np.array([np.array([d]) for d in data])
                 err = hdu.data['VIS2ERR']
+                err = np.sqrt(err**2+extra_error_v2**2)
+                
                 if len(err.shape) == 1:
                     err = np.array([np.array([e]) for e in err])
                 # we'll deal with that later...

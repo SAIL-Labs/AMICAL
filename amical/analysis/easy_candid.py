@@ -6,6 +6,7 @@ from amical.analysis import candid
 
 
 def candid_grid(input_data, step=10, rmin=20, rmax=400, diam=0, obs=['cp', 'v2'],
+                extra_error=0, err_scale=1, extra_error_v2=0,
                 doNotFit=['diam*', ], ncore=1, verbose=False):
     """ This function is an user friendly interface between the users of amical
     pipeline and the CANDID analysis package (https://github.com/amerand/CANDID).
@@ -35,7 +36,8 @@ def candid_grid(input_data, step=10, rmin=20, rmax=400, diam=0, obs=['cp', 'v2']
     """
 
     cprint(' | --- Start CANDID fitting --- :', 'green')
-    o = candid.Open(input_data)
+    o = candid.Open(input_data, extra_error=extra_error,
+                    err_scale=err_scale, extra_error_v2=extra_error_v2)
 
     o.observables = obs
 
