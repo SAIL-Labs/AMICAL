@@ -300,7 +300,6 @@ def hammer(cpo, ivar=[52., 192., 1.53], ndim='Default', nwalcps=50, plot=False,
     ths = chain[:, 1]
     cs = chain[:, 2:][:, 0]
 
-
     # Now introduce the prior, by ignoring values outside of the range
     if sep_prior is not None:
         wh = (seps >= sep_prior[0]) & (seps <= sep_prior[1])
@@ -1392,7 +1391,8 @@ def coarse_grid(cpo, nsep=32, nth=20, ncon=32, smin='Default', smax='Default',
     best_params = [seps[best_ix[0][0]],
                    ths[best_ix[1][0]], cons[best_ix[2][0]]]
     best_params = np.array(np.array(best_params).ravel())
-    print('\nMaximum likelihood estimation (χ2=%2.1f):' % (np.amin(chi2)))
+    print('\nMaximum likelihood estimation (χ2=%2.1f):' %
+          (np.amin(chi2)/(ndata)))
     print('-------------------------------')
     print('Separation = %2.2f mas' % best_params[0])
     print('PA = %2.2f deg' % best_params[1])
