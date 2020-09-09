@@ -199,6 +199,9 @@ def average_calib_files(list_nrm, sig_thres=2, display=False):
     vis2_vs_file = np.array(vis2_vs_file)
     e_vis2_vs_file = np.array(e_vis2_vs_file)
 
+    zero_uncer = (e_vis2_vs_file == 0)
+    e_vis2_vs_file[zero_uncer] = np.max(e_vis2_vs_file)
+    
     cmn_vis2, std_vis2 = wtmn(vis2_vs_file, e_vis2_vs_file)
     cmn_cp, std_cp = wtmn(cp_vs_file, e_cp_vs_file)
 
@@ -258,8 +261,8 @@ def calibrate(res_t, res_c, clip=False, sig_thres=2, apply_phscorr=False, Addind
     if type(res_c) is not list:
         res_c = [res_c]
 
-    calib_tab = average_calib_files(
-        res_c, sig_thres=sig_thres, display=display)
+    calib_tab = average_calib_files(res_c, sig_thres=sig_thres,
+                                    display=display)
 
     if clip:
         cmn_v2_c, cmn_cp_c, std_v2_c, std_cp_c = (calib_tab.f_v2_clip, calib_tab.f_cp_clip,
