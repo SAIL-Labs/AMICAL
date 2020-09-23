@@ -90,52 +90,6 @@ def test_bs_v2(filepath, savepath):
     assert (list(_saved_bs_v2[1]) == list(res_v2[1]))
 
 
-@pytest.mark.parametrize("filepath", [example_fits])
-@pytest.mark.parametrize("savepath", [save_cp_gauss])
-def test_bs_cp(filepath, savepath):
-    hdu = fits.open(filepath)
-    cube = hdu[0].data
-    hdu.close()
-
-    params_ami = {"peakmethod": 'gauss',
-                  "bs_multi_tri": False,
-                  "maskname": "g7",
-                  "fw_splodge": 0.7,
-                  }
-    bs = amical.extract_bs(cube, filepath, targetname='test',
-                           **params_ami, display=False)
-
-    res_cp = np.array([bs.cp, bs.e_cp])
-    _saved_bs_cp = fits.open(savepath)[0].data
-
-    assert (len(_saved_bs_cp[0]) == len(res_cp[0]))
-    assert (list(_saved_bs_cp[0]) == list(res_cp[0]))
-    assert (list(_saved_bs_cp[1]) == list(res_cp[1]))
-
-
-@pytest.mark.parametrize("filepath", [example_fits])
-@pytest.mark.parametrize("savepath", [save_cp_fft])
-def test_bs_cp_fft(filepath, savepath):
-    hdu = fits.open(filepath)
-    cube = hdu[0].data
-    hdu.close()
-
-    params_ami = {"peakmethod": 'fft',
-                  "bs_multi_tri": False,
-                  "maskname": "g7",
-                  "fw_splodge": 0.7,
-                  }
-    bs = amical.extract_bs(cube, filepath, targetname='test',
-                           **params_ami, display=False)
-
-    res_cp = np.array([bs.cp, bs.e_cp])
-    _saved_bs_cp = fits.open(savepath)[0].data
-
-    assert (len(_saved_bs_cp[0]) == len(res_cp[0]))
-    assert (list(_saved_bs_cp[0]) == list(res_cp[0]))
-    assert (list(_saved_bs_cp[1]) == list(res_cp[1]))
-
-
 @pytest.mark.slow
 @pytest.mark.parametrize("filepath", [example_fits])
 def test_show(filepath):
