@@ -17,6 +17,8 @@ from amical.tools import mas2rad
 def get_mask(ins, mask, first=0):
     """ Return dictionnary containning saved informations about masks. """
 
+    pupil_visir = 8.
+    pupil_visir_mm = 17.67
     off = 0.3
     dic_mask = {
         'NIRISS': {'g7': np.array([[0, -2.64],
@@ -80,7 +82,14 @@ def get_mask(ins, mask, first=0):
                                         [-2.92, -1.35],
                                         [2.92, -1.35],
                                         [0, -3.04]
-                                        ])}
+                                        ])},
+        'VISIR': {'g7': (pupil_visir/pupil_visir_mm)*np.array([[-5.707, -2.885],
+                                                               [-5.834, 3.804],
+                                                               [0.099, 7.271],
+                                                               [7.989, 0.422],
+                                                               [3.989, -6.481],
+                                                               [-3.790, -6.481],
+                                                               [-1.928, -2.974]])}
     }
 
     xycoords = dic_mask[ins][mask]
@@ -111,7 +120,9 @@ def get_wavelength(ins, filtname):
                            },
                 'GLINT': {'F155': [1.55, 0.01],
                           'F430': [4.3, 0.01]
-                          }
+                          },
+                'VISIR': {'10_5_SAM': [10.56, 0.37],
+                          '11_3_SAM': [11.23, 0.55]}
                 }
     try:
         wl = np.array(dic_filt[ins][filtname]) * 1e-6
@@ -122,7 +133,8 @@ def get_wavelength(ins, filtname):
 
 def get_pixel_size(ins):
     saved_pixel_detector = {'NIRISS': 65.6,
-                            'SPHERE': 12.27}
+                            'SPHERE': 12.27,
+                            'VISIR': 45}
     try:
         p = mas2rad(saved_pixel_detector[ins])
     except KeyError:
