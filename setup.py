@@ -6,7 +6,7 @@ project_name = "amical"
 
 setup(
     name=project_name,
-    version=__import__(project_name).__version__,
+    version=1.0,
     packages=find_packages(),
     author='Anthony Soulain',
     author_email='anthony.soulain@sydney.edu.au.com',
