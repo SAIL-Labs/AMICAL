@@ -2,7 +2,7 @@
 
 (**A**perture **M**asking **I**nterferometry **C**alibration and **A**nalysis **L**ibrary)
 
-[![version](http://img.shields.io/badge/AMICAL-v1.-orange.svg?style=flat)](https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL.git)
+[![version](http://img.shields.io/badge/AMICAL-v1.0-orange.svg?style=flat)](https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL.git)
 
 ## Install from source (for conda-based systems)
 
