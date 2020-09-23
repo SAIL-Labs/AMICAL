@@ -304,7 +304,6 @@ def _check_input_infos(hdr, targetname=None, filtname=None):
     target = hdr.get('OBJECT')
     filt = hdr.get('FILTER')
     instrument = hdr.get('INSTRUME')
-
     # Check the target name
     if (target is None):
         if (targetname is not None):
@@ -858,7 +857,7 @@ def _add_infos_header(infos, hdr, mf, pa, filename, maskname, npix):
 
 def extract_bs(cube, filename, maskname, filtname=None, targetname=None,
                bs_multi_tri=False, peakmethod='gauss', hole_diam=0.8, cutoff=1e-4,
-               fw_splodge=0.7, naive_err=False, n_wl=3, n_blocks=0,
+               fw_splodge=0.7, naive_err=False, n_wl=3, n_blocks=0, theta_detector=0,
                verbose=False, display=True,):
     """Compute the bispectrum (bs, v2, cp, etc.) from a data cube.
 
@@ -886,7 +885,7 @@ def extract_bs(cube, filename, maskname, filtname=None, targetname=None,
         fraction of pixel to determine its weight; 'gauss' considers a gaussian splodge (with a gaussian
         weight) to get the same splodge side for each n(n-1)/2 baselines,\n
     `fw_splodge` {float}:
-        Relative size of the splodge used to compute mutliple triangle indices and the fwhm
+        Relative size of the splodge used to compute multiple triangle indices and the fwhm
         of the 'gauss' technique,\n
     `naive_err` {bool}:
         If True, the uncertainties are computed using the std of the overall
@@ -897,6 +896,9 @@ def extract_bs(cube, filename, maskname, filtname=None, targetname=None,
     `n_blocks` {float}:
         Number of separated blocks use to split the data cube and get more
         accurate uncertainties (default: 0, n_blocks = n_ps),\n
+    `theta_detector`: float
+        Angle [deg] to rotate the mask compare to the detector (if the mask is not
+        perfectly aligned with the detector, e.g.: VLT/VISIR) ,\n
     `targetname` {str}:
         Name of the target to save in oifits file (if not in header of the
         cube),\n
@@ -944,7 +946,7 @@ def extract_bs(cube, filename, maskname, filtname=None, targetname=None,
     # ------------------------------------------------------------------------
     mf = make_mf(maskname, infos.instrument, infos.filtname, npix, peakmethod=peakmethod,
                  fw_splodge=fw_splodge, n_wl=n_wl, cutoff=cutoff, hole_diam=hole_diam,
-                 display=display,)
+                 theta_detector=theta_detector, display=display,)
     if mf is None:
         return None
 

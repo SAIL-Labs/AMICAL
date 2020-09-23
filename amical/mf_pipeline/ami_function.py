@@ -6,7 +6,7 @@
 AMICAL: Aperture Masking Interferometry Calibration and Analysis Library
 -------------------------------------------------------------------------
 
-Matched filter sub-pipeline method.
+Matched filter pipeline method.
 
 All AMI related function, the most important are:
 - make_mf: compute splodge positions for a given mask,
@@ -268,9 +268,9 @@ def _make_overlap_mat(mf, n_baselines, display=False):
 
 
 def make_mf(maskname, instrument, filtname, npix,
-            peakmethod='fft', n_wl=3, cutoff=1e-4, D=6.5,
-            hole_diam=0.8, fw_splodge=0.7, verbose=False,
-            display=True):
+            peakmethod='fft', n_wl=3, theta_detector=0,
+            cutoff=1e-4, hole_diam=0.8, fw_splodge=0.7,
+            verbose=False, display=True):
     """
     Summary:
     --------
@@ -284,23 +284,29 @@ def make_mf(maskname, instrument, filtname, npix,
     -----------
     `maskname`: str
         Name of the mask (number of holes),\n
-    `npix`: int
-        Size of the image,\n
     `instrument`: str
         Instrument used (default = jwst),\n
-    `mas_pixel`: float
-        Pixel size of the detector [mas] (default = 65.6 mas for NIRISS),\n
-    `peakmethod`: boolean
-        If True, perform FFTs to compute the peak position in the Fourier space (default).
-        Otherwise, set the u-v peak sampled into 4 pixels,\n
+    `filtname`: str
+        Name of the filter,\n
+    `npix`: int
+        Size of the image,\n
+    `peakmethod` {str}:
+        3 methods are used to sample the u-v space: 'fft' uses fft between individual holes to compute
+        the expected splodge positions; 'square' compute the splodge in a square using the expected
+        fraction of pixel to determine its weight; 'gauss' considers a gaussian splodge (with a gaussian
+        weight) to get the same splodge side for each n(n-1)/2 baselines,\n
     `n_wl`: int
         number of wavelengths to use to simulate bandwidth,\n
+    `theta_detector`: float
+        Angle [deg] to rotate the mask compare to the detector (if the mask is not
+        perfectly aligned with the detector, e.g.: VLT/VISIR) ,\n
     `cutoff`: float
-        cut between noise and signal pixels in simulated transforms,\n
-    `D`: float
-        Diameter of the primary mirror,\n
+        cutoff limit between noise and signal pixels in simulated transforms,\n
     `hole_diam`: float
-        Diameter of a single aperture (0.8 for JWST).
+        Diameter of a single aperture (0.8 for JWST),\n
+    `fw_splodge` {float}:
+        Relative size of the splodge used to compute multiple triangle indices and the fwhm
+        of the 'gauss' technique,\n
     """
 
     # Get detector, filter and mask informations
@@ -309,6 +315,19 @@ def make_mf(maskname, instrument, filtname, npix,
     # Wavelength of the filter (filt[0]: central, filt[1]: width)
     filt = get_wavelength(instrument, filtname)
     xy_coords = get_mask(instrument, maskname)  # mask coordinates
+
+    x_mask = xy_coords[:, 0]
+    y_mask = xy_coords[:, 1]
+
+    x_mask_rot = x_mask*np.cos(np.deg2rad(theta_detector)) + \
+        y_mask*np.sin(np.deg2rad(theta_detector))
+    y_mask_rot = -x_mask*np.sin(np.deg2rad(theta_detector)) + \
+        y_mask*np.cos(np.deg2rad(theta_detector))
+
+    xy_coords_rot = []
+    for i in range(len(x_mask)):
+        xy_coords_rot.append([x_mask_rot[i], y_mask_rot[i]])
+    xy_coords = np.array(xy_coords_rot)
 
     if display:
         _plot_mask_coord(xy_coords, maskname, instrument)
@@ -340,7 +359,8 @@ def make_mf(maskname, instrument, filtname, npix,
     if verbose:
         print('\n- Calculating sampling of', n_holes, 'holes array...')
 
-    innerpix, innerpix_center = _compute_center_splodge(npix, pixelsize, filt)
+    innerpix, innerpix_center = _compute_center_splodge(npix, pixelsize, filt,
+                                                        hole_diam=hole_diam)
 
     u, v = _compute_uv_coord(xy_coords, index_mask, filt, pixelsize, npix,
                              round_uv_to_pixel=False)
@@ -360,7 +380,8 @@ def make_mf(maskname, instrument, filtname, npix,
 
         elif peakmethod == 'gauss':
             ind_peak = _peak_gauss_method(u=u, v=v, filt=filt, index_mask=index_mask,
-                                          fw_splodge=fw_splodge, **args)
+                                          fw_splodge=fw_splodge, **args,
+                                          hole_diam=hole_diam)
         else:
             cprint(
                 "Error: choose the extraction method 'gauss', 'fft' or 'square'.", 'red')
@@ -962,8 +983,3 @@ def phase_chi2(p, fitmat, ph_mn, ph_err):
     arg = (np.array(tmp - piston) * 1j)
     phase_chi2 = np.sum(np.abs(1 - np.exp(arg))**2/e_tmp)
     return phase_chi2
-
-
-# mf = make_mf('g7', 'NIRISS', 'F430M', 80, peakmethod='gauss')
-
-# plt.show(block=True)
