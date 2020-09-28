@@ -92,7 +92,7 @@ def cp_loglikelihood(params, u, v, wavel, t3data, t3err, model='constant'):
         return -np.inf
     # if (params[0] > 250.) or (params[0] < 0.):
     #    return -np.inf
-    if (params[1] > 360.) or (params[1] < 0.):
+    if (params[1] > 380.) or (params[1] < -5.):
         return -np.inf
 
     cps = cp_model(params, u, v, wavel, model=model)
@@ -114,7 +114,7 @@ def cp_loglikelihood_cov(params, u, v, wavel, t3data, cov_inv, model='constant')
         return -np.inf
     if (params[0] > 250.) or (params[0] < 0.):
         return -np.inf
-    if (params[1] > 360.) or (params[1] < 0.):
+    if (params[1] > 380.) or (params[1] < -5):
         return -np.inf
 
     cps = cp_model(params, u, v, wavel, model=model)
@@ -144,7 +144,7 @@ def cp_loglikelihood_proj(params, u, v, wavel, proj_t3data, proj_t3err, proj, mo
 #        return -np.inf
     if (params[0] > 350.) or (params[0] < 0.):
         return -np.inf
-    if (params[1] > 360.) or (params[1] < 0.):
+    if (params[1] > 380.) or (params[1] < -5.):
         return -np.inf
 
     cps = cp_model(params, u, v, wavel, model=model)
