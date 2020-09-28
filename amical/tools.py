@@ -22,6 +22,7 @@ from munch import munchify as dict2class
 from scipy.signal import medfilt2d
 from termcolor import cprint
 from uncertainties import ufloat
+import math as m
 
 warnings.filterwarnings("ignore", module='astropy.io.votable.tree')
 warnings.filterwarnings("ignore", module='astropy.io.votable.xmlutil')
@@ -610,7 +611,7 @@ def check_seeing_cond(list_nrm):
 
     """
     l_seeing, l_vis2, l_cp, l_pa, l_mjd = [], [], [], [], []
-    
+
     hdr = fits.open(list_nrm[0].filename)[0].header
     for nrm in list_nrm:
         hdr = fits.open(nrm.filename)[0].header
@@ -677,3 +678,20 @@ def plot_seeing_cond(cond, lim_seeing=None):
     plt.tight_layout()
     plt.show(block=False)
     return fig
+
+
+def roundSciDigit(number):
+    """ Rounds a float number with a significant digit number. """
+    ff = str(number).split('.')[0]
+    d = str(number).split('.')[1]
+    d, ff = m.modf(number)
+    if ff == 0:
+        res = str(d).split('.')[1]
+        for i in range(len(res)):
+            if float(res[i]) != 0.:
+                sig_digit = i + 1
+                break
+    else:
+        sig_digit = 1
+
+    return float(np.round(number, sig_digit)), sig_digit
