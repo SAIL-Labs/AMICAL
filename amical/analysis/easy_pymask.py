@@ -13,7 +13,7 @@ def pymask_grid(input_data, ngrid=40, pa_prior=[0, 360], sep_prior=[0, 100], cr_
     return like_grid
 
 
-def pymask_mcmc(input_data, initial_guess, niters=1000, pa_prior=[0, 360], sep_prior=[0, 100], cr_prior=[1, 150],
+def pymask_mcmc(input_data, initial_guess, niters=1000, pa_prior=[0, 360], sep_prior=None, cr_prior=None,
                 err_scale=1, extra_error=0, ncore=1, burn_in=500, walkers=100, display=True,
                 verbose=True):
     cpo = pymask.cpo(input_data)
@@ -24,6 +24,13 @@ def pymask_mcmc(input_data, initial_guess, niters=1000, pa_prior=[0, 360], sep_p
 
     res_corner = hammer_data[1]
     chain = hammer_data[0]['chain']
+
+    dm = 2.5*np.log10(res_corner['cr'])
+    dmm = 2.5*np.log10(res_corner['cr']-res_corner['delcrm'])
+    dmp = 2.5*np.log10(res_corner['cr']+res_corner['delcrp'])
+    e_dmm = abs(dm - dmm)
+    e_dmp = abs(dm - dmp)
+
     if verbose:
         print('MCMC estimation')
         print('---------------')
@@ -33,11 +40,6 @@ def pymask_mcmc(input_data, initial_guess, niters=1000, pa_prior=[0, 360], sep_p
               (res_corner['pa'], res_corner['delpap'], res_corner['delpam']))
         print('Contrast Ratio = %2.1f +%2.1f/-%2.1f' %
               (res_corner['cr'], res_corner['delcrp'], res_corner['delcrm']))
-        dm = 2.5*np.log10(res_corner['cr'])
-        dmm = 2.5*np.log10(res_corner['cr']-res_corner['delcrm'])
-        dmp = 2.5*np.log10(res_corner['cr']+res_corner['delcrp'])
-        e_dmm = abs(dm - dmm)
-        e_dmp = abs(dm - dmp)
         print('dm = %2.2f +%2.2f/-%2.2f mag' % (dm, e_dmp, e_dmm))
 
     chain_sep = chain[:, :, 0].T
@@ -64,7 +66,21 @@ def pymask_mcmc(input_data, initial_guess, niters=1000, pa_prior=[0, 360], sep_p
         plt.ylabel('CR')
         plt.tight_layout()
         plt.show(block=False)
-    return res_corner
+
+    res = {'best': {'model': 'binary',
+                    'dm': dm,
+                    'theta': res_corner['pa'],
+                    'sep': res_corner['sep'],
+                    'x0': 0,
+                    'y0': 0},
+           'uncer': {'dm_p': e_dmp,
+                     'dm_m': e_dmm,
+                     'theta_p': res_corner['delpap'],
+                     'theta_m': res_corner['delpam'],
+                     'sep_p': res_corner['delsepp'],
+                     'sep_m': res_corner['delsepm']},
+           }
+    return res
 
 
 def pymask_cr_limit(input_data, nsim=100, err_scale=1, extra_error=0, ncore=1, cmax=500,
