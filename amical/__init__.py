@@ -5,5 +5,6 @@ from .data_processing import check_data_params, select_clean_data
 from .mf_pipeline.ami_function import make_mf
 from .mf_pipeline.bispect import extract_bs
 from .oifits import cal2dict, load, loadc, save, show
+from .analysis.fitting import fits2obs, smartfit, plot_model
 
-__version__ = "0.5dev"
+__version__ = "1.0"
