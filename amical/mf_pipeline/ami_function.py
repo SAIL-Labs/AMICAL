@@ -154,6 +154,22 @@ def _peak_square_method(i, npix, u, v, pixelsize, innerpix, innerpix_center):
     return dic_mf
 
 
+def _peak_one_method(i, npix, u, v, pixelsize, innerpix, innerpix_center):
+    mf = np.zeros([npix, npix])
+    uv = np.array([v[i], u[i]])*pixelsize*npix
+    uv = (uv + npix) % npix
+    uv_int = np.array(np.round(uv), dtype=int)
+    mf[uv_int[0], uv_int[1]] = 1
+    mf = np.roll(mf, [0, 0])
+    mf_flat = norm_max(mf.ravel())
+    mf_centered = norm_max(np.fft.fftshift(mf).ravel())
+    mf_flat[innerpix] = 0.0
+    mf_centered[innerpix_center] = 0.0
+    dic_mf = {'flat': mf_flat,
+              'centered': mf_centered}
+    return dic_mf
+
+
 def _peak_gauss_method(i, npix, u, v, filt, index_mask, pixelsize,
                        innerpix, innerpix_center, fw_splodge=0.7,
                        hole_diam=0.8):
@@ -374,10 +390,10 @@ def make_mf(maskname, instrument, filtname, npix,
         if peakmethod == 'fft':
             ind_peak = _peak_fft_method(xy_coords=xy_coords, wl=wl, index_mask=index_mask,
                                         **args)
-
         elif peakmethod == 'square':
             ind_peak = _peak_square_method(u=u, v=v, **args)
-
+        elif peakmethod == 'one':
+            ind_peak = _peak_one_method(u=u, v=v, **args)
         elif peakmethod == 'gauss':
             ind_peak = _peak_gauss_method(u=u, v=v, filt=filt, index_mask=index_mask,
                                           fw_splodge=fw_splodge, **args,
