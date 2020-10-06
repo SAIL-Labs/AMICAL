@@ -37,7 +37,7 @@ hdu.close()
 # ----------------------------------
 
 #  AMI parameters (refer to the docstrings of `extract_bs` for details)
-params_ami = {"peakmethod": 'gauss',
+params_ami = {"peakmethod": 'fft',
               "bs_multi_tri": False,
               "maskname": "g7",
               "fw_splodge": 0.7,
@@ -57,6 +57,7 @@ cal = amical.calibrate(bs_t, bs_c)
 
 # Display and save the results as oifits
 amical.show(cal)
-dic = amical.save(cal, oifits_file='example_fakebinary_NIRISS.oifits', fake_obj=True)
+dic = amical.save(
+    cal, oifits_file='example_fakebinary_NIRISS.oifits', fake_obj=True)
 
 plt.show(block=True)
