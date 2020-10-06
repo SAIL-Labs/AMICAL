@@ -48,7 +48,7 @@ def rad2mas(rad):
     return mas
 
 
-def crop_max(img, dim, filtmed=True, f=3):
+def crop_max(img, dim, offx=0, offy=0, filtmed=True, f=3):
     """
     Summary
     -------------
@@ -77,8 +77,8 @@ def crop_max(img, dim, filtmed=True, f=3):
         im_med = img.copy()
 
     pos_max = np.where(im_med == im_med.max())
-    X = pos_max[1][0]
-    Y = pos_max[0][0]
+    X = pos_max[1][0] + offx
+    Y = pos_max[0][0] + offy
     cutout = Cutout2D(img, (X, Y), dim)
     return cutout.data, (X, Y)
 
@@ -321,37 +321,30 @@ def sky_correction(imA, r1=100, dr=20, verbose=False):
     return imC, backgroundC
 
 
-def apply_mask_apod(img, r=80, sig=10):
+def super_gauss(dist, hwhm, m):
+    y = np.exp(-np.log(0.5) * (dist/hwhm)**m)
+    return y
+
+
+def super_gaussian(x, sigma, m, amp=1, x0=0):
+    sigma = float(sigma)
+    m = float(m)
+    return amp * ((np.exp(-(2 ** (2 * m - 1)) * np.log(2) * (((x - x0) ** 2) / ((sigma) ** 2)) ** (m))) ** 2)
+
+
+def apply_windowing(img, window=80, m=3):
     isz = len(img)
-
-    X = [np.arange(isz), np.arange(isz), 1]
-
-    sig = 10
-    param = {'A': 1,
-             'x0': 0,
-             'y0': 0,
-             'fwhm_x': sig,
-             'fwhm_y': sig,
-             'theta': 0
-             }
-
-    gauss = gauss_2d_asym(X, param)
-
     xx, yy = np.arange(isz), np.arange(isz)
     xx2 = (xx-isz//2)
     yy2 = (isz//2-yy)
-
+    # Distance map
     distance = np.sqrt(xx2**2 + yy2[:, np.newaxis]**2)
 
-    mask = np.zeros([isz, isz])
+    # Super-gaussian windowing
+    window = super_gaussian(distance, sigma=window, m=m)
 
-    mask[distance < r] = 1
-
-    conv_mask = conv_fft(mask, gauss)
-
-    mask_apod = conv_mask/np.max(conv_mask)
-
-    img_apod = img * mask_apod
+    # Apply the windowing
+    img_apod = img * window
     return img_apod
 
 

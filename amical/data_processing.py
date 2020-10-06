@@ -19,7 +19,7 @@ from matplotlib.colors import PowerNorm
 from termcolor import cprint
 from tqdm import tqdm
 
-from amical.tools import apply_mask_apod, crop_max
+from amical.tools import apply_windowing, crop_max
 
 
 def _apply_patch_ghost(cube, xc, yc, radius=20, dx=0, dy=-200, method='bg'):
@@ -215,7 +215,7 @@ def fix_bad_pixels(image, bad_map, add_bad=[], x_stddev=1):
 
 def check_data_params(filename, isz, r1, dr, bad_map=None, add_bad=[],
                       edge=0, remove_bad=True, nframe=0, ihdu=0,
-                      apod=False,):
+                      offx=0, offy=0, apod=False, window=None):
     """ Check the input parameters for the cleaning.
 
     Parameters:
@@ -243,7 +243,7 @@ def check_data_params(filename, isz, r1, dr, bad_map=None, add_bad=[],
         img1 = fix_bad_pixels(img0, bad_map, add_bad=add_bad)
     else:
         img1 = img0.copy()
-    cropped_infos = crop_max(img1, isz, f=3)
+    cropped_infos = crop_max(img1, isz, offx=offx, offy=offy, f=3)
     pos = cropped_infos[1]
 
     noBadPixel = False
@@ -261,11 +261,15 @@ def check_data_params(filename, isz, r1, dr, bad_map=None, add_bad=[],
     theta = np.linspace(0, 2*np.pi, 100)
     x0 = pos[0]
     y0 = pos[1]
+    
+    r3 = window
 
     x1 = r1 * np.cos(theta) + x0
     y1 = r1 * np.sin(theta) + y0
     x2 = r2 * np.cos(theta) + x0
     y2 = r2 * np.sin(theta) + y0
+    x3 = r3 * np.cos(theta) + x0
+    y3 = r3 * np.sin(theta) + y0
 
     xs1, ys1 = x0 + isz//2, y0 + isz//2
     xs2, ys2 = x0 - isz//2, y0 + isz//2
@@ -277,6 +281,8 @@ def check_data_params(filename, isz, r1, dr, bad_map=None, add_bad=[],
     plt.imshow(img1, norm=PowerNorm(.5), cmap='afmhot', vmin=0, vmax=max_val)
     plt.plot(x1, y1, label='Inner radius for sky subtraction')
     plt.plot(x2, y2, label='Outer radius for sky subtraction')
+    if apod:
+        plt.plot(x3, y3, label='Super-gaussian windowing')
     plt.plot(x0, y0, '+', color='g', ms=10, label='Centering position')
     plt.plot([xs1, xs2, xs3, xs4, xs1], [ys1, ys2, ys3, ys4, ys1], 'w--',
              label='Resized image')
@@ -294,8 +300,9 @@ def check_data_params(filename, isz, r1, dr, bad_map=None, add_bad=[],
 
 
 def clean_data(data, isz=None, r1=None, dr=None, edge=0,
-               bad_map=None, add_bad=[], apod=True,
-               sky=True, verbose=False):
+               r2=None, bad_map=None, add_bad=[], apod=True,
+               offx=0, offy=0, sky=True, window=None,
+               verbose=False):
     """ Clean data.
 
     Parameters:
@@ -329,7 +336,7 @@ def clean_data(data, isz=None, r1=None, dr=None, edge=0,
             img1 = fix_bad_pixels(img0, bad_map, add_bad=add_bad)
         else:
             img1 = img0.copy()
-        im_rec_max = crop_max(img1, isz, f=3)[0]
+        im_rec_max = crop_max(img1, isz, offx=offx, offy=offy, f=3)[0]
         if sky:
             img_biased = sky_correction(im_rec_max, r1=r1, dr=dr,
                                         verbose=verbose)[0]
@@ -343,16 +350,19 @@ def clean_data(data, isz=None, r1=None, dr=None, edge=0,
             return None
 
         if apod:
-            img = apply_mask_apod(img_biased, r=isz//3)
+            if r2 is None:
+                r2 = isz//3
+            img = apply_windowing(img_biased, window=window)
+
         else:
             img = img_biased.copy()
         cube_cleaned[i] = img
     return cube_cleaned
 
 
-def select_clean_data(filename, isz=256, r1=100, dr=10, edge=0,
-                      clip=True, bad_map=None, add_bad=[],
-                      clip_fact=0.5, apod=True, sky=True,
+def select_clean_data(filename, isz=256, r1=100, r2=None, dr=10, edge=0,
+                      clip=True, bad_map=None, add_bad=[], offx=0, offy=0,
+                      clip_fact=0.5, apod=True, sky=True, window=None,
                       verbose=False, ihdu=0, display=False):
     """ Clean and select good datacube (sigma-clipping using fluxes variations).
 
@@ -392,9 +402,9 @@ def select_clean_data(filename, isz=256, r1=100, dr=10, edge=0,
             'Reshape factor is larger than the data size (choose a smaller isz).')
 
     cube_cleaned = clean_data(cube, isz=isz, r1=r1, edge=edge,
-                              bad_map=bad_map, add_bad=add_bad,
-                              dr=dr, sky=sky, apod=apod,
-                              verbose=verbose)
+                              r2=r2, bad_map=bad_map, add_bad=add_bad,
+                              dr=dr, sky=sky, apod=apod, window=window,
+                              offx=offx, offy=offy, verbose=verbose)
 
     if cube_cleaned is None:
         return None
