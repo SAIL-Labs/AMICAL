@@ -54,7 +54,12 @@ def candid_grid(input_data, step=10, rmin=20, rmax=400, diam=0, obs=['cp', 'v2']
 
     f = fit["f"] / 100.0
     e_f = e_fit["f"] / 100.0
-
+    if (e_f < 0) or (e_fit["x"] < 0) or (e_fit["y"] < 0):
+        print('Warning: error dm is negative.')
+        e_f = abs(e_f)
+        e_fit["x"] = 0  # e_fit["x"]
+        e_fit["y"] = 0
+        
     f_u = ufloat(f, e_f)
     x, y = fit["x"], fit["y"]
     x_u = ufloat(x, e_fit["x"])
