@@ -5,21 +5,21 @@ from amical.analysis import pymask
 
 
 def pymask_grid(input_data, ngrid=40, pa_prior=[0, 360], sep_prior=[0, 100], cr_prior=[1, 150],
-                err_scale=1., extra_error=0., ncore=1, verbose=False):
+                err_scale=1., extra_error_cp=0., ncore=1, verbose=False):
     cpo = pymask.cpo(input_data)
     like_grid = pymask.coarse_grid(cpo, nsep=ngrid, nth=ngrid, ncon=ngrid, thmin=pa_prior[0], thmax=pa_prior[1],
                                    smin=sep_prior[0], smax=sep_prior[1], cmin=cr_prior[0], cmax=cr_prior[1],
-                                   threads=ncore, err_scale=err_scale, extra_error=extra_error, verbose=verbose)
+                                   threads=ncore, err_scale=err_scale, extra_error=extra_error_cp, verbose=verbose)
     return like_grid
 
 
 def pymask_mcmc(input_data, initial_guess, niters=1000, pa_prior=[0, 360], sep_prior=None, cr_prior=None,
-                err_scale=1, extra_error=0, ncore=1, burn_in=500, walkers=100, display=True,
+                err_scale=1, extra_error_cp=0, ncore=1, burn_in=500, walkers=100, display=True,
                 verbose=True):
     cpo = pymask.cpo(input_data)
     hammer_data = pymask.hammer(cpo, ivar=initial_guess, niters=niters, model='constant', nwalcps=walkers,
                                 sep_prior=sep_prior, pa_prior=pa_prior, crat_prior=cr_prior,
-                                err_scale=err_scale, extra_error=extra_error, plot=display,
+                                err_scale=err_scale, extra_error=extra_error_cp, plot=display,
                                 burn_in=burn_in, threads=ncore)
 
     res_corner = hammer_data[1]
@@ -83,13 +83,13 @@ def pymask_mcmc(input_data, initial_guess, niters=1000, pa_prior=[0, 360], sep_p
     return res
 
 
-def pymask_cr_limit(input_data, nsim=100, err_scale=1, extra_error=0, ncore=1, cmax=500,
+def pymask_cr_limit(input_data, nsim=100, err_scale=1, extra_error_cp=0, ncore=1, cmax=500,
                     nsep=60, ncrat=60, nth=30, smax=250, ):
     cpo = pymask.cpo(input_data)
     lims_data = pymask.detec_limits(cpo, threads=ncore, nsim=nsim,
                                     nsep=nsep, ncon=ncrat, nth=nth,
                                     smax=smax, cmax=cmax,
-                                    err_scale=err_scale, extra_error=extra_error)
+                                    err_scale=err_scale, extra_error=extra_error_cp)
 
     limits = lims_data['limits']
     seps = lims_data['seps']

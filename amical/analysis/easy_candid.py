@@ -6,7 +6,7 @@ from amical.analysis import candid
 
 
 def candid_grid(input_data, step=10, rmin=20, rmax=400, diam=0, obs=['cp', 'v2'],
-                extra_error=0, err_scale=1, extra_error_v2=0,
+                extra_error_cp=0, err_scale=1, extra_error_v2=0,
                 doNotFit=['diam*', ], ncore=1, verbose=False):
     """ This function is an user friendly interface between the users of amical
     pipeline and the CANDID analysis package (https://github.com/amerand/CANDID).
@@ -36,14 +36,11 @@ def candid_grid(input_data, step=10, rmin=20, rmax=400, diam=0, obs=['cp', 'v2']
     """
 
     cprint(' | --- Start CANDID fitting --- :', 'green')
-    o = candid.Open(input_data, extra_error=extra_error,
+    o = candid.Open(input_data, extra_error=extra_error_cp,
                     err_scale=err_scale, extra_error_v2=extra_error_v2)
 
     o.observables = obs
 
-    #ifig = plt.gcf().number + 1
-    # if (ifig == 2):
-    #    ifig = 1
     o.fitMap(rmax=rmax, rmin=rmin, ncore=ncore, fig=0,
              step=step, addParam={"diam*": diam}, doNotFit=doNotFit, verbose=verbose)
 
@@ -57,9 +54,9 @@ def candid_grid(input_data, step=10, rmin=20, rmax=400, diam=0, obs=['cp', 'v2']
     if (e_f < 0) or (e_fit["x"] < 0) or (e_fit["y"] < 0):
         print('Warning: error dm is negative.')
         e_f = abs(e_f)
-        e_fit["x"] = 0  # e_fit["x"]
+        e_fit["x"] = 0
         e_fit["y"] = 0
-        
+
     f_u = ufloat(f, e_f)
     x, y = fit["x"], fit["y"]
     x_u = ufloat(x, e_fit["x"])
@@ -95,16 +92,18 @@ def candid_grid(input_data, step=10, rmin=20, rmax=400, diam=0, obs=['cp', 'v2']
            'comp': o.bestFit["best"]
            }
 
-    return res  # dict2class(res)
+    return res
 
 
-def candid_cr_limit(input_data, step=10, rmin=20, rmax=400, diam=0, obs=['cp', 'v2'],
-                    fitComp=None, ncore=1, methods=['injection']):
+def candid_cr_limit(input_data, step=10, rmin=20, rmax=400,
+                    extra_error_cp=0, err_scale=1, extra_error_v2=0,
+                    obs=['cp', 'v2'], fitComp=None, ncore=1,
+                    methods=['injection']):
     cprint(' | --- Start CANDID contrast limit --- :', 'green')
-    o = candid.Open(input_data)
+    o = candid.Open(input_data, extra_error=extra_error_cp,
+                    err_scale=err_scale, extra_error_v2=extra_error_v2)
     o.observables = obs
 
-    #ifig = plt.gcf().number + 1
     res = o.detectionLimit(rmin=rmin, rmax=rmax, step=step, drawMaps=True,
                            fratio=1, methods=methods, removeCompanion=fitComp,
                            ncore=ncore)
