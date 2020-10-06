@@ -421,7 +421,8 @@ def _compute_corr_noise(complex_bs, ft_arr, fringe_peak):
     return bias, dark_bias, autocor_noise
 
 
-def _unbias_v2_arr(v2_arr, npix, fringe_peak, bias, dark_bias, autocor_noise):
+def _unbias_v2_arr(v2_arr, npix, fringe_peak, bias, dark_bias, autocor_noise,
+                   unbias=True):
     """ Unbias the squared visibilities array and add the dark bias substracted 
     twice instead of one. """
     n_baselines = v2_arr.shape[1]
@@ -436,7 +437,12 @@ def _unbias_v2_arr(v2_arr, npix, fringe_peak, bias, dark_bias, autocor_noise):
         autocor_mf = np.fft.ifft2(np.abs(np.fft.ifft2(im_peak)) ** 2).real
         bias_arr[j] = (np.sum(autocor_mf * autocor_noise) *
                        bias / autocor_noise[0, 0] * npix**2)
-        v2_arr[:, j] -= bias_arr[j]
+
+        if unbias:
+            true_bias = bias_arr[j]
+        else:
+            true_bias = 0
+        v2_arr[:, j] -= true_bias
 
     for j in range(n_baselines):
         v2_arr[:, j] += np.sum(fringe_peak[j][:, 2] ** 2) * dark_bias
@@ -858,7 +864,7 @@ def _add_infos_header(infos, hdr, mf, pa, filename, maskname, npix):
 def extract_bs(cube, filename, maskname, filtname=None, targetname=None,
                bs_multi_tri=False, peakmethod='gauss', hole_diam=0.8, cutoff=1e-4,
                fw_splodge=0.7, naive_err=False, n_wl=3, n_blocks=0, theta_detector=0,
-               verbose=False, display=True,):
+               unbias_v2=True, verbose=False, display=True,):
     """Compute the bispectrum (bs, v2, cp, etc.) from a data cube.
 
     Parameters:
@@ -1005,7 +1011,7 @@ def extract_bs(cube, filename, maskname, filtname=None, targetname=None,
                                                          fringe_peak)
 
     v2_arr_unbiased, bias_arr = _unbias_v2_arr(v2_arr, npix, fringe_peak, bias, dark_bias,
-                                               autocor_noise)
+                                               autocor_noise, unbias=unbias_v2)
 
     # 8. Turn Arrays into means and covariance matrices
     # -------------------------------------------------
