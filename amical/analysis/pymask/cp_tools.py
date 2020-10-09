@@ -1515,8 +1515,7 @@ def multiple_companions_hammer(cpo, ivar=[[50., 0., 2.], [50., 90., 2.]], ndim='
     else:
         print('I havent coded this yet...')
         raise NameError('cp_loglikelihood_multiple_proj doesnt exist')
-        sampler = emcee.EnsembleSampler(nwalcps, ndim, cp_loglikelihood_proj,
-                                        args=[cpo.u, cpo.v, cpo.wavel, cpo.proj_t3data, cpo.proj_t3err, cpo.proj, ncomp], threads=threads)
+
     sampler.run_mcmc(p0, niters)
     tf = time.time()
 

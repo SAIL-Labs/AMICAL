@@ -365,23 +365,6 @@ _VUDX = ''.join(_approxVUD('X', maxM=7)).strip()
 _VUDX = _VUDX[3:]
 # print(_VUDX)
 _VUDXeval = eval('lambda X:'+_VUDX)
-if False:  # -- check approximation
-    print(_VUDX)
-    plt.close('all')
-    plt.subplot(211)
-    x = np.linspace(1e-6, 7, 500)
-    plt.plot(x, 2*scipy.special.j1(x)/x, '-r', label='Bessel')
-    plt.plot(x, _VUDXeval(x), '-b', label='approximation')
-    plt.plot(x, 0*x, linestyle='dashed')
-    plt.ylim(-0.3, 1)
-    plt.ylabel('visibility')
-    plt.subplot(212)
-    plt.plot(x, 100*(2*scipy.special.j1(x)/x-_VUDXeval(x))/(
-        scipy.special.j1(x)/x+_VUDXeval(x)/2.), '-k')
-    plt.ylabel('rel. err. %')
-    plt.xlabel(r'$\pi$ B $\theta$ / $\lambda$')
-    plt.ylim(-1, 1)
-    plt.legend()
 
 
 def _V2binFast(uv, param):
@@ -886,7 +869,6 @@ def _injectCompanionData(data, delta, param):
     for i, d in enumerate(data):
         d[-2] += np.sign(param['f'])*(bi[i]-ud[i])
     return data
-    return res
 
 
 def _generateFitData(chi2Data, observables, instruments):
@@ -2171,8 +2153,7 @@ class Open:
         if not p is None:
             p.close()
             p.join()
-        if True:
-            print('\n | Grid of fit took %.1f seconds' % (time.time()-t0))
+        print('\n | Grid of fit took %.1f seconds' % (time.time()-t0))
         if verbose:
             print(' | Computing map of interpolated Chi2 minima')
 
@@ -2521,27 +2502,6 @@ class Open:
             if not fig is None:
                 ax1.plot(self._dataheader['X'], self._dataheader['Y'], 'py',
                          markersize=12, alpha=0.3)
-
-        # -- do an additional fit by fitting also the bandwidth smearing
-        if False:
-            param = self.bestFit['best']
-            fitAlso = list(filter(lambda x: x.startswith('dwavel'), param))
-            print(' | fixed bandwidth parameters for the map (in um):')
-            for s in fitAlso:
-                print(' | %s = ' % s, param[s])
-            print('*'*67)
-            print(
-                '*'*3, 'do an additional fit by fitting also the bandwidth smearing', '*'*3)
-            print('*'*67)
-
-            fit = _fitFunc(param, self._chi2Data, self.observables,
-                           self.instruments, fitAlso)
-            print('  > chi2 = %5.3f' % fit['chi2'])
-            tmp = ['x', 'y', 'f', 'diam*']
-            tmp.extend(fitAlso)
-            for s in tmp:
-                print(' | %5s=' % s, '%8.4f +- %6.4f %s' % (fit['best'][s], fit['uncer'][s],
-                                                            paramUnits(s)))
 
         self.history.append(result)
         return _X, _Y, n_sigma, x0, y0, s0, outout
@@ -3387,43 +3347,12 @@ def _dpfit_leastsqFit(func, x, params, y, err=None, fitOnly=None, verbose=False,
     if verbose:
         print('[dpfit] %d FITTED parameters:' % (len(fitOnly)), fitOnly)
 
-    #print('Nnan=', np.sum([np.sum(np.isnan(d[-1])) for d in x]), end=' / ')
-    #print(np.sum([np.size(d[-1]) for d in x]))
-
-    if False:
-        # -- actual fit, using curvefit
-        # -- set globals:
-        _pfitKeys = fitOnly
-        _func = func
-        _pfix = pfix
-        # -- copy data:
-        _x = [[d if i == 0 else d.copy() for i, d in enumerate(D)] for D in x]
-        # -- only works if err is 1D !!!
-        _w = np.where(np.isfinite(err))
-        try:
-            plsq, cov = scipy.optimize.curve_fit(_dpfit_fitFuncCF, y[_w], y[_w], p0=pfit,
-                                                 sigma=err[_w], maxfev=1000,
-                                                 epsfcn=epsfcn, ftol=ftol)
-            if np.any(~np.isfinite(cov)):
-                print(' > WARNING: fit failed around',
-                      dict(zip(fitOnly, pfit)))
-        except:
-            print(' > WARNING: fit failed around', dict(zip(fitOnly, pfit)))
-            # -- fit failed
-            plsq = pfit
-            cov = np.zeros([len(pfit), len(pfit)])
-            for i in range(len(pfit)):
-                cov[i, i] = 1.0
-
-        info, mesg, ier = [], '', ''
-    else:
-        # -- actual fit, using leastsq
-        plsq, cov, info, mesg, ier = \
-            scipy.optimize.leastsq(_dpfit_fitFunc, pfit,
-                                   args=(fitOnly, x, y, err, func,
-                                         pfix, verbose, follow,),
-                                   full_output=True, epsfcn=epsfcn, ftol=ftol,
-                                   maxfev=1000,)
+    # -- actual fit, using leastsq
+    plsq, cov, info, mesg, ier = \
+        scipy.optimize.leastsq(_dpfit_fitFunc, pfit,
+                                args=(fitOnly, x, y, err, func,
+                                      pfix, verbose, follow,),
+                                full_output=True, epsfcn=epsfcn, ftol=ftol, maxfev=1000,)
 
     # -- best fit -> agregate to pfix
     for i, k in enumerate(fitOnly):

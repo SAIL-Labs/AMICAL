@@ -165,7 +165,7 @@ def chi2_grid(everything):
  # =========================================================================
 
 def xy_grid(cpo,nxy=30,ncon=32,xymax='Default', cmin=10.,cmax=500.,
-             threads=0,err_scale=1.,extra_error=0.,plot_chi2=False,fix_crat=False,
+             threads=0,err_scale=1.,extra_error=0.,fix_crat=False,
              cmap='ds9cool',plot_as_mags=False,projected=False):
 
     '''An attempt to copy Sylvestre's chi2 grid plots, using x and y instead

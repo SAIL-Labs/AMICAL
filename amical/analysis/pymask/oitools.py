@@ -249,7 +249,7 @@ def plot_visamp_map(oifitsobj, width=0.1, height=0.1, colorcoding=None):
     for vis in oifitsobj.vis:
         B = sqrt(vis.ucoord**2+vis.vcoord**2)
         pa = (arctan(vis.ucoord / vis.vcoord) * 180.0 / pi) % 180.0
-        print B, pa
+        print(B, pa)
         ax = fig.add_axes((B/80.0-width/2.0, pa/180.0-height/2.0, width, height), axis_bgcolor=(0,0,0,0))
         if colorcoding:
             for key in sort(colorcoding.keys()):
@@ -313,7 +313,7 @@ def plot_phases(oidata, uvplot=False, legend=False):
             ax2.plot([-u,u],[-v,v], '.', label=label, color=color)
         names.append(vis.target.target)
         baselinemax = np.amax([np.sqrt(u**2+v**2), baselinemax])
-        print '%10s: %s, %5.2f m, %s'%(line[0].get_color(), label, np.sqrt(u**2+v**2), vis.timeobs)
+        print('%10s: %s, %5.2f m, %s'%(line[0].get_color(), label, np.sqrt(u**2+v**2), vis.timeobs))
 
     ax1.set_xlim(xmin,xmax)
     ax1.set_ylim(ymin,ymax)
@@ -412,7 +412,7 @@ def plot_visibilities(oidata, uvplot=False, legend=False, ploterror=False):
 
 
     if legend and uvplot: ax2.legend(prop={'size':10},numpoints=1)
-    print output
+    print(output)
 
 def plot_gaussian_widths_vs_wavelength(oidata, uvplot=False, legend=False, ploterror=False):
 
@@ -481,7 +481,7 @@ def plot_gaussian_widths_vs_wavelength(oidata, uvplot=False, legend=False, plote
 
 
     if legend and uvplot: ax2.legend(prop={'size':10},numpoints=1)
-    print output
+    print(output)
 
 def plot_cflux(oidata, uvplot=False, legend=False, ploterror=False):
 

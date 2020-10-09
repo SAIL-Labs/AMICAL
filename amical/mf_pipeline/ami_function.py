@@ -688,7 +688,7 @@ def clos_unique(closing_tri_pix):
     return closing_tri_pix[:, l_i]
 
 
-def tri_pix(array_size, sampledisk_r, itrip=1, verbose=True, display=True):
+def tri_pix(array_size, sampledisk_r, verbose=True, display=True):
     """Compute all combination of triangle for a given splodge size"""
 
     if array_size % 2 == 1:
