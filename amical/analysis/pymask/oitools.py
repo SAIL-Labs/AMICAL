@@ -591,7 +591,7 @@ def plot_vis2(oidata, uvplot=False, legend=False, ploterror=False):
         if ploterror:
             line = ax1.errorbar(1e6*vis.wavelength.eff_wave, vis.vis2data, vis.vis2err, label=label, color=color)
         else:
-            print 1e6*vis.wavelength.eff_wave, vis.vis2data
+            print(1e6*vis.wavelength.eff_wave, vis.vis2data)
             line = ax1.plot(1e6*vis.wavelength.eff_wave, vis.vis2data, label=label, color=color)
         ymax=np.amax(np.append(vis.vis2data[np.where(vis.flag == False)], ymax))
         xmin=np.amin(np.append(1e6*vis.wavelength.eff_wave[np.where(vis.flag == False)], xmax))
