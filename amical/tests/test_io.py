@@ -19,26 +19,16 @@ save_cp_gauss = TEST_DATA_DIR / 'save_results_cp_example_gauss.fits'
 save_cp_fft = TEST_DATA_DIR / 'save_results_cp_example_fft.fits'
 
 
-@pytest.mark.parametrize("filepath", [example_oifits])
-def test_load_file(filepath):
-    s = load(filepath)
+def test_load_file():
+    s = load(example_oifits)
     assert isinstance(s, dict)
 
 
-@pytest.mark.parametrize("filepath", [example_fits])
-def test_open_fits(filepath):
-    hdu = fits.open(filepath)
-    cube = hdu[0].data
-    hdu.close()
-    assert isinstance(cube, np.ndarray)
-
-
 @pytest.mark.slow
-@pytest.mark.parametrize("filepath", [example_fits])
-def test_extraction(filepath):
-    hdu = fits.open(filepath)
-    cube = hdu[0].data
-    hdu.close()
+def test_extraction():
+    with fits.open(example_fits) as fh:
+        cube = fh[0].data
+
     method = ['fft', 'gauss', 'square']
     for m in method:
         params_ami = {"peakmethod": m,
@@ -46,56 +36,51 @@ def test_extraction(filepath):
                       "maskname": "g7",
                       "fw_splodge": 0.7,
                       }
-        bs = amical.extract_bs(cube, filepath, targetname='test',
+        bs = amical.extract_bs(cube, example_fits, targetname='test',
                                **params_ami, display=False)
         assert isinstance(bs, munch.Munch)
 
 
 @pytest.mark.slow
-@pytest.mark.parametrize("filepath", [example_fits])
-def test_calibration(filepath):
-    hdu = fits.open(filepath)
-    cube = hdu[0].data
-    hdu.close()
+def test_calibration():
+    with fits.open(example_fits) as fh:
+        cube = fh[0].data
+
     params_ami = {"peakmethod": 'fft',
                   "bs_multi_tri": False,
                   "maskname": "g7",
                   "fw_splodge": 0.7,
                   }
-    bs = amical.extract_bs(cube, filepath, targetname='test',
+    bs = amical.extract_bs(cube, example_fits, targetname='test',
                            **params_ami, display=False)
     cal = amical.calibrate(bs, bs)
     assert isinstance(cal, munch.Munch)
 
 
 @pytest.mark.slow
-@pytest.mark.parametrize("filepath", [example_fits])
-def test_show(filepath):
-    hdu = fits.open(filepath)
-    cube = hdu[0].data
-    hdu.close()
+def test_show():
+    with fits.open(example_fits) as fh:
+        cube = fh[0].data
     params_ami = {"peakmethod": 'fft',
                   "bs_multi_tri": False,
                   "maskname": "g7",
                   "fw_splodge": 0.7,
                   }
-    bs = amical.extract_bs(cube, filepath, targetname='test',
+    bs = amical.extract_bs(cube, example_fits, targetname='test',
                            **params_ami, display=False)
     cal = amical.calibrate(bs, bs)
     amical.show(cal)
 
 
-@pytest.mark.parametrize("filepath", [example_fits])
-def test_save(filepath):
-    hdu = fits.open(filepath)
-    cube = hdu[0].data
-    hdu.close()
+def test_save():
+    with fits.open(example_fits) as fh:
+        cube = fh[0].data
     params_ami = {"peakmethod": 'fft',
                   "bs_multi_tri": False,
                   "maskname": "g7",
                   "fw_splodge": 0.7,
                   }
-    bs = amical.extract_bs(cube, filepath, targetname='test',
+    bs = amical.extract_bs(cube, example_fits, targetname='test',
                            **params_ami, display=False)
     cal = amical.calibrate(bs, bs)
     assert isinstance(cal, munch.Munch)
@@ -113,45 +98,41 @@ def test_save(filepath):
 
 
 @pytest.mark.slow
-@pytest.mark.parametrize("filepath", [example_oifits])
 @pytest.mark.filterwarnings("ignore::RuntimeWarning")
-def test_candid(filepath):
+def test_candid():
 
     param_candid = {'rmin': 20,
                     'rmax': 250,
                     'step': 100,
                     'ncore': 1
                     }
-    fit1 = amical.candid_grid(filepath, **param_candid)
+    fit1 = amical.candid_grid(example_oifits, **param_candid)
     assert isinstance(fit1, dict)
 
 
 @pytest.mark.slow
-@pytest.mark.parametrize("filepath", [example_oifits])
 @pytest.mark.filterwarnings("ignore::RuntimeWarning")
-def test_candid_multiproc(filepath):
+def test_candid_multiproc():
 
     param_candid = {'rmin': 20,
                     'rmax': 250,
                     'step': 100,
                     'ncore': 4
                     }
-    fit1 = amical.candid_grid(filepath, **param_candid)
+    fit1 = amical.candid_grid(example_oifits, **param_candid)
     assert isinstance(fit1, dict)
 
 
 @pytest.mark.slow
-@pytest.mark.parametrize("filepath", [example_oifits])
-def test_pymask(filepath):
-    fit1 = amical.pymask_grid(str(filepath))
+def test_pymask():
+    fit1 = amical.pymask_grid(str(example_oifits))
     assert isinstance(fit1, dict)
-    fit2 = amical.pymask_grid([filepath])
+    fit2 = amical.pymask_grid([example_oifits])
     assert isinstance(fit2, dict)
 
 
-@pytest.mark.parametrize("filepath", [example_oifits])
-def test_loadc_file(filepath):
-    s = loadc(filepath)
+def test_loadc_file():
+    s = loadc(example_oifits)
     assert isinstance(s, munch.Munch)
 
 
