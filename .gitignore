@@ -15,7 +15,6 @@ Saveoifits/
 TestSPHEREData/
 
 # Install files 
-*.txt
 PKG*
 my*.py
 

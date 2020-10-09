@@ -6,7 +6,6 @@ import pytest
 from astropy.io import fits
 
 import amical
-from amical import load, loadc
 from amical.get_infos_obs import get_pixel_size
 
 TEST_DIR = Path(__file__).parent
@@ -16,12 +15,6 @@ example_fits = TEST_DATA_DIR / "test.fits"
 save_v2_gauss = TEST_DATA_DIR / 'save_results_v2_example_gauss.fits'
 save_cp_gauss = TEST_DATA_DIR / 'save_results_cp_example_gauss.fits'
 save_cp_fft = TEST_DATA_DIR / 'save_results_cp_example_fft.fits'
-
-
-@pytest.mark.parametrize("filepath", [example_oifits])
-def test_load_file(filepath):
-    s = load(filepath)
-    assert isinstance(s, dict)
 
 
 @pytest.mark.parametrize("filepath", [example_fits])
@@ -174,11 +167,6 @@ def test_pymask(filepath):
     fit2 = amical.pymask_grid([filepath])
     assert isinstance(fit2, dict)
 
-
-@pytest.mark.parametrize("filepath", [example_oifits])
-def test_loadc_file(filepath):
-    s = loadc(filepath)
-    assert isinstance(s, munch.Munch)
 
 
 @pytest.mark.parametrize("ins", ['NIRISS', 'SPHERE', 'VAMPIRES'])
