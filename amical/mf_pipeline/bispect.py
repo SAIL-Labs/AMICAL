@@ -22,7 +22,6 @@ import numpy as np
 from astropy.io import fits
 from matplotlib import pyplot as plt
 from munch import munchify as dict2class
-from numpy.lib.twodim_base import triu_indices
 from scipy.optimize import minimize
 from termcolor import cprint
 from tqdm import tqdm

@@ -10,15 +10,10 @@ from multiprocessing import Pool
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.interpolate as interp
-from matplotlib.cm import cmap_d, register_cmap
 
 from .cp_tools import (cp_loglikelihood, cp_loglikelihood_proj, cp_model,
                        mas2rad, project_cps, rad2mas)
 
-try:
-    import ds9cool
-except:
-    pass
 
 def phase_binary_flux(u, v, wavel, p,return_cvis=False):
         ''' Calculate the phases observed by an array on a binary star

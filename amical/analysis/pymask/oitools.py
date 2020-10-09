@@ -552,7 +552,7 @@ def plot_cflux(oidata, uvplot=False, legend=False, ploterror=False):
 
 
     if legend and uvplot: ax2.legend(prop={'size':10},numpoints=1)
-    print output
+    print(output)
 
 def plot_vis2(oidata, uvplot=False, legend=False, ploterror=False):
 
