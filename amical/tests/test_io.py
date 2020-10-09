@@ -2,6 +2,7 @@ from pathlib import Path
 
 import munch
 import numpy as np
+from numpy.testing import assert_approx_equal, assert_allclose
 import pytest
 from astropy.io import fits
 
@@ -85,9 +86,7 @@ def test_bs_v2(filepath, savepath):
     res_v2 = np.array([bs.vis2, bs.e_vis2])
     _saved_bs_v2 = fits.open(savepath)[0].data
 
-    assert (len(_saved_bs_v2[0]) == len(res_v2[0]))
-    assert (list(_saved_bs_v2[0]) == list(res_v2[0]))
-    assert (list(_saved_bs_v2[1]) == list(res_v2[1]))
+    assert_allclose(_saved_bs_v2[:2], res_v2, rtol=1e-14)
 
 
 @pytest.mark.slow
@@ -134,8 +133,8 @@ def test_save(filepath):
     assert(isinstance(cp, np.ndarray))
     assert(len(v2) == 21)
     assert(len(cp) == 35)
-    assert(v2[0] == expected_v2)
-    assert(cp[0] == expected_cp)
+    assert_approx_equal(v2[0], expected_v2, significant=13)
+    assert_approx_equal(cp[0], expected_cp, significant=13)
 
 
 @pytest.mark.slow
