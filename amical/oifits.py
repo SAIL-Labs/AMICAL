@@ -869,11 +869,14 @@ def show(inputList, diffWl=False, ind_hole=None, vmin=0, vmax=1.05, cmax=180, se
             dic_color[filt] = list_color[i_c]
             i_c += 1
 
+    fontsize = 14
+    fttick = 12
     fig = plt.figure(figsize=(16, 5.5))
     ax1 = plt.subplot2grid((2, 6), (0, 0), rowspan=2, colspan=2)
     ax2 = plt.subplot2grid((2, 6), (0, 2), colspan=4)
     ax3 = plt.subplot2grid((2, 6), (1, 2), colspan=4)
-
+    plt.rc('xtick', labelsize=fttick)
+    plt.rc('ytick', labelsize=fttick)
     # Plot plan UV
     # -------
     l_bmax, l_band_al = [], []
@@ -922,8 +925,8 @@ def show(inputList, diffWl=False, ind_hole=None, vmin=0, vmax=1.05, cmax=180, se
                  'arcsec': 'arcsec$^{-1}$',
                  'lambda': 'M$\lambda$'}
 
-    ax1.set_xlabel(r'U [%s]' % unitlabel[unit])
-    ax1.set_ylabel(r'V [%s]' % unitlabel[unit])
+    ax1.set_xlabel(r'U [%s]' % unitlabel[unit], fontsize=fontsize)
+    ax1.set_ylabel(r'V [%s]' % unitlabel[unit], fontsize=fontsize)
     ax1.grid(alpha=0.2)
 
     # Plot V2
@@ -949,7 +952,7 @@ def show(inputList, diffWl=False, ind_hole=None, vmin=0, vmax=1.05, cmax=180, se
 
     ax2.set_ylim([vmin, vmax])
     ax2.set_xlim([0, 1.2*np.max(max_f_vis)])
-    ax2.set_ylabel(r'$V^2$')
+    ax2.set_ylabel(r'$V^2$', fontsize=fontsize)
     ax2.spines['left'].set_visible(False)
     ax2.spines['right'].set_visible(False)
     ax2.spines['bottom'].set_visible(False)
@@ -1001,14 +1004,14 @@ def show(inputList, diffWl=False, ind_hole=None, vmin=0, vmax=1.05, cmax=180, se
     ax3.patch.set_alpha(1)
     ax3.xaxis.set_ticks_position('none')
     ax3.yaxis.set_ticks_position('none')
-    ax3.set_xlabel('Spatial frequency [cycle/arcsec]')
-    ax3.set_ylabel('Clos. $\phi$ [%s]' % unit_cp)
+    ax3.set_xlabel('Spatial frequency [arcsec$^{-1}$]', fontsize=fontsize)
+    ax3.set_ylabel('Clos. $\phi$ [%s]' % unit_cp, fontsize=fontsize)
     ax3.axis([0, 1.2*np.max(max_f_cp), cmin*conv_cp, cmax*conv_cp])
     ax3.grid(which='both', alpha=.2)
 
     plt.subplots_adjust(top=0.974,
-                        bottom=0.091,
-                        left=0.04,
+                        bottom=0.1,
+                        left=0.05,
                         right=0.99,
                         hspace=0.127,
                         wspace=0.35)
