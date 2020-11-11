@@ -279,6 +279,7 @@ def calibrate(res_t, res_c, clip=False, sig_thres=2, apply_phscorr=False, Addind
     # Raw V2 target (corrected from atm correction and phasors.)
     v2_t = res_t.vis2/v2_corr_t
     e_v2_t = res_t.e_vis2/v2_corr_t
+    #  e_v2_c = res_c[0].e_vis2/v2_corr_t
 
     # Raw CP target
     cp_t = res_t.cp
@@ -297,10 +298,15 @@ def calibrate(res_t, res_c, clip=False, sig_thres=2, apply_phscorr=False, Addind
         err_scale = 1
 
     # Quadratic added error due to calibrator dispersion (the average is weightened (see wtmn from amical.tools)).
-    e_vis2_calib = np.sqrt(e_v2_t**2/cmn_v2_c**2 +
-                           std_v2_c**2*v2_t**2/cmn_v2_c**4)
+    weightened_error = True
+    if weightened_error:
+        e_vis2_calib = np.sqrt(e_v2_t**2/cmn_v2_c**2 +
+                               std_v2_c**2*v2_t**2/cmn_v2_c**4)
+    else:
+        e_vis2_calib = np.sqrt(e_v2_t**2 + std_v2_c**2)
+        
     e_cp_calib = np.sqrt(e_cp_t**2 + std_cp_c**2) * err_scale
-
+    
     u1 = res_t.u[res_t.mask.bs2bl_ix[0, :]]
     v1 = res_t.v[res_t.mask.bs2bl_ix[0, :]]
     u2 = res_t.u[res_t.mask.bs2bl_ix[1, :]]
