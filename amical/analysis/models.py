@@ -77,7 +77,7 @@ def visBinary_res(Utable, Vtable, Lambda, param):
     sep = mas2rad(param["sep"])
     dm = param["dm"]
     theta = np.deg2rad(90-param["theta"])
-    diam = mas2rad(param["diam"])
+    diam = param["diam"]
 
     if dm < 0:
         return np.array([np.nan]*len(Lambda))
@@ -88,9 +88,16 @@ def visBinary_res(Utable, Vtable, Lambda, param):
     rel_f1 = f1 / ftot
     rel_f2 = f2 / ftot
 
-    p_s1 = {'diam': diam, "x0": 0, "y0": 0}
+    if diam == 0:
+        p_s1 = {"x0": 0, "y0": 0}
+    else:
+        p_s1 = {'diam': diam, "x0": 0, "y0": 0}
     p_s2 = {"x0": sep * np.cos(theta), "y0": sep * np.sin(theta)}
-    s1 = rel_f1 * visUniformDisk(Utable, Vtable, Lambda, p_s1)
+    
+    if diam == 0:
+        s1 = rel_f1 * visPointSource(Utable, Vtable, Lambda, p_s1)
+    else:
+        s1 = rel_f1 * visUniformDisk(Utable, Vtable, Lambda, p_s1)
     s2 = rel_f2 * visPointSource(Utable, Vtable, Lambda, p_s2)
     C_centered = s1 + s2
     return C_centered
