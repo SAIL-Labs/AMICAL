@@ -246,13 +246,14 @@ def _show_peak_position(ft_arr, n_baselines, mf, maskname, peakmethod, i_fram=0)
     ps = ft_frame.real
 
     fig, ax = plt.subplots(figsize=(9, 7))
+    plt.rc('xtick', labelsize=15)
     ax.set_title("Expected splodge position with mask %s (method = %s)" %
                  (maskname, peakmethod))
     im = ax.imshow(ps, cmap="gist_stern", origin="lower")
-    sc = ax.scatter(lX, lY, c=lC, s=3, cmap="viridis")
+    sc = ax.scatter(lX, lY, c=lC, s=20, cmap="viridis")  #, vmin=0, vmax=1)
 
     divider = make_axes_locatable(ax)
-    cax = divider.new_horizontal(size="3%", pad=0.1)
+    cax = divider.new_horizontal(size="3%", pad=0.5)
     fig.add_axes(cax)
     cb = fig.colorbar(im, cax=cax)
 
@@ -261,7 +262,10 @@ def _show_peak_position(ft_arr, n_baselines, mf, maskname, peakmethod, i_fram=0)
     cb2 = fig.colorbar(sc, cax=cax2)
     cb2.ax.yaxis.set_ticks_position('left')
     cb.set_label("Power Spectrum intensity")
-    cb2.set_label("Relative weight [%]")
+    cb2.set_label("Relative weight [%]", fontsize=20)
+    # x1, y1 = 23, 60
+    # ax.set_xlim(x1, x1+8)
+    # ax.set_ylim(y1, y1+8)
     plt.subplots_adjust(top=0.965, bottom=0.035, left=0.025, right=0.965,
                         hspace=0.2, wspace=0.2)
 
@@ -296,7 +300,8 @@ def _show_norm_matrices(obs_norm):
     return fig1, fig2
 
 
-def _check_input_infos(hdr, targetname=None, filtname=None):
+def _check_input_infos(hdr, targetname=None, filtname=None,
+                       verbose=True):
     """ Extract informations from the header and fill the missing values with the
     input arguments. Return the infos class containing important informations of 
     the input header (keys: target, seeing, instrument, ...)
@@ -308,8 +313,9 @@ def _check_input_infos(hdr, targetname=None, filtname=None):
     if (target is None):
         if (targetname is not None):
             target = targetname
-            cprint("Warning: OBJECT is not in the header, targetname is used (%s)." %
-                   targetname, "green")
+            if verbose:
+                cprint("Warning: OBJECT is not in the header, targetname is used (%s)." %
+                       targetname, "green")
         else:
             cprint("Error: target name not found (header or as input).", "red")
 
@@ -317,8 +323,9 @@ def _check_input_infos(hdr, targetname=None, filtname=None):
     if (filt is None):
         if (filtname is not None):
             filt = filtname
-            cprint("Warning: FILTER is not in the header, filtname is used (%s)." %
-                   filtname, "green")
+            if verbose:
+                cprint("Warning: FILTER is not in the header, filtname is used (%s)." %
+                       filtname, "green")
         else:
             cprint("Error: filter not found (in the header or as input).", "red")
 
@@ -328,6 +335,8 @@ def _check_input_infos(hdr, targetname=None, filtname=None):
 
     # Origin files
     orig = hdr.get("ORIGFILE", 'SimulatedData')
+    if orig == 'SimulatedData':
+        orig = hdr.get("ARCFILE", 'SimulatedData')
 
     # Seeing informations
     seeing_start = float(hdr.get('HIERARCH ESO TEL AMBI FWHM START', 0))
@@ -461,20 +470,29 @@ def _compute_v2_quantities(v2_arr, bias_arr, n_blocks):
 
     # Compute vis. squared average
     v2 = np.mean(v2_arr, axis=0)
+    
+    # plt.figure()
+    # plt.plot(v2_arr.T)
 
     # Compute vis. squared difference
     for j in range(n_baselines):
         for k in range(n_blocks):
             ind1 = k * n_ps // n_blocks
-            ind2 = (k + 1) * n_ps // (n_blocks)
+            ind2 = (k + 1) * n_ps // (n_blocks - 1)
             v2_diff[k, j] = np.mean(v2_arr[ind1:ind2, j]) - v2[j]
+            # v2_diff[k, j] = np.mean(v2_arr[k, j]) - v2[j]
 
     # Compute vis. squared covariance
     for j in range(n_baselines):
         for k in range(n_baselines):
             num = np.sum(v2_diff[:, j] * v2_diff[:, k])
             v2_cov[j, k] = num / (n_blocks - 1) / n_blocks
-
+            # Additonal "/ n_blocks" in the original code ???
+    
+    # AS. Comparison with numpy cov matrices   
+    # v2_cov_pyt = np.cov(v2_arr.T, bias=False)
+    # v2_cov = v2_cov_pyt
+    
     x = np.arange(n_baselines)
     avar = v2_cov[x, x] * n_ps - bias_arr ** 2 * (1 + (2.0 * v2) / bias_arr)
     err_avar = np.sqrt(
@@ -535,8 +553,8 @@ def _compute_bs_var(bs_arr, bs, n_blocks):
             ind2 = (k + 1) * n_ps // (n_blocks)
             comp_diff[k] = np.mean(tmp[ind1:ind2])
 
-        num_real = np.sum(np.real(comp_diff) ** 2) / n_blocks / (n_blocks - 1)
-        num_imag = np.sum(np.imag(comp_diff) ** 2) / n_blocks / (n_blocks - 1)
+        num_real = np.sum(np.real(comp_diff) ** 2) / (n_blocks - 1) / n_blocks
+        num_imag = np.sum(np.imag(comp_diff) ** 2) / (n_blocks - 1) / n_blocks
 
         bs_var[0, j] = num_real / (np.abs(bs[j]) ** 2)
         bs_var[1, j] = num_imag / (np.abs(bs[j]) ** 2)
@@ -620,8 +638,8 @@ def _normalize_all_obs(bs_quantities, v2_quantities, cvis_arr, cp_cov,
     v2_arr_norm = v2_arr / np.mean(fluxes ** 2) * n_holes ** 2
     cvis_arr_norm = cvis_arr / np.mean(fluxes) * n_holes
 
-    v2_norm = v2 / np.mean(fluxes ** 2) * n_holes ** 2
-    v2_cov_norm = v2_cov / np.mean(fluxes ** 4) * n_holes ** 4
+    v2_norm = (v2 / np.mean(fluxes ** 2)) * n_holes ** 2
+    v2_cov_norm = (v2_cov / np.mean(fluxes ** 4)) * n_holes ** 4
 
     bs_norm = bs / np.mean(fluxes ** 3) * n_holes ** 3
 
@@ -696,10 +714,9 @@ def _compute_uncertainties(obs_result, obs_norm, naive_err=False):
     bs = obs_norm['bs']
     bs_var = obs_norm['bs_var']
     v2_cov = obs_norm['v2_cov']
-
     cp_arr = obs_norm['cp_arr']
     v2_arr = obs_norm['v2_arr']
-
+    
     if not naive_err:
         e_cp = np.rad2deg(np.sqrt(bs_var[1] / abs(bs) ** 2))
         e_v2 = np.sqrt(np.diag(v2_cov))
