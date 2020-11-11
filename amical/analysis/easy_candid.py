@@ -6,7 +6,7 @@ from amical.analysis import candid
 
 
 def candid_grid(input_data, step=10, rmin=20, rmax=400, diam=0, obs=['cp', 'v2'],
-                extra_error_cp=0, err_scale=1, extra_error_v2=0,
+                extra_error_cp=0, err_scale=1, extra_error_v2=0, instruments=None,
                 doNotFit=['diam*', ], ncore=1, verbose=False):
     """ This function is an user friendly interface between the users of amical
     pipeline and the CANDID analysis package (https://github.com/amerand/CANDID).
@@ -37,7 +37,8 @@ def candid_grid(input_data, step=10, rmin=20, rmax=400, diam=0, obs=['cp', 'v2']
 
     cprint(' | --- Start CANDID fitting --- :', 'green')
     o = candid.Open(input_data, extra_error=extra_error_cp,
-                    err_scale=err_scale, extra_error_v2=extra_error_v2)
+                    err_scale=err_scale, extra_error_v2=extra_error_v2,
+                    instruments=instruments)
 
     o.observables = obs
 
@@ -78,10 +79,11 @@ def candid_grid(input_data, step=10, rmin=20, rmax=400, diam=0, obs=['cp', 'v2']
           (posang.nominal_value, posang.std_dev))
     print("CR = %2.1f +/- %2.1f" % (cr.nominal_value, cr.std_dev))
     print("dm = %2.2f +/- %2.2f" % (dm.nominal_value, dm.std_dev))
-    res = {'best': {'model': 'binary',
+    res = {'best': {'model': 'binary_res',
                     'dm': dm.nominal_value,
                     'theta': posang.nominal_value,
                     'sep': s.nominal_value,
+                    'diam': fit["diam*"],
                     'x0': 0,
                     'y0': 0},
            'uncer': {'dm': dm.std_dev,
@@ -98,13 +100,14 @@ def candid_grid(input_data, step=10, rmin=20, rmax=400, diam=0, obs=['cp', 'v2']
 def candid_cr_limit(input_data, step=10, rmin=20, rmax=400,
                     extra_error_cp=0, err_scale=1, extra_error_v2=0,
                     obs=['cp', 'v2'], fitComp=None, ncore=1,
-                    methods=['injection']):
+                    diam=None, methods=['injection'], instruments=None):
     cprint(' | --- Start CANDID contrast limit --- :', 'green')
     o = candid.Open(input_data, extra_error=extra_error_cp,
-                    err_scale=err_scale, extra_error_v2=extra_error_v2)
+                    err_scale=err_scale, extra_error_v2=extra_error_v2,
+                    instruments=instruments)
     o.observables = obs
 
     res = o.detectionLimit(rmin=rmin, rmax=rmax, step=step, drawMaps=True,
                            fratio=1, methods=methods, removeCompanion=fitComp,
-                           ncore=ncore)
+                           ncore=ncore, diam=diam)
     return res
