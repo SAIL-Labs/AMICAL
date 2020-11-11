@@ -84,11 +84,12 @@ def pymask_mcmc(input_data, initial_guess, niters=1000, pa_prior=[0, 360], sep_p
 
 
 def pymask_cr_limit(input_data, nsim=100, err_scale=1, extra_error_cp=0, ncore=1, cmax=500,
-                    nsep=60, ncrat=60, nth=30, smax=250, ):
+                    nsep=60, ncrat=60, nth=30, smin=20, smax=250, cmin=1.0001):
     cpo = pymask.cpo(input_data)
     lims_data = pymask.detec_limits(cpo, threads=ncore, nsim=nsim,
                                     nsep=nsep, ncon=ncrat, nth=nth,
-                                    smax=smax, cmax=cmax,
+                                    smax=smax, cmax=cmax, cmin=cmin, 
+                                    smin=smin, 
                                     err_scale=err_scale, extra_error=extra_error_cp)
 
     limits = lims_data['limits']
@@ -98,12 +99,12 @@ def pymask_cr_limit(input_data, nsim=100, err_scale=1, extra_error_cp=0, ncore=1
 
     # Loop through seps and find the highest contrast ratio that would be detectable
     for sep_ix in range(len(seps)):
-        would_detec = limits[:, sep_ix] > 0.99
+        would_detec = limits[:, sep_ix] > 0.9973
         if np.sum(would_detec) > 1:
             threesig_lim = np.max(crats[would_detec])
             fivesig_lim = threesig_lim*3.3 / \
                 3.  # convert to 3 sigma (normally 5)
-            crat_limits[sep_ix] = fivesig_lim
+            crat_limits[sep_ix] = threesig_lim  # fivesig_lim
         else:
             crat_limits[sep_ix] = 1.
     con_limits = 2.5*np.log10(crat_limits)
@@ -116,6 +117,7 @@ def pymask_cr_limit(input_data, nsim=100, err_scale=1, extra_error_cp=0, ncore=1
     plt.ylim(plt.ylim()[1], plt.ylim()[0])  # -- rreverse plot
     plt.tight_layout()
     res = {'r': seps,
-           'cr_limit': con_limits
+           'cr_limit': con_limits,
+           'lims_data': lims_data
            }
     return res
