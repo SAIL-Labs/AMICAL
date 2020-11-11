@@ -1393,7 +1393,7 @@ class Open:
 
                 if len(err.shape) == 1:
                     err = np.array([np.array([e]) for e in err])
-                    
+
                 if 'AMBER' in ins:
                     print(' | !!AMBER: rejecting CP WL<%3.1fum' % amberWLmin)
                     print(' | !!AMBER: rejecting CP WL<%3.1fum' % amberWLmax)
@@ -1546,7 +1546,7 @@ class Open:
                     data = np.array([np.array([d]) for d in data])
                 err = hdu.data['VIS2ERR']
                 err = np.sqrt(err**2+extra_error_v2**2)
-                
+
                 if len(err.shape) == 1:
                     err = np.array([np.array([e]) for e in err])
                 # we'll deal with that later...
@@ -2472,21 +2472,24 @@ class Open:
             s0 = allMin2[i]['nsigma']
 
             # if not fig is None:
-            fs = max(int(12*s0/bestNsigma), 6)
-            # -- draw cross hair
-            for ax in [ax1, ax2]:
-                ax.plot([x0, x0], [y0-0.05*self.rmax, y0-0.1*self.rmax], '-r',
-                        alpha=fs/12, linewidth=fs/4)
-                ax.plot([x0, x0], [y0+0.05*self.rmax, y0+0.1*self.rmax], '-r',
-                        alpha=fs/12, linewidth=fs/4)
-                ax.plot([x0-0.05*self.rmax, x0-0.1*self.rmax], [y0, y0], '-r',
-                        alpha=fs/12, linewidth=fs/4)
-                ax.plot([x0+0.05*self.rmax, x0+0.1*self.rmax], [y0, y0], '-r',
-                        alpha=fs/12, linewidth=fs/4)
+            try:
+                fs = max(int(12*s0/bestNsigma), 6)
+                # -- draw cross hair
+                for ax in [ax1, ax2]:
+                    ax.plot([x0, x0], [y0-0.05*self.rmax, y0-0.1*self.rmax], '-r',
+                            alpha=fs/12, linewidth=fs/4)
+                    ax.plot([x0, x0], [y0+0.05*self.rmax, y0+0.1*self.rmax], '-r',
+                            alpha=fs/12, linewidth=fs/4)
+                    ax.plot([x0-0.05*self.rmax, x0-0.1*self.rmax], [y0, y0], '-r',
+                            alpha=fs/12, linewidth=fs/4)
+                    ax.plot([x0+0.05*self.rmax, x0+0.1*self.rmax], [y0, y0], '-r',
+                            alpha=fs/12, linewidth=fs/4)
+                ax2.text(x0, y0, r'%3.1f$\sigma$' % s0, color='r',
+                         va='bottom', ha='left', fontsize=fs)
+            except ValueError:
+                pass
             # ax1.text(x0, y0, r'%.2e'%(allMin[i]['chi2']/self.chi2_UD), color='r',
             #         va='bottom', ha='left', fontsize=fs)
-            ax2.text(x0, y0, r'%3.1f$\sigma$' % s0, color='r',
-                     va='bottom', ha='left', fontsize=fs)
 
         # if not fig is None:
         plt.xlabel(r'E $\leftarrow\, \Delta \alpha$ (mas)')
@@ -3146,8 +3149,10 @@ class Open:
                 self._chi2Data, self._delta, tmp)
 
         a = self.fitUD(diam)
-        diam_fitted, e_diam_fitted, chi2UDn = a['best']['diam*'], a['uncer']['diam*'], a['chi2']
-
+        try:
+            diam_fitted, e_diam_fitted, chi2UDn = a['best']['diam*'], a['uncer']['diam*'], a['chi2']
+        except:
+            diam_fitted, e_diam_fitted, chi2UDn = diam, -1, 3.3
         print(' | Detection Limit Map %dx%d' % (N, N), end=' ')
 
         # -- estimate how long it will take

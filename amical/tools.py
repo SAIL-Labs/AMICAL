@@ -599,19 +599,19 @@ def check_seeing_cond(list_nrm):
 
     Output
     ------
-    If output is **res**, access to parallactic angle by `res.pa`, or
-    `res.seeing` for the seeing across multiple nrm data (files).
+    If output is **res**, access to parallactic angle by `res.infos.pa`, or
+    `res.infos.seeing` for the seeing across multiple nrm data (files).
 
     """
     l_seeing, l_vis2, l_cp, l_pa, l_mjd = [], [], [], [], []
 
-    hdr = fits.open(list_nrm[0].filename)[0].header
+    hdr = fits.open(list_nrm[0].infos.filename)[0].header
     for nrm in list_nrm:
-        hdr = fits.open(nrm.filename)[0].header
+        hdr = fits.open(nrm.infos.filename)[0].header
         pa = np.mean(sphere_parang(hdr))
-        seeing = nrm.hdr['SEEING']
+        seeing = nrm.infos.seeing
         mjd = hdr['MJD-OBS']
-        l_vis2.append(np.mean(nrm.v2))
+        l_vis2.append(np.mean(nrm.vis2))
         l_cp.append(np.mean(nrm.cp))
         l_seeing.append(seeing)
         l_pa.append(pa)
@@ -630,16 +630,20 @@ def check_seeing_cond(list_nrm):
 def plot_seeing_cond(cond, lim_seeing=None):
     """ Plot seeing condition between calibrator and target files. """
 
-    l_xmin, l_xmax = [], []
-    for x in cond:
-        m_mjd = abs(np.min(np.diff(x.mjd)))/2.
-        xmin = np.min([x.mjd.min(), x.mjd.min()])-m_mjd
-        xmax = np.max([x.mjd.max(), x.mjd.max()])+m_mjd
-        l_xmin.append(xmin)
-        l_xmax.append(xmax)
+    # l_xmin, l_xmax = [], []
+    # # for x in cond:
 
-    xmin = np.min(l_xmin)
-    xmax = np.min(l_xmax)
+    # #     try:
+    # #         m_mjd = abs(np.min(np.diff(x.mjd)))/2.
+    # #     except ValueError:
+
+    # #     xmin = np.min([x.mjd.min(), x.mjd.min()])-m_mjd
+    # #     xmax = np.max([x.mjd.max(), x.mjd.max()])+m_mjd
+    # #     l_xmin.append(xmin)
+    # #     l_xmax.append(xmax)
+
+    # xmin = np.min(l_xmin)
+    # xmax = np.min(l_xmax)
 
     # m_mjd=abs(np.min(np.diff(cond_t.mjd)))/2.
     # xmin=np.min([cond_c.mjd.min(), cond_t.mjd.min()])-m_mjd
@@ -661,11 +665,11 @@ def plot_seeing_cond(cond, lim_seeing=None):
     # ax2.plot(cond_c.mjd, cond_c.seeing, '+',
     #          color="#c62d42", label='Seeing')
     if lim_seeing is not None:
-        ax2.hlines(lim_seeing, xmin, xmax, color='g',
-                   label='Seeing threshold')
+        ax2.axhline(lim_seeing, color='g',
+                    label='Seeing threshold')
     ax1.set_ylim(0, 1.2)
     ax2.set_ylim(0.6, 1.8)
-    ax1.set_xlim(xmin, xmax)
+    # ax1.set_xlim(xmin, xmax)
     ax1.grid(alpha=.1, color='grey')
     ax1.legend(loc='best', fontsize=9)
     plt.tight_layout()
