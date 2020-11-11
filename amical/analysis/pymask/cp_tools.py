@@ -1444,7 +1444,7 @@ def coarse_grid(cpo, nsep=32, nth=20, ncon=32, smin='Default', smax='Default',
             'seps': seps,
             'ths': ths,
             'cons': cons,
-            'best_params': best_params}
+            'best': best_params}
     return data
 
 
