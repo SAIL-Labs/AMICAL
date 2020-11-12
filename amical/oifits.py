@@ -875,8 +875,8 @@ def show(inputList, diffWl=False, ind_hole=None, vmin=0, vmax=1.05, cmax=180, se
     ax1 = plt.subplot2grid((2, 6), (0, 0), rowspan=2, colspan=2)
     ax2 = plt.subplot2grid((2, 6), (0, 2), colspan=4)
     ax3 = plt.subplot2grid((2, 6), (1, 2), colspan=4)
-    plt.rc('xtick', labelsize=fttick)
-    plt.rc('ytick', labelsize=fttick)
+    # plt.rc('xtick', labelsize=fttick)
+    # plt.rc('ytick', labelsize=fttick)
     # Plot plan UV
     # -------
     l_bmax, l_band_al = [], []

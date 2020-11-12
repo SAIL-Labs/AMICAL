@@ -246,7 +246,7 @@ def _show_peak_position(ft_arr, n_baselines, mf, maskname, peakmethod, i_fram=0)
     ps = ft_frame.real
 
     fig, ax = plt.subplots(figsize=(9, 7))
-    plt.rc('xtick', labelsize=15)
+    # plt.rc('xtick', labelsize=15)
     ax.set_title("Expected splodge position with mask %s (method = %s)" %
                  (maskname, peakmethod))
     im = ax.imshow(ps, cmap="gist_stern", origin="lower")
@@ -471,9 +471,6 @@ def _compute_v2_quantities(v2_arr, bias_arr, n_blocks):
     # Compute vis. squared average
     v2 = np.mean(v2_arr, axis=0)
     
-    # plt.figure()
-    # plt.plot(v2_arr.T)
-
     # Compute vis. squared difference
     for j in range(n_baselines):
         for k in range(n_blocks):

@@ -483,8 +483,8 @@ def make_mf(maskname, instrument, filtname, npix,
                   (maskname), fontsize=14)
         plt.imshow(im_uv, origin='lower')
         plt.plot(npix//2+1, npix//2, 'r+')
-        plt.ylabel('Y [pix]', fontsize=12)
-        plt.xlabel('X [pix]', fontsize=12)
+        plt.ylabel('Y [pix]')  # , fontsize=12)
+        plt.xlabel('X [pix]')  # , fontsize=12)
         plt.tight_layout()
 
     out = {'cube': mf['norm'],
