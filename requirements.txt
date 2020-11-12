@@ -5,3 +5,5 @@ scipy
 termcolor
 tqdm
 emcee
+uncertainties
+astroquery
