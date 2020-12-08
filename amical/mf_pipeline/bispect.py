@@ -270,7 +270,7 @@ def _show_peak_position(ft_arr, n_baselines, mf, maskname, peakmethod, i_fram=0)
                         hspace=0.2, wspace=0.2)
 
 
-def _show_norm_matrices(obs_norm):
+def _show_norm_matrices(obs_norm, expert_plot=False):
     """ Show covariances matrices of the V2, CP, and a combination 
     bispectrum vs. V2."""
 
@@ -291,13 +291,15 @@ def _show_norm_matrices(obs_norm):
     plt.ylabel("# CP")
     plt.tight_layout()
 
-    fig2 = plt.figure(figsize=(3, 6))
-    plt.title("Cov matrix BS vs. $V^2$")
-    plt.imshow(bs_v2_cov, origin="upper")
-    plt.ylabel("# BL")
-    plt.xlabel("# holes - 2")
-    plt.tight_layout()
-    return fig1, fig2
+    if expert_plot:
+        fig2 = plt.figure(figsize=(3, 6))
+        plt.title("Cov matrix BS vs. $V^2$")
+        plt.imshow(bs_v2_cov, origin="upper")
+        plt.ylabel("# BL")
+        plt.xlabel("# holes - 2")
+        plt.tight_layout()
+        return fig1, fig2
+    return fig1
 
 
 def _check_input_infos(hdr, targetname=None, filtname=None,
@@ -310,7 +312,7 @@ def _check_input_infos(hdr, targetname=None, filtname=None,
     filt = hdr.get('FILTER')
     instrument = hdr.get('INSTRUME')
     # Check the target name
-    if (target is None):
+    if (target is None) or (target == 'STD'):
         if (targetname is not None):
             target = targetname
             if verbose:
@@ -476,7 +478,7 @@ def _compute_v2_quantities(v2_arr, bias_arr, n_blocks):
         for k in range(n_blocks):
             ind1 = k * n_ps // n_blocks
             ind2 = (k + 1) * n_ps // (n_blocks - 1)
-            v2_diff[k, j] = np.mean(v2_arr[ind1:ind2, j]) - v2[j]
+            v2_diff[k, j] = np.mean(v2_arr[ind1:ind2, j]) - v2[j]                
             # v2_diff[k, j] = np.mean(v2_arr[k, j]) - v2[j]
 
     # Compute vis. squared covariance
@@ -614,7 +616,7 @@ def _compute_bs_v2_cov(bs_arr, v2_arr, v2, bs, index_mask):
 
 
 def _normalize_all_obs(bs_quantities, v2_quantities, cvis_arr, cp_cov,
-                       bs_v2_cov, fluxes, index_mask):
+                       bs_v2_cov, fluxes, index_mask, infos, expert_plot=False):
     """ Normalize all observables by the appropriate factor proportional to 
     the averaged fluxes and the number of holes."""
     bs_arr = bs_quantities['bs_arr']
@@ -649,6 +651,18 @@ def _normalize_all_obs(bs_quantities, v2_quantities, cvis_arr, cp_cov,
     bs_v2_cov_norm = np.real(bs_v2_cov / np.mean(fluxes ** 5) * n_holes ** 5)
     bs_var_norm = bs_var / np.mean(fluxes ** 6) * n_holes ** 6
 
+    if expert_plot:
+        plt.figure(figsize=(5, 4))
+        plt.title('DIAGNOSTIC PLOTS - V2 - %s' % infos.target)
+        plt.plot(v2_arr_norm[0], color='grey', alpha=.2, label='V$^2$ dispersion')
+        plt.plot(v2_arr_norm.T, color='grey', alpha=.2)
+        plt.plot(v2_norm, color='crimson', label='Raw V$^2$')
+        plt.grid(alpha=.2)
+        plt.legend()
+        plt.xlabel('# baselines')
+        plt.ylabel('Raw visibilities')
+        plt.tight_layout()
+    
     # We compute the correlation matrix (to be used lated)
     v2_cor = cov2cor(v2_cov)[0]
 
@@ -662,7 +676,7 @@ def _normalize_all_obs(bs_quantities, v2_quantities, cvis_arr, cp_cov,
     return v2_norm, norm_quantities
 
 
-def _compute_cp(obs_result, obs_norm):
+def _compute_cp(obs_result, obs_norm, infos, expert_plot=False):
     """ Compute the closure phases array (across the cube) and averaged cp using
     the normalized bispectrum (see _normalize_all_obs()). Note that for the CP, the
     extracted quantities are computed after the normalisation. """
@@ -674,6 +688,18 @@ def _compute_cp(obs_result, obs_norm):
 
     obs_result['cp'] = cp
     obs_norm['cp_arr'] = cp_arr
+    
+    if expert_plot:
+        plt.figure(figsize=(5, 4))
+        plt.title('DIAGNOSTIC PLOTS - CP - %s' % infos.target)
+        plt.plot(cp_arr[0], color='grey', alpha=.2, label='CP dispersion')
+        plt.plot(cp_arr.T, color='grey', alpha=.2)
+        plt.plot(cp, color='crimson', label='Raw CP')
+        plt.grid(alpha=.2)
+        plt.legend()
+        plt.xlabel('# BS')
+        plt.ylabel('Raw closure phases [deg]')
+        plt.tight_layout()
     return obs_result
 
 
@@ -878,7 +904,7 @@ def _add_infos_header(infos, hdr, mf, pa, filename, maskname, npix):
 def extract_bs(cube, filename, maskname, filtname=None, targetname=None,
                bs_multi_tri=False, peakmethod='gauss', hole_diam=0.8, cutoff=1e-4,
                fw_splodge=0.7, naive_err=False, n_wl=3, n_blocks=0, theta_detector=0,
-               unbias_v2=True, verbose=False, display=True,):
+               unbias_v2=True, verbose=False, expert_plot=False, display=True,):
     """Compute the bispectrum (bs, v2, cp, etc.) from a data cube.
 
     Parameters:
@@ -1040,14 +1066,15 @@ def extract_bs(cube, filename, maskname, filtname=None, targetname=None,
 
     # 9. Now normalize all extracted observables
     vis2_norm, obs_norm = _normalize_all_obs(bs_quantities, v2_quantities, cvis_arr, cp_cov,
-                                             bs_v2_cov, fluxes, index_mask)
+                                             bs_v2_cov, fluxes, index_mask, infos,
+                                             expert_plot=expert_plot)
     obs_result['vis2'] = vis2_norm
 
     if display:
-        _show_norm_matrices(obs_norm)
+        _show_norm_matrices(obs_norm, expert_plot=expert_plot)
 
     # 10. Now we compute the cp quantities and store them with the other observables
-    obs_result = _compute_cp(obs_result, obs_norm)
+    obs_result = _compute_cp(obs_result, obs_norm, infos, expert_plot=expert_plot)
 
     t3_coord, bl_cp = _compute_t3_coord(mf, index_mask)
     bl_v2 = np.sqrt(mf.u ** 2 + mf.v ** 2)
@@ -1060,7 +1087,7 @@ def extract_bs(cube, filename, maskname, filtname=None, targetname=None,
                                         naive_err=naive_err)
 
     # 12. Compute scaling error due to phase error (piston) between holes.
-    fitmat = _compute_phs_piston(complex_bs, index_mask, display=display)
+    fitmat = _compute_phs_piston(complex_bs, index_mask, display=expert_plot)
     phs_v2corr = _compute_phs_error(complex_bs, fitmat, index_mask, npix)
     obs_norm['phs_v2corr'] = phs_v2corr
 

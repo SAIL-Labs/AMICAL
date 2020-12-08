@@ -286,7 +286,7 @@ def _make_overlap_mat(mf, n_baselines, display=False):
 def make_mf(maskname, instrument, filtname, npix,
             peakmethod='fft', n_wl=3, theta_detector=0,
             cutoff=1e-4, hole_diam=0.8, fw_splodge=0.7,
-            verbose=False, display=True):
+            verbose=False, diag_plot=False, display=True):
     """
     Summary:
     --------
@@ -402,7 +402,7 @@ def make_mf(maskname, instrument, filtname, npix,
             cprint(
                 "Error: choose the extraction method 'gauss', 'fft' or 'square'.", 'red')
             return None
-
+        
         # Compute the cutoff limit before saving the gain map
         pixelvector = np.where(ind_peak['flat'] >= cutoff)[0]
         pixelvector_c = np.where(ind_peak['centered'] >= cutoff)[0]
@@ -470,7 +470,7 @@ def make_mf(maskname, instrument, filtname, npix,
         mf['norm_c'][:, :, i] = mf['norm_c'][:, :, i]/norm
         mf['conj_c'][:, :, i] = mf['conj_c'][:, :, i]/norm
 
-    rmat, imat = _make_overlap_mat(mf, n_baselines, display=display)
+    rmat, imat = _make_overlap_mat(mf, n_baselines, display=diag_plot)
 
     mf_tot = np.sum(mf['norm'], axis=2) + np.sum(mf['conj'], axis=2)
     mf_tot_m = np.sum(mf['norm'], axis=2) - np.sum(mf['conj'], axis=2)
