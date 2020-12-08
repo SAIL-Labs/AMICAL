@@ -101,3 +101,159 @@ def visBinary_res(Utable, Vtable, Lambda, param):
     s2 = rel_f2 * visPointSource(Utable, Vtable, Lambda, p_s2)
     C_centered = s1 + s2
     return C_centered
+
+
+def visGaussianDisk(Utable, Vtable, Lambda, param):
+    """
+    Compute complex visibility of a gaussian disk
+
+    Params:
+    -------
+    fwhm: {float}
+        fwhm of the disk [rad],\n
+    x0, y0: {float}
+        Shift along x and y position [rad].
+    """
+    u = Utable / Lambda
+    v = Vtable / Lambda
+
+    fwhm = param["fwhm"]
+    x0 = param["x0"]
+    y0 = param["y0"]
+
+    r2 = ((np.pi ** 2) * (u ** 2 + v ** 2) * (fwhm ** 2)) / (4.0 * np.log(2.0))
+    C_centered = np.exp(-r2)
+
+    # Deplacement du plan image
+    C = shiftFourier(Utable, Vtable, Lambda, C_centered, x0, y0)
+    return C
+
+
+def visDebrisDisk(Utable, Vtable, Lambda, param):
+    """
+    Compute complex visibility of an elliptical thick ring.
+
+    Params:
+    -------
+    majorAxis: {float}
+        Major axis of the disk [rad],\n
+    minorAxis: {float}
+        Minor axis of the disk [rad],\n
+    angle: {float}
+        Orientation of the disk [rad],\n
+    thickness: {float}
+        Thickness of the ring [rad],\n
+    x0, y0: {float}
+        Shift along x and y position [rad].
+    """
+
+    majorAxis = mas2rad(param["majorAxis"])*2
+    inclination = np.deg2rad(param['incl'])
+    posang = np.deg2rad(param["posang"])
+    thickness = mas2rad(param["thickness"])
+    cr_star = param["cr"]
+    x0 = param["x0"]
+    y0 = param["y0"]
+    
+    minorAxis = majorAxis * np.cos(inclination)
+
+    u = Utable / Lambda
+    v = Vtable / Lambda
+
+    r = np.sqrt(
+        ((u * np.sin(posang) + v * np.cos(posang)) * majorAxis) ** 2
+        + ((u * np.cos(posang) - v * np.sin(posang)) * minorAxis) ** 2
+    )
+    
+    C_centered = special.j0(np.pi * r)
+    C_shifted = shiftFourier(Utable, Vtable, Lambda, C_centered, x0, y0)
+    C = C_shifted * visGaussianDisk(Utable, Vtable, Lambda, 
+                                    {"fwhm": thickness, "x0": 0.0, "y0": 0.0})
+    
+    fstar = cr_star
+    fdisk = 1
+    total_flux = fstar + fdisk
+    
+    rel_star = fstar / total_flux
+    rel_disk = fdisk / total_flux
+    
+    p_s1 = {'x0': x0, 'y0': y0}
+    s1 = rel_star * visPointSource(Utable, Vtable, Lambda, p_s1)
+    s2 = rel_disk * C
+    return s1 + s2
+
+
+def visClumpDebrisDisk(Utable, Vtable, Lambda, param):
+    """
+    Compute complex visibility of an elliptical thick ring.
+
+    Params:
+    -------
+    majorAxis: {float}
+        Major axis of the disk [rad],\n
+    minorAxis: {float}
+        Minor axis of the disk [rad],\n
+    angle: {float}
+        Orientation of the disk [rad],\n
+    thickness: {float}
+        Thickness of the ring [rad],\n
+    x0, y0: {float}
+        Shift along x and y position [rad].
+    """
+
+    majorAxis = mas2rad(param["majorAxis"])*2
+    inclination = np.deg2rad(param['incl'])
+    posang = np.deg2rad(param["posang"])
+    thickness = mas2rad(param["thickness"])
+    cr_star = param["cr"]
+    x0 = param["x0"]
+    y0 = param["y0"]
+    
+    minorAxis = majorAxis * np.cos(inclination)
+
+    #majorAxis = majorAxis_c * np.cos(inclination) - minorAxis_c * np.sin(inclination)
+    #minorAxis = -majorAxis_c * np.sin(inclination) + minorAxis_c * np.cos(inclination)
+    
+    u = Utable / Lambda
+    v = Vtable / Lambda
+
+    r = np.sqrt(
+        ((u * np.sin(posang) + v * np.cos(posang)) * majorAxis) ** 2
+        + ((u * np.cos(posang) - v * np.sin(posang)) * minorAxis) ** 2
+    )
+    
+    d_clump = mas2rad(param['d_clump'])
+    cr_clump = param['cr_clump']/100.
+
+    x1 = 0
+    y1 = majorAxis * np.cos(inclination)
+    x_clump = ((x1 * np.cos(posang) - y1 * np.sin(posang))/2.)
+    y_clump = ((x1 * np.sin(posang) + y1 * np.cos(posang))/2.)
+    
+    p_clump = {"fwhm": d_clump, 
+               "x0": x_clump, 
+               "y0": y_clump}
+    
+    C_clump = visGaussianDisk(Utable, Vtable, Lambda, p_clump)
+                              
+    C_centered = special.j0(np.pi * r)
+    C_shifted = shiftFourier(Utable, Vtable, Lambda, C_centered, x0, y0)
+    C = C_shifted * visGaussianDisk(Utable, Vtable, Lambda, 
+                                    {"fwhm": thickness, "x0": 0.0, "y0": 0.0})
+    
+    fstar = cr_star
+    fdisk = 1
+    total_flux = fstar + fdisk
+    
+    f_clump = cr_clump * total_flux
+    f_debrisdisk = (1 - cr_clump) * total_flux
+    
+    rel_star = fstar / total_flux
+    rel_disk = fdisk / total_flux
+    
+    p_s1 = {'x0': x0, 'y0': y0}
+    s1 = rel_star * visPointSource(Utable, Vtable, Lambda, p_s1)
+    s2 = rel_disk * C
+    deb_disk = s1 + s2
+    return f_debrisdisk * deb_disk + f_clump * C_clump
+    

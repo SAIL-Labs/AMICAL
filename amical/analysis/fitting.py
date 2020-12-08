@@ -26,6 +26,10 @@ def select_model(name):
         model = models.visBinary_res
     elif name == 'edisk':
         model = models.visEllipticakUniformDisk
+    elif name == 'debrisDisk':
+        model = models.visDebrisDisk
+    elif name == 'clumpyDebrisDisk':
+        model = models.visClumpDebrisDisk
     else:
         model = None
     return model
@@ -482,6 +486,7 @@ def plot_model(inputdata, param, extra_error_v2=0, extra_error_cp=0, err_scale=1
     model_target = select_model(param['model'])
 
     u, v, wl = d.u, d.v, d.wl
+    
     mod_v2 = comput_V2([u, v, wl], param, model_target)
 
     u1, u2, v1, v2 = d.u1, d.u2, d.v1, d.v2
