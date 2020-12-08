@@ -32,8 +32,9 @@ cube_c = hdu[0].data
 hdu.close()
 
 # ----------------------------------
-# Additionnal cleaning step is required here for
-# groundbased observations (see example_SPHERE.py).
+# Additionnal cleaning step is required for real NIRISS data 
+# or MIRAGE data (bad pixel, centering, and background). 
+# Check example_SPHERE.py for more details.
 # ----------------------------------
 
 #  AMI parameters (refer to the docstrings of `extract_bs` for details)
@@ -46,12 +47,12 @@ params_ami = {"peakmethod": 'fft',
 # Extract raw complex observables for the target and the calibrator:
 # It's the core of the pipeline (amical/mf_pipeline/bispect.py)
 bs_t = amical.extract_bs(cube_t, file_t, targetname='fakebinary',
-                         **params_ami)
+                         **params_ami, display=True)
 bs_c = amical.extract_bs(cube_c, file_c, targetname='fakepsf',
                          **params_ami, display=False)
 
 # Calibrate the raw data to get calibrated V2 and CP.
-# bs_c can be a single calibrator result or a list of calibrator.
+# bs_c can be a single calibrator result or a list of calibrators.
 # (see amical/calibration.py for details).
 cal = amical.calibrate(bs_t, bs_c)
 
