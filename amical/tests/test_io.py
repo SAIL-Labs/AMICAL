@@ -2,6 +2,7 @@ from pathlib import Path
 
 import munch
 import numpy as np
+from numpy.testing import assert_approx_equal, assert_allclose
 import pytest
 from astropy.io import fits
 
@@ -66,6 +67,7 @@ def test_calibration(filepath):
     cal = amical.calibrate(bs, bs)
     assert isinstance(cal, munch.Munch)
 
+
 @pytest.mark.slow
 @pytest.mark.parametrize("filepath", [example_fits])
 def test_show(filepath):
@@ -108,6 +110,11 @@ def test_save(filepath):
     assert(isinstance(cp, np.ndarray))
     assert(len(v2) == 21)
     assert(len(cp) == 35)
+<<<<<<< HEAD
+=======
+    assert_approx_equal(v2[0], expected_v2, significant=13)
+    assert_approx_equal(cp[0], expected_cp, significant=13)
+>>>>>>> 8ed42260784bee3d2ad5eb6ced0c53c598d9f010
 
 
 @pytest.mark.slow
