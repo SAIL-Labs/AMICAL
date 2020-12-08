@@ -99,11 +99,9 @@ def pymask_cr_limit(input_data, nsim=100, err_scale=1, extra_error_cp=0, ncore=1
 
     # Loop through seps and find the highest contrast ratio that would be detectable
     for sep_ix in range(len(seps)):
-        would_detec = limits[:, sep_ix] > 0.9973
-        if np.sum(would_detec) > 1:
+        would_detec = limits[:, sep_ix] >= 0.9973
+        if np.sum(would_detec) >= 1:
             threesig_lim = np.max(crats[would_detec])
-            fivesig_lim = threesig_lim*3.3 / \
-                3.  # convert to 3 sigma (normally 5)
             crat_limits[sep_ix] = threesig_lim  # fivesig_lim
         else:
             crat_limits[sep_ix] = 1.

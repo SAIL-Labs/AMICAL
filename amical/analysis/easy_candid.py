@@ -63,7 +63,7 @@ def candid_grid(input_data, step=10, rmin=20, rmax=400, diam=0, obs=['cp', 'v2']
     x_u = ufloat(x, e_fit["x"])
     y_u = ufloat(y, e_fit["y"])
 
-    dm = 2.5*umath.log(1 / (f_u)) / umath.log(10)
+    dm = -2.5*umath.log10(f_u)
     s = (x_u ** 2 + y_u ** 2) ** 0.5
     posang = ((umath.atan2(x_u, y_u)*180/np.pi))
     if posang.nominal_value < 0:
