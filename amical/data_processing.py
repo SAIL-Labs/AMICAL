@@ -301,7 +301,7 @@ def check_data_params(filename, isz, r1, dr, bad_map=None, add_bad=[],
 
 
 def clean_data(data, isz=None, r1=None, dr=None, edge=0,
-               r2=None, bad_map=None, add_bad=[], apod=True,
+               bad_map=None, add_bad=[], apod=True,
                offx=0, offy=0, sky=True, window=None,
                f_kernel=3, verbose=False):
     """ Clean data.
@@ -320,10 +320,6 @@ def clean_data(data, isz=None, r1=None, dr=None, edge=0,
     --------
     `cube` {np.array} -- Cleaned datacube.
     """
-    # print(data.shape[1])
-    # if data.shape[1] % 2 == 1:
-    #     data = np.array([im[:-1, :-1] for im in data])
-
     n_im = data.shape[0]
     cube_cleaned = np.zeros([n_im, isz, isz])
     for i in tqdm(range(n_im), ncols=100, desc='Cleaning', leave=False):
@@ -351,8 +347,6 @@ def clean_data(data, isz=None, r1=None, dr=None, edge=0,
             return None
 
         if apod:
-            if r2 is None:
-                r2 = isz//3
             img = apply_windowing(img_biased, window=window)
 
         else:
@@ -361,7 +355,7 @@ def clean_data(data, isz=None, r1=None, dr=None, edge=0,
     return cube_cleaned
 
 
-def select_clean_data(filename, isz=256, r1=100, r2=None, dr=10, edge=0,
+def select_clean_data(filename, isz=256, r1=100, dr=10, edge=0,
                       clip=True, bad_map=None, add_bad=[], offx=0, offy=0,
                       clip_fact=0.5, apod=True, sky=True, window=None,
                       f_kernel=3, verbose=False, ihdu=0, display=False):
@@ -403,7 +397,7 @@ def select_clean_data(filename, isz=256, r1=100, r2=None, dr=10, edge=0,
             'Reshape factor is larger than the data size (choose a smaller isz).')
 
     cube_cleaned = clean_data(cube, isz=isz, r1=r1, edge=edge,
-                              r2=r2, bad_map=bad_map, add_bad=add_bad,
+                              bad_map=bad_map, add_bad=add_bad,
                               dr=dr, sky=sky, apod=apod, window=window,
                               f_kernel=f_kernel, offx=offx, offy=offy,
                               verbose=verbose)
