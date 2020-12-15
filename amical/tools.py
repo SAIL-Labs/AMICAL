@@ -432,7 +432,7 @@ def compute_pa(hdr, n_ps, verbose=False, display=False):
         pa_exist = False
         l_pa = np.zeros(nframe)
     else:
-        l_pa = list_fct_pa[instrument](hdr)
+        l_pa = list_fct_pa[instrument](hdr, n_ps)
         pa_exist = True
 
     pa = np.mean(l_pa)
@@ -451,7 +451,7 @@ def compute_pa(hdr, n_ps, verbose=False, display=False):
     return pa
 
 
-def sphere_parang(hdr):
+def sphere_parang(hdr, n_dit_ifs=None):
     """
     Reads the header and creates an array giving the paralactic angle for each frame,
     taking into account the inital derotator position.
@@ -504,7 +504,10 @@ def sphere_parang(hdr):
         geolat_rad = 0
 
     if 'NAXIS3' in hdr:
-        n_frames = hdr['NAXIS3']
+        if detector.strip() == 'IFS':
+            n_frames = n_dit_ifs
+        else:
+            n_frames = hdr['NAXIS3']
     else:
         n_frames = 1
 
