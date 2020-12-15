@@ -10,6 +10,8 @@ Instruments and mask informations.
 -------------------------------------------------------------------- 
 """
 import numpy as np
+from pathlib import Path
+from astropy.io import fits
 
 from amical.tools import mas2rad
 
@@ -83,6 +85,14 @@ def get_mask(ins, mask, first=0):
                                         [2.92, -1.35],
                                         [0, -3.04]
                                         ])},
+        'SPHERE-IFS': {'g7': 1*np.array([[-2.07, 2.71],
+                                            [0.98, 3.27],
+                                            [-3.11, -0.2],
+                                            [-1.43, -0.81],
+                                            [-2.79, -1.96],
+                                            [3.3, -0.85],
+                                            [0.58, -3.17]
+                                            ])},
         'VISIR': {'g7': (pupil_visir/pupil_visir_mm)*np.array([[-5.707, -2.885],
                                                                [-5.834, 3.804],
                                                                [0.099, 7.271],
@@ -104,6 +114,12 @@ def get_mask(ins, mask, first=0):
 def get_wavelength(ins, filtname):
     """ Return dictionnary containning saved informations about filters. """
 
+    LOCAL_DIR = Path(__file__).parent
+    INT_DATA_DIR = LOCAL_DIR / "internal_data/"
+
+    wave_YJ = fits.open(INT_DATA_DIR / 'ifs_wave_YJ.fits')[0].data
+    wave_YJH = fits.open(INT_DATA_DIR / 'ifs_wave_YJH.fits')[0].data
+    
     dic_filt = {'NIRISS': {'F277W': [2.776, 0.715],
                            'F380M': [3.828, 0.205],
                            'F430M': [4.286, 0.202],
@@ -116,8 +132,11 @@ def get_wavelength(ins, filtname):
                            'K2': [2.251, 0.109],
                            'CntH': [1.573, 0.023],
                            'CntK1': [2.091, 0.034],
-                           'CntK2': [2.266, 0.032],
+                           'CntK2': [2.266, 0.032]
                            },
+                'SPHERE-IFS': {'YJ': wave_YJ,
+                               'YH': wave_YJH
+                               },
                 'GLINT': {'F155': [1.55, 0.01],
                           'F430': [4.3, 0.01]
                           },
@@ -134,7 +153,8 @@ def get_wavelength(ins, filtname):
 def get_pixel_size(ins):
     saved_pixel_detector = {'NIRISS': 65.6,
                             'SPHERE': 12.27,
-                            'VISIR': 45}
+                            'VISIR': 45,
+                            'SPHERE-IFS': 7.46}
     try:
         p = mas2rad(saved_pixel_detector[ins])
     except KeyError:
