@@ -13,9 +13,12 @@ Simulated_NRMdata/.DS_Store
 # Data relative files
 Saveoifits/
 TestSPHEREData/
+SavedFigures/
 
 # Install files 
 *.txt
 PKG*
 my*.py
 
+# Test data
+test_l_cal.dpy
