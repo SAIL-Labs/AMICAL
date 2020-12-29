@@ -59,12 +59,12 @@ def test_show(bss):
     amical.show(cal)
 
 
-def test_save(bss):
+def test_save(bss, tmpdir):
     bs = bss["fft"]
     cal = amical.calibrate(bs, bs)
     assert isinstance(cal, munch.Munch)
 
-    dic, savefile = amical.save(cal, oifits_file='test.oifits', fake_obj=True)
+    dic, savefile = amical.save(cal, oifits_file='test.oifits', datadir=tmpdir, fake_obj=True)
     v2 = dic['OI_VIS2']['VIS2DATA']
     cp = dic['OI_T3']['T3PHI']
 
