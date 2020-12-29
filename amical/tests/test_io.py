@@ -10,78 +10,58 @@ import amical
 from amical import load, loadc
 from amical.get_infos_obs import get_pixel_size
 
-TEST_DIR = Path(__file__).parent
-TEST_DATA_DIR = TEST_DIR / "data"
-example_oifits = TEST_DATA_DIR / "test.oifits"
-example_fits = TEST_DATA_DIR / "test.fits"
-save_v2_gauss = TEST_DATA_DIR / 'save_results_v2_example_gauss.fits'
-save_cp_gauss = TEST_DATA_DIR / 'save_results_cp_example_gauss.fits'
-save_cp_fft = TEST_DATA_DIR / 'save_results_cp_example_fft.fits'
+@pytest.fixture()
+def example_oifits(shared_datadir):
+    return shared_datadir / "test.oifits"
 
-
-def test_load_file():
+def test_load_file(example_oifits):
     s = load(example_oifits)
     assert isinstance(s, dict)
 
 
-@pytest.mark.slow
-def test_extraction():
-    with fits.open(example_fits) as fh:
+peakmethods = ['fft', 'gauss', 'square']
+
+@pytest.fixture(name="bss")
+def example_bss(shared_datadir):
+    fits_file = shared_datadir / "test.fits"
+    with fits.open(fits_file) as fh:
         cube = fh[0].data
-
-    method = ['fft', 'gauss', 'square']
-    for m in method:
-        params_ami = {"peakmethod": m,
-                      "bs_multi_tri": False,
-                      "maskname": "g7",
-                      "fw_splodge": 0.7,
-                      }
-        bs = amical.extract_bs(cube, example_fits, targetname='test',
-                               **params_ami, display=False)
-        assert isinstance(bs, munch.Munch)
+    bss = {}
+    for peakmethod in peakmethods:
+        bss[peakmethod] = amical.extract_bs(
+                            cube,
+                            fits_file,
+                            targetname='test',
+                            bs_multi_tri=False,
+                            maskname="g7",
+                            fw_splodge=0.7,
+                            display=False,
+                            peakmethod=peakmethod
+                        )
+    return bss
 
 
 @pytest.mark.slow
-def test_calibration():
-    with fits.open(example_fits) as fh:
-        cube = fh[0].data
+def test_extraction(bss):
+    assert isinstance(bss["gauss"], munch.Munch)
 
-    params_ami = {"peakmethod": 'fft',
-                  "bs_multi_tri": False,
-                  "maskname": "g7",
-                  "fw_splodge": 0.7,
-                  }
-    bs = amical.extract_bs(cube, example_fits, targetname='test',
-                           **params_ami, display=False)
+
+@pytest.mark.slow
+def test_calibration(bss):
+    bs = bss["fft"]
     cal = amical.calibrate(bs, bs)
     assert isinstance(cal, munch.Munch)
 
 
 @pytest.mark.slow
-def test_show():
-    with fits.open(example_fits) as fh:
-        cube = fh[0].data
-    params_ami = {"peakmethod": 'fft',
-                  "bs_multi_tri": False,
-                  "maskname": "g7",
-                  "fw_splodge": 0.7,
-                  }
-    bs = amical.extract_bs(cube, example_fits, targetname='test',
-                           **params_ami, display=False)
+def test_show(bss):
+    bs = bss["fft"]
     cal = amical.calibrate(bs, bs)
     amical.show(cal)
 
 
-def test_save():
-    with fits.open(example_fits) as fh:
-        cube = fh[0].data
-    params_ami = {"peakmethod": 'fft',
-                  "bs_multi_tri": False,
-                  "maskname": "g7",
-                  "fw_splodge": 0.7,
-                  }
-    bs = amical.extract_bs(cube, example_fits, targetname='test',
-                           **params_ami, display=False)
+def test_save(bss):
+    bs = bss["fft"]
     cal = amical.calibrate(bs, bs)
     assert isinstance(cal, munch.Munch)
 
@@ -99,7 +79,7 @@ def test_save():
 
 @pytest.mark.slow
 @pytest.mark.filterwarnings("ignore::RuntimeWarning")
-def test_candid():
+def test_candid(example_oifits):
 
     param_candid = {'rmin': 20,
                     'rmax': 250,
@@ -112,7 +92,7 @@ def test_candid():
 
 @pytest.mark.slow
 @pytest.mark.filterwarnings("ignore::RuntimeWarning")
-def test_candid_multiproc():
+def test_candid_multiproc(example_oifits):
 
     param_candid = {'rmin': 20,
                     'rmax': 250,
@@ -124,14 +104,14 @@ def test_candid_multiproc():
 
 
 @pytest.mark.slow
-def test_pymask():
+def test_pymask(example_oifits):
     fit1 = amical.pymask_grid(str(example_oifits))
     assert isinstance(fit1, dict)
     fit2 = amical.pymask_grid([example_oifits])
     assert isinstance(fit2, dict)
 
 
-def test_loadc_file():
+def test_loadc_file(example_oifits):
     s = loadc(example_oifits)
     assert isinstance(s, munch.Munch)
 
