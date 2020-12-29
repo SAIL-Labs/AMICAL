@@ -1,8 +1,5 @@
-from pathlib import Path
-
 import munch
 import numpy as np
-from numpy.testing import assert_approx_equal, assert_allclose
 import pytest
 from astropy.io import fits
 
@@ -10,9 +7,11 @@ import amical
 from amical import load, loadc
 from amical.get_infos_obs import get_pixel_size
 
+
 @pytest.fixture()
-def example_oifits(shared_datadir):
-    return shared_datadir / "test.oifits"
+def example_oifits(global_datadir):
+    return global_datadir / "test.oifits"
+
 
 def test_load_file(example_oifits):
     s = load(example_oifits)
@@ -21,9 +20,9 @@ def test_load_file(example_oifits):
 
 peakmethods = ['fft', 'gauss', 'square']
 
-@pytest.fixture(name="bss")
-def example_bss(shared_datadir):
-    fits_file = shared_datadir / "test.fits"
+@pytest.fixture(name="bss", scope="session")
+def example_bss(global_datadir):
+    fits_file = global_datadir / "test.fits"
     with fits.open(fits_file) as fh:
         cube = fh[0].data
     bss = {}
