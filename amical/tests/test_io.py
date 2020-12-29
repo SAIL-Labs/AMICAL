@@ -78,25 +78,13 @@ def test_save(bss):
 
 @pytest.mark.slow
 @pytest.mark.filterwarnings("ignore::RuntimeWarning")
-def test_candid(example_oifits):
+@pytest.mark.parametrize("ncore", [1, 2, 4])
+def test_candid_grid(example_oifits, ncore):
 
     param_candid = {'rmin': 20,
                     'rmax': 250,
                     'step': 100,
-                    'ncore': 1
-                    }
-    fit1 = amical.candid_grid(example_oifits, **param_candid)
-    assert isinstance(fit1, dict)
-
-
-@pytest.mark.slow
-@pytest.mark.filterwarnings("ignore::RuntimeWarning")
-def test_candid_multiproc(example_oifits):
-
-    param_candid = {'rmin': 20,
-                    'rmax': 250,
-                    'step': 100,
-                    'ncore': 4
+                    'ncore': ncore
                     }
     fit1 = amical.candid_grid(example_oifits, **param_candid)
     assert isinstance(fit1, dict)
