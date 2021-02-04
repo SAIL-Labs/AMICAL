@@ -376,7 +376,7 @@ def loadc(filename):
     dic = load(filename)
     res = {}
     # Extract infos
-    res['target'] = dic['info']['OBJECT']
+    res['target'] = dic['info'].get('OBJECT')
 
     res['calib'] = dic['info'].get('CALIB')
     res['seeing'] = dic['info'].get('SEEING')

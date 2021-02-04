@@ -12,6 +12,7 @@ Instruments and mask informations.
 import numpy as np
 from pathlib import Path
 from astropy.io import fits
+from termcolor import cprint
 
 from amical.tools import mas2rad
 
@@ -143,10 +144,18 @@ def get_wavelength(ins, filtname):
                 'VISIR': {'10_5_SAM': [10.56, 0.37],
                           '11_3_SAM': [11.23, 0.55]}
                 }
+    
+    if ins not in dic_filt.keys():
+        cprint("--- Error: instrument <%s> not found ---" % ins, 'red')
+        cprint('Available: %s' % list(dic_filt.keys()), 'red')
+        wl = np.NaN
+        
     try:
         wl = np.array(dic_filt[ins][filtname]) * 1e-6
     except KeyError:
-        wl = np.Nan
+        cprint("--- Error: filtname <%s> not found for %s ---" % (filtname, ins), 'red')
+        cprint('Available: %s' % list(dic_filt[ins].keys()), 'red')
+        wl = np.NaN
     return wl
 
 

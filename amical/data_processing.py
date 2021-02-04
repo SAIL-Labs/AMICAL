@@ -277,14 +277,15 @@ def check_data_params(filename, isz, r1, dr, bad_map=None, add_bad=[],
     xs4, ys4 = x0 + isz//2, y0 - isz//2
 
     max_val = img1[y0, x0]
-    fig = plt.figure(figsize=(6, 6))
+    fig = plt.figure(figsize=(5, 5))
+    plt.title("--- CLEANING PARAMETERS ---")
     plt.imshow(img1, norm=PowerNorm(.5), cmap='afmhot', vmin=0, vmax=max_val)
     plt.plot(x1, y1, label='Inner radius for sky subtraction')
     plt.plot(x2, y2, label='Outer radius for sky subtraction')
     if apod:
         if window is not None:
-            plt.plot(x3, y3, label='Super-gaussian windowing')
-    plt.plot(x0, y0, '+', color='g', ms=10, label='Centering position')
+            plt.plot(x3, y3, '--', label='Super-gaussian windowing')
+    plt.plot(x0, y0, '+', color='c', ms=10, label='Centering position')
     plt.plot([xs1, xs2, xs3, xs4, xs1], [ys1, ys2, ys3, ys4, ys1], 'w--',
              label='Resized image')
     if not noBadPixel:
@@ -295,7 +296,9 @@ def check_data_params(filename, isz, r1, dr, bad_map=None, add_bad=[],
         plt.scatter(bad_pix_y, bad_pix_x, color='', marker='s',
                     edgecolors='r', s=20, label=label)
 
-    plt.legend(fontsize=7, loc=1)
+    plt.xlabel('X [pix]')
+    plt.ylabel('Y [pix]')
+    plt.legend(fontsize=8, loc=1)
     plt.tight_layout()
     return fig
 
