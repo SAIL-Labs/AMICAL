@@ -19,19 +19,18 @@ import time
 import warnings
 
 import numpy as np
+from amical.get_infos_obs import get_mask
+from amical.tools import compute_pa, cov2cor
 from astropy.io import fits
 from matplotlib import pyplot as plt
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 from munch import munchify as dict2class
 from scipy.optimize import minimize
 from termcolor import cprint
 from tqdm import tqdm
-from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-from amical.get_infos_obs import get_mask
-from amical.tools import compute_pa, cov2cor
-
-from .ami_function import (bs_multi_triangle, give_peak_info2d, compute_index_mask,
-                           make_mf, phase_chi2, tri_pix)
+from .ami_function import (bs_multi_triangle, compute_index_mask,
+                           give_peak_info2d, make_mf, phase_chi2, tri_pix)
 from .idl_function import dblarr, dist, regress_noc
 
 warnings.filterwarnings("ignore")
@@ -95,7 +94,7 @@ def _compute_complex_bs(ft_arr, index_mask, fringe_peak, mf, dark_ps=None,
     fluxes = np.zeros(n_ps)
 
     for i in tqdm(range(n_ps), ncols=100, desc='Extracting in the cube',
-                  leave=False, file=sys.stdout):
+                  leave=True, file=sys.stdout):
         ft_frame = ft_arr[i]
         ps = np.abs(ft_frame) ** 2
 
@@ -134,7 +133,7 @@ def _compute_complex_bs(ft_arr, index_mask, fringe_peak, mf, dark_ps=None,
             ftf2 = np.roll(ft_frame, -1, axis=1)
             dummy = np.sum(ft_frame[pix] * np.conj(ftf1[pix]) +
                            np.conj(ft_frame[pix]) * ftf2[pix])
-
+            
             phs["value"][1, i, j] = np.arctan2(dummy.imag, dummy.real)
             phs["err"][1, i, j] = 1 / abs(dummy)
 
@@ -199,6 +198,7 @@ def _construct_ft_arr(cube):
 
     i_ps = ft_arr.shape
     n_ps = i_ps[0]
+    
     return ft_arr, n_ps, n_pix
 
 
@@ -285,7 +285,10 @@ def _show_norm_matrices(obs_norm, expert_plot=False):
     plt.ylabel("# BL")
     plt.subplot(1, 2, 2)
     plt.title("Covariance matrix CP")
-    plt.imshow(cp_cov, origin="upper")
+    try:
+        plt.imshow(cp_cov, origin="upper")
+    except Exception:
+        pass
     plt.xlabel("# CP")
     plt.ylabel("# CP")
     plt.tight_layout()
@@ -302,14 +305,14 @@ def _show_norm_matrices(obs_norm, expert_plot=False):
 
 
 def _check_input_infos(hdr, targetname=None, filtname=None,
-                       verbose=True):
+                       instrum=None, verbose=True):
     """ Extract informations from the header and fill the missing values with the
     input arguments. Return the infos class containing important informations of 
     the input header (keys: target, seeing, instrument, ...)
     """
     target = hdr.get('OBJECT')
     filt = hdr.get('FILTER')
-    instrument = hdr.get('INSTRUME')
+    instrument = hdr.get('INSTRUME', instrum)
     # Check the target name
     if (target is None) or (target == 'STD'):
         if (targetname is not None):
@@ -331,8 +334,8 @@ def _check_input_infos(hdr, targetname=None, filtname=None,
             cprint("Error: filter not found (in the header or as input).", "red")
 
     # Check the instrument used
-    if instrument is None:
-        cprint("Error: INSTRUME not found (header).", "red")
+    if (instrument is None):
+        cprint("Error: instrum not found (in the header or as input).", "red")
 
     # Origin files
     orig = hdr.get("ORIGFILE", 'SimulatedData')
@@ -582,7 +585,7 @@ def _compute_cp_cov(bs_arr, bs, index_mask):
     n_bispect = index_mask.n_bispect
 
     cp_cov = dblarr(n_bispect, n_bispect)
-    for i in range(n_bispect):
+    for i in tqdm(range(n_bispect), desc='CP covariance', ncols=100):
         for j in range(n_bispect):
             temp1 = (bs_arr[:, i] - bs[i]) * np.conj(bs[i])
             temp2 = (bs_arr[:, j] - bs[j]) * np.conj(bs[j])
@@ -644,8 +647,11 @@ def _normalize_all_obs(bs_quantities, v2_quantities, cvis_arr, cp_cov,
     avar_norm = avar / np.mean(fluxes ** 4) * n_holes ** 4
     err_avar_norm = err_avar / np.mean(fluxes ** 4) * n_holes ** 4
 
-    cp_cov_norm = cp_cov / np.mean(fluxes ** 6) * n_holes ** 6
-
+    try:
+        cp_cov_norm = cp_cov / np.mean(fluxes ** 6) * n_holes ** 6
+    except TypeError:
+        cp_cov_norm = None
+    
     bs_cov_norm = bs_cov / np.mean(fluxes ** 6) * n_holes ** 6
     bs_v2_cov_norm = np.real(bs_v2_cov / np.mean(fluxes ** 5) * n_holes ** 5)
     bs_var_norm = bs_var / np.mean(fluxes ** 6) * n_holes ** 6
@@ -900,7 +906,7 @@ def _add_infos_header(infos, hdr, mf, pa, filename, maskname, npix):
     return infos
 
 
-def extract_bs(cube, filename, maskname, filtname=None, targetname=None,
+def extract_bs(cube, filename, maskname, filtname=None, targetname=None, instrum=None,
                bs_multi_tri=False, peakmethod='gauss', hole_diam=0.8, cutoff=1e-4,
                fw_splodge=0.7, naive_err=False, n_wl=3, n_blocks=0, theta_detector=0,
                unbias_v2=True, verbose=False, expert_plot=False, display=True,):
@@ -967,16 +973,22 @@ def extract_bs(cube, filename, maskname, filtname=None, targetname=None,
     hdu = fits.open(filename)
     hdr = hdu[0].header
 
-    infos = _check_input_infos(hdr, targetname=targetname, filtname=filtname)
+    infos = _check_input_infos(hdr, targetname=targetname, filtname=filtname,
+                               instrum=instrum)
 
+    if 'INSTRUME' not in hdr.keys():
+        hdr['INSTRUME'] = infos['instrument']
     # 1. Open the data cube and perform a series of roll (both axis) to avoid
     # grid artefact (negative fft values).
     # ------------------------------------------------------------------------
     ft_arr, n_ps, npix = _construct_ft_arr(cube)
 
     # Number of aperture in the mask
-    n_holes = len(get_mask(infos.instrument, maskname))
-
+    try:
+        n_holes = len(get_mask(infos.instrument, maskname))
+    except TypeError:
+        return None
+    
     # 2. Determine the number of different baselines (bl), bispectrums (bs) or
     # covariance matrices (cov) and associates each holes as couple for bl or
     # triplet for bs (or cp) using compute_index_mask function (see ami_function.py).
@@ -1038,7 +1050,7 @@ def extract_bs(cube, filename, maskname, filtname=None, targetname=None,
     complex_bs = _compute_complex_bs(ft_arr, index_mask, fringe_peak, mf,
                                      dark_ps=None, closing_tri_pix=closing_tri_pix,
                                      bs_multi_tri=bs_multi_tri)
-
+    
     cvis_arr = complex_bs['vis_arr']['complex']
     v2_arr = complex_bs['vis_arr']['squared']
     bs_arr = complex_bs['bs_arr']
@@ -1055,14 +1067,18 @@ def extract_bs(cube, filename, maskname, filtname=None, targetname=None,
     # 8. Turn Arrays into means and covariance matrices
     # -------------------------------------------------
     v2_quantities = _compute_v2_quantities(v2_arr_unbiased, bias_arr, n_blocks)
+
     bs_quantities = _compute_bs_quantities(bs_arr, v2_quantities['v2'], fluxes, index_mask,
                                            n_blocks)
 
     bs_v2_cov = _compute_bs_v2_cov(bs_arr, v2_arr_unbiased, v2_quantities['v2'],
                                    bs_quantities['bs'], index_mask)
 
-    cp_cov = _compute_cp_cov(bs_arr, bs_quantities['bs'], index_mask)
-
+    compute_cp_cov = False
+    if compute_cp_cov:
+        cp_cov = _compute_cp_cov(bs_arr, bs_quantities['bs'], index_mask)
+    else:
+        cp_cov = None
     # 9. Now normalize all extracted observables
     vis2_norm, obs_norm = _normalize_all_obs(bs_quantities, v2_quantities, cvis_arr, cp_cov,
                                              bs_v2_cov, fluxes, index_mask, infos,

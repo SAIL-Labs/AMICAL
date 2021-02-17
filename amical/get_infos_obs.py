@@ -10,6 +10,7 @@ Instruments and mask informations.
 -------------------------------------------------------------------- 
 """
 import numpy as np
+from termcolor import cprint
 
 from amical.tools import mas2rad
 
@@ -89,21 +90,38 @@ def get_mask(ins, mask, first=0):
                                                                [7.989, 0.422],
                                                                [3.989, -6.481],
                                                                [-3.790, -6.481],
-                                                               [-1.928, -2.974]])}
+                                                               [-1.928, -2.974]]),
+                  },
+        'VAMPIRES': {'g18': np.array([[0.821457, 2.34684], [-2.34960, 1.49034],
+                                      [-2.54456, 2.55259], [1.64392, 3.04681],
+                                      [2.73751, -0.321102], [1.38503, -3.31443],
+                                      [-3.19337, -1.68413], [3.05126, 0.560011],
+                                      [-2.76083, 1.14035], [3.02995, -1.91449],
+                                      [0.117786, 3.59025], [-0.802156, 3.42140],
+                                      [-1.47228, -3.28982], [-1.95968, -0.634178],
+                                      [0.876319, -3.13328],  # [-3.29085, -1.15300],
+                                      [2.01253, -1.55220], [-2.07847, -2.57755]
+                                      ])}
     }
+    
+    # 
 
-    xycoords = dic_mask[ins][mask]
-    nrand = [first]
-    for x in np.arange(len(xycoords)):
-        if x not in nrand:
-            nrand.append(x)
-    xycoords_sel = xycoords[nrand]
+    try:
+        xycoords = dic_mask[ins][mask]
+        nrand = [first]
+        for x in np.arange(len(xycoords)):
+            if x not in nrand:
+                nrand.append(x)
+        xycoords_sel = xycoords[nrand]
+    except KeyError:
+        cprint("\n-- Error: maskname (%s) unknown for %s." %
+               (mask, ins), 'red')
+        xycoords_sel = None
     return xycoords_sel
 
 
 def get_wavelength(ins, filtname):
     """ Return dictionnary containning saved informations about filters. """
-
     dic_filt = {'NIRISS': {'F277W': [2.776, 0.715],
                            'F380M': [3.828, 0.205],
                            'F430M': [4.286, 0.202],
@@ -122,7 +140,8 @@ def get_wavelength(ins, filtname):
                           'F430': [4.3, 0.01]
                           },
                 'VISIR': {'10_5_SAM': [10.56, 0.37],
-                          '11_3_SAM': [11.23, 0.55]}
+                          '11_3_SAM': [11.23, 0.55]},
+                'VAMPIRES': {'750-50': [0.77, 0.05]}
                 }
     try:
         wl = np.array(dic_filt[ins][filtname]) * 1e-6
@@ -134,7 +153,9 @@ def get_wavelength(ins, filtname):
 def get_pixel_size(ins):
     saved_pixel_detector = {'NIRISS': 65.6,
                             'SPHERE': 12.27,
-                            'VISIR': 45}
+                            'VISIR': 45,
+                            'VAMPIRES': 6.475
+                            }
     try:
         p = mas2rad(saved_pixel_detector[ins])
     except KeyError:

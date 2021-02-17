@@ -13,6 +13,9 @@ Simulated_NRMdata/.DS_Store
 # Data relative files
 Saveoifits/
 TestSPHEREData/
+test_vampires_data/
+SavedFigures/
+
 
 # Install files 
 *.txt
