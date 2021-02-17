@@ -8,29 +8,9 @@ Also able to read the outputs from the IDL pipeline
 @author: cheetham
 """
 
-import copy
-import glob
-import gzip
-import json
-import os
-import pdb
-import pickle
-import subprocess
-import sys
-import threading
-import time
-from multiprocessing import Pool
-
-import astropy.io.fits as pf
-import emcee
-import matplotlib.cm as cm
-import matplotlib.pyplot as plt
 import numpy as np
-import scipy.interpolate as interp
-from scipy.optimize import curve_fit, leastsq
 
-from . import oifits
-from .cp_tools import mas2rad, rad2mas
+from .cp_tools import mas2rad
 
 
 # =========================================================================

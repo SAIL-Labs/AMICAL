@@ -10,15 +10,10 @@ from multiprocessing import Pool
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.interpolate as interp
-from matplotlib.cm import cmap_d, register_cmap
 
 from .cp_tools import (cp_loglikelihood, cp_loglikelihood_proj, cp_model,
                        mas2rad, project_cps, rad2mas)
 
-try:
-    import ds9cool
-except:
-    pass
 
 def phase_binary_flux(u, v, wavel, p,return_cvis=False):
         ''' Calculate the phases observed by an array on a binary star
@@ -165,7 +160,7 @@ def chi2_grid(everything):
  # =========================================================================
 
 def xy_grid(cpo,nxy=30,ncon=32,xymax='Default', cmin=10.,cmax=500.,
-             threads=0,err_scale=1.,extra_error=0.,plot_chi2=False,fix_crat=False,
+             threads=0,err_scale=1.,extra_error=0.,fix_crat=False,
              cmap='ds9cool',plot_as_mags=False,projected=False):
 
     '''An attempt to copy Sylvestre's chi2 grid plots, using x and y instead
