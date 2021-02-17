@@ -358,7 +358,8 @@ def clean_data(data, isz=None, r1=None, dr=None, edge=0,
             else:
                 img = img_biased.copy()
             cube_cleaned.append(img)
-    print('Bad centering:', l_bad_frame)
+    if verbose:
+        print('Bad centering frame number:', l_bad_frame)
     cube_cleaned = np.array(cube_cleaned)
     return cube_cleaned
 
