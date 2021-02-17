@@ -72,7 +72,11 @@ def crop_max(img, dim, offx=0, offy=0, filtmed=True, f=3):
         Resized image.
     """
     if filtmed:
-        im_med = medfilt2d(img, f)
+        try:
+            im_med = medfilt2d(img, f)
+        except ValueError:
+            img = img.astype(float)
+            im_med = medfilt2d(img, f)
     else:
         im_med = img.copy()
 
@@ -341,7 +345,7 @@ def apply_windowing(img, window=80, m=3):
     distance = np.sqrt(xx2**2 + yy2[:, np.newaxis]**2)
 
     # Super-gaussian windowing
-    window = super_gaussian(distance, sigma=window, m=m)
+    window = super_gaussian(distance, sigma=window*2, m=m)
 
     # Apply the windowing
     img_apod = img * window
