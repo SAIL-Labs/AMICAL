@@ -1,11 +1,10 @@
+import amical
 import munch
 import numpy as np
 import pytest
-from astropy.io import fits
-
-import amical
 from amical import load, loadc
 from amical.get_infos_obs import get_pixel_size
+from astropy.io import fits
 
 
 @pytest.fixture()
@@ -20,6 +19,7 @@ def test_load_file(example_oifits):
 
 peakmethods = ['fft', 'gauss', 'square']
 
+
 @pytest.fixture(name="bss", scope="session")
 def example_bss(global_datadir):
     fits_file = global_datadir / "test.fits"
@@ -28,15 +28,15 @@ def example_bss(global_datadir):
     bss = {}
     for peakmethod in peakmethods:
         bss[peakmethod] = amical.extract_bs(
-                            cube,
-                            fits_file,
-                            targetname='test',
-                            bs_multi_tri=False,
-                            maskname="g7",
-                            fw_splodge=0.7,
-                            display=False,
-                            peakmethod=peakmethod
-                        )
+            cube,
+            fits_file,
+            targetname='test',
+            bs_multi_tri=False,
+            maskname="g7",
+            fw_splodge=0.7,
+            display=False,
+            peakmethod=peakmethod
+        )
     return bss
 
 
@@ -64,7 +64,8 @@ def test_save(bss, tmpdir):
     cal = amical.calibrate(bs, bs)
     assert isinstance(cal, munch.Munch)
 
-    dic, savefile = amical.save(cal, oifits_file='test.oifits', datadir=tmpdir, fake_obj=True)
+    dic, savefile = amical.save(
+        cal, oifits_file='test.oifits', datadir=tmpdir, fake_obj=True)
     v2 = dic['OI_VIS2']['VIS2DATA']
     cp = dic['OI_T3']['T3PHI']
 
