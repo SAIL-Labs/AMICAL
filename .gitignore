@@ -1,24 +1,13 @@
 # Development files
 .vscode/
 
-# Old version
-amical/old_core.py
-amical/mf_pipeline/old_bispect.py
-
 # System files
 *__pycache__/
 *.DS_Store
 Simulated_NRMdata/.DS_Store
  
-# Data relative files
-TestSPHEREData/
-test_vampires_data/
-SavedFigures/
-Saveoifits/
-
-
 # Install files 
 *.txt
 PKG*
-my*.py
+
 

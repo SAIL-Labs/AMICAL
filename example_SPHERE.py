@@ -4,8 +4,7 @@ import amical
 
 plt.close("all")
 
-datadir = 'TestSPHEREData'
-
+datadir = 'TestSPHEREData/'
 
 file_t = os.path.join(datadir, 'HD142527_IRD_SCIENCE_DBI_LEFT_CUBE.fits')
 file_c = os.path.join(datadir, 'HD142695_IRD_SCIENCE_DBI_LEFT_CUBE.fits')

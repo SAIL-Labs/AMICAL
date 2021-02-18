@@ -6,7 +6,7 @@ import amical
 
 plt.close("all")
 
-datadir = 'Simulated_NRMdata'
+datadir = 'NRM_DATA/'
 
 # This example comes with 2 NIRISS simulated dataset representing
 # a relativily faint binary star (dm = 6) @ 4.3 μm :

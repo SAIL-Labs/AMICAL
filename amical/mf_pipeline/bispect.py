@@ -249,8 +249,7 @@ def _show_peak_position(ft_arr, n_baselines, mf, maskname, peakmethod, i_fram=0)
     ax.set_title("Expected splodge position with mask %s (method = %s)" %
                  (maskname, peakmethod))
     im = ax.imshow(ps, cmap="gist_stern", origin="lower")
-    sc = ax.scatter(lX, lY, c=lC, s=20, cmap="viridis")  #, vmin=0, vmax=1)
-
+    sc = ax.scatter(lX, lY, c=lC, s=20, cmap="viridis")
     divider = make_axes_locatable(ax)
     cax = divider.new_horizontal(size="3%", pad=0.5)
     fig.add_axes(cax)
@@ -909,7 +908,8 @@ def _add_infos_header(infos, hdr, mf, pa, filename, maskname, npix):
 def extract_bs(cube, filename, maskname, filtname=None, targetname=None, instrum=None,
                bs_multi_tri=False, peakmethod='gauss', hole_diam=0.8, cutoff=1e-4,
                fw_splodge=0.7, naive_err=False, n_wl=3, n_blocks=0, theta_detector=0,
-               unbias_v2=True, verbose=False, expert_plot=False, display=True,):
+               unbias_v2=True, compute_cp_cov=True, expert_plot=False,
+               verbose=False, display=True,):
     """Compute the bispectrum (bs, v2, cp, etc.) from a data cube.
 
     Parameters:
@@ -1074,11 +1074,11 @@ def extract_bs(cube, filename, maskname, filtname=None, targetname=None, instrum
     bs_v2_cov = _compute_bs_v2_cov(bs_arr, v2_arr_unbiased, v2_quantities['v2'],
                                    bs_quantities['bs'], index_mask)
 
-    compute_cp_cov = False
     if compute_cp_cov:
         cp_cov = _compute_cp_cov(bs_arr, bs_quantities['bs'], index_mask)
     else:
         cp_cov = None
+        
     # 9. Now normalize all extracted observables
     vis2_norm, obs_norm = _normalize_all_obs(bs_quantities, v2_quantities, cvis_arr, cp_cov,
                                              bs_v2_cov, fluxes, index_mask, infos,
