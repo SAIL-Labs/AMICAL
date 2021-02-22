@@ -896,6 +896,7 @@ def _add_infos_header(infos, hdr, mf, pa, filename, maskname, npix):
     infos['filename'] = filename
     infos['maskname'] = maskname
     infos['isz'] = npix
+    infos['hdr'] = hdr
 
     # Save keys of the original header (as needed):
     add_keys = ['TELESCOP', 'DATE-OBS', 'MJD-OBS', 'OBSERVER']
