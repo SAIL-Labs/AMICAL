@@ -376,7 +376,7 @@ def loadc(filename):
     dic = load(filename)
     res = {}
     # Extract infos
-    res['target'] = dic['info']['OBJECT']
+    res['target'] = dic['info'].get('OBJECT')
 
     res['calib'] = dic['info'].get('CALIB')
     res['seeing'] = dic['info'].get('SEEING')
@@ -409,7 +409,7 @@ def loadc(filename):
     return dict2class(res)
 
 
-def save(cal, oifits_file=None, datadir='Saveoifits',
+def save(input_calibrated, oifits_file=None, datadir='Saveoifits',
          pa=0, ind_hole=None, fake_obj=False,
          include_vis=False, true_flag_v2=True, true_flag_t3=False,
          snr=4, verbose=False):
@@ -417,14 +417,15 @@ def save(cal, oifits_file=None, datadir='Saveoifits',
     Summary:
     --------
 
-    Save the class object (from calibrate function) into oifits format.
+    Save the class object (from calibrate function) into oifits format. The input
+    input_calibrated can be a list of object for IFU data (e.g.: IFS-SPHERE).
 
     Parameters:
     -----------
 
-    `cal` {class}: 
-        Class containing all calibrated interferometric variable extracted using
-        calibrate (amical.core) function,\n
+    `input_calibrated` {class}: 
+        Class or list of class containing all calibrated interferometric variable extracted 
+        using calibrate (amical.calibration) function,\n
     `ind_hole` {int}:
         By default, ind_hole is None, all the CP are considered ncp = N(N-1)(N-2)/6. If 
         ind_hole is set, save only the independant CP including the given hole 
@@ -456,7 +457,7 @@ def save(cal, oifits_file=None, datadir='Saveoifits',
 
     """
 
-    if cal is None:
+    if input_calibrated is None:
         cprint('\nError save : Wrong data format!', on_color='on_red')
         return None
 
@@ -464,12 +465,16 @@ def save(cal, oifits_file=None, datadir='Saveoifits',
         print('Error: oifits filename is not given, please specify oifits_file.')
         return None
 
-    if type(cal) != dict:
-        dic = cal2dict(cal, pa=pa, include_vis=include_vis,
-                       true_flag_v2=true_flag_v2, true_flag_t3=true_flag_t3,
-                       ind_hole=ind_hole, snr=snr)
-    else:
-        dic = cal.copy()
+    if type(input_calibrated) is not list:
+        input_calibrated = [input_calibrated]
+        
+    l_dic = []
+    for ical in input_calibrated:
+        idic = cal2dict(ical, pa=pa, include_vis=include_vis,
+                        true_flag_v2=true_flag_v2, true_flag_t3=true_flag_t3,
+                        ind_hole=ind_hole, snr=snr)
+        l_dic.append(idic)
+    dic = l_dic[0]
 
     if not os.path.exists(datadir):
         print('### Create %s directory to save all requested Oifits ###' % datadir)
@@ -481,7 +486,7 @@ def save(cal, oifits_file=None, datadir='Saveoifits',
     if verbose:
         print("\n\n### Init creation of OI_FITS (%s) :" % (oifits_file))
 
-    refdate = datetime.datetime(2000, 1, 1)  # Unix time reference
+    # refdate = datetime.datetime(2000, 1, 1)  # Unix time reference
     hdulist = fits.HDUList()
 
     hdr = dic['info'].get('HDR', {})
@@ -490,8 +495,7 @@ def save(cal, oifits_file=None, datadir='Saveoifits',
         format='%F')  # , 'Creation date'
     hdu.header['ORIGIN'] = 'Sydney University'
     hdu.header['CONTENT'] = 'OIFITS2'
-
-    hdu.header['DATE-OBS'] = hdr.get('DATE-OBS', '')
+    hdu.header['DATE-OBS'] = hdr.get('date-obs', '')
     hdu.header['TELESCOP'] = hdr.get('TELESCOP', '')
     hdu.header['INSTRUME'] = hdr.get('INSTRUME', '')
     hdu.header['OBSERVER'] = hdr.get('OBSERVER', '')
@@ -511,14 +515,21 @@ def save(cal, oifits_file=None, datadir='Saveoifits',
     if verbose:
         print('-> Including OI Wavelength table...')
     data = dic['OI_WAVELENGTH']
-
+    
+    EFF_WAVE, EFF_BAND = [], []
+    for dic in l_dic:
+        d = dic['OI_WAVELENGTH']
+        EFF_WAVE.append(d['EFF_WAVE'][0])
+        EFF_BAND.append(d['EFF_BAND'][0])
+        
+    iwl = len(EFF_WAVE)
     # Data
     # -> Initiation new hdu table :
     hdu = fits.BinTableHDU.from_columns(fits.ColDefs((
         fits.Column(name='EFF_WAVE', format='1E',
-                    unit='METERS', array=[data['EFF_WAVE']]),
+                    unit='METERS', array=EFF_WAVE),
         fits.Column(name='EFF_BAND', format='1E',
-                    unit='METERS', array=[data['EFF_BAND']])
+                    unit='METERS', array=EFF_BAND)
     )))
 
     # Header
@@ -677,8 +688,9 @@ def save(cal, oifits_file=None, datadir='Saveoifits',
         hdu.header['EXTNAME'] = 'OI_VIS'
         hdu.header['INSNAME'] = dic['info']['INSTRUME']
         hdu.header['ARRNAME'] = dic['info']['MASK']
-        hdu.header['DATE-OBS'] = refdate.strftime(
-            '%F'), 'Zero-point for table (UTC)'
+        hdu.header['DATE-OBS'] = hdr.get('date-obs', '')
+        # refdate.strftime(
+        #     '%F'), 'Zero-point for table (UTC)'
         hdulist.append(hdu)
 
     # ------------------------------
@@ -708,6 +720,16 @@ def save(cal, oifits_file=None, datadir='Saveoifits',
 
     staIndex = _format_staindex_v2(data['STA_INDEX'])
 
+    VIS2DATA, VIS2ERR, FLAG = [], [], []
+    for dic in l_dic:
+        d = dic['OI_VIS2']
+        VIS2DATA.append(d['VIS2DATA'])
+        VIS2ERR.append(d['VIS2ERR'])
+        FLAG.append(d['FLAG'])
+    VIS2DATA = np.array(VIS2DATA).T
+    VIS2ERR = np.array(VIS2ERR).T
+    FLAG = np.array(FLAG).T
+        
     hdu = fits.BinTableHDU.from_columns(fits.ColDefs([
         fits.Column(name='TARGET_ID', format='1I',
                     array=targetId),
@@ -717,22 +739,21 @@ def save(cal, oifits_file=None, datadir='Saveoifits',
                     array=mjd),
         fits.Column(name='INT_TIME', format='1D', unit='SECONDS',
                     array=intTime),
-        fits.Column(name='VIS2DATA', format='1D', array=data['VIS2DATA']),
-        fits.Column(name='VIS2ERR', format='1D', array=data['VIS2ERR']),
+        fits.Column(name='VIS2DATA', format='%iD' % iwl, array=VIS2DATA),
+        fits.Column(name='VIS2ERR', format='%iD' % iwl, array=VIS2ERR),
         fits.Column(name='UCOORD', format='1D',
                     unit='METERS', array=data['UCOORD']),
         fits.Column(name='VCOORD', format='1D',
                     unit='METERS', array=data['VCOORD']),
         fits.Column(name='STA_INDEX', format='2I', array=staIndex),
-        fits.Column(name='FLAG', format='1L', array=data['FLAG'])
+        fits.Column(name='FLAG', format='%iL' % iwl, array=FLAG)
     ]))
 
     hdu.header['EXTNAME'] = 'OI_VIS2'
     hdu.header['INSNAME'] = dic['info']['INSTRUME']
     hdu.header['ARRNAME'] = dic['info']['MASK']
     hdu.header['OI_REVN'] = 2, 'Revision number of the table definition'
-    hdu.header['DATE-OBS'] = refdate.strftime(
-        '%F'), 'Zero-point for table (UTC)'
+    hdu.header['DATE-OBS'] = hdr.get('date-obs', '')
     hdulist.append(hdu)
 
     # ------------------------------
@@ -760,6 +781,20 @@ def save(cal, oifits_file=None, datadir='Saveoifits',
         time = data['TIME']
         mjd = data['MJD']
         intTime = data['INT_TIME']
+        
+    T3AMP, T3AMPERR, T3PHI, T3PHIERR, FLAG = [], [], [], [], []
+    for dic in l_dic:
+        d = dic['OI_T3']
+        T3AMP.append(d['T3AMP'])
+        T3AMPERR.append(d['T3AMPERR'])
+        T3PHI.append(d['T3PHI'])
+        T3PHIERR.append(d['T3PHIERR'])
+        FLAG.append(d['FLAG'])
+    T3AMP = np.array(T3AMP).T
+    T3AMPERR = np.array(T3AMPERR).T
+    T3PHI = np.array(T3PHI).T
+    T3PHIERR = np.array(T3PHIERR).T
+    FLAG = np.array(FLAG).T
 
     staIndex = _format_staindex_t3(data['STA_INDEX'])
     hdu = fits.BinTableHDU.from_columns(fits.ColDefs((
@@ -769,12 +804,12 @@ def save(cal, oifits_file=None, datadir='Saveoifits',
                     array=mjd),
         fits.Column(name='INT_TIME', format='1D', unit='SECONDS',
                     array=intTime),
-        fits.Column(name='T3AMP', format='1D', array=data['T3AMP']),
-        fits.Column(name='T3AMPERR', format='1D', array=data['T3AMPERR']),
-        fits.Column(name='T3PHI', format='1D', unit='DEGREES',
-                    array=data['T3PHI']),
-        fits.Column(name='T3PHIERR', format='1D', unit='DEGREES',
-                    array=data['T3PHIERR']),
+        fits.Column(name='T3AMP', format='%iD' % iwl, array=T3AMP),
+        fits.Column(name='T3AMPERR', format='%iD' % iwl, array=T3AMPERR),
+        fits.Column(name='T3PHI', format='%iD' % iwl, unit='DEGREES',
+                    array=T3PHI),
+        fits.Column(name='T3PHIERR', format='%iD' % iwl, unit='DEGREES',
+                    array=T3PHIERR),
         fits.Column(name='U1COORD', format='1D',
                     unit='METERS', array=data['U1COORD']),
         fits.Column(name='V1COORD', format='1D',
@@ -784,15 +819,14 @@ def save(cal, oifits_file=None, datadir='Saveoifits',
         fits.Column(name='V2COORD', format='1D',
                     unit='METERS', array=data['V2COORD']),
         fits.Column(name='STA_INDEX', format='3I', array=staIndex),
-        fits.Column(name='FLAG', format='1L', array=data['FLAG'])
+        fits.Column(name='FLAG', format='%iL' % iwl, array=FLAG)
     )))
 
     hdu.header['EXTNAME'] = 'OI_T3'
     hdu.header['INSNAME'] = dic['info']['INSTRUME']
     hdu.header['ARRNAME'] = dic['info']['MASK']
     hdu.header['OI_REVN'] = 2, 'Revision number of the table definition'
-    hdu.header['DATE-OBS'] = refdate.strftime(
-        '%F'), 'Zero-point for table (UTC)'
+    hdu.header['DATE-OBS'] = hdr.get('date-obs', '')
     hdulist.append(hdu)
 
     # ------------------------------
@@ -802,9 +836,157 @@ def save(cal, oifits_file=None, datadir='Saveoifits',
     hdulist.writeto(savedfile, overwrite=True)
     if verbose:
         cprint('\n\n### OIFITS CREATED (%s).' % oifits_file, 'cyan')
-    return dic, savedfile
+    return l_dic, savedfile
 
 
+def _plot_UV(ax1, l_dic, dic_color, diffWl=False):
+    l_band_al, l_bmax = [], []
+    for dic in l_dic:
+        tmp = _apply_flag(dic)
+        U = tmp.U
+        V = tmp.V
+        band = tmp.band
+        wl = tmp.wl
+        label = '%2.2f $\mu m$ (%s)' % (wl*1e6, band)
+        if diffWl:
+            c1, c2 = dic_color[band], dic_color[band]
+            if band not in l_band_al:
+                label = '%2.2f $\mu m$ (%s)' % (wl*1e6, band)
+                l_band_al.append(band)
+            else:
+                label = ''
+        else:
+            c1, c2 = '#00adb5', '#fc5185'
+        l_bmax.append(tmp.bmax)
+
+        ax1.scatter(U, V, s=50, c=c1, label=label,
+                    edgecolors='#364f6b', marker='o', alpha=1)
+        ax1.scatter(-1*np.array(U), -1*np.array(V), c=c2, s=50,
+                    edgecolors='#364f6b', marker='o', alpha=1)
+    return l_bmax
+
+
+def _plot_UV_ifu(ax1, fig, l_dic):
+    l_bmax = []
+    all_U, all_V, all_wl = [], [], []
+    
+    for dic in l_dic:
+        tmp = _apply_flag(dic)
+        U = tmp.U
+        V = tmp.V
+        wl = tmp.wl
+        l_bmax.append(tmp.bmax)
+        all_U.append(U)
+        all_V.append(V)
+        all_wl.append([wl]*len(U))
+    all_U = np.array(all_U)
+    all_V = np.array(all_V)
+    all_wl = np.array(all_wl)*1e6
+    
+    ax1.scatter(all_U, all_V, s=40, c=all_wl,
+                marker='o', edgecolors='#364f6b', alpha=1, linewidth=.1, cmap='jet')
+    sc = ax1.scatter(-all_U, -all_V, s=40, c=all_wl,
+                     marker='o', edgecolors='#364f6b', alpha=1, linewidth=.1, cmap='jet')
+    
+    position = fig.add_axes([0.22, 0.95, 0.1, 0.015])
+    fig.colorbar(sc, cax=position, orientation='horizontal', drawedges=False)
+    ax1.text(0.53, 0.98, '$\lambda$ [µm]', ha='center',
+             va='center', transform=ax1.transAxes)
+    return l_bmax
+            
+            
+def _plot_V2(ax2, l_dic, dic_color, diffWl=False):
+    max_f_vis = []
+    for dic in l_dic:
+        tmp = _apply_flag(dic, unit='arcsec')
+        V2 = tmp.vis2
+        e_V2 = tmp.e_vis2
+        sp_freq_vis = tmp.sp_freq_vis
+        max_f_vis.append(np.max(sp_freq_vis))
+        band = tmp.band
+        if diffWl:
+            mfc = dic_color[band]
+        else:
+            mfc = '#00adb5'
+
+        ax2.errorbar(sp_freq_vis, V2, yerr=e_V2, linestyle="None", capsize=1, mfc=mfc, 
+                     ecolor='#364f6b', mec='#364f6b', marker='.', 
+                     elinewidth=0.5, alpha=1, ms=9)
+    return max_f_vis
+
+
+def _plot_V2_ifu(ax2, l_dic):
+    max_f_vis = []
+    all_V2, all_e_V2, all_freq, all_wl = [], [], [], []
+    for dic in l_dic:
+        tmp = _apply_flag(dic, unit='arcsec')
+        V2 = tmp.vis2
+        e_V2 = tmp.e_vis2
+        sp_freq_vis = tmp.sp_freq_vis
+        max_f_vis.append(np.max(sp_freq_vis))
+        
+        all_V2.extend(V2)
+        all_e_V2.extend(e_V2)
+        all_freq.extend(sp_freq_vis)
+        all_wl.extend([tmp.wl]*len(V2))
+        
+    all_V2 = np.array(all_V2)
+    all_e_V2 = np.array(all_e_V2)
+    all_freq = np.array(all_freq)
+    all_wl = np.array(all_wl)
+    
+    ax2.errorbar(all_freq, all_V2, yerr=all_e_V2, linestyle="None", capsize=1,
+                 ecolor='#364f6b', mec='#364f6b', marker='None',
+                 elinewidth=0.5, alpha=1, ms=9)
+    ax2.scatter(all_freq, all_V2, s=20, c=all_wl, zorder=20, linewidth=.5,
+                marker='o', edgecolors='#364f6b', alpha=1, cmap='jet')
+
+    return max_f_vis
+        
+        
+def _plot_CP(ax3, l_dic, dic_color, conv_cp, diffWl=False):
+    max_f_cp = []
+    for dic in l_dic:
+        tmp = _apply_flag(dic, unit='arcsec')
+        cp = tmp.cp*conv_cp
+        e_cp = tmp.e_cp*conv_cp
+        sp_freq_cp = tmp.sp_freq_cp
+        max_f_cp.append(np.max(sp_freq_cp))
+        band = tmp.band
+        if diffWl:
+            mfc = dic_color[band]
+        else:
+            mfc = '#00adb5'
+
+        ax3.errorbar(sp_freq_cp, cp, yerr=e_cp, linestyle="None", capsize=1, 
+                     mfc=mfc, ecolor='#364f6b', mec='#364f6b',
+                     marker='.', elinewidth=0.5, alpha=1, ms=9)
+    return max_f_cp
+
+
+def _plot_CP_ifu(ax3, l_dic, conv_cp):
+    max_f_cp = []
+    all_CP, all_e_cp, all_freq, all_wl = [], [], [], []
+    for dic in l_dic:
+        tmp = _apply_flag(dic, unit='arcsec')
+        cp = tmp.cp*conv_cp
+        e_cp = tmp.e_cp*conv_cp
+        sp_freq_cp = tmp.sp_freq_cp
+        max_f_cp.append(np.max(sp_freq_cp))
+        
+        all_CP.extend(cp)
+        all_e_cp.extend(e_cp)
+        all_freq.extend(sp_freq_cp)
+        all_wl.extend([tmp.wl]*len(cp))
+        
+    ax3.errorbar(all_freq, all_CP, yerr=all_e_cp, linestyle="None", capsize=1,
+                 ecolor='#364f6b', mec='#364f6b', marker='None',
+                 elinewidth=0.5, alpha=1, ms=9)
+    ax3.scatter(all_freq, all_CP, s=20, c=all_wl, zorder=20, linewidth=.5,
+                marker='o', edgecolors='#364f6b', alpha=1, cmap='jet')
+    return max_f_cp
+    
+    
 def show(inputList, diffWl=False, ind_hole=None, vmin=0, vmax=1.05, cmax=180, setlog=False, pa=0,
          unit='arcsec', unit_cp='deg', snr=4, true_flag_v2=True, true_flag_t3=False):
     """ Show oifits data of a multiple dataset (loaded with oifits.load or oifits filename).
@@ -875,34 +1057,18 @@ def show(inputList, diffWl=False, ind_hole=None, vmin=0, vmax=1.05, cmax=180, se
     ax1 = plt.subplot2grid((2, 6), (0, 0), rowspan=2, colspan=2)
     ax2 = plt.subplot2grid((2, 6), (0, 2), colspan=4)
     ax3 = plt.subplot2grid((2, 6), (1, 2), colspan=4)
-    # plt.rc('xtick', labelsize=fttick)
-    # plt.rc('ytick', labelsize=fttick)
+    # ax1.set_rc('xtick', labelsize=fttick)
+    # ax1.set_rc('ytick', labelsize=fttick)
+    
     # Plot plan UV
     # -------
-    l_bmax, l_band_al = [], []
-    for dic in l_dic:
-        tmp = _apply_flag(dic)
-        U = tmp.U
-        V = tmp.V
-        band = tmp.band
-        wl = tmp.wl
-        label = '%2.2f $\mu m$ (%s)' % (wl*1e6, band)
-        if diffWl:
-            c1, c2 = dic_color[band], dic_color[band]
-            if band not in l_band_al:
-                label = '%2.2f $\mu m$ (%s)' % (wl*1e6, band)
-                l_band_al.append(band)
-            else:
-                label = ''
-        else:
-            c1, c2 = '#00adb5', '#fc5185'
-        l_bmax.append(tmp.bmax)
-
-        ax1.scatter(U, V, s=50, c=c1, label=label,
-                    edgecolors='#364f6b', marker='o', alpha=1)
-        ax1.scatter(-1*np.array(U), -1*np.array(V), s=50, c=c2,
-                    edgecolors='#364f6b', marker='o', alpha=1)
-
+    ins = l_dic[0]['info']['INSTRUME']
+    
+    if ('IFS' in ins) & (len(l_dic) > 1):
+        l_bmax = _plot_UV_ifu(ax1, fig, l_dic)
+    else:
+        l_bmax = _plot_UV(ax1, l_dic, dic_color, diffWl=False)
+    
     Bmax = np.max(l_bmax)
     ax1.axis([Bmax, -Bmax, -Bmax, Bmax])
     ax1.spines['left'].set_visible(False)
@@ -918,7 +1084,6 @@ def show(inputList, diffWl=False, ind_hole=None, vmin=0, vmax=1.05, cmax=180, se
         labels, handles = zip(
             *sorted(zip(labels, handles), key=lambda t: t[0]))
         ax1.legend(handles, labels, loc='best', fontsize=9)
-        # ax1.legend(loc='best')
 
     unitlabel = {'m': 'm',
                  'rad': 'rad$^{-1}$',
@@ -931,22 +1096,11 @@ def show(inputList, diffWl=False, ind_hole=None, vmin=0, vmax=1.05, cmax=180, se
 
     # Plot V2
     # -------
-    max_f_vis = []
-    for dic in l_dic:
-        tmp = _apply_flag(dic, unit='arcsec')
-        V2 = tmp.vis2
-        e_V2 = tmp.e_vis2
-        sp_freq_vis = tmp.sp_freq_vis
-        max_f_vis.append(np.max(sp_freq_vis))
-        band = tmp.band
-        if diffWl:
-            mfc = dic_color[band]
-        else:
-            mfc = '#00adb5'
-
-        ax2.errorbar(sp_freq_vis, V2, yerr=e_V2, linestyle="None", capsize=1, mfc=mfc, ecolor='#364f6b', mec='#364f6b',
-                     marker='.', elinewidth=0.5, alpha=1, ms=9)
-
+    if ('IFS' in ins) & (len(l_dic) > 1):
+        max_f_vis = _plot_V2_ifu(ax2, l_dic)
+    else:
+        max_f_vis = _plot_V2(ax2, l_dic, dic_color, diffWl=diffWl)
+    
     ax2.hlines(1, 0, 1.2*np.max(max_f_vis),
                lw=1, color='k', alpha=.2, ls='--')
 
@@ -977,21 +1131,11 @@ def show(inputList, diffWl=False, ind_hole=None, vmin=0, vmax=1.05, cmax=180, se
 
     cmin = -cmax
 
-    max_f_cp = []
-    for dic in l_dic:
-        tmp = _apply_flag(dic, unit='arcsec')
-        cp = tmp.cp*conv_cp
-        e_cp = tmp.e_cp*conv_cp
-        sp_freq_cp = tmp.sp_freq_cp
-        max_f_cp.append(np.max(sp_freq_cp))
-        band = tmp.band
-        if diffWl:
-            mfc = dic_color[band]
-        else:
-            mfc = '#00adb5'
-
-        ax3.errorbar(sp_freq_cp, cp, yerr=e_cp, linestyle="None", capsize=1, mfc=mfc, ecolor='#364f6b', mec='#364f6b',
-                     marker='.', elinewidth=0.5, alpha=1, ms=9)
+    if ('IFS' in ins) & (len(l_dic) > 1):
+        max_f_cp = _plot_CP_ifu(ax3, l_dic, conv_cp)
+    else:
+        max_f_cp = _plot_CP(ax3, l_dic, dic_color, conv_cp, diffWl=diffWl)
+    
     ax3.hlines(h1, 0, 1.2*np.max(max_f_cp),
                lw=1, color='k', alpha=.2, ls='--')
     ax3.hlines(-h1, 0, 1.2*np.max(max_f_cp),

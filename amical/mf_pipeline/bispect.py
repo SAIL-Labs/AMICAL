@@ -202,7 +202,7 @@ def _construct_ft_arr(cube):
     return ft_arr, n_ps, n_pix
 
 
-def _show_complex_ps(ft_arr):
+def _show_complex_ps(ft_arr, i_frame=0):
     """
     Show the complex fft image (real and imaginary) and power spectrum (abs(fft)) of the first frame
     to check the applied correction on the cube.
@@ -210,14 +210,14 @@ def _show_complex_ps(ft_arr):
     fig = plt.figure(figsize=(16, 6))
     ax1 = plt.subplot(1, 3, 1)
     plt.title("Real part")
-    plt.imshow(ft_arr[0].real, cmap="gist_stern", origin="lower")
+    plt.imshow(ft_arr[i_frame].real, cmap="gist_stern", origin="lower")
     plt.subplot(1, 3, 2, sharex=ax1, sharey=ax1)
     plt.title("Imaginary part")
-    plt.imshow(ft_arr[0].imag, cmap="gist_stern", origin="lower")
+    plt.imshow(ft_arr[i_frame].imag, cmap="gist_stern", origin="lower")
     plt.subplot(1, 3, 3)
     plt.title("Power spectrum (centred)")
     plt.imshow(np.fft.fftshift(
-        abs(ft_arr[0])), cmap="gist_stern", origin="lower")
+        abs(ft_arr[i_frame])), cmap="gist_stern", origin="lower")
     plt.tight_layout()
     return fig
 
@@ -312,6 +312,11 @@ def _check_input_infos(hdr, targetname=None, filtname=None,
     target = hdr.get('OBJECT')
     filt = hdr.get('FILTER')
     instrument = hdr.get('INSTRUME', instrum)
+    mod = hdr.get('HIERARCH ESO DET ID')
+    
+    if (mod == 'IFS') & (instrument == 'SPHERE'):
+        instrument = instrument + '-' + mod
+
     # Check the target name
     if (target is None) or (target == 'STD'):
         if (targetname is not None):
@@ -909,7 +914,7 @@ def _add_infos_header(infos, hdr, mf, pa, filename, maskname, npix):
 def extract_bs(cube, filename, maskname, filtname=None, targetname=None, instrum=None,
                bs_multi_tri=False, peakmethod='gauss', hole_diam=0.8, cutoff=1e-4,
                fw_splodge=0.7, naive_err=False, n_wl=3, n_blocks=0, theta_detector=0,
-               unbias_v2=True, compute_cp_cov=True, expert_plot=False,
+               i_wl=None, unbias_v2=True, compute_cp_cov=True, expert_plot=False,
                verbose=False, display=True,):
     """Compute the bispectrum (bs, v2, cp, etc.) from a data cube.
 
@@ -948,9 +953,14 @@ def extract_bs(cube, filename, maskname, filtname=None, targetname=None, instrum
     `n_blocks` {float}:
         Number of separated blocks use to split the data cube and get more
         accurate uncertainties (default: 0, n_blocks = n_ps),\n
-    `theta_detector`: float
+    `theta_detector`: {float}
         Angle [deg] to rotate the mask compare to the detector (if the mask is not
         perfectly aligned with the detector, e.g.: VLT/VISIR) ,\n
+    `i_wl`: {int}
+        Only used for IFU data (e.g.: IFS/SPHERE), select the desired spectral channel
+        to retrieve the appropriate wavelength and mask positions, \n
+    `unbias_v2`: {bool}
+        If True, the squared visibilities are unbiased using the Fourier base, \n
     `targetname` {str}:
         Name of the target to save in oifits file (if not in header of the
         cube),\n
@@ -965,7 +975,7 @@ def extract_bs(cube, filename, maskname, filtname=None, targetname=None, instrum
         Return all interferometric observables (.vis2, .e_vis2, .cp, .e_cp, etc.), information relative 
         to the used mask (.mask), the computed matrices and statistic (.matrix)
         and the important information (.infos). The .mask, .infos and .matrix are also class with
-        various quantities (see .mask.__dict__.keys(), etc.).
+        various quantities (see .mask.__dict__.keys()).
     """
     if verbose:
         cprint("\n-- Starting extraction of observables --", 'cyan')
@@ -975,7 +985,8 @@ def extract_bs(cube, filename, maskname, filtname=None, targetname=None, instrum
     hdr = hdu[0].header
 
     infos = _check_input_infos(hdr, targetname=targetname, filtname=filtname,
-                               instrum=instrum)
+                               instrum=instrum, verbose=False)
+
 
     if 'INSTRUME' not in hdr.keys():
         hdr['INSTRUME'] = infos['instrument']
@@ -1004,7 +1015,7 @@ def extract_bs(cube, filename, maskname, filtname=None, targetname=None, instrum
     # ------------------------------------------------------------------------
     mf = make_mf(maskname, infos.instrument, infos.filtname, npix, peakmethod=peakmethod,
                  fw_splodge=fw_splodge, n_wl=n_wl, cutoff=cutoff, hole_diam=hole_diam,
-                 theta_detector=theta_detector, display=display,)
+                 theta_detector=theta_detector, i_wl=i_wl, display=display,)
     if mf is None:
         return None
 

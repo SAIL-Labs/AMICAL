@@ -10,6 +10,8 @@ Instruments and mask informations.
 -------------------------------------------------------------------- 
 """
 import numpy as np
+from pathlib import Path
+from astropy.io import fits
 from termcolor import cprint
 
 from amical.tools import mas2rad
@@ -84,6 +86,14 @@ def get_mask(ins, mask, first=0):
                                         [2.92, -1.35],
                                         [0, -3.04]
                                         ])},
+        'SPHERE-IFS': {'g7': 1*np.array([[-2.07, 2.71],
+                                            [0.98, 3.27],
+                                            [-3.11, -0.2],
+                                            [-1.43, -0.81],
+                                            [-2.79, -1.96],
+                                            [3.3, -0.85],
+                                            [0.58, -3.17]
+                                            ])},
         'VISIR': {'g7': (pupil_visir/pupil_visir_mm)*np.array([[-5.707, -2.885],
                                                                [-5.834, 3.804],
                                                                [0.099, 7.271],
@@ -122,6 +132,12 @@ def get_mask(ins, mask, first=0):
 
 def get_wavelength(ins, filtname):
     """ Return dictionnary containning saved informations about filters. """
+    LOCAL_DIR = Path(__file__).parent
+    INT_DATA_DIR = LOCAL_DIR / "internal_data/"
+
+    wave_YJ = fits.open(INT_DATA_DIR / 'ifs_wave_YJ.fits')[0].data
+    wave_YJH = fits.open(INT_DATA_DIR / 'ifs_wave_YJH.fits')[0].data
+
     dic_filt = {'NIRISS': {'F277W': [2.776, 0.715],
                            'F380M': [3.828, 0.205],
                            'F430M': [4.286, 0.202],
@@ -134,8 +150,11 @@ def get_wavelength(ins, filtname):
                            'K2': [2.251, 0.109],
                            'CntH': [1.573, 0.023],
                            'CntK1': [2.091, 0.034],
-                           'CntK2': [2.266, 0.032],
+                           'CntK2': [2.266, 0.032]
                            },
+                'SPHERE-IFS': {'YJ': wave_YJ,
+                               'YH': wave_YJH
+                               },
                 'GLINT': {'F155': [1.55, 0.01],
                           'F430': [4.3, 0.01]
                           },
@@ -143,10 +162,18 @@ def get_wavelength(ins, filtname):
                           '11_3_SAM': [11.23, 0.55]},
                 'VAMPIRES': {'750-50': [0.77, 0.05]}
                 }
+    
+    if ins not in dic_filt.keys():
+        cprint("--- Error: instrument <%s> not found ---" % ins, 'red')
+        cprint('Available: %s' % list(dic_filt.keys()), 'red')
+        wl = np.NaN
+        
     try:
         wl = np.array(dic_filt[ins][filtname]) * 1e-6
     except KeyError:
-        wl = np.Nan
+        cprint("--- Error: filtname <%s> not found for %s ---" % (filtname, ins), 'red')
+        cprint('Available: %s' % list(dic_filt[ins].keys()), 'red')
+        wl = np.NaN
     return wl
 
 
@@ -154,6 +181,7 @@ def get_pixel_size(ins):
     saved_pixel_detector = {'NIRISS': 65.6,
                             'SPHERE': 12.27,
                             'VISIR': 45,
+                            'SPHERE-IFS': 7.46,
                             'VAMPIRES': 6.475
                             }
     try:
