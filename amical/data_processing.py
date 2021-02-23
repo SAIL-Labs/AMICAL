@@ -324,7 +324,8 @@ def clean_data(data, isz=None, r1=None, dr=None, edge=0,
     `cube` {np.array} -- Cleaned datacube.
     """
     n_im = data.shape[0]
-    cube_cleaned = np.zeros([n_im, isz, isz])
+    cube_cleaned = []  # np.zeros([n_im, isz, isz])
+    l_bad_frame = []
     for i in tqdm(range(n_im), ncols=100, desc='Cleaning', leave=False):
         img0 = data[i]
         if edge != 0:
@@ -344,17 +345,17 @@ def clean_data(data, isz=None, r1=None, dr=None, edge=0,
             img_biased = im_rec_max.copy()
         img_biased[img_biased < 0] = 0  # Remove negative pixels
 
-        if img_biased.shape[0] != img_biased.shape[1]:
-            cprint(
-                '\nCropped image do not have same X, Y dimensions -> check isz', 'red')
-            return None
-
-        if apod:
-            img = apply_windowing(img_biased, window=window)
-
+        if (img_biased.shape[0] != img_biased.shape[1]) or (img_biased.shape[0] != isz):
+            l_bad_frame.append(i)
         else:
-            img = img_biased.copy()
-        cube_cleaned[i] = img
+            if apod:
+                img = apply_windowing(img_biased, window=window)
+            else:
+                img = img_biased.copy()
+            cube_cleaned.append(img)
+    if verbose:
+        print('Bad centering frame number:', l_bad_frame)
+    cube_cleaned = np.array(cube_cleaned)
     return cube_cleaned
 
 
@@ -383,8 +384,10 @@ def select_clean_data(filename, isz=256, r1=100, dr=10, edge=0,
     hdu = fits.open(filename)
     cube = hdu[ihdu].data
     hdr = hdu[0].header
+    
+    ins = hdr.get('INSTRUME', None)
 
-    if hdr['INSTRUME'] == 'SPHERE':
+    if ins == 'SPHERE':
         seeing_start = float(hdr['HIERARCH ESO TEL AMBI FWHM START'])
         seeing = float(hdr['HIERARCH ESO TEL IA FWHM'])
         seeing_end = float(hdr['HIERARCH ESO TEL AMBI FWHM END'])

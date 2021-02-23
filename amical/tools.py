@@ -11,8 +11,10 @@ General tools.
 --------------------------------------------------------------------
 """
 
+import math as m
 import warnings
 
+import h5py
 import matplotlib.pyplot as plt
 import numpy as np
 from astropy.io import fits
@@ -22,7 +24,6 @@ from munch import munchify as dict2class
 from scipy.signal import medfilt2d
 from termcolor import cprint
 from uncertainties import ufloat
-import math as m
 
 warnings.filterwarnings("ignore", module='astropy.io.votable.tree')
 warnings.filterwarnings("ignore", module='astropy.io.votable.xmlutil')
@@ -72,7 +73,11 @@ def crop_max(img, dim, offx=0, offy=0, filtmed=True, f=3):
         Resized image.
     """
     if filtmed:
-        im_med = medfilt2d(img, f)
+        try:
+            im_med = medfilt2d(img, f)
+        except ValueError:
+            img = img.astype(float)
+            im_med = medfilt2d(img, f)
     else:
         im_med = img.copy()
 
@@ -341,7 +346,7 @@ def apply_windowing(img, window=80, m=3):
     distance = np.sqrt(xx2**2 + yy2[:, np.newaxis]**2)
 
     # Super-gaussian windowing
-    window = super_gaussian(distance, sigma=window, m=m)
+    window = super_gaussian(distance, sigma=window*2, m=m)
 
     # Apply the windowing
     img_apod = img * window
@@ -695,3 +700,101 @@ def roundSciDigit(number):
         sig_digit = 1
 
     return float(np.round(number, sig_digit)), sig_digit
+
+
+def save_bs_hdf5(bs, filename):
+    """ Save results from `amical.extract_bs()` into hdf5 file. """
+    if '.h5' not in filename:
+        filename += '.h5'
+
+    # Step 1 - Create hdf5 and hierarchy tree/grp
+    hf = h5py.File(filename, 'w')
+
+    grp_obs = hf.create_group('obs')
+    grp_matrix = hf.create_group('matrix')
+    grp_info = hf.create_group('infos')
+    grp_mask = hf.create_group('mask')
+    grp_hdr = hf.create_group('hdr')
+
+    # Step 2 - Save observable (not in tree matrix, infos and mask).
+    for key in bs:
+        if key not in ['matrix', 'mask', 'infos']:
+            grp_obs.create_dataset(key, data=bs[key])
+
+    # Step 3 - Save matrix (contains all individual observable
+    # frame by frame and statistics matrix (covariance, variance, etc.)).
+    matrix = bs.matrix
+    for mat in matrix:
+        if matrix[mat] is not None:
+            grp_matrix.create_dataset(mat, data=matrix[mat])
+        else:
+            grp_matrix.create_dataset(mat, data=[0])
+
+    # Step 4 - Save mask (contains all mask informations) as
+    # well as u1, v1, u2, v2 coordinates (for the CP).
+    mask = bs.mask
+    for key in mask:
+        if (mask[key] is not None) and (key != 't3_coord'):
+            grp_mask.create_dataset(key, data=mask[key])
+    t3_coord = mask['t3_coord']
+    for key in t3_coord:
+        grp_mask.create_dataset(key, data=t3_coord[key])
+
+    # Step 5 - Save informations (target, date, etc.).
+    infos = bs.infos
+    for i in infos:
+        if i != 'hdr':
+            grp_info.create_dataset(i, data=infos[i])
+
+    # Step 6 - Save original header keywords.
+    hdr = bs.infos.hdr
+    for key in hdr:
+        grp_hdr.create_dataset(key, data=hdr[key])
+
+    # Last step - close hdf5
+    hf.close()
+    return None
+
+
+def load_bs_hdf5(filename):
+    """ Load hdf5 file and format as class like object (same
+    format as `amical.extract_bs()`
+    """
+    hf2 = h5py.File(filename, 'r')
+
+    dict_bs = {'matrix': {}, 'infos': {'hdr': {}}, 'mask': {}}
+
+    obs = hf2['obs']
+    for o in obs:
+        dict_bs[o] = obs[o].value
+
+    matrix = hf2['matrix']
+    for key in matrix:
+        dict_bs['matrix'][key] = matrix[key].value
+
+    if len(dict_bs['matrix']['cp_cov']) == 1:
+        dict_bs['matrix']['cp_cov'] = None
+
+    mask = hf2['mask']
+    for key in mask:
+        if key not in ['u1', 'u2', 'v1', 'v2']:
+            dict_bs['mask'][key] = mask[key].value
+
+    t3_coord = {'u1': mask['u1'].value,
+                'u2': mask['u2'].value,
+                'v1': mask['v1'].value,
+                'v2': mask['v2'].value,
+                }
+
+    dict_bs['mask']['t3_coord'] = t3_coord
+
+    infos = hf2['infos']
+    for key in infos:
+        dict_bs['infos'][key] = infos[key].value
+
+    hdr = hf2['hdr']
+    for key in hdr:
+        dict_bs['infos']['hdr'][key] = hdr[key].value
+
+    bs_save = dict2class(dict_bs)
+    return bs_save

@@ -16,14 +16,13 @@ All AMI related function, the most important are:
 """
 
 import numpy as np
-from matplotlib import pyplot as plt
-from munch import munchify as dict2class
-from termcolor import cprint
-
 from amical.dpfit import leastsqFit
 from amical.get_infos_obs import get_mask, get_pixel_size, get_wavelength
 from amical.mf_pipeline.idl_function import array_coords, dist
 from amical.tools import gauss_2d_asym, linear, norm_max, plot_circle
+from matplotlib import pyplot as plt
+from munch import munchify as dict2class
+from termcolor import cprint
 
 
 def _plot_mask_coord(xy_coords, maskname, instrument):
@@ -328,6 +327,9 @@ def make_mf(maskname, instrument, filtname, npix, i_wl=None,
     # Get detector, filter and mask informations
     # ------------------------------------------
     pixelsize = get_pixel_size(instrument)  # Pixel size of the detector [rad]
+    if pixelsize is np.nan:
+        cprint('Error: Pixel size unknown for %s.' % instrument, 'red')
+        return None
     # Wavelength of the filter (filt[0]: central, filt[1]: width)
     filt = get_wavelength(instrument, filtname)
     
@@ -409,7 +411,7 @@ def make_mf(maskname, instrument, filtname, npix, i_wl=None,
             cprint(
                 "Error: choose the extraction method 'gauss', 'fft' or 'square'.", 'red')
             return None
-        
+
         # Compute the cutoff limit before saving the gain map
         pixelvector = np.where(ind_peak['flat'] >= cutoff)[0]
         pixelvector_c = np.where(ind_peak['centered'] >= cutoff)[0]
@@ -695,7 +697,7 @@ def clos_unique(closing_tri_pix):
     return closing_tri_pix[:, l_i]
 
 
-def tri_pix(array_size, sampledisk_r, itrip=1, verbose=True, display=True):
+def tri_pix(array_size, sampledisk_r, verbose=True, display=True):
     """Compute all combination of triangle for a given splodge size"""
 
     if array_size % 2 == 1:

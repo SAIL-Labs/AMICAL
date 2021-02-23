@@ -6,9 +6,9 @@
 AMICAL: Aperture Masking Interferometry Calibration and Analysis Library
 -------------------------------------------------------------------------
 
-Core function to reduce NRM data.
+Set of functions to calibrate NRM data using a calibrator star data.
 
--------------------------------------------------------------------- 
+------------------------------------------------------------------------- 
 """
 
 import numpy as np
@@ -228,7 +228,8 @@ def average_calib_files(list_nrm, sig_thres=2, display=False):
     return dict2class(res)
 
 
-def calibrate(res_t, res_c, clip=False, sig_thres=2, apply_phscorr=False, AddindepCpErr=False, display=False):
+def calibrate(res_t, res_c, clip=False, sig_thres=2, apply_phscorr=False, 
+              apply_atmcorr=True, AddindepCpErr=False, display=False):
     """ Calibrate v2 and cp from a science target and its calibrator.
 
     Parameters
@@ -271,7 +272,9 @@ def calibrate(res_t, res_c, clip=False, sig_thres=2, apply_phscorr=False, Addind
         cmn_v2_c, cmn_cp_c, std_v2_c, std_cp_c = (calib_tab.f_v2, calib_tab.f_cp,
                                                   calib_tab.std_vis2, calib_tab.std_cp)
 
-    v2_corr_t = _calc_correction_atm_vis2(res_t)
+    v2_corr_t = 1
+    if apply_atmcorr:
+        v2_corr_t = _calc_correction_atm_vis2(res_t)
 
     if apply_phscorr:
         v2_corr_t *= res_t.matrix.phs_v2corr
