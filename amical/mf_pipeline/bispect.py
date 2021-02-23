@@ -901,7 +901,8 @@ def _add_infos_header(infos, hdr, mf, pa, filename, maskname, npix):
     infos['filename'] = filename
     infos['maskname'] = maskname
     infos['isz'] = npix
-    infos['hdr'] = hdr
+    if 'SPHERE' not in infos.instrument:
+        infos['hdr'] = hdr
 
     # Save keys of the original header (as needed):
     add_keys = ['TELESCOP', 'DATE-OBS', 'MJD-OBS', 'OBSERVER']
@@ -986,7 +987,6 @@ def extract_bs(cube, filename, maskname, filtname=None, targetname=None, instrum
 
     infos = _check_input_infos(hdr, targetname=targetname, filtname=filtname,
                                instrum=instrum, verbose=False)
-
 
     if 'INSTRUME' not in hdr.keys():
         hdr['INSTRUME'] = infos['instrument']

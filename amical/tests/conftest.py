@@ -1,5 +1,7 @@
 import pathlib
+
 import pytest
+
 
 @pytest.fixture(scope="session")
 def global_datadir():

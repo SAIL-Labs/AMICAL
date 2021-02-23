@@ -836,6 +836,9 @@ def save(input_calibrated, oifits_file=None, datadir='Saveoifits',
     hdulist.writeto(savedfile, overwrite=True)
     if verbose:
         cprint('\n\n### OIFITS CREATED (%s).' % oifits_file, 'cyan')
+    
+    if len(l_dic) == 1:
+        l_dic = l_dic[0]
     return l_dic, savedfile
 
 
