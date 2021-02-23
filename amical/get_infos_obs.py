@@ -181,7 +181,7 @@ def get_pixel_size(ins):
     saved_pixel_detector = {'NIRISS': 65.6,
                             'SPHERE': 12.27,
                             'VISIR': 45,
-                            'SPHERE-IFS': 7.46}
+                            'SPHERE-IFS': 7.46,
                             'VAMPIRES': 6.475
                             }
     try:
