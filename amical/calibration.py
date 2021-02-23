@@ -6,9 +6,9 @@
 AMICAL: Aperture Masking Interferometry Calibration and Analysis Library
 -------------------------------------------------------------------------
 
-Core function to reduce NRM data.
+Set of functions to calibrate NRM data using a calibrator star data.
 
--------------------------------------------------------------------- 
+------------------------------------------------------------------------- 
 """
 
 import numpy as np
