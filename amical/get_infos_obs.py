@@ -9,7 +9,7 @@ AMICAL: Aperture Masking Interferometry Calibration and Analysis Library
 Instruments and mask informations.
 -------------------------------------------------------------------- 
 """
-from pathlib import Path
+import pkg_resources
 
 import numpy as np
 from astropy.io import fits
@@ -134,14 +134,11 @@ def get_mask(ins, mask, first=0):
 
 def get_wavelength(ins, filtname):
     """ Return dictionnary containning saved informations about filters. """
-    LOCAL_DIR = Path(__file__).parent
-    INT_DATA_DIR = LOCAL_DIR / "internal_data/"
 
-    try:
-        wave_YJ = fits.open(INT_DATA_DIR / 'ifs_wave_YJ.fits')[0].data
-        wave_YJH = fits.open(INT_DATA_DIR / 'ifs_wave_YJH.fits')[0].data
-    except FileNotFoundError:
-        wave_YJ, wave_YJH = None, None
+    YJfile = pkg_resources.resource_stream("amical", "internal_data/ifs_wave_YJ.fits")
+    YJHfile = pkg_resources.resource_stream("amical", "internal_data/ifs_wave_YJH.fits")
+    wave_YJ = fits.open(YJfile)[0].data
+    wave_YJH = fits.open(YJHfile)[0].data
 
     dic_filt = {'NIRISS': {'F277W': [2.776, 0.715],
                            'F380M': [3.828, 0.205],
