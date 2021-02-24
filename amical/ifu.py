@@ -14,12 +14,13 @@ Set of functions to work with spectraly dispersed (IFU) NRM data.
 import numpy as np
 from astropy.io import fits
 from matplotlib import pyplot as plt
+from tqdm import tqdm
 
 from .data_processing import select_clean_data
 from .get_infos_obs import get_wavelength
 
 
-def get_lambda(i_wl, filtname='YH', instrument='SPHERE-IFS'):
+def get_lambda(i_wl=None, filtname='YH', instrument='SPHERE-IFS'):
     """ Get spectral information for the given instrumental IFU setup.
     i_wl can be an integer or a list of 2 integers used to display the
     requested spectral channel."""
@@ -91,8 +92,8 @@ def clean_data(list_file, isz=256, r1=100, dr=10, edge=0,
 
     cube_lambda = np.zeros([nframe, nlambda, isz, isz])
 
-    for i, f in enumerate(list_file):
-        cube_cleaned = select_clean_data(f, **clean_param)
+    for i in tqdm(range(len(list_file)), desc='Format/clean IFU (%s)' % (hdr['OBJECT']), ncols=100):
+        cube_cleaned = select_clean_data(list_file[i], **clean_param)
         cube_lambda[i] = cube_cleaned
 
     return cube_lambda

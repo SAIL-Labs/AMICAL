@@ -94,7 +94,7 @@ def _compute_complex_bs(ft_arr, index_mask, fringe_peak, mf, dark_ps=None,
     fluxes = np.zeros(n_ps)
 
     for i in tqdm(range(n_ps), ncols=100, desc='Extracting in the cube',
-                  leave=True, file=sys.stdout):
+                  leave=False, file=sys.stdout):
         ft_frame = ft_arr[i]
         ps = np.abs(ft_frame) ** 2
 
@@ -589,7 +589,7 @@ def _compute_cp_cov(bs_arr, bs, index_mask):
     n_bispect = index_mask.n_bispect
 
     cp_cov = dblarr(n_bispect, n_bispect)
-    for i in tqdm(range(n_bispect), desc='CP covariance', ncols=100):
+    for i in tqdm(range(n_bispect), desc='CP covariance', ncols=100, leave=False):
         for j in range(n_bispect):
             temp1 = (bs_arr[:, i] - bs[i]) * np.conj(bs[i])
             temp2 = (bs_arr[:, j] - bs[j]) * np.conj(bs[j])
