@@ -204,7 +204,7 @@ def fix_bad_pixels(image, bad_map, add_bad=[], x_stddev=1):
     is made with a gaussian kernel convolution)."""
     if len(add_bad) != 0:
         for j in range(len(add_bad)):
-            bad_map[add_bad[j][0], add_bad[j][1]] = 1
+            bad_map[add_bad[j][1], add_bad[j][0]] = 1
 
     img_nan = image.copy()
     img_nan[bad_map == 1] = np.nan
@@ -234,6 +234,10 @@ def check_data_params(filename, isz, r1, dr, bad_map=None, add_bad=[],
     """
     data = fits.open(filename)[ihdu].data
     img0 = data[nframe]
+    
+    if (bad_map is None) and (len(add_bad) != 0):
+        bad_map = np.zeros(img0.shape)
+        
     if edge != 0:
         img0[:, 0:edge] = 0
         img0[:, -edge:-1] = 0
@@ -248,9 +252,9 @@ def check_data_params(filename, isz, r1, dr, bad_map=None, add_bad=[],
 
     noBadPixel = False
     bad_pix_x, bad_pix_y = [], []
-    if (bad_map is not None) or (len(add_bad) != 0):
+    if (bad_map is not None) & (len(add_bad) != 0):
         for j in range(len(add_bad)):
-            bad_map[add_bad[j][0], add_bad[j][1]] = 1
+            bad_map[add_bad[j][1], add_bad[j][0]] = 1
         bad_pix = np.where(bad_map == 1)
         bad_pix_x = bad_pix[0]
         bad_pix_y = bad_pix[1]
