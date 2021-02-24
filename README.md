@@ -2,7 +2,7 @@
 
 (**A**perture **M**asking **I**nterferometry **C**alibration and **A**nalysis **L**ibrary)
 
-![version](https://img.shields.io/github/v/release/SydneyAstrophotonicInstrumentationLab/AMICAL) ![Supported Python Version](https://img.shields.io/badge/python%20version-≥%203.6-important)
+![version](https://img.shields.io/github/v/release/SydneyAstrophotonicInstrumentationLab/AMICAL) ![Supported Python Version](https://img.shields.io/badge/python%20version-≥%203.7-important)
 
 [![PEP8](https://img.shields.io/badge/code%20style-pep8-orange.svg)](https://www.python.org/dev/peps/pep-0008/) [![Imports: isort](https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336)](https://pycqa.github.io/isort/)
 
