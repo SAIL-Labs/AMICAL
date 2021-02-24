@@ -14,11 +14,9 @@ Set of functions to work with spectraly dispersed (IFU) NRM data.
 import numpy as np
 from astropy.io import fits
 from matplotlib import pyplot as plt
-from termcolor import cprint
 
 from .data_processing import select_clean_data
 from .get_infos_obs import get_wavelength
-from .mf_pipeline.bispect import extract_bs
 
 
 def get_lambda(i_wl, filtname='YH', instrument='SPHERE-IFS'):
