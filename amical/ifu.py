@@ -12,12 +12,16 @@ Set of functions to work with spectraly dispersed (IFU) NRM data.
 """
 
 import numpy as np
+from astropy.io import fits
 from matplotlib import pyplot as plt
+from termcolor import cprint
 
+from .data_processing import select_clean_data
 from .get_infos_obs import get_wavelength
+from .mf_pipeline.bispect import extract_bs
 
 
-def select_wl(i_wl, filtname='YH', instrument='SPHERE-IFS'):
+def get_lambda(i_wl, filtname='YH', instrument='SPHERE-IFS'):
     """ Get spectral information for the given instrumental IFU setup.
     i_wl can be an integer or a list of 2 integers used to display the
     requested spectral channel."""
@@ -61,3 +65,36 @@ def select_wl(i_wl, filtname='YH', instrument='SPHERE-IFS'):
     else:
         output = np.round(wl_range)
     return output
+
+
+def clean_data(list_file, isz=256, r1=100, dr=10, edge=0,
+               bad_map=None, add_bad=[], offx=0, offy=0,
+               clip_fact=0.5, apod=True, sky=True, window=None,
+               f_kernel=3, verbose=False, ihdu=0, display=False):
+    """ Clean data using the standard procedure amical.select_clean_data()
+    for each file in list_file. For IFU mode of SPHERE, the different frames
+    are stored in different files and need to be reshaped into the appropriate 
+    4D datacube (i.e.: `cube_lambda.shape = [ndit, nlambda, isz, 
+    isz]`). Check amical.select_clean_data() for details about input parameters.
+    """
+
+    clean_param = {'isz': isz, 'r1': r1, 'dr': dr, 'edge': edge, 'clip': False,
+                   'bad_map': bad_map, 'add_bad': add_bad, 'offx': offx, 'offy': offy,
+                   'clip_fact': clip_fact, 'apod': apod, 'sky': sky, 'window': window,
+                   'f_kernel': f_kernel, 'verbose': verbose, 'ihdu': ihdu,
+                   'display': display
+                   }
+
+    hdu = fits.open(list_file[0])
+    hdr = hdu[0].header
+
+    nlambda = hdr['NAXIS3']
+    nframe = len(list_file)
+
+    cube_lambda = np.zeros([nframe, nlambda, isz, isz])
+
+    for i, f in enumerate(list_file):
+        cube_cleaned = select_clean_data(f, **clean_param)
+        cube_lambda[i] = cube_cleaned
+
+    return cube_lambda
