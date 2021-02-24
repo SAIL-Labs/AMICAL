@@ -15,8 +15,12 @@ git clone https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL.git
 
 cd AMICAL/
 
+# You may need to install pip inside your new environment
+conda install pip
+
 # Install AMICAL
-pip install .
+pip install -e .
+
 ```
 
 ## What can AMICAL do for you ?
