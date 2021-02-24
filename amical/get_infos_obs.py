@@ -9,8 +9,9 @@ AMICAL: Aperture Masking Interferometry Calibration and Analysis Library
 Instruments and mask informations.
 -------------------------------------------------------------------- 
 """
-import numpy as np
 from pathlib import Path
+
+import numpy as np
 from astropy.io import fits
 from termcolor import cprint
 
@@ -87,13 +88,13 @@ def get_mask(ins, mask, first=0):
                                         [0, -3.04]
                                         ])},
         'SPHERE-IFS': {'g7': 1*np.array([[-2.07, 2.71],
-                                            [0.98, 3.27],
-                                            [-3.11, -0.2],
-                                            [-1.43, -0.81],
-                                            [-2.79, -1.96],
-                                            [3.3, -0.85],
-                                            [0.58, -3.17]
-                                            ])},
+                                         [0.98, 3.27],
+                                         [-3.11, -0.2],
+                                         [-1.43, -0.81],
+                                         [-2.79, -1.96],
+                                         [3.3, -0.85],
+                                         [0.58, -3.17]
+                                         ])},
         'VISIR': {'g7': (pupil_visir/pupil_visir_mm)*np.array([[-5.707, -2.885],
                                                                [-5.834, 3.804],
                                                                [0.099, 7.271],
@@ -109,12 +110,13 @@ def get_mask(ins, mask, first=0):
                                       [-2.76083, 1.14035], [3.02995, -1.91449],
                                       [0.117786, 3.59025], [-0.802156, 3.42140],
                                       [-1.47228, -3.28982], [-1.95968, -0.634178],
-                                      [0.876319, -3.13328],  # [-3.29085, -1.15300],
+                                      # [-3.29085, -1.15300],
+                                      [0.876319, -3.13328],
                                       [2.01253, -1.55220], [-2.07847, -2.57755]
                                       ])}
     }
-    
-    # 
+
+    #
 
     try:
         xycoords = dic_mask[ins][mask]
@@ -135,8 +137,11 @@ def get_wavelength(ins, filtname):
     LOCAL_DIR = Path(__file__).parent
     INT_DATA_DIR = LOCAL_DIR / "internal_data/"
 
-    wave_YJ = fits.open(INT_DATA_DIR / 'ifs_wave_YJ.fits')[0].data
-    wave_YJH = fits.open(INT_DATA_DIR / 'ifs_wave_YJH.fits')[0].data
+    try:
+        wave_YJ = fits.open(INT_DATA_DIR / 'ifs_wave_YJ.fits')[0].data
+        wave_YJH = fits.open(INT_DATA_DIR / 'ifs_wave_YJH.fits')[0].data
+    except FileNotFoundError:
+        wave_YJ, wave_YJH = None, None
 
     dic_filt = {'NIRISS': {'F277W': [2.776, 0.715],
                            'F380M': [3.828, 0.205],
@@ -162,16 +167,17 @@ def get_wavelength(ins, filtname):
                           '11_3_SAM': [11.23, 0.55]},
                 'VAMPIRES': {'750-50': [0.77, 0.05]}
                 }
-    
+
     if ins not in dic_filt.keys():
         cprint("--- Error: instrument <%s> not found ---" % ins, 'red')
         cprint('Available: %s' % list(dic_filt.keys()), 'red')
         wl = np.NaN
-        
+
     try:
         wl = np.array(dic_filt[ins][filtname]) * 1e-6
     except KeyError:
-        cprint("--- Error: filtname <%s> not found for %s ---" % (filtname, ins), 'red')
+        cprint("--- Error: filtname <%s> not found for %s ---" %
+               (filtname, ins), 'red')
         cprint('Available: %s' % list(dic_filt[ins].keys()), 'red')
         wl = np.NaN
     return wl
