@@ -110,8 +110,8 @@ def pymask_cr_limit(input_data, nsim=100, err_scale=1, extra_error_cp=0, ncore=1
     plt.figure()
     plt.plot(seps, con_limits)
     plt.xlabel('Separation [mas]')
-    plt.ylabel('$\Delta \mathrm{Mag}_{3\sigma}$')
-    plt.title("PYMASK: flux ratio for 3$\sigma$ detection")
+    plt.ylabel(r'$\Delta \mathrm{Mag}_{3\sigma}$')
+    plt.title(r"PYMASK: flux ratio for 3$\sigma$ detection")
     plt.ylim(plt.ylim()[1], plt.ylim()[0])  # -- rreverse plot
     plt.tight_layout()
     res = {'r': seps,

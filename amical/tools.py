@@ -445,8 +445,8 @@ def compute_pa(hdr, n_ps, verbose=False, display=False):
 
     if display and pa_exist:
         plt.figure(figsize=(4, 3))
-        plt.plot(
-            l_pa, '.-', label='pa=%2.1f, $\sigma_{pa}$=%2.1f deg' % (pa, std_pa))
+        plt.plot(l_pa, '.-', 
+                 label=r'pa=%2.1f, $\sigma_{pa}$=%2.1f deg' % (pa, std_pa))
         plt.legend(fontsize=7)
         plt.grid(alpha=.2)
         plt.xlabel("# frames")

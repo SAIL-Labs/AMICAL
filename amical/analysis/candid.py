@@ -12,7 +12,6 @@ import scipy.optimize
 import scipy.special
 import scipy.stats
 from matplotlib import pyplot as plt
-# from scipy.misc import factorial
 from scipy.special import factorial
 
 plt.ion()  # interactive mode
@@ -3355,9 +3354,9 @@ def _dpfit_leastsqFit(func, x, params, y, err=None, fitOnly=None, verbose=False,
     # -- actual fit, using leastsq
     plsq, cov, info, mesg, ier = \
         scipy.optimize.leastsq(_dpfit_fitFunc, pfit,
-                                args=(fitOnly, x, y, err, func,
-                                      pfix, verbose, follow,),
-                                full_output=True, epsfcn=epsfcn, ftol=ftol, maxfev=1000,)
+                               args=(fitOnly, x, y, err, func,
+                                     pfix, verbose, follow,),
+                               full_output=True, epsfcn=epsfcn, ftol=ftol, maxfev=1000,)
 
     # -- best fit -> agregate to pfix
     for i, k in enumerate(fitOnly):

@@ -75,7 +75,7 @@ import datetime
 import warnings
 
 import numpy as np
-from numpy import bool, double, ma
+from numpy import double, ma
 
 try:
     import pyfits
