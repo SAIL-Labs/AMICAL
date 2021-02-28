@@ -11,6 +11,7 @@ centering, etc.) and data selection (sigma-clipping, centered flux,).
 -------------------------------------------------------------------- 
 """
 
+from platform import version
 import numpy as np
 from astropy.convolution import Gaussian2DKernel, interpolate_replace_nans
 from astropy.io import fits
@@ -234,10 +235,10 @@ def check_data_params(filename, isz, r1, dr, bad_map=None, add_bad=[],
     """
     data = fits.open(filename)[ihdu].data
     img0 = data[nframe]
-    
+
     if (bad_map is None) and (len(add_bad) != 0):
         bad_map = np.zeros(img0.shape)
-        
+
     if edge != 0:
         img0[:, 0:edge] = 0
         img0[:, -edge:-1] = 0
@@ -307,10 +308,34 @@ def check_data_params(filename, isz, r1, dr, bad_map=None, add_bad=[],
     return fig
 
 
+def _apply_edge_correction(img0, edge=0):
+    """ Remove the bright edges (set to 0) observed for
+    some detectors (SPHERE). """
+    if edge != 0:
+        img0[:, 0:edge] = 0
+        img0[:, -edge:-1] = 0
+        img0[0:edge, :] = 0
+        img0[-edge:-1, :] = 0
+    return img0
+
+
+def _remove_dark(img1, darkfile=None, ihdu=0,
+                 verbose=False):
+    if darkfile is not None:
+        hdu = fits.open(darkfile)
+        dark = hdu[ihdu].data
+        hdu.close()
+        if verbose:
+            print('Dark cube shape is:', dark.shape)
+        master_dark = np.mean(dark, axis=0)
+        img1 -= master_dark
+    return img1
+
+
 def clean_data(data, isz=None, r1=None, dr=None, edge=0,
                bad_map=None, add_bad=[], apod=True,
                offx=0, offy=0, sky=True, window=None,
-               f_kernel=3, verbose=False):
+               darkfile=None, f_kernel=3, verbose=False):
     """ Clean data.
 
     Parameters:
@@ -332,15 +357,13 @@ def clean_data(data, isz=None, r1=None, dr=None, edge=0,
     l_bad_frame = []
     for i in tqdm(range(n_im), ncols=100, desc='Cleaning', leave=False):
         img0 = data[i]
-        if edge != 0:
-            img0[:, 0:edge] = 0
-            img0[:, -edge:-1] = 0
-            img0[0:edge, :] = 0
-            img0[-edge:-1, :] = 0
+        img0 = _apply_edge_correction(img0, edge=edge)
         if bad_map is not None:
             img1 = fix_bad_pixels(img0, bad_map, add_bad=add_bad)
         else:
             img1 = img0.copy()
+            
+        img1 = _remove_dark(img1, darkfile=darkfile, verbose=verbose)
         im_rec_max = crop_max(img1, isz, offx=offx, offy=offy, f=f_kernel)[0]
         if sky:
             img_biased = sky_correction(im_rec_max, r1=r1, dr=dr,
@@ -366,19 +389,30 @@ def clean_data(data, isz=None, r1=None, dr=None, edge=0,
 def select_clean_data(filename, isz=256, r1=100, dr=10, edge=0,
                       clip=True, bad_map=None, add_bad=[], offx=0, offy=0,
                       clip_fact=0.5, apod=True, sky=True, window=None,
-                      f_kernel=3, verbose=False, ihdu=0, display=False):
+                      darkfile=None, f_kernel=3, verbose=False, ihdu=0, 
+                      display=False):
     """ Clean and select good datacube (sigma-clipping using fluxes variations).
 
     Parameters:
     -----------
 
     `filename` {str}: filename containing the datacube,\n
-    `isz` {int}: Size of the cropped image (default: 256)\n
-    `r1` {int}: Radius of the rings to compute background sky (default: 100)\n
-    `dr` {int}: Outer radius to compute sky (default: 10)\n
-    `edge` {int}: Patch the edges of the image (VLT/SPHERE artifact, default: {100}),\n
+    `isz` {int}: Size of the cropped image (default: {256})\n
+    `r1` {int}: Radius of the rings to compute background sky (default: {100})\n
+    `dr` {int}: Outer radius to compute sky (default: {10})\n
+    `edge` {int}: Patch the edges of the image (VLT/SPHERE artifact, default: {0}),\n
     `clip` {bool}: If True, sigma-clipping is used to reject frames with low integrated flux,\n
-    `clip_fact` {float}: Relative sigma if rejecting frames by sigma-clipping 
+    `clip_fact` {float}: Relative sigma if rejecting frames by sigma-clipping,\n
+    `apod` {bool}: If True, apodisation is performed in the image plan using a super-gaussian
+    function (known as windowing). The gaussian FWHM is set by the parameter `window`,\n
+    `window` {float}: FWHM of the super-gaussian to apodise the image (smoothly go to zero
+    on the edges),\n
+    `sky` {bool}: If True, the sky is remove using the annulus technique (computed between `r1` 
+    and `r1` + `dr`),
+    `darkfile` {str}: If specified (default: None), the input dark (master_dark averaged if
+    multiple integrations) is substracted from the raw image,\n
+    image,\
+    `f_kernel` {float}: kernel size used in the applied median filter (to find the center),\n
     (default=0.5),\n
 
     Returns:
@@ -388,7 +422,7 @@ def select_clean_data(filename, isz=256, r1=100, dr=10, edge=0,
     hdu = fits.open(filename)
     cube = hdu[ihdu].data
     hdr = hdu[0].header
-    
+
     ins = hdr.get('INSTRUME', None)
 
     if ins == 'SPHERE':
@@ -410,7 +444,7 @@ def select_clean_data(filename, isz=256, r1=100, dr=10, edge=0,
                               bad_map=bad_map, add_bad=add_bad,
                               dr=dr, sky=sky, apod=apod, window=window,
                               f_kernel=f_kernel, offx=offx, offy=offy,
-                              verbose=verbose)
+                              darkfile=darkfile, verbose=verbose)
 
     if cube_cleaned is None:
         return None
