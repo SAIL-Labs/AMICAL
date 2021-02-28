@@ -9,9 +9,8 @@ AMICAL: Aperture Masking Interferometry Calibration and Analysis Library
 Instruments and mask informations.
 -------------------------------------------------------------------- 
 """
-import pkg_resources
-
 import numpy as np
+import pkg_resources
 from astropy.io import fits
 from termcolor import cprint
 
@@ -135,8 +134,10 @@ def get_mask(ins, mask, first=0):
 def get_wavelength(ins, filtname):
     """ Return dictionnary containning saved informations about filters. """
 
-    YJfile = pkg_resources.resource_stream("amical", "internal_data/ifs_wave_YJ.fits")
-    YJHfile = pkg_resources.resource_stream("amical", "internal_data/ifs_wave_YJH.fits")
+    YJfile = pkg_resources.resource_stream(
+        "amical", "internal_data/ifs_wave_YJ.fits")
+    YJHfile = pkg_resources.resource_stream(
+        "amical", "internal_data/ifs_wave_YJH.fits")
     wave_YJ = fits.open(YJfile)[0].data
     wave_YJH = fits.open(YJHfile)[0].data
 
@@ -162,7 +163,7 @@ def get_wavelength(ins, filtname):
                           },
                 'VISIR': {'10_5_SAM': [10.56, 0.37],
                           '11_3_SAM': [11.23, 0.55]},
-                'VAMPIRES': {'750-50': [0.77, 0.05]}
+                'VAMPIRES': {'750-50': [0.75, 0.05]}
                 }
 
     if ins not in dic_filt.keys():
