@@ -11,7 +11,6 @@ centering, etc.) and data selection (sigma-clipping, centered flux,).
 -------------------------------------------------------------------- 
 """
 
-from platform import version
 import numpy as np
 from astropy.convolution import Gaussian2DKernel, interpolate_replace_nans
 from astropy.io import fits
