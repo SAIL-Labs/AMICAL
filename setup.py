@@ -20,5 +20,5 @@ setup(
                       "astropy", "scipy", "termcolor", "tqdm",
                       "uncertainties", "astroquery",
                       "corner", "h5py", "pytest"],
-
+    package_data={"amical": ["internal_data/*.fits"]},
 )
