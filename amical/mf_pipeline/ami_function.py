@@ -285,7 +285,8 @@ def _make_overlap_mat(mf, n_baselines, display=False):
 def make_mf(maskname, instrument, filtname, npix, i_wl=None,
             peakmethod='fft', n_wl=3, theta_detector=0,
             cutoff=1e-4, hole_diam=0.8, fw_splodge=0.7,
-            verbose=False, diag_plot=False, display=True):
+            scaling=1, diag_plot=False, verbose=False, 
+            display=True):
     """
     Summary:
     --------
@@ -341,8 +342,8 @@ def make_mf(maskname, instrument, filtname, npix, i_wl=None,
         
     xy_coords = get_mask(instrument, maskname)  # mask coordinates
 
-    x_mask = xy_coords[:, 0]
-    y_mask = xy_coords[:, 1]
+    x_mask = xy_coords[:, 0] * scaling
+    y_mask = xy_coords[:, 1] * scaling
 
     x_mask_rot = x_mask*np.cos(np.deg2rad(theta_detector)) + \
         y_mask*np.sin(np.deg2rad(theta_detector))
