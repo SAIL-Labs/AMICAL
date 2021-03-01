@@ -222,7 +222,8 @@ def _show_complex_ps(ft_arr, i_frame=0):
     return fig
 
 
-def _show_peak_position(ft_arr, n_baselines, mf, maskname, peakmethod, i_fram=0):
+def _show_peak_position(ft_arr, n_baselines, mf, maskname, peakmethod, 
+                        i_fram=0, aver=False):
     """ Show the expected position of the peak in the Fourier space using the
     mask coordinates and the chosen method. """
     dim1, dim2 = ft_arr.shape[1], ft_arr.shape[2]
@@ -243,7 +244,13 @@ def _show_peak_position(ft_arr, n_baselines, mf, maskname, peakmethod, i_fram=0)
 
     ft_frame = ft_arr[i_fram]
     ps = ft_frame.real
-
+    
+    if aver:
+        ps = np.zeros(ps.shape)
+        for i_frame in ft_arr:
+            ps += i_frame.real
+        ps /= ft_arr.shape[0]
+        
     fig, ax = plt.subplots(figsize=(9, 7))
     # plt.rc('xtick', labelsize=15)
     ax.set_title("Expected splodge position with mask %s (method = %s)" %
