@@ -56,10 +56,12 @@ The major part of data coming from general pipelines (applying dark, flat, disto
 
 The first step of AMICAL consists to clean the data in different way:
 
-- Apply bad pixels correction (`bad_map`, `add_bad`, `remove_bad`)
-- Remove residual sky background (`sky`, `r1`, `dr`)
-- Crop and center the image (`isz`, `f_kernel`),
-- Apply windowing (`apod`, `window`).
+- Remove residual sky background (`sky`=True, `r1`, `dr`)
+- Crop and center the image (`isz`, `f_kernel`=3),
+- Apply windowing (`apod`, `window`),
+- Apply bad pixels correction (`bad_map`=None, `add_bad`=[], `remove_bad`=False).
+
+We use a 2d gaussian interpolation to replace the bad pixels (same as [here](https://docs.astropy.org/en/stable/convolution/)). The input `bad_map` is a 2D array (same shape as the data) filled with 0 and 1 where 1 stands for a bad pixel (hot, cosmic, etc.). Instrument pipelines generally come with bad pixels map generator, but you can add an unlimited number of bad pixels as the input list `add_bad` (e.g.: \[[24, 08], [31, 41]])).
 
 ```python
 nrm_file = 'my_nrm_data.fits'
