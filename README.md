@@ -40,12 +40,18 @@ In addition (4), we include two external packages called [CANDID](https://github
 - [Step 1: clean and select data](#step-1--clean-and-select-data)
 - [Step 2: extract observables](#step-2--extract-observables)
 - [Step 3: calibrate V2 & CP](#step-3--calibrate-v2---cp)
+- [Step 4: analyse with CANDID and Pymask](#step-4--analyse-with-candid-and-pymask)
 
 ### Step 1: clean and select data
+
+In addition (4), we include two external packages called [CANDID](https://github.com/amerand/CANDID) and [Pymask](https://github.com/AnthonyCheetham/pymask) to **analyse** the final outputs obtained from a binary-like sources (star-star or star-planet). We interfaced these stand-alone packages with AMICAL to quickly estimate our scientific results (e.g.: separation, position angle, contrast ratio, contrast limits, etc.) using different approaches (chi2 grid, MCMC, see [example_analysis.py](example_analysis.py) for details).In addition (4), we include two external packages called [CANDID](https://github.com/amerand/CANDID) and [Pymask](https://github.com/AnthonyCheetham/pymask) to **analyse** the final outputs obtained from a binary-like sources (star-star or star-planet). We interfaced these stand-alone packages with AMICAL to quickly estimate our scientific results (e.g.: separation, position angle, contrast ratio, contrast limits, etc.) using different approaches (chi2 grid, MCMC, see [example_analysis.py](example_analysis.py) for details).In addition (4), we include two external packages called [CANDID](https://github.com/amerand/CANDID) and [Pymask](https://github.com/AnthonyCheetham/pymask) to **analyse** the final outputs obtained from a binary-like sources (star-star or star-planet). We interfaced these stand-alone packages with AMICAL to quickly estimate our scientific results (e.g.: separation, position angle, contrast ratio, contrast limits, etc.) using different approaches (chi2 grid, MCMC, see [example_analysis.py](example_analysis.py) for details).
+
 
 ### Step 2: extract observables
 
 ### Step 3: calibrate V2 & CP
+
+### Step 4: analyse with CANDID and Pymask
 
 ## Use policy and reference publication
 
