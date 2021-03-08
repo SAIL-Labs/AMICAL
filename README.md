@@ -75,12 +75,8 @@ clean_param = {'isz': 69, # final cropped image size [pix]
 amical.check_data_params(nrm_file, **clean_param)
 ```
 
-<p align="center">
-<img src="Figures/cleaning_params.png" width="50%"/>
-</p>
-
-**Figure 1** - Result of `check_data_params()` showing the cleaning parameters (`isz`, `r1`, `dr`, `window`).
-
+<img src="Figures/cleaning_params.png" width="100%"/> | Figure 1 - Result of `check_data_params()` showing the cleaning parameters (`isz`, `r1`, `dr`, `window`).
+:-------------------------:|:-------------------------:
 
 ### Step 2: extract observables
 
