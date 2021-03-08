@@ -410,9 +410,8 @@ def select_clean_data(filename, isz=256, r1=100, dr=10, edge=0,
     and `r1` + `dr`),
     `darkfile` {str}: If specified (default: None), the input dark (master_dark averaged if
     multiple integrations) is substracted from the raw image,\n
-    image,\
-    `f_kernel` {float}: kernel size used in the applied median filter (to find the center),\n
-    (default=0.5),\n
+    image,\n
+    `f_kernel` {float}: kernel size used in the applied median filter (to find the center).
 
     Returns:
     --------

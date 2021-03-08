@@ -37,14 +37,51 @@ In addition (4), we include two external packages called [CANDID](https://github
 
 ## Tutorials
 
+In this tutorial, we will go through the different possibilities of AMICAL. You can find a detailed description of the principal functions and associated parameters in their docstrings (easily accessible with good editors, e.g.: vscode).
+
 - [Step 1: clean and select data](#step-1-clean-and-select-data)
 - [Step 2: extract observables](#step-2-extract-observables)
 - [Step 3: calibrate V2 & CP](#step-3-calibrate-v2--cp)
 - [Step 4: analyse with CANDID and Pymask](#step-4-analyse-with-candid-and-pymask)
 
+To begin, we just need to import AMICAL library:
+
+```python
+import amical
+```
+
 ### Step 1: clean and select data
 
-The major part of data coming from general pipeline (dark, flat, distorsion, etc.) are not enought compliant with the Fourier extracting method developed within AMICAL. The first step of AMICAL consists to clean the in different way.
+The major part of data coming from general pipeline (applying dark, flat, distorsion, etc.) are not enought compliant with the Fourier extracting method developed within AMICAL.
+
+The first step of AMICAL consists to clean the data in different way:
+
+- Apply bad pixels correction (`bad_map`, `add_bad`, `remove_bad`)
+- Remove residual sky background (`sky`, `r1`, `dr`)
+- Crop and center the image (`isz`, `f_kernel`),
+- Apply windowing (`apod`, `window`).
+
+```python
+nrm_file = 'my_nrm_data.fits'
+
+clean_param = {'isz': 69, # final cropped image size [pix]
+               'r1': 31, # Inner radius to compute sky [pix]
+               'dr': 2, # Outer radius (r2 = r1 + dr) 
+               'apod': True, # If True, apply windowing
+               'window': 32 # FWHM of the super-gaussian (for windowing)
+              }
+
+# Firsly, check if the input parameters are valid
+amical.check_data_params(nrm_file, **clean_param)
+```
+
+<figure>
+  <p align="center">
+  <img src="Figures/cleaning_params.png" width="70%"/>
+  <figcaption>Figure 1 - Location of the different parameters used to clean the data </figcaption>
+  </p>
+</figure>
+
 
 ### Step 2: extract observables
 
