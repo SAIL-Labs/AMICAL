@@ -124,20 +124,22 @@ def select_data(cube, clip_fact=0.5, clip=False, verbose=True, display=True):
 
     diffmm = 100*abs(np.max(fluxes) - np.min(fluxes))/med_flux
     if display:
-        plt.figure()
+        plt.figure(figsize=(10, 5))
         plt.plot(fluxes, label=r'|$\Delta F$|/$\sigma_F$=%2.0f (%2.2f %%)' %
-                 (med_flux/std_flux, diffmm))
+                 (med_flux/std_flux, diffmm), lw=1)
         if len(flag_fram) > 0:
             plt.scatter(flag_fram, fluxes[flag_fram],
                         s=52, facecolors='none', edgecolors='r', label='Rejected frames (maximum fluxes)')
         if clip:
             if len(ind_clip) > 0:
-                plt.plot(ind_clip, fluxes[ind_clip], 'rx',
+                plt.plot(ind_clip, fluxes[ind_clip], 'x', color='crimson',
                          label='Rejected frames (clipping)')
             else:
                 print('0')
-        plt.hlines(limit_flux, 0, len(fluxes), lw=1,
-                   ls='--', label='Clipping limit', zorder=10)
+        # plt.hlines(limit_flux, 0, len(fluxes), )
+        plt.axhline(limit_flux, lw=3, color='#00b08b',
+                    ls='--', label='Clipping threshold',
+                    zorder=10)
         plt.legend(loc='best', fontsize=9)
         plt.ylabel('Flux [counts]')
         plt.xlabel('# frames')
@@ -361,7 +363,7 @@ def clean_data(data, isz=None, r1=None, dr=None, edge=0,
             img1 = fix_bad_pixels(img0, bad_map, add_bad=add_bad)
         else:
             img1 = img0.copy()
-            
+
         img1 = _remove_dark(img1, darkfile=darkfile, verbose=verbose)
         im_rec_max = crop_max(img1, isz, offx=offx, offy=offy, f=f_kernel)[0]
         if sky:
@@ -388,7 +390,7 @@ def clean_data(data, isz=None, r1=None, dr=None, edge=0,
 def select_clean_data(filename, isz=256, r1=100, dr=10, edge=0,
                       clip=True, bad_map=None, add_bad=[], offx=0, offy=0,
                       clip_fact=0.5, apod=True, sky=True, window=None,
-                      darkfile=None, f_kernel=3, verbose=False, ihdu=0, 
+                      darkfile=None, f_kernel=3, verbose=False, ihdu=0,
                       display=False):
     """ Clean and select good datacube (sigma-clipping using fluxes variations).
 

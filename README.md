@@ -75,8 +75,22 @@ clean_param = {'isz': 69, # final cropped image size [pix]
 amical.check_data_params(nrm_file, **clean_param)
 ```
 
-<img src="Figures/cleaning_params.png" width="100%"/> | Figure 1 - Result of `check_data_params()` showing the cleaning parameters (`isz`, `r1`, `dr`, `window`).
-:-------------------------:|:-------------------------:
+<p align="center">
+<img src="Figures/cleaning_params.png" width="50%"/> 
+</p>
+
+If the cleaning parameters seem well located (cyan cross on the centre, sky radius outside the fringes pattern, etc.), we can apply the cleaning step to the data.
+
+```python
+
+cube_cleaned = amical.select_clean_data(nrm_file, **clean_param, clip=True)
+```
+
+During the cleaning step, you can decide to apply a lucky imaging method (`clip`=True) to select only the best frames (based on the integrated fluxes, **_Threshold_** = $|\Delta F|$ - `clip_fact` $\times$ $\sigma_{dev, F}$).
+
+<p align="center">
+<img src="Figures/clipping.png" width="100%"/> 
+</p>
 
 ### Step 2: extract observables
 
