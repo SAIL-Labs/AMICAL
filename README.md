@@ -37,11 +37,11 @@ In addition (4), we include two external packages called [CANDID](https://github
 
 ## Tutorials
 
-* [Step 1: clean](#make-my-data-compliant:-clean,-crop-and-select)
+* [Step 1: CLEAN](#Step-1:-CLEAN)
 * [Technologies](#technologies)
 * [Setup](#setup)
 
-### Make my data compliant: clean, crop and select
+### Step-1:-CLEAN
 
 This project is simple Lorem ipsum dolor generator.
 
