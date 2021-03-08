@@ -101,6 +101,9 @@ The second step is the core of AMICAL: we use the Fourier sampling approach to e
 All the challenge when you play with the NRM data is to find the correct position of each baseline in the Fourier transform. To do so, we implemented 4 different sampling methods (`peakmethod` = ('unique', 'square', gauss', 'fft')) to exploit information spread beyond just the _u_, _v_ positions.
 
 <p align="center">
+<img src="Figures/fft.png" width="80%"/>
+</p>
+<p align="center">
 <img src="Figures/peakmethod.png" width="100%"/>
 </p>
 
