@@ -37,26 +37,24 @@ In addition (4), we include two external packages called [CANDID](https://github
 
 ## Tutorials
 
-- [Step 1: clean and select data](#step-1--clean-and-select-data)
+- [Step 1: clean and select data](#clean)
 - [Step 2: extract observables](#extract)
 - [Step 3: calibrate V2 & CP](#calibrate)
-- [Step 4: analyse with CANDID and Pymask](#headers)
-
-### Step 1: clean and select data
+- [Step 4: analyse with CANDID and Pymask](#analyse)
 
 <a name="clean"/>
+### Step 1: clean and select data
 
-### Step 2: extract observables
+The major part of data coming from general pipeline (dark, flat, distorsion, etc.) are not enought compliant with the Fourier extracting method developed within AMICAL. The first step of AMICAL consists to clean the in different way.
 
 <a name="extract"/>
-
-### Step 3: calibrate V2 & CP
+### Step 2: extract observables
 
 <a name="calibrate"/>
-
-### Step 4: analyse with CANDID and Pymask
+### Step 3: calibrate V2 & CP
 
 <a name="analyse"/>
+### Step 4: analyse with CANDID and Pymask
 
 ## Use policy and reference publication
 
