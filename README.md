@@ -37,13 +37,15 @@ In addition (4), we include two external packages called [CANDID](https://github
 
 ## Tutorials
 
-* [Step 1: CLEAN](#Step-1:-CLEAN)
-* [Technologies](#technologies)
-* [Setup](#setup)
+* [Step 1: CLEAN](#step-1:-clean)
+* [Step 2: EXTRACT](#step-2:-extract)
+* [Step 3: CALIBRATE](#step-3:-calibrate)
 
-### Step-1:-CLEAN
+### step-1:-clean
 
-This project is simple Lorem ipsum dolor generator.
+### step-2:-extract
+
+### step-3:-calibrate
 
 ## Use policy and reference publication
 
