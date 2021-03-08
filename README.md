@@ -52,7 +52,7 @@ import amical
 
 ### Step 1: clean and select data
 
-The major part of data coming from general pipeline (applying dark, flat, distorsion, etc.) are not enought compliant with the Fourier extracting method developed within AMICAL.
+The major part of data coming from general pipelines (applying dark, flat, distorsion, etc.) are not enought compliant with the Fourier extracting method developed within AMICAL.
 
 The first step of AMICAL consists to clean the data in different way:
 
