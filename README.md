@@ -37,15 +37,15 @@ In addition (4), we include two external packages called [CANDID](https://github
 
 ## Tutorials
 
-* [Step 1: CLEAN](#step-1:-clean)
-* [Step 2: EXTRACT](#step-2:-extract)
-* [Step 3: CALIBRATE](#step-3:-calibrate)
+- [Step 1: clean and select data](#step-1--clean-and-select-data)
+- [Step 2: extract observables](#step-2--extract-observables)
+- [Step 3: calibrate V2 & CP](#step-3--calibrate-v2---cp)
 
-### step-1:-clean
+### Step 1: clean and select data
 
-### step-2:-extract
+### Step 2: extract observables
 
-### step-3:-calibrate
+### Step 3: calibrate V2 & CP
 
 ## Use policy and reference publication
 
