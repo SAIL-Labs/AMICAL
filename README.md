@@ -37,22 +37,26 @@ In addition (4), we include two external packages called [CANDID](https://github
 
 ## Tutorials
 
-- [Step 1: clean and select data](#step-1--clean-and-select-data)
-- [Step 2: extract observables](#step-2--extract-observables)
-- [Step 3: calibrate V2 & CP](#step-3--calibrate-v2---cp)
+- [Step 1: clean and select data](#clean)
+- [Step 2: extract observables](#extract)
+- [Step 3: calibrate V2 & CP](#calibrate)
 - [Step 4: analyse with CANDID and Pymask](#headers)
 
 ### Step 1: clean and select data
 
-In addition (4), we include two external packages called [CANDID](https://github.com/amerand/CANDID) and [Pymask](https://github.com/AnthonyCheetham/pymask) to **analyse** the final outputs obtained from a binary-like sources (star-star or star-planet). We interfaced these stand-alone packages with AMICAL to quickly estimate our scientific results (e.g.: separation, position angle, contrast ratio, contrast limits, etc.) using different approaches (chi2 grid, MCMC, see [example_analysis.py](example_analysis.py) for details).In addition (4), we include two external packages called [CANDID](https://github.com/amerand/CANDID) and [Pymask](https://github.com/AnthonyCheetham/pymask) to **analyse** the final outputs obtained from a binary-like sources (star-star or star-planet). We interfaced these stand-alone packages with AMICAL to quickly estimate our scientific results (e.g.: separation, position angle, contrast ratio, contrast limits, etc.) using different approaches (chi2 grid, MCMC, see [example_analysis.py](example_analysis.py) for details).In addition (4), we include two external packages called [CANDID](https://github.com/amerand/CANDID) and [Pymask](https://github.com/AnthonyCheetham/pymask) to **analyse** the final outputs obtained from a binary-like sources (star-star or star-planet). We interfaced these stand-alone packages with AMICAL to quickly estimate our scientific results (e.g.: separation, position angle, contrast ratio, contrast limits, etc.) using different approaches (chi2 grid, MCMC, see [example_analysis.py](example_analysis.py) for details).
-
+<a name="clean"/>
 
 ### Step 2: extract observables
 
+<a name="extract"/>
+
 ### Step 3: calibrate V2 & CP
 
-<a name="headers"/>
+<a name="calibrate"/>
+
 ### Step 4: analyse with CANDID and Pymask
+
+<a name="analyse"/>
 
 ## Use policy and reference publication
 
