@@ -37,7 +37,7 @@ In addition (4), we include two external packages called [CANDID](https://github
 
 ## Tutorials
 
-- [Step 1: clean and select data](#clean)
+- [Step 1: clean and select data](#step-1--clean-and-select-data)
 - [Step 2: extract observables](#extract)
 - [Step 3: calibrate V2 & CP](#calibrate)
 - [Step 4: analyse with CANDID and Pymask](#headers)
