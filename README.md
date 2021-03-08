@@ -86,7 +86,7 @@ If the cleaning parameters seem well located (cyan cross on the centre, sky radi
 cube_cleaned = amical.select_clean_data(nrm_file, **clean_param, clip=True, clip_fact=0.5)
 ```
 
-During the cleaning step, you can decide to apply a lucky imaging approach (`clip`=True) to select only the best frames (based on the integrated fluxes compared to the median: threshold = median(fluxes) - `clip_fact` x std(fluxes)).
+During the cleaning step, you can decide to adopt a lucky imaging approach (`clip`=True) to select only the best frames (based on the integrated fluxes compared to the median: threshold = median(fluxes) - `clip_fact` x std(fluxes)).
 
 <p align="center">
 <img src="Figures/clipping.png" width="100%"/>
