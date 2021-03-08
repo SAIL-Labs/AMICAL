@@ -94,19 +94,27 @@ During the cleaning step, you can decide to apply a lucky imaging selection (`cl
 
 ### Step 2: extract observables
 
-The second step is the core of AMICAL: we use the Fourier sampling approach to extract the interferometric observables (visibilities and closure phases). We implimented 4 different sampling methods (`peakmethod` = ('fft', 'gauss', 'square', 'unique')).
+The second step is the core of AMICAL: we use the Fourier sampling approach to extract the interferometric observables (visibilities and closure phases).
+
+All the challenge when you play with the NRM data is to find the correct position of each baseline in the Fourier transform. To do so, we implemented 4 different sampling methods (`peakmethod` = ('unique', 'square', gauss', 'fft')) to exploit information spread beyond just the _u_, _v_ positions.
+
+<p align="center">
+<img src="Figures/peakmethod.png" width="100%"/>
+</p>
+
+Based on NIRISS and SPHERE dataset analysis, we recommend using the **fft** method (but feel free to test the other methods for your specific case!). The expected baseline locations on the detector are computed using the mask coordinates, the wavelength and the pixel size. In some cases, the mask is not perfectly aligned with the detector and so requires to be rotated (`theta_detector` = 0) or centrally scaled (`scaling_uv` = 1). 
+
+With AMICAL, the mask coordinates, the wavelengths, the pixel size and the target name are normally determined using the fits header informations. Otherwise, you will need to give `filtname`,`instrum` and `targetname` to determine those information from the AMICAL internal database ([get_infos_obs.py](amical/get_infos_obs.py)).
 
 ```python
 params_ami = {"peakmethod": "fft",
               "maskname": "g7", # 7 holes mask of NIRISS
-              "filtname": "F380M", # If not in the header
-              "theta_detector": 0,
-              "scaling_uv": 1,
               }
 
 bs = amical.extract_bs(cube_cleaned, file_t, **params_ami)
 ```
 
+Other parameters of `amical.extract_bs()` are rarely modified but you can check the docstrings for details ([bispect.py](amical/mf_pipeline/bispect.py)).
 
 ### Step 3: calibrate V2 & CP
 
