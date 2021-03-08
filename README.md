@@ -40,7 +40,7 @@ In addition (4), we include two external packages called [CANDID](https://github
 - [Step 1: clean and select data](#step-1--clean-and-select-data)
 - [Step 2: extract observables](#step-2--extract-observables)
 - [Step 3: calibrate V2 & CP](#step-3--calibrate-v2---cp)
-- [Step 4: analyse with CANDID and Pymask](#step-4--analyse-with-candid-and-pymask)
+- [Step 4: analyse with CANDID and Pymask](#headers)
 
 ### Step 1: clean and select data
 
@@ -51,6 +51,7 @@ In addition (4), we include two external packages called [CANDID](https://github
 
 ### Step 3: calibrate V2 & CP
 
+<a name="headers"/>
 ### Step 4: analyse with CANDID and Pymask
 
 ## Use policy and reference publication
