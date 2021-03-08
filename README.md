@@ -83,16 +83,30 @@ If the cleaning parameters seem well located (cyan cross on the centre, sky radi
 
 ```python
 
-cube_cleaned = amical.select_clean_data(nrm_file, **clean_param, clip=True)
+cube_cleaned = amical.select_clean_data(nrm_file, **clean_param, clip=True, clip_fact=0.5)
 ```
 
-During the cleaning step, you can decide to apply a lucky imaging method (`clip`=True) to select only the best frames (based on the integrated fluxes compared to the median: threshold = median(fluxes) - `clip_fact` x std(fluxes)).
+During the cleaning step, you can decide to apply a lucky imaging approach (`clip`=True) to select only the best frames (based on the integrated fluxes compared to the median: threshold = median(fluxes) - `clip_fact` x std(fluxes)).
 
 <p align="center">
 <img src="Figures/clipping.png" width="100%"/>
 </p>
 
 ### Step 2: extract observables
+
+The second step is the core of AMICAL: we use the Fourier sampling approach to extract the interferometric observables (visibilities and closure phases). We implimented 4 different sampling methods (`peakmethod` = ('fft', 'gauss', 'square', 'unique')).
+
+```python
+params_ami = {"peakmethod": "fft",
+              "maskname": "g7", # 7 holes mask of NIRISS
+              "filtname": "F380M", # If not in the header
+              "theta_detector": 0,
+              "scaling_uv": 1,
+              }
+
+bs = amical.extract_bs(cube_cleaned, file_t, **params_ami)
+```
+
 
 ### Step 3: calibrate V2 & CP
 

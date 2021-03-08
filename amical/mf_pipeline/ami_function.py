@@ -402,7 +402,7 @@ def make_mf(maskname, instrument, filtname, npix, i_wl=None,
                                         **args)
         elif peakmethod == 'square':
             ind_peak = _peak_square_method(u=u, v=v, **args)
-        elif peakmethod == 'one':
+        elif peakmethod == 'unique':
             ind_peak = _peak_one_method(u=u, v=v, **args)
         elif peakmethod == 'gauss':
             ind_peak = _peak_gauss_method(u=u, v=v, filt=filt, index_mask=index_mask,

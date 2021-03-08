@@ -922,7 +922,7 @@ def _add_infos_header(infos, hdr, mf, pa, filename, maskname, npix):
 def extract_bs(cube, filename, maskname, filtname=None, targetname=None, instrum=None,
                bs_multi_tri=False, peakmethod='gauss', hole_diam=0.8, cutoff=1e-4,
                fw_splodge=0.7, naive_err=False, n_wl=3, n_blocks=0, theta_detector=0,
-               scaling=1, i_wl=None, unbias_v2=True, compute_cp_cov=True, 
+               scaling_uv=1, i_wl=None, unbias_v2=True, compute_cp_cov=True, 
                expert_plot=False, verbose=False, display=True,):
     """Compute the bispectrum (bs, v2, cp, etc.) from a data cube.
 
@@ -1022,7 +1022,7 @@ def extract_bs(cube, filename, maskname, filtname=None, targetname=None, instrum
     # ------------------------------------------------------------------------
     mf = make_mf(maskname, infos.instrument, infos.filtname, npix, peakmethod=peakmethod,
                  fw_splodge=fw_splodge, n_wl=n_wl, cutoff=cutoff, hole_diam=hole_diam,
-                 scaling=scaling, theta_detector=theta_detector, i_wl=i_wl, 
+                 scaling=scaling_uv, theta_detector=theta_detector, i_wl=i_wl, 
                  display=display,)
     if mf is None:
         return None
