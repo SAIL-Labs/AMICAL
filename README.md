@@ -202,7 +202,7 @@ cr_candid = amical.candid_cr_limit(inputdata, **param_candid, fitComp=fit1['comp
 ```
 
 <p align="center">
-<img src="Figures/example_crlimits_candid.png" width="80%"/>
+<img src="Figures/example_crlimits_candid.png" width="60%"/>
 </p>
 
 For a detailled description and the use of Pymask package (using the MCMC approach), you can check the [example_analysis.py](example_analysis.py) script.
