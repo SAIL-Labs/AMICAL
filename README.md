@@ -119,7 +119,13 @@ params_ami = {"peakmethod": "fft",
 bs = amical.extract_bs(cube_cleaned, file_t, **params_ami)
 ```
 
-Other parameters of `amical.extract_bs()` are rarely modified but you can check the docstrings for details ([bispect.py](amical/mf_pipeline/bispect.py)).
+> NOTE #1: Other parameters of `amical.extract_bs()` are rarely modified but you can check the docstrings for details ([bispect.py](amical/mf_pipeline/bispect.py)).
+
+The object `bs` stores the raw observables (`bs.vis2`, `bs.e_vis2`, `bs.cp`, `bs.e_cp`), the u-v coordinates and wavelength (`bs.u`, `bs.v`, `bs.wl`), the baseline lengths (`bs.bl`, `bs.bl_cp`), information relative to the used mask (`bs.mask`), the computed matrices and statistic (`bs.matrix`) and the important information (`bs.infos`). The .mask, .infos and .matrix are also class with various quantities.
+
+```python
+print bs.keys(), bs.mask.keys() # for details
+```
 
 ### Step 3: calibrate V2 & CP
 
@@ -139,7 +145,7 @@ cal = amical.calibrate(bs_t, [bs_c1, bs_c2, bs_c3], clip=True, sig_thres=2)
 
 > NOTE #1: for ground based facilities, two additional corrections can be applied on V2 to deal with potential piston between holes (`apply_phscorr`=True) or seeing/wind shacking variations (`apply_atmcorr`=True).
 
-> NOTE #2: You can decide to normalize the CP uncertaintities by \(\sqrt{n_{holes}/3}\).
+> NOTE #3: You can decide to normalize the CP uncertaintities by sqrt(n_holes/3) take into account the dependant vs. independant closure phases (`normalize_err_indep`=True).
 
 ### Step 4: analyse with CANDID and Pymask
 
