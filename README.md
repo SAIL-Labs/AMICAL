@@ -143,7 +143,7 @@ During the calibration procedure, a second data selection can be performed to re
 cal = amical.calibrate(bs_t, [bs_c1, bs_c2, bs_c3], clip=True, sig_thres=2) 
 ```
 
-> Note: For ground based facilities, two additional corrections can be applied on V2 to deal with potential piston between holes (`apply_phscorr`=True) or seeing/wind shacking variations (`apply_atmcorr`=True).
+> Note: For ground based facilities, two additional corrections can be applied on V2 to deal with potential piston between holes (`apply_phscorr`=True) or seeing/wind shacking variations (`apply_atmcorr`=True). This functionnality was only tested on old dataset from the previous IDL pipeline, and so needs to be cautiously used (seem to not working on SPHERE data).
 
 > Note: You can decide to normalize the CP uncertaintities by sqrt(n_holes/3) take into account the dependant vs. independant closure phases (`normalize_err_indep`=True).
 
