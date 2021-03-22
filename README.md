@@ -78,7 +78,7 @@ amical.check_data_params(nrm_file, **clean_param)
 ```
 
 <p align="center">
-<img src="Figures/cleaning_params.png" width="50%"/> 
+<img src="Figures/cleaning_params.png" width="50%"/>
 </p>
 
 If the cleaning parameters seem well located (cyan cross on the centre, sky radius outside the fringes pattern, etc.), we can apply the cleaning step to the data.
@@ -91,7 +91,7 @@ cube_cleaned = amical.select_clean_data(nrm_file, **clean_param, clip=True, clip
 During the cleaning step, you can decide to apply a lucky imaging selection (`clip`=True) to accumulate only the best frames in the cube (based on the integrated fluxes compared to the median: threshold = median(fluxes) - `clip_fact` x std(fluxes)).
 
 <p align="center">
-<img src="Figures/clipping.png" width="100%"/>
+<img src="Figures/clipping.png" width="80%"/>
 </p>
 
 ### Step 2: extract observables
@@ -101,10 +101,10 @@ The second step is the core of AMICAL: we use the Fourier sampling approach to e
 All the challenge when you play with the NRM data is to find the correct position of each baseline in the Fourier transform. To do so, we implemented 4 different sampling methods (`peakmethod` = ('unique', 'square', 'gauss', 'fft')) to exploit information spread beyond just the _u_, _v_ positions.
 
 <p align="center">
-<img src="Figures/fft.png" width="80%"/>
+<img src="Figures/fft.png" width="60%"/>
 </p>
 <p align="center">
-<img src="Figures/peakmethod.png" width="100%"/>
+<img src="Figures/peakmethod.png" width="80%"/>
 </p>
 
 Based on NIRISS and SPHERE dataset analysis, we recommend using the **fft** method (but feel free to test the other methods for your specific case!). The expected baseline locations on the detector are computed using the mask coordinates, the wavelength and the pixel size. In some cases, the mask is not perfectly aligned with the detector and so requires to be rotated (`theta_detector` = 0) or centrally scaled (`scaling_uv` = 1). 
@@ -161,7 +161,7 @@ amical.show(cal, cmax=1, vmin=0.97, vmax=1.01)
 
 By default, we assume that the u-v plan is not oriented on the detector (north-up, east-left) with `pa`=0 in degrees. The true position angle is normally computed during the step 2 (not yet available for all instruments) and so need to be given as input with `pa`=`bs.infos.pa`.
 
-Few other parameters are available to set the axe limites (`vmax`, `vmin`, `cmax`), set units (`unit`, `unit_cp`), log scale (`setlog`), flags (`true_flag_v2`, `true_flag_cp`), etc. Check [amical.show()](amical/oifits.py) for details.
+Few other parameters are available to set the axe limites (`vmax`, `vmin`, `cmax`), set units (`unit`, `unit_cp`), log scale (`setlog`), flags (`true_flag_v2`, `true_flag_cp`), etc. Check [oifits.py](amical/oifits.py) for details.
 
 ```python
 oifits_file = 'my_oifits_results.oifits'
