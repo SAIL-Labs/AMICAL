@@ -119,7 +119,7 @@ params_ami = {"peakmethod": "fft",
 bs = amical.extract_bs(cube_cleaned, file_t, **params_ami)
 ```
 
-> NOTE #1: Other parameters of `amical.extract_bs()` are rarely modified but you can check the docstrings for details ([bispect.py](amical/mf_pipeline/bispect.py)).
+> Note: Other parameters of `amical.extract_bs()` are rarely modified but you can check the docstrings for details ([bispect.py](amical/mf_pipeline/bispect.py)).
 
 The object `bs` stores the raw observables (`bs.vis2`, `bs.e_vis2`, `bs.cp`, `bs.e_cp`), the u-v coordinates and wavelength (`bs.u`, `bs.v`, `bs.wl`), the baseline lengths (`bs.bl`, `bs.bl_cp`), information relative to the used mask (`bs.mask`), the computed matrices and statistic (`bs.matrix`) and the important information (`bs.infos`). The .mask, .infos and .matrix are also class with various quantities.
 
@@ -143,11 +143,69 @@ During the calibration procedure, a second data selection can be performed to re
 cal = amical.calibrate(bs_t, [bs_c1, bs_c2, bs_c3], clip=True, sig_thres=2) 
 ```
 
-> NOTE #1: for ground based facilities, two additional corrections can be applied on V2 to deal with potential piston between holes (`apply_phscorr`=True) or seeing/wind shacking variations (`apply_atmcorr`=True).
+> Note: For ground based facilities, two additional corrections can be applied on V2 to deal with potential piston between holes (`apply_phscorr`=True) or seeing/wind shacking variations (`apply_atmcorr`=True).
 
-> NOTE #3: You can decide to normalize the CP uncertaintities by sqrt(n_holes/3) take into account the dependant vs. independant closure phases (`normalize_err_indep`=True).
+> Note: You can decide to normalize the CP uncertaintities by sqrt(n_holes/3) take into account the dependant vs. independant closure phases (`normalize_err_indep`=True).
+
+Once again, `cal` is an object containing the calibrated observables (`cal.vis2`, `cal.e_vis2`, etc.), u-v coordinates (`cal.u`, `cal.v`, `cal.u1`, `cal.v2`, etc.), wavelength (`cal.wl`) and the output objects from step 2 (`cal.raw_t`, `cal.raw_c`).
+
+You can now visualize the calibrated observables with amical.show() and save them as the standard oifits file with amical.save().
+
+```python
+amical.show(cal, cmax=1, vmin=0.97, vmax=1.01)
+```
+
+<p align="center">
+<img src="Figures/results_show.png" width="100%"/>
+</p>
+
+By default, we assume that the u-v plan is not oriented on the detector (north-up, east-left) with `pa`=0 in degrees. The true position angle is normally computed during the step 2 (not yet available for all instruments) and so need to be given as input with `pa`=`bs.infos.pa`.
+
+Few other parameters are available to set the axe limites (`vmax`, `vmin`, `cmax`), set units (`unit`, `unit_cp`), log scale (`setlog`), flags (`true_flag_v2`, `true_flag_cp`), etc. Check [amical.show()](amical/oifits.py) for details.
+
+```python
+oifits_file = 'my_oifits_results.oifits'
+
+amical.save(cal, oifits_file, pa=bs_t.infos.pa)
+```
+
+If you want to save the independant CP only, you can add `ind_hole`=0 (0..n_holes-1) to select only the CP with the given aperture index. The others parameters can be check in the docstrings of [amical.save()](amical/oifits.py).
+
+> Note: If data are extracted from a fake target, you have to add `fake_obj`=True to ignore the SIMBAD search.
 
 ### Step 4: analyse with CANDID and Pymask
+
+Finally, you can fit the data using CANDID or Pymask (two independant and stand-alone packages).
+
+First, you can use CANDID to fit the data using a grid search approach.
+
+```python
+inputdata = 'Saveoifits/my_oifits_results.oifits'
+
+param_candid = {'rmin': 20,  # inner radius of the grid
+                'rmax': 250,  # outer radius of the grid
+                'step': 50,  # grid sampling
+                'ncore': 12  # core for multiprocessing
+                }
+
+fit1 = amical.candid_grid(inputdata, **param_candid, diam=0, doNotFit=['diam*'])
+```
+
+<p align="center">
+<img src="Figures/example_fit_candid.png" width="80%"/>
+</p>
+
+And an estimate of the contrast limit.
+
+```python
+cr_candid = amical.candid_cr_limit(inputdata, **param_candid, fitComp=fit1['comp'])
+```
+
+<p align="center">
+<img src="Figures/example_crlimits_candid.png" width="80%"/>
+</p>
+
+For a detailled description and the use of Pymask package (using the MCMC approach), you can check the [example_analysis.py](example_analysis.py) script.
 
 ## Use policy and reference publication
 
