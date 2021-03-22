@@ -98,7 +98,7 @@ During the cleaning step, you can decide to apply a lucky imaging selection (`cl
 
 The second step is the core of AMICAL: we use the Fourier sampling approach to extract the interferometric observables (visibilities and closure phases).
 
-All the challenge when you play with the NRM data is to find the correct position of each baseline in the Fourier transform. To do so, we implemented 4 different sampling methods (`peakmethod` = ('unique', 'square', gauss', 'fft')) to exploit information spread beyond just the _u_, _v_ positions.
+All the challenge when you play with the NRM data is to find the correct position of each baseline in the Fourier transform. To do so, we implemented 4 different sampling methods (`peakmethod` = ('unique', 'square', 'gauss', 'fft')) to exploit information spread beyond just the _u_, _v_ positions.
 
 <p align="center">
 <img src="Figures/fft.png" width="80%"/>
@@ -122,6 +122,24 @@ bs = amical.extract_bs(cube_cleaned, file_t, **params_ami)
 Other parameters of `amical.extract_bs()` are rarely modified but you can check the docstrings for details ([bispect.py](amical/mf_pipeline/bispect.py)).
 
 ### Step 3: calibrate V2 & CP
+
+Closure phases and square visibilities suffer from systematic terms, caused by the wavefront fluctuations (temporal, polychromatic sources, non-zero size mask, etc.). To calibrate aperture masking data, these quantities are measured on identified point source calibrator stars. In practice, we subtract the calibrator signal from the raw closure phases and normalize the target visibilities by the calibrator’s visibilities.
+
+```python             }
+cal = amical.calibrate(bs_t, bs_c) # where bs_t and bs_c are the results from amical.extract_bs() on the target and calibrator respectively.
+```
+
+If several calibrators are available, the calibration factors are computed using a weighted average to account for variations between sources. In this case, `bs_c` will be a list of results from `amical.extract_bs()`. The extra errors induced are then quadratically added to the calibrated uncertainties.
+
+During the calibration procedure, a second data selection can be performed to reject bad calibrator-source pairs using a sigma-clipping approach (`clip`=True, using a threshold value in sigma `sig_thres`=2).
+
+```python             }
+cal = amical.calibrate(bs_t, [bs_c1, bs_c2, bs_c3], clip=True, sig_thres=2) 
+```
+
+> NOTE #1: for ground based facilities, two additional corrections can be applied on V2 to deal with potential piston between holes (`apply_phscorr`=True) or seeing/wind shacking variations (`apply_atmcorr`=True).
+
+> NOTE #2: You can decide to normalize the CP uncertaintities by \(\sqrt{n_{holes}/3}\).
 
 ### Step 4: analyse with CANDID and Pymask
 
