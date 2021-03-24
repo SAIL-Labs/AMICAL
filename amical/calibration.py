@@ -229,7 +229,7 @@ def average_calib_files(list_nrm, sig_thres=2, display=False):
 
 
 def calibrate(res_t, res_c, clip=False, sig_thres=2, apply_phscorr=False, 
-              apply_atmcorr=True, AddindepCpErr=False, display=False):
+              apply_atmcorr=False, normalize_err_indep=False, display=False):
     """ Calibrate v2 and cp from a science target and its calibrator.
 
     Parameters
@@ -244,7 +244,12 @@ def calibrate(res_t, res_c, clip=False, sig_thres=2, apply_phscorr=False,
     `sig_thres` : {float}
         Threshold of the sigma clipping (default: 2-sigma around the median is used),\n    
     `apply_phscorr` : {bool}, optional
-        If True, apply a phasor correction from seeing and wind shacking issues, by default False.\n
+        If True, apply a phasor correction due to piston between holes, by default False.\n
+    `apply_atmcorr` : {bool}, optional
+        If True, apply a atmospheric correction on V2 from seeing and wind shacking issues, by default False.\n
+    `normalize_err_indep` : {bool}, optional
+        If True, the CP uncertaintities are normalized by np.sqrt(n_holes/3.) to not over use
+        the non-independant closure phases.\n
     `display`: {bool}
         If True, plot figures.
 
@@ -295,7 +300,7 @@ def calibrate(res_t, res_c, clip=False, sig_thres=2, apply_phscorr=False,
 
     #
     n_holes = res_t.mask.n_holes
-    if AddindepCpErr:
+    if normalize_err_indep:
         err_scale = np.sqrt(n_holes/3.)
     else:
         err_scale = 1
