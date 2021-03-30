@@ -156,7 +156,7 @@ to exploit information spread beyond just the _u_, _v_ positions.
 <img src="Figures/peakmethod.png" width="80%"/>
 </p>
 
-Based on NIRISS and SPHERE dataset analysis, we recommend using the **fft**
+Based on NIRISS and SPHERE dataset analysis, we recommend using the `'fft'`
 method (but feel free to test the other methods for your specific case!). The
 expected baseline locations on the detector are computed using the mask
 coordinates, the wavelength and the pixel size. In some cases, the mask is not
