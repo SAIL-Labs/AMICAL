@@ -164,7 +164,7 @@ perfectly aligned with the detector and so requires to be rotated
 (`theta_detector = 0`) or centrally scaled (`scaling_uv = 1`). 
 
 With AMICAL, the mask coordinates, the wavelengths, the pixel size and the
-target name are normally determined using the fits header informations.
+target name are normally read from the fits file header.
 Otherwise, you will need to give `filtname`,`instrum` and `targetname` to
 determine those information from the AMICAL internal database
 ([get_infos_obs.py](amical/get_infos_obs.py)).
