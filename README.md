@@ -65,7 +65,7 @@ limits, etc.) using different approaches (chi2 grid, MCMC, see
 
 ## Tutorial
 
-In this tutorial, we will go through the different possibilities of AMICAL. You
+In this tutorial, we will go through different features of AMICAL. You
 can find a detailed description of the principal functions and associated
 parameters in their docstrings (easily accessible with good editors, e.g.:
 vscode).
