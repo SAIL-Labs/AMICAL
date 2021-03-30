@@ -59,7 +59,7 @@ In addition (4), we include two external packages called
 [Pymask](https://github.com/AnthonyCheetham/pymask) to **analyse** the final
 outputs obtained from a binary-like sources (star-star or star-planet). We
 interfaced these stand-alone packages with AMICAL to quickly estimate our
-scientific results (e.g.: separation, position angle, contrast ratio, contrast
+scientific results (e.g., separation, position angle, contrast ratio, contrast
 limits, etc.) using different approaches (chi2 grid, MCMC, see
 [example_analysis.py](example_analysis.py) for details).
 
