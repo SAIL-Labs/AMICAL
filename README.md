@@ -231,7 +231,7 @@ Once again, `cal` is an object containing the calibrated observables
 `cal.v2`, etc.), wavelength (`cal.wl`) and the output objects from step 2
 (`cal.raw_t`, `cal.raw_c`).
 
-You can now visualize the calibrated observables with amical.show() and save
+You can now visualize the calibrated observables with `amical.show()` and save
 them as the standard oifits file with amical.save().
 
 ```python
