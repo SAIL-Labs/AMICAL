@@ -161,7 +161,7 @@ method (but feel free to test the other methods for your specific case!). The
 expected baseline locations on the detector are computed using the mask
 coordinates, the wavelength and the pixel size. In some cases, the mask is not
 perfectly aligned with the detector and so requires to be rotated
-(`theta_detector` = 0) or centrally scaled (`scaling_uv` = 1). 
+(`theta_detector = 0`) or centrally scaled (`scaling_uv = 1`). 
 
 With AMICAL, the mask coordinates, the wavelengths, the pixel size and the
 target name are normally determined using the fits header informations.
