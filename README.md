@@ -88,7 +88,7 @@ The major part of data coming from general pipelines (applying dark, flat,
 distorsion, etc.) are not enought compliant with the Fourier extracting method
 developed within AMICAL.
 
-The first step of AMICAL consists to clean the data in different way:
+The first step of running AMICAL consists in cleaning the data in different ways:
 
 - Remove residual sky background (`sky`=True, `r1`, `dr`)
 - Crop and center the image (`isz`, `f_kernel`=3),
