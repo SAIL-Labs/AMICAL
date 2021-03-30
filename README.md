@@ -144,7 +144,7 @@ integrated fluxes compared to the median: threshold = median(fluxes) -
 The second step is the core of AMICAL: we use the Fourier sampling approach to
 extract the interferometric observables (visibilities and closure phases).
 
-All the challenge when you play with the NRM data is to find the correct
+The whole challenge when playing with the NRM data is to find the correct
 position of each baseline in the Fourier transform. To do so, we implemented 4
 different sampling methods (`peakmethod` = ('unique', 'square', 'gauss', 'fft'))
 to exploit information spread beyond just the _u_, _v_ positions.
