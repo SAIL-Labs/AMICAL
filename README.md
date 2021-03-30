@@ -126,7 +126,6 @@ radius outside the fringes pattern, etc.), we can apply the cleaning step to the
 data.
 
 ```python
-
 cube_cleaned = amical.select_clean_data(nrm_file, **clean_param, clip=True, clip_fact=0.5)
 ```
 
