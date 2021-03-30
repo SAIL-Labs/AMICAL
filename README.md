@@ -34,7 +34,7 @@ pip install -e .
 
 ## What can AMICAL do for you ?
 
-AMICAL has been developed to provide an easy-to-use solution to process
+AMICAL is developed to provide an easy-to-use solution to process
 **A**perture **M**asking **I**nterferometry (AMI) data from major existing
 facilities:
 [NIRISS](https://jwst-docs.stsci.edu/near-infrared-imager-and-slitless-spectrograph)
