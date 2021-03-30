@@ -243,7 +243,7 @@ amical.show(cal, cmax=1, vmin=0.97, vmax=1.01)
 By default, we assume that the u-v plan is not oriented on the detector
 (north-up, east-left) with `pa`=0 in degrees. The true position angle is
 normally computed during the step 2 (not yet available for all instruments) and
-so need to be given as input with `pa`=`bs.infos.pa`.
+so need to be given as input with `pa=bs.infos.pa`.
 
 Few other parameters are available to set the axe limites (`vmax`, `vmin`,
 `cmax`), set units (`unit`, `unit_cp`), log scale (`setlog`), flags
