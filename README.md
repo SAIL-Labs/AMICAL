@@ -185,7 +185,7 @@ baseline lengths (`bs.bl`, `bs.bl_cp`), information relative to the used mask
 information (`bs.infos`). The `mask`, `infos` and `matrix` attributes also hold various data.
 
 ```python
-print bs.keys(), bs.mask.keys() # for details
+print(bs.keys(), bs.mask.keys())
 ```
 
 ### Step 3: calibrate V2 & CP
