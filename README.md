@@ -1,5 +1,5 @@
-<a href="https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL"><img
-src="amical/internal_data/amical_logo.png" width="300"></a>
+<a href="https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL">
+<img src="amical/internal_data/amical_logo.png" width="300"></a>
 
 (**A**perture **M**asking **I**nterferometry **C**alibration and **A**nalysis
 **L**ibrary)
