@@ -197,7 +197,7 @@ identified point source calibrator stars. In practice, we subtract the
 calibrator signal from the raw closure phases and normalize the target
 visibilities by the calibrator’s visibilities.
 
-```python             }
+```python
 cal = amical.calibrate(bs_t, bs_c) # where bs_t and bs_c are the results from amical.extract_bs() on the target and calibrator respectively.
 ```
 
