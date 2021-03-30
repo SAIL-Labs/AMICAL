@@ -256,7 +256,7 @@ oifits_file = 'my_oifits_results.oifits'
 amical.save(cal, oifits_file, pa=bs_t.infos.pa)
 ```
 
-If you want to save the independant CP only, you can add `ind_hole`=0
+If you want to save the independent CP only, you can add `ind_hole=0`
 (0..n_holes-1) to select only the CP with the given aperture index. The others
 parameters can be check in the docstrings of [amical.save()](amical/oifits.py).
 
