@@ -174,7 +174,7 @@ params_ami = {"peakmethod": "fft",
 bs = amical.extract_bs(cube_cleaned, file_t, **params_ami)
 ```
 
-> Note: Other parameters of `amical.extract_bs()` are rarely modified but you
+> Note: Other parameters in `amical.extract_bs()` are rarely modified but you
 > can check the docstrings for details
 > ([bispect.py](amical/mf_pipeline/bispect.py)).
 
