@@ -182,8 +182,7 @@ The object `bs` stores the raw observables (`bs.vis2`, `bs.e_vis2`, `bs.cp`,
 `bs.e_cp`), the u-v coordinates and wavelength (`bs.u`, `bs.v`, `bs.wl`), the
 baseline lengths (`bs.bl`, `bs.bl_cp`), information relative to the used mask
 (`bs.mask`), the computed matrices and statistic (`bs.matrix`) and the important
-information (`bs.infos`). The .mask, .infos and .matrix are also class with
-various quantities.
+information (`bs.infos`). The `mask`, `infos` and `matrix` attributes also hold various data.
 
 ```python
 print bs.keys(), bs.mask.keys() # for details
