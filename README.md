@@ -4,8 +4,7 @@ src="amical/internal_data/amical_logo.png" width="300"></a>
 (**A**perture **M**asking **I**nterferometry **C**alibration and **A**nalysis
 **L**ibrary)
 
-[![alt
-text](https://img.shields.io/github/v/release/SydneyAstrophotonicInstrumentationLab/AMICAL)](https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL)
+[![release](https://img.shields.io/github/v/release/SydneyAstrophotonicInstrumentationLab/AMICAL)](https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL)
 [![Supported Python
 Version](https://img.shields.io/badge/python%20version-≥%203.7-important)](https://www.python.org/downloads/release/python-370/)
 ![](https://img.shields.io/github/license/SydneyAstrophotonicInstrumentationLab/AMICAL)
