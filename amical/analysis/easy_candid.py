@@ -1,5 +1,5 @@
 import numpy as np
-from amical.externals.candid import candid
+from amical.externals import candid
 from termcolor import cprint
 from uncertainties import ufloat, umath
 
