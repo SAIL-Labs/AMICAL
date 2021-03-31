@@ -1,5 +1,5 @@
 import numpy as np
-from amical.externals import candid
+from amical.externals.candid import candid
 from termcolor import cprint
 from uncertainties import ufloat, umath
 
@@ -35,9 +35,9 @@ def candid_grid(input_data, step=10, rmin=20, rmax=400, diam=0, obs=['cp', 'v2']
     """
 
     cprint(' | --- Start CANDID fitting --- :', 'green')
-    o = candid.candid.Open(input_data, extra_error=extra_error_cp,
-                           err_scale=err_scale, extra_error_v2=extra_error_v2,
-                           instruments=instruments)
+    o = candid.Open(input_data, extra_error=extra_error_cp,
+                    err_scale=err_scale, extra_error_v2=extra_error_v2,
+                    instruments=instruments)
 
     o.observables = obs
 
@@ -101,9 +101,9 @@ def candid_cr_limit(input_data, step=10, rmin=20, rmax=400,
                     obs=['cp', 'v2'], fitComp=None, ncore=1,
                     diam=None, methods=['injection'], instruments=None):
     cprint(' | --- Start CANDID contrast limit --- :', 'green')
-    o = candid.candid.Open(input_data, extra_error=extra_error_cp,
-                           err_scale=err_scale, extra_error_v2=extra_error_v2,
-                           instruments=instruments)
+    o = candid.Open(input_data, extra_error=extra_error_cp,
+                    err_scale=err_scale, extra_error_v2=extra_error_v2,
+                    instruments=instruments)
     o.observables = obs
 
     res = o.detectionLimit(rmin=rmin, rmax=rmax, step=step, drawMaps=True,
