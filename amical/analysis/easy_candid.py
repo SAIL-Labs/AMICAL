@@ -2,7 +2,7 @@ import numpy as np
 from termcolor import cprint
 from uncertainties import ufloat, umath
 
-from externals.candid import candid
+from amical.externals.candid import candid
 
 
 def candid_grid(input_data, step=10, rmin=20, rmax=400, diam=0, obs=['cp', 'v2'],
