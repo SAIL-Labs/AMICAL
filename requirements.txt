@@ -1,9 +1,0 @@
-matplotlib
-astropy
-munch
-scipy
-termcolor
-tqdm
-emcee
-uncertainties
-astroquery
