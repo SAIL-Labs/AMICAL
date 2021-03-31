@@ -81,7 +81,10 @@ extract the interferometric observables (visibilities and closure phases).
 The whole challenge when playing with the NRM data is to find the correct
 position of each baseline in the Fourier transform. To do so, we implemented 4
 different sampling methods (`peakmethod` = ('unique', 'square', 'gauss', 'fft'))
-to exploit information spread beyond just the _u_, _v_ positions.
+to exploit information spread beyond just the _u_, _v_ positions (see
+our SPIE 2020 [reference
+paper](https://ui.adsabs.harvard.edu/abs/2020SPIE11446E..11S/abstract) for more
+details).
 
 <p align="center">
 <img src="Figures/fft.png" width="60%"/>
@@ -127,8 +130,7 @@ print(bs.keys(), bs.mask.keys())
 
 Closure phases and square visibilities suffer from systematic terms, caused by
 the wavefront fluctuations (temporal, polychromatic sources, non-zero size mask,
-etc.). To calibrate aperture masking data, these quantities are measured on
-identified point source calibrator stars. In practice, we subtract the
+etc.). To calibrate aperture masking data, these quantities are measured on one or several identified unresolved (or known size) calibration stars. In practice, we subtract the
 calibrator signal from the raw closure phases and normalize the target
 visibilities by the calibrator’s visibilities.
 
@@ -221,6 +223,12 @@ fit1 = amical.candid_grid(inputdata, **param_candid, diam=0, doNotFit=['diam*'])
 <p align="center">
 <img src="Figures/example_fit_candid.png" width="80%"/>
 </p>
+<p align="center">
+<sub>
+Figure - Example of CANDID fit showing the location of the detected companion (red cross) and the associated detection map.
+</sub>
+</em>
+</p>
 
 And an estimate of the contrast limit.
 
@@ -228,9 +236,19 @@ And an estimate of the contrast limit.
 cr_candid = amical.candid_cr_limit(inputdata, **param_candid, fitComp=fit1['comp'])
 ```
 
-<p align="center">
+<p align="center" style="color:#5f939a">
 <img src="Figures/example_crlimits_candid.png" width="60%"/>
+<font size="-1">
+<em>
+Figure - Example of CANDID contrast limit map (top panel) and detection limit curve (lower panel). For this dataset, the contrast limit achieved is around 8.5 magnitudes (3-σ).
+</font>
+</em>
 </p>
+<!-- <p align="center" style="color:#5f939a">
+<font size="-1">
+Figure - Example of CANDID contrast limit map (top panel) and detection limit curve (lower panel). For this dataset, the contrast limit achieved is around 8.5 magnitudes (3-σ).
+</font>
+</p> -->
 
 For a detailled description and the use of Pymask package (using the MCMC
 approach), you can check the [example_analysis.py](example_analysis.py) script.
