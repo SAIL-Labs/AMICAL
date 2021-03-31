@@ -238,17 +238,12 @@ cr_candid = amical.candid_cr_limit(inputdata, **param_candid, fitComp=fit1['comp
 
 <p align="center" style="color:#5f939a">
 <img src="Figures/example_crlimits_candid.png" width="60%"/>
-<font size="-1">
-<em>
-Figure - Example of CANDID contrast limit map (top panel) and detection limit curve (lower panel). For this dataset, the contrast limit achieved is around 8.5 magnitudes (3-σ).
-</font>
-</em>
 </p>
-<!-- <p align="center" style="color:#5f939a">
+<p align="center" style="color:#5f939a">
 <font size="-1">
 Figure - Example of CANDID contrast limit map (top panel) and detection limit curve (lower panel). For this dataset, the contrast limit achieved is around 8.5 magnitudes (3-σ).
 </font>
-</p> -->
+</p>
 
 For a detailled description and the use of Pymask package (using the MCMC
 approach), you can check the [example_analysis.py](example_analysis.py) script.
