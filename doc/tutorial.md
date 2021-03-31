@@ -236,11 +236,11 @@ And an estimate of the contrast limit.
 cr_candid = amical.candid_cr_limit(inputdata, **param_candid, fitComp=fit1['comp'])
 ```
 
-<p align="center" style="color:#5f939a">
+<p align="center">
 <img src="Figures/example_crlimits_candid.png" width="60%"/>
 </p>
-<p align="center" style="color:#5f939a">
-<font size="-1">
+<p align="center" style="color:#5f939a" width="60%">
+<font size="-2">
 Figure - Example of CANDID contrast limit map (top panel) and detection limit curve (lower panel). For this dataset, the contrast limit achieved is around 8.5 magnitudes (3-σ).
 </font>
 </p>
