@@ -34,8 +34,6 @@ pip install -e .
 
 ## What can AMICAL do for you ?
 
----
-
 AMICAL is developed to provide an easy-to-use solution to process
 **A**perture **M**asking **I**nterferometry (AMI) data from major existing
 facilities:
@@ -64,8 +62,6 @@ limits, etc.) using different approaches (chi2 grid, MCMC, see
 
 ## Getting started
 
----
-
 Looking for a quickstart into AMICAL? You can go through our **[tutorial](doc/tutorial.md)** explaining
 how to use its different features.
 
@@ -73,8 +69,6 @@ You can also have a look to the example scripts
 made for [NIRISS](doc/example_NIRISS.py) and [SPHERE](doc/example_NIRISS.py) or get details about the CANDID/Pymask uses with [example_analysis.py](doc/example_analysis.py).
 
 ## Use policy and reference publication
-
----
 
 If you use AMICAL in a publication, we encourage you to properly cite the
 reference paper published during the 2020 SPIE conference: [The James Webb Space
@@ -85,8 +79,6 @@ mode of NIRISS, so feel free to have a look at the exciting possibilities of
 AMI!
 
 ## Acknowledgements
-
----
 
 This work is mainly a modern Python translation of the very well known (and old)
 IDL pipeline used to process and analyze Sparse Aperture Masking data. This
