@@ -1,7 +1,7 @@
 import numpy as np
 from matplotlib import pyplot as plt
 
-from amical.analysis import pymask
+from externals import pymask
 
 
 def pymask_grid(input_data, ngrid=40, pa_prior=[0, 360], sep_prior=[0, 100], cr_prior=[1, 150],
