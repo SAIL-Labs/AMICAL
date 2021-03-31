@@ -174,7 +174,7 @@ them as the standard oifits file with amical.save().
 ```python
 amical.show(cal, cmax=1, vmin=0.97, vmax=1.01)
 ```
----
+
 <p align="center">
 <img src="Figures/results_show.png" width="100%"/>
 </p>
@@ -182,8 +182,6 @@ amical.show(cal, cmax=1, vmin=0.97, vmax=1.01)
 
 *Figure - Example of calibrated observables obtained with NIRISS. **Left:** u-v
 plan, **Top-right:** squared visibilities, **Lower-right:** Closure phases.*
-
----
 
 By default, we assume that the u-v plan is oriented on the detector
 (north-up, east-left) with `pa=0` in degrees. The true position angle is
