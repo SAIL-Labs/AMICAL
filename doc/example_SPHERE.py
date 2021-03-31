@@ -21,7 +21,7 @@ clean_param = {'isz': 149,
                'f_kernel': 3
                }
 
-amical.check_data_params(file_t, **clean_param)
+amical.show_clean_params(file_t, **clean_param)
 cube_t = amical.select_clean_data(file_t, clip=True,
                                   **clean_param, display=True)
 

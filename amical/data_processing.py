@@ -215,10 +215,10 @@ def fix_bad_pixels(image, bad_map, add_bad=[], x_stddev=1):
     return fixed_image
 
 
-def check_data_params(filename, isz, r1, dr, bad_map=None, add_bad=[],
+def show_clean_params(filename, isz, r1, dr, bad_map=None, add_bad=[],
                       edge=0, remove_bad=True, nframe=0, ihdu=0, f_kernel=3,
                       offx=0, offy=0, apod=False, window=None):
-    """ Check the input parameters for the cleaning.
+    """ Display the input parameters for the cleaning.
 
     Parameters:
     -----------

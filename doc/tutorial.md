@@ -49,7 +49,7 @@ clean_param = {'isz': 69, # final cropped image size [pix]
               }
 
 # Firsly, check if the input parameters are valid
-amical.check_data_params(nrm_file, **clean_param)
+amical.show_clean_params(nrm_file, **clean_param)
 ```
 
 <p align="center">
