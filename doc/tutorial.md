@@ -178,6 +178,11 @@ amical.show(cal, cmax=1, vmin=0.97, vmax=1.01)
 <p align="center">
 <img src="Figures/results_show.png" width="100%"/>
 </p>
+<p align="center" style="color:#5f939a" width="60%">
+<sub>
+Figure - Example of calibrated observables obtained with NIRISS. **Left:** u-v plan, **Top-right:** squared visibilities, **Lower-right:** Closure phases.
+</sub>
+</p>
 
 By default, we assume that the u-v plan is oriented on the detector
 (north-up, east-left) with `pa=0` in degrees. The true position angle is
@@ -227,7 +232,6 @@ fit1 = amical.candid_grid(inputdata, **param_candid, diam=0, doNotFit=['diam*'])
 <sub>
 Figure - Example of CANDID fit showing the location of the detected companion (red cross) and the associated detection map.
 </sub>
-</em>
 </p>
 
 And an estimate of the contrast limit.
@@ -240,9 +244,9 @@ cr_candid = amical.candid_cr_limit(inputdata, **param_candid, fitComp=fit1['comp
 <img src="Figures/example_crlimits_candid.png" width="60%"/>
 </p>
 <p align="center" style="color:#5f939a" width="60%">
-<font size="-2">
+<sub>
 Figure - Example of CANDID contrast limit map (top panel) and detection limit curve (lower panel). For this dataset, the contrast limit achieved is around 8.5 magnitudes (3-σ).
-</font>
+</sub>
 </p>
 
 For a detailled description and the use of Pymask package (using the MCMC
