@@ -90,14 +90,14 @@ developed within AMICAL.
 
 The first step of running AMICAL consists in cleaning the data in different ways:
 
-- Remove residual sky background (`sky`=True, `r1`, `dr`)
-- Crop and center the image (`isz`, `f_kernel`=3),
+- Remove residual sky background (`sky=True`, `r1`, `dr`)
+- Crop and center the image (`isz`, `f_kernel=3`),
 - Apply windowing (`apod`, `window`),
-- Apply bad pixels correction (`bad_map`=None, `add_bad`=[],
-  `remove_bad`=False).
+- Apply bad pixels correction (`bad_map=None`, `add_bad=[]`,
+  `remove_bad=False`).
 
 We use a 2d gaussian interpolation to replace the bad pixels (same as
-[here](https://docs.astropy.org/en/stable/convolution/)). The input `bad_map` is
+[here](https://docs.astropy.org/en/stable/convolution/)). The keyword argument `bad_map` is
 a 2D array (same shape as the data) filled with 0 and 1 where 1 stands for a bad
 pixel (hot, cosmic, etc.). Instrument pipelines generally come with bad pixels
 map generator, but you can add an unlimited number of bad pixels as the input
@@ -160,7 +160,7 @@ method (but feel free to test the other methods for your specific case!). The
 expected baseline locations on the detector are computed using the mask
 coordinates, the wavelength and the pixel size. In some cases, the mask is not
 perfectly aligned with the detector and so requires to be rotated
-(`theta_detector = 0`) or centrally scaled (`scaling_uv = 1`). 
+(`theta_detector = 0`) or centrally scaled (`scaling_uv = 1`).
 
 With AMICAL, the mask coordinates, the wavelengths, the pixel size and the
 target name are normally read from the fits file header.
@@ -198,7 +198,9 @@ calibrator signal from the raw closure phases and normalize the target
 visibilities by the calibrator’s visibilities.
 
 ```python
-cal = amical.calibrate(bs_t, bs_c) # where bs_t and bs_c are the results from amical.extract_bs() on the target and calibrator respectively.
+# bs_t and bs_c are the results from amical.extract_bs() on the target and 
+# calibrator respectively.
+cal = amical.calibrate(bs_t, bs_c) 
 ```
 
 If several calibrators are available, the calibration factors are computed using
@@ -207,22 +209,22 @@ a weighted average to account for variations between sources. In this case,
 induced are then quadratically added to the calibrated uncertainties.
 
 During the calibration procedure, a second data selection can be performed to
-reject bad calibrator-source pairs using a sigma-clipping approach (`clip`=True,
-using a threshold value in sigma `sig_thres`=2).
+reject bad calibrator-source pairs using a sigma-clipping approach (`clip=True`,
+using a threshold value in sigma `sig_thres=2`).
 
 ```python             }
 cal = amical.calibrate(bs_t, [bs_c1, bs_c2, bs_c3], clip=True, sig_thres=2) 
 ```
 
 > Note: For ground based facilities, two additional corrections can be applied
-> on V2 to deal with potential piston between holes (`apply_phscorr`=True) or
-> seeing/wind shacking variations (`apply_atmcorr`=True). This functionnality
+> on V2 to deal with potential piston between holes (`apply_phscorr=True`) or
+> seeing/wind shacking variations (`apply_atmcorr=True`). This functionnality
 > was only tested on old dataset from the previous IDL pipeline, and so needs to
 > be cautiously used (seem to not working on SPHERE data).
 
 > Note: You can decide to normalize the CP uncertaintities by sqrt(n_holes/3)
 > take into account the dependant vs. independant closure phases
-> (`normalize_err_indep`=True).
+> (`normalize_err_indep=True`).
 
 Once again, `cal` is an object containing the calibrated observables
 (`cal.vis2`, `cal.e_vis2`, etc.), u-v coordinates (`cal.u`, `cal.v`, `cal.u1`,
@@ -240,15 +242,14 @@ amical.show(cal, cmax=1, vmin=0.97, vmax=1.01)
 <img src="Figures/results_show.png" width="100%"/>
 </p>
 
-By default, we assume that the u-v plan is not oriented on the detector
-(north-up, east-left) with `pa`=0 in degrees. The true position angle is
+By default, we assume that the u-v plan is oriented on the detector
+(north-up, east-left) with `pa=0` in degrees. The true position angle is
 normally computed during the step 2 (not yet available for all instruments) and
 so need to be given as input with `pa=bs.infos.pa`.
 
 Few other parameters are available to set the axe limites (`vmax`, `vmin`,
 `cmax`), set units (`unit`, `unit_cp`), log scale (`setlog`), flags
-(`true_flag_v2`, `true_flag_cp`), etc. Check [oifits.py](amical/oifits.py) for
-details.
+(`true_flag_v2`, `true_flag_cp`), etc.
 
 ```python
 oifits_file = 'my_oifits_results.oifits'
@@ -258,10 +259,10 @@ amical.save(cal, oifits_file, pa=bs_t.infos.pa)
 
 If you want to save the independent CP only, you can add `ind_hole=0`
 (0..n_holes-1) to select only the CP with the given aperture index. The others
-parameters can be check in the docstrings of [amical.save()](amical/oifits.py).
+parameters can be check in the docstrings.
 
 > Note: If data are extracted from a fake target, you have to add
-> `fake_obj`=True to ignore the SIMBAD search.
+> `fake_obj=True` to ignore the SIMBAD search.
 
 ### Step 4: analyse with CANDID and Pymask
 
