@@ -1,7 +1,5 @@
 # Tutorials
 
----
-
 In this tutorial, we will go through different features of AMICAL. You
 can find a detailed description of the principal functions and associated
 parameters in their docstrings (easily accessible with good editors, e.g.:
@@ -13,7 +11,7 @@ vscode).
 - [Step 4: analyse with CANDID and
   Pymask](#step-4-analyse-with-candid-and-pymask)
 
-To begin, we just need to import AMICAL library:
+In the following, we'll assume you imported the library as:
 
 ```python
 import amical
