@@ -56,6 +56,8 @@ amical.check_data_params(nrm_file, **clean_param)
 <img src="Figures/cleaning_params.png" width="50%"/>
 </p>
 
+***FIG. 1** - Example of appropriate set of parameters to clean NIRISS data.*
+
 If the cleaning parameters seem well located (cyan cross on the centre, sky
 radius outside the fringes pattern, etc.), we can apply the cleaning step to the
 data.
@@ -73,6 +75,10 @@ integrated fluxes compared to the median: threshold = median(fluxes) -
 <img src="Figures/clipping.png" width="80%"/>
 </p>
 
+***FIG. 2** - Example of integrated flux measurement along the cube (# frames).
+The rejected frames are labelled by the red cross. The threshold is represented
+with the green dashed line.*
+
 ### Step 2: extract observables
 
 The second step is the core of AMICAL: we use the Fourier sampling approach to
@@ -81,14 +87,22 @@ extract the interferometric observables (visibilities and closure phases).
 The whole challenge when playing with the NRM data is to find the correct
 position of each baseline in the Fourier transform. To do so, we implemented 4
 different sampling methods (`peakmethod` = ('unique', 'square', 'gauss', 'fft'))
-to exploit information spread beyond just the _u_, _v_ positions.
+to exploit information spread beyond just the _u_, _v_ positions (see
+our SPIE 2020 [reference
+paper](https://ui.adsabs.harvard.edu/abs/2020SPIE11446E..11S/abstract) for more
+details).
 
 <p align="center">
 <img src="Figures/fft.png" width="60%"/>
 </p>
+
+***FIG. 3** - Example of NIRISS data. **Left:** Image plane representing the fringe
+pattern. **Right:** Fourier transform (Fourier plane).*
 <p align="center">
 <img src="Figures/peakmethod.png" width="80%"/>
 </p>
+
+***FIG. 4** - Zoom on one Fourier peak (called splodge) showing the different sampling methods.*
 
 Based on NIRISS and SPHERE dataset analysis, we recommend using the `'fft'`
 method (but feel free to test the other methods for your specific case!). The
@@ -127,8 +141,7 @@ print(bs.keys(), bs.mask.keys())
 
 Closure phases and square visibilities suffer from systematic terms, caused by
 the wavefront fluctuations (temporal, polychromatic sources, non-zero size mask,
-etc.). To calibrate aperture masking data, these quantities are measured on
-identified point source calibrator stars. In practice, we subtract the
+etc.). To calibrate aperture masking data, these quantities are measured on one or several identified unresolved (or known size) calibration stars. In practice, we subtract the
 calibrator signal from the raw closure phases and normalize the target
 visibilities by the calibrator’s visibilities.
 
@@ -176,6 +189,10 @@ amical.show(cal, cmax=1, vmin=0.97, vmax=1.01)
 <p align="center">
 <img src="Figures/results_show.png" width="100%"/>
 </p>
+<p align="center">
+
+***FIG. 5** - Example of calibrated observables obtained with NIRISS. **Left:** u-v
+plan, **Top-right:** squared visibilities, **Lower-right:** Closure phases.*
 
 By default, we assume that the u-v plan is oriented on the detector
 (north-up, east-left) with `pa=0` in degrees. The true position angle is
@@ -222,6 +239,8 @@ fit1 = amical.candid_grid(inputdata, **param_candid, diam=0, doNotFit=['diam*'])
 <img src="Figures/example_fit_candid.png" width="80%"/>
 </p>
 
+***FIG. 6** - Example of CANDID fit showing the location of the detected companion (red cross) and the associated detection map.*
+
 And an estimate of the contrast limit.
 
 ```python
@@ -231,6 +250,8 @@ cr_candid = amical.candid_cr_limit(inputdata, **param_candid, fitComp=fit1['comp
 <p align="center">
 <img src="Figures/example_crlimits_candid.png" width="60%"/>
 </p>
+
+***FIG. 7** - Example of CANDID contrast limit map (top panel) and detection limit curve (lower panel). For this dataset, the contrast limit achieved is around 8.5 magnitudes (3-σ).*
 
 For a detailled description and the use of Pymask package (using the MCMC
 approach), you can check the [example_analysis.py](example_analysis.py) script.
