@@ -133,7 +133,7 @@ def _compute_complex_bs(ft_arr, index_mask, fringe_peak, mf, dark_ps=None,
             ftf2 = np.roll(ft_frame, -1, axis=1)
             dummy = np.sum(ft_frame[pix] * np.conj(ftf1[pix]) +
                            np.conj(ft_frame[pix]) * ftf2[pix])
-            
+
             phs["value"][1, i, j] = np.arctan2(dummy.imag, dummy.real)
             phs["err"][1, i, j] = 1 / abs(dummy)
 
@@ -198,7 +198,7 @@ def _construct_ft_arr(cube):
 
     i_ps = ft_arr.shape
     n_ps = i_ps[0]
-    
+
     return ft_arr, n_ps, n_pix
 
 
@@ -222,56 +222,48 @@ def _show_complex_ps(ft_arr, i_frame=0):
     return fig
 
 
-def _show_peak_position(ft_arr, n_baselines, mf, maskname, peakmethod, 
-                        i_fram=0, aver=False):
-    """ Show the expected position of the peak in the Fourier space using the
+def _show_ft_arr_peak(ft_arr, n_baselines, mf, maskname, peakmethod,
+                      i_fram=0, aver=False, centred=False, size=20,
+                      norm=None, alpha=1, vmin=0):
+    """ Show the expected position of the peaks in the Fourier space using the
     mask coordinates and the chosen method. """
-    dim1, dim2 = ft_arr.shape[1], ft_arr.shape[2]
-    x, y = np.arange(dim1), np.arange(dim2)
-    X, Y = np.meshgrid(x, y)
-    lX, lY, lC = [], [], []
-    for j in range(n_baselines):
-        l_x = X.ravel()[mf.pvct[mf.ix[0, j]: mf.ix[1, j]]]
-        l_y = Y.ravel()[mf.pvct[mf.ix[0, j]: mf.ix[1, j]]]
-        g = mf.gvct[mf.ix[0, j]: mf.ix[1, j]]
-
-        peak = [[l_y[k], l_x[k], g[k]] for k in range(len(l_x))]
-
-        for x in peak:
-            lX.append(x[1])
-            lY.append(x[0])
-            lC.append(x[2])
 
     ft_frame = ft_arr[i_fram]
-    ps = ft_frame.real
-    
+    ps = abs(ft_frame)
+
     if aver:
-        ps = np.zeros(ps.shape)
-        for i_frame in ft_arr:
-            ps += i_frame.real
-        ps /= ft_arr.shape[0]
-        
+        ps = abs(np.mean(ft_arr, axis=0))
+        if centred:
+            ps = np.fft.fftshift(ps)
+    ps /= ps.max()
+
+    lX, lY, lC = [], [], []
+    for j in range(n_baselines):
+        lX.extend(mf.l_norm_c[j][1])
+        lY.extend(mf.l_norm_c[j][0])
+        lC.extend(mf.v_norm_c[j])
+        lX.extend(mf.l_conj_c[j][1])
+        lY.extend(mf.l_conj_c[j][0])
+        lC.extend(mf.v_conj_c[j])
+
     fig, ax = plt.subplots(figsize=(9, 7))
-    # plt.rc('xtick', labelsize=15)
     ax.set_title("Expected splodge position with mask %s (method = %s)" %
                  (maskname, peakmethod))
-    im = ax.imshow(ps, cmap="gist_stern", origin="lower")
-    sc = ax.scatter(lX, lY, c=lC, s=20, cmap="viridis")
+    im = ax.imshow(ps, cmap="gist_stern", origin="lower", norm=norm,
+                   vmin=vmin)
+    sc = ax.scatter(lX, lY, c=lC, s=size, cmap="viridis", alpha=alpha)
     divider = make_axes_locatable(ax)
     cax = divider.new_horizontal(size="3%", pad=0.5)
     fig.add_axes(cax)
     cb = fig.colorbar(im, cax=cax)
 
-    cax2 = divider.new_horizontal(size="3%", pad=0.6, pack_start=True)
+    cax2 = divider.new_horizontal(size="3%", pad=0.8, pack_start=True)
     fig.add_axes(cax2)
     cb2 = fig.colorbar(sc, cax=cax2)
     cb2.ax.yaxis.set_ticks_position('left')
     cb.set_label("Power Spectrum intensity")
     cb2.set_label("Relative weight [%]", fontsize=20)
-    # x1, y1 = 23, 60
-    # ax.set_xlim(x1, x1+8)
-    # ax.set_ylim(y1, y1+8)
-    plt.subplots_adjust(top=0.965, bottom=0.035, left=0.025, right=0.965,
+    plt.subplots_adjust(top=0.965, bottom=0.035, left=0.05, right=0.965,
                         hspace=0.2, wspace=0.2)
 
 
@@ -320,7 +312,7 @@ def _check_input_infos(hdr, targetname=None, filtname=None,
     filt = hdr.get('FILTER')
     instrument = hdr.get('INSTRUME', instrum)
     mod = hdr.get('HIERARCH ESO DET ID')
-    
+
     if (mod == 'IFS') & (instrument == 'SPHERE'):
         instrument = instrument + '-' + mod
 
@@ -332,7 +324,8 @@ def _check_input_infos(hdr, targetname=None, filtname=None,
                 cprint("Warning: OBJECT is not in the header, targetname is used (%s)." %
                        targetname, "green")
         else:
-            cprint("Error: target name not found (header or as input).", "red")
+            if verbose:
+                cprint("Error: target name not found (header or as input).", "red")
 
     # Check the filter used
     if (filt is None):
@@ -485,13 +478,13 @@ def _compute_v2_quantities(v2_arr, bias_arr, n_blocks):
 
     # Compute vis. squared average
     v2 = np.mean(v2_arr, axis=0)
-    
+
     # Compute vis. squared difference
     for j in range(n_baselines):
         for k in range(n_blocks):
             ind1 = k * n_ps // n_blocks
             ind2 = (k + 1) * n_ps // (n_blocks - 1)
-            v2_diff[k, j] = np.mean(v2_arr[ind1:ind2, j]) - v2[j]                
+            v2_diff[k, j] = np.mean(v2_arr[ind1:ind2, j]) - v2[j]
             # v2_diff[k, j] = np.mean(v2_arr[k, j]) - v2[j]
 
     # Compute vis. squared covariance
@@ -500,11 +493,11 @@ def _compute_v2_quantities(v2_arr, bias_arr, n_blocks):
             num = np.sum(v2_diff[:, j] * v2_diff[:, k])
             v2_cov[j, k] = num / (n_blocks - 1) / n_blocks
             # Additonal "/ n_blocks" in the original code ???
-    
-    # AS. Comparison with numpy cov matrices   
+
+    # AS. Comparison with numpy cov matrices
     # v2_cov_pyt = np.cov(v2_arr.T, bias=False)
     # v2_cov = v2_cov_pyt
-    
+
     x = np.arange(n_baselines)
     avar = v2_cov[x, x] * n_ps - bias_arr ** 2 * (1 + (2.0 * v2) / bias_arr)
     err_avar = np.sqrt(
@@ -662,7 +655,7 @@ def _normalize_all_obs(bs_quantities, v2_quantities, cvis_arr, cp_cov,
         cp_cov_norm = cp_cov / np.mean(fluxes ** 6) * n_holes ** 6
     except TypeError:
         cp_cov_norm = None
-    
+
     bs_cov_norm = bs_cov / np.mean(fluxes ** 6) * n_holes ** 6
     bs_v2_cov_norm = np.real(bs_v2_cov / np.mean(fluxes ** 5) * n_holes ** 5)
     bs_var_norm = bs_var / np.mean(fluxes ** 6) * n_holes ** 6
@@ -670,7 +663,8 @@ def _normalize_all_obs(bs_quantities, v2_quantities, cvis_arr, cp_cov,
     if expert_plot:
         plt.figure(figsize=(5, 4))
         plt.title('DIAGNOSTIC PLOTS - V2 - %s' % infos.target)
-        plt.plot(v2_arr_norm[0], color='grey', alpha=.2, label='V$^2$ dispersion')
+        plt.plot(v2_arr_norm[0], color='grey',
+                 alpha=.2, label='V$^2$ dispersion')
         plt.plot(v2_arr_norm.T, color='grey', alpha=.2)
         plt.plot(v2_norm, color='crimson', label='Raw V$^2$')
         plt.grid(alpha=.2)
@@ -678,7 +672,7 @@ def _normalize_all_obs(bs_quantities, v2_quantities, cvis_arr, cp_cov,
         plt.xlabel('# baselines')
         plt.ylabel('Raw visibilities')
         plt.tight_layout()
-    
+
     # We compute the correlation matrix (to be used lated)
     v2_cor = cov2cor(v2_cov)[0]
 
@@ -704,7 +698,7 @@ def _compute_cp(obs_result, obs_norm, infos, expert_plot=False):
 
     obs_result['cp'] = cp
     obs_norm['cp_arr'] = cp_arr
-    
+
     if expert_plot:
         plt.figure(figsize=(5, 4))
         plt.title('DIAGNOSTIC PLOTS - CP - %s' % infos.target)
@@ -755,7 +749,7 @@ def _compute_uncertainties(obs_result, obs_norm, naive_err=False):
     v2_cov = obs_norm['v2_cov']
     cp_arr = obs_norm['cp_arr']
     v2_arr = obs_norm['v2_arr']
-    
+
     if not naive_err:
         e_cp = np.rad2deg(np.sqrt(bs_var[1] / abs(bs) ** 2))
         e_v2 = np.sqrt(np.diag(v2_cov))
@@ -922,8 +916,8 @@ def _add_infos_header(infos, hdr, mf, pa, filename, maskname, npix):
 def extract_bs(cube, filename, maskname, filtname=None, targetname=None, instrum=None,
                bs_multi_tri=False, peakmethod='gauss', hole_diam=0.8, cutoff=1e-4,
                fw_splodge=0.7, naive_err=False, n_wl=3, n_blocks=0, theta_detector=0,
-               scaling_uv=1, i_wl=None, unbias_v2=True, compute_cp_cov=True, 
-               expert_plot=False, verbose=False, display=True,):
+               scaling_uv=1, i_wl=None, unbias_v2=True, compute_cp_cov=True,
+               fliplr=False, expert_plot=False, verbose=False, display=True,):
     """Compute the bispectrum (bs, v2, cp, etc.) from a data cube.
 
     Parameters:
@@ -1007,7 +1001,7 @@ def extract_bs(cube, filename, maskname, filtname=None, targetname=None, instrum
         n_holes = len(get_mask(infos.instrument, maskname))
     except TypeError:
         return None
-    
+
     # 2. Determine the number of different baselines (bl), bispectrums (bs) or
     # covariance matrices (cov) and associates each holes as couple for bl or
     # triplet for bs (or cp) using compute_index_mask function (see ami_function.py).
@@ -1022,8 +1016,8 @@ def extract_bs(cube, filename, maskname, filtname=None, targetname=None, instrum
     # ------------------------------------------------------------------------
     mf = make_mf(maskname, infos.instrument, infos.filtname, npix, peakmethod=peakmethod,
                  fw_splodge=fw_splodge, n_wl=n_wl, cutoff=cutoff, hole_diam=hole_diam,
-                 scaling=scaling_uv, theta_detector=theta_detector, i_wl=i_wl, 
-                 display=display,)
+                 scaling=scaling_uv, theta_detector=theta_detector, i_wl=i_wl,
+                 fliplr=fliplr, display=display,)
     if mf is None:
         return None
 
@@ -1051,7 +1045,8 @@ def extract_bs(cube, filename, maskname, filtname=None, targetname=None, instrum
     # ------------------------------------------------------------------------
     if display:
         _show_complex_ps(ft_arr)
-        _show_peak_position(ft_arr, n_baselines, mf, maskname, peakmethod)
+        _show_ft_arr_peak(ft_arr, n_baselines, mf, maskname, peakmethod,
+                          aver=True, centred=True)
 
     if verbose:
         print("\nFilename: %s" % filename.split("/")[-1])
@@ -1070,7 +1065,7 @@ def extract_bs(cube, filename, maskname, filtname=None, targetname=None, instrum
     complex_bs = _compute_complex_bs(ft_arr, index_mask, fringe_peak, mf,
                                      dark_ps=None, closing_tri_pix=closing_tri_pix,
                                      bs_multi_tri=bs_multi_tri)
-    
+
     cvis_arr = complex_bs['vis_arr']['complex']
     v2_arr = complex_bs['vis_arr']['squared']
     bs_arr = complex_bs['bs_arr']
@@ -1098,7 +1093,7 @@ def extract_bs(cube, filename, maskname, filtname=None, targetname=None, instrum
         cp_cov = _compute_cp_cov(bs_arr, bs_quantities['bs'], index_mask)
     else:
         cp_cov = None
-        
+
     # 9. Now normalize all extracted observables
     vis2_norm, obs_norm = _normalize_all_obs(bs_quantities, v2_quantities, cvis_arr, cp_cov,
                                              bs_v2_cov, fluxes, index_mask, infos,
@@ -1109,7 +1104,8 @@ def extract_bs(cube, filename, maskname, filtname=None, targetname=None, instrum
         _show_norm_matrices(obs_norm, expert_plot=expert_plot)
 
     # 10. Now we compute the cp quantities and store them with the other observables
-    obs_result = _compute_cp(obs_result, obs_norm, infos, expert_plot=expert_plot)
+    obs_result = _compute_cp(obs_result, obs_norm,
+                             infos, expert_plot=expert_plot)
 
     t3_coord, bl_cp = _compute_t3_coord(mf, index_mask)
     bl_v2 = np.sqrt(mf.u ** 2 + mf.v ** 2)
@@ -1155,3 +1151,38 @@ def extract_bs(cube, filename, maskname, filtname=None, targetname=None, instrum
         cprint("\nDone (exec time: %d min %2.1f s)." %
                (m, t - m * 60), color="magenta")
     return dict2class(obs_result)
+
+
+def show_peaks_position(cube, filename, maskname, filtname=None,
+                        targetname=None, instrum=None, peakmethod='fft',
+                        fw_splodge=0.7, n_wl=3, cutoff=1e-4, hole_diam=0.8,
+                        scaling_uv=1, theta_detector=0, i_wl=None, size=20,
+                        fliplr=False, aver=True, centred=True, alpha=1,
+                        norm=None, vmin=0):
+
+    ft_arr, n_ps, npix = _construct_ft_arr(cube)
+
+    hdu = fits.open(filename)
+    hdr = hdu[0].header
+
+    infos = _check_input_infos(hdr, targetname=targetname, filtname=filtname,
+                               instrum=instrum, verbose=False)
+    try:
+        n_holes = len(get_mask(infos.instrument, maskname))
+    except TypeError:
+        return None
+
+    index_mask = compute_index_mask(n_holes)
+    n_baselines = index_mask.n_baselines
+
+    mf = make_mf(maskname, infos.instrument, infos.filtname, npix, peakmethod=peakmethod,
+                 fw_splodge=fw_splodge, n_wl=n_wl, cutoff=cutoff, hole_diam=hole_diam,
+                 scaling=scaling_uv, theta_detector=theta_detector, i_wl=i_wl,
+                 fliplr=fliplr, display=False)
+    if mf is None:
+        return None
+
+    _show_ft_arr_peak(ft_arr, n_baselines, mf, maskname, peakmethod,
+                      aver=aver, centred=centred, size=size, norm=norm,
+                      alpha=alpha, vmin=vmin)
+    return mf
