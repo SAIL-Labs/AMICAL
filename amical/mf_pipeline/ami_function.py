@@ -285,7 +285,7 @@ def _make_overlap_mat(mf, n_baselines, display=False):
 def make_mf(maskname, instrument, filtname, npix, i_wl=None,
             peakmethod='fft', n_wl=3, theta_detector=0,
             cutoff=1e-4, hole_diam=0.8, fw_splodge=0.7,
-            scaling=1, diag_plot=False, verbose=False, 
+            scaling=1, diag_plot=False, verbose=False,
             display=True):
     """
     Summary:
@@ -333,13 +333,14 @@ def make_mf(maskname, instrument, filtname, npix, i_wl=None,
         return None
     # Wavelength of the filter (filt[0]: central, filt[1]: width)
     filt = get_wavelength(instrument, filtname)
-    
+
     if (instrument == 'SPHERE-IFS'):
         if isinstance(i_wl, (int, np.integer)):
             filt = [filt[i_wl], 0.001 * filt[i_wl]]
         else:
-            filt = [np.mean(filt[i_wl[0]:i_wl[1]]), filt[i_wl[1]]-filt[i_wl[0]]]
-        
+            filt = [np.mean(filt[i_wl[0]:i_wl[1]]),
+                    filt[i_wl[1]]-filt[i_wl[0]]]
+
     xy_coords = get_mask(instrument, maskname)  # mask coordinates
 
     x_mask = xy_coords[:, 0] * scaling
@@ -472,7 +473,7 @@ def make_mf(maskname, instrument, filtname, npix, i_wl=None,
         mf['conj'][:, :, i] = mf_temp_rot
         mf['conj_c'][:, :, i] = mf_temp_rot_c
 
-        norm = np.sqrt(np.sum(mf['norm'][:, :, i]**2))
+        norm = np.sqrt(np.sum(mf['norm'][:, :, i])**2)
 
         mf['norm'][:, :, i] = mf['norm'][:, :, i]/norm
         mf['conj'][:, :, i] = mf['conj'][:, :, i]/norm
