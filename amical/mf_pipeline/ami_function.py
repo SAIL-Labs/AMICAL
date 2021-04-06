@@ -15,6 +15,8 @@ All AMI related function, the most important are:
 --------------------------------------------------------------------
 """
 
+import time
+
 import numpy as np
 from amical.dpfit import leastsqFit
 from amical.get_infos_obs import get_mask, get_pixel_size, get_wavelength
@@ -285,7 +287,7 @@ def _make_overlap_mat(mf, n_baselines, display=False):
 def make_mf(maskname, instrument, filtname, npix, i_wl=None,
             peakmethod='fft', n_wl=3, theta_detector=0,
             cutoff=1e-4, hole_diam=0.8, fw_splodge=0.7,
-            scaling=1, diag_plot=False, verbose=False,
+            scaling=1, fliplr=False, diag_plot=False, verbose=False,
             display=True):
     """
     Summary:
@@ -325,6 +327,8 @@ def make_mf(maskname, instrument, filtname, npix, i_wl=None,
         of the 'gauss' technique,\n
     """
 
+    start_time = time.time()
+
     # Get detector, filter and mask informations
     # ------------------------------------------
     pixelsize = get_pixel_size(instrument)  # Pixel size of the detector [rad]
@@ -345,6 +349,9 @@ def make_mf(maskname, instrument, filtname, npix, i_wl=None,
 
     x_mask = xy_coords[:, 0] * scaling
     y_mask = xy_coords[:, 1] * scaling
+
+    if fliplr:
+        x_mask *= -1
 
     x_mask_rot = x_mask*np.cos(np.deg2rad(theta_detector)) + \
         y_mask*np.sin(np.deg2rad(theta_detector))
@@ -449,6 +456,8 @@ def make_mf(maskname, instrument, filtname, npix, i_wl=None,
     mf = np.zeros([npix, npix, n_baselines], dtype=[('norm', float), ('conj', float),
                                                     ('norm_c', float), ('conj_c', float)])
 
+    l_norm_c, l_conj_c = [], []
+    v_norm_c, v_conj_c = [], []
     for i in range(n_baselines):
         mf_tmp = np.zeros([npix, npix])
         mf_tmp_c = np.zeros([npix, npix])
@@ -462,6 +471,9 @@ def make_mf(maskname, instrument, filtname, npix, i_wl=None,
         mf_tmp = mf_tmp.reshape([npix, npix])
         mf_tmp_c = mf_tmp_c.reshape([npix, npix])
 
+        l_norm_c.append(np.where(mf_tmp_c > 0))
+        v_norm_c.append(mfc_gvct[mf_ix_c[0, i]:mf_ix_c[1, i]])
+
         mf['norm'][:, :, i] = np.roll(mf_tmp, 0, axis=1)
         mf['norm_c'][:, :, i] = np.roll(mf_tmp_c, 0, axis=1)
 
@@ -469,6 +481,9 @@ def make_mf(maskname, instrument, filtname, npix, i_wl=None,
             np.roll(np.rot90(np.rot90(mf_tmp)), 1, axis=0), 1, axis=1)
         mf_temp_rot_c = np.roll(
             np.roll(np.rot90(np.rot90(mf_tmp_c)), 1, axis=0), 1, axis=1)
+
+        l_conj_c.append(np.where(mf_temp_rot_c > 0))
+        v_conj_c.append(mf_temp_rot_c[np.where(mf_temp_rot_c > 0)].T)
 
         mf['conj'][:, :, i] = mf_temp_rot
         mf['conj_c'][:, :, i] = mf_temp_rot_c
@@ -514,9 +529,15 @@ def make_mf(maskname, instrument, filtname, npix, i_wl=None,
            'wl': filt[0],
            'e_wl': filt[1],
            'pixelSize': pixelsize,
-           'xy_coords': xy_coords
+           'xy_coords': xy_coords,
+           'l_conj_c': l_conj_c,
+           'l_norm_c': l_norm_c,
+           'v_norm_c': v_norm_c,
+           'v_conj_c': v_conj_c
            }
-
+    
+    if verbose:
+        print('Time make_mf = %2.2f s' % (time.time() - start_time))
     return dict2class(out)
 
 
