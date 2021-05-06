@@ -38,7 +38,7 @@ def _plot_mask_coord(xy_coords, maskname, instrument):
 
     for i in range(xy_coords.shape[0]):
         plt.scatter(xy_coords[i][0], xy_coords[i][1],
-                    s=1e2, c='', edgecolors='navy', marker=marker)
+                    s=1e2, c='None', edgecolors='navy', marker=marker)
         plt.text(xy_coords[i][0]+0.1, xy_coords[i][1]+0.1, i)
 
     plt.xlabel('Aperture x-coordinate [m]', fontsize=12)
@@ -285,7 +285,7 @@ def _make_overlap_mat(mf, n_baselines, display=False):
 def make_mf(maskname, instrument, filtname, npix, i_wl=None,
             peakmethod='fft', n_wl=3, theta_detector=0,
             cutoff=1e-4, hole_diam=0.8, fw_splodge=0.7,
-            scaling=1, diag_plot=False, verbose=False, 
+            scaling=1, diag_plot=False, verbose=False,
             display=True):
     """
     Summary:
@@ -333,13 +333,13 @@ def make_mf(maskname, instrument, filtname, npix, i_wl=None,
         return None
     # Wavelength of the filter (filt[0]: central, filt[1]: width)
     filt = get_wavelength(instrument, filtname)
-    
+
     if (instrument == 'SPHERE-IFS'):
         if isinstance(i_wl, (int, np.integer)):
             filt = [filt[i_wl], 0.001 * filt[i_wl]]
         else:
             filt = [np.mean(filt[i_wl[0]:i_wl[1]]), filt[i_wl[1]]-filt[i_wl[0]]]
-        
+
     xy_coords = get_mask(instrument, maskname)  # mask coordinates
 
     x_mask = xy_coords[:, 0] * scaling
@@ -636,14 +636,14 @@ def compute_index_mask(n_holes, verbose=False):
 
 
 def give_peak_info2d(mf, n_baselines, dim1, dim2):
-    """ 
+    """
     Transform mf.pvct indices from flatten 1-D array to 2-D coordinates and the
     associated gains.
 
     Parameters:
     -----------
 
-    `mf` {object class}: 
+    `mf` {object class}:
         Match filter class (see make_mf function),\n
     `n_baselines` {int}:
         Number of baselines,\n
@@ -783,7 +783,7 @@ def bs_multi_triangle(i, bs_arr, ft_frame, bs2bl_ix, mf, closing_tri_pix):
     Parameters:
     -----------
 
-    `i` {int}: 
+    `i` {int}:
         Indice number of the bispectrum array (bs_arr),\n
     `bs_arr` {array}:
         Empty bispectrum array (bs_arr.shape[0] = n_bs),\n
@@ -940,7 +940,7 @@ def find_bad_BL_BS(bad_holes, bl2h_ix, bs2bl_ix):
     `bad_holes` {array}:
         Bad holes list from find_bad_holes (using calibrator data),\n
     `bl2h_ix`, `bs2bl_ix` {array}:
-        Corresponding indices of baselines and bispectrums from a given mask 
+        Corresponding indices of baselines and bispectrums from a given mask
         positions (see index_mask function).\n
 
     Returns:
