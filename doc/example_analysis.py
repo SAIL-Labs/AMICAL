@@ -20,9 +20,8 @@ extract the quantitative values of our simulated binary.
 --------------------------------------------------------------------
 """
 
-from matplotlib import pyplot as plt
-
 import amical
+from matplotlib import pyplot as plt
 
 # Your inputdata is an oifits file or a list of oifits.
 inputdata = 'Saveoifits/example_fakebinary_NIRISS.oifits'
@@ -38,11 +37,17 @@ if use_candid:
                     'step': 50,  # grid sampling
                     'ncore': 12  # core for multiprocessing
                     }
+    
+    # If you want to save the figure locally as .pdf, use save=True (new feature
+    # June 2021).
+    fit1 = amical.candid_grid(inputdata, **param_candid, diam=20, doNotFit=[],
+                              save=False)
 
-    fit1 = amical.candid_grid(inputdata, **param_candid, diam=20, doNotFit=[])
+    # Plot and save the fitted model
+    amical.plot_model(inputdata, fit1['best'], save=False)
 
-    cr_candid = amical.candid_cr_limit(
-        inputdata, **param_candid, fitComp=fit1['comp'])
+    cr_candid = amical.candid_cr_limit(inputdata, **param_candid, 
+                                       fitComp=fit1['comp'], save=False)
 
 # Analysis with PYMASK package
 # ----------------------------

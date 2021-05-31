@@ -2489,8 +2489,8 @@ class Open:
         self.bestFit['nsigma'] = _nSigmas(
             self.chi2_UD,  self.bestFit['chi2'], self.ndata()-1)
         self.bestFit['reliability'] = reliability
-        if not fig is None:
-            self.plotModel(fig=fig+1)
+        # if not fig is None:
+        #     self.plotModel(fig=fig+1)
 
         # -- compare with injected companion, if any
         if 'X' in self._dataheader.keys() and\
@@ -2964,8 +2964,7 @@ class Open:
         _mod = _modelObservables(list(filter(lambda c: c[0].split(';')[0] in self.observables
                                              and c[0].split(';')[1] in self.instruments,
                                              self._chi2Data)), param)
-        # print(_meas.shape)
-        # plt.close(fig)
+
         plt.figure(figsize=(7, 7))
         plt.clf()
         N = len(set(_types))
@@ -2998,17 +2997,17 @@ class Open:
                 _measw = np.angle(_meas[w]).real
                 _modw = np.angle(_mod[w]).real
                 plt.plot(X, 180/np.pi*(np.mod(_modw+np.pi/2, np.pi)-np.pi/2)+oCP*offset,
-                         '.k', alpha=0.4)
+                        '.k', alpha=0.4)
                 plt.scatter(X, 180/np.pi*(np.mod(_measw+np.pi/2, np.pi)-np.pi/2)+oCP*offset,
                             c=_wl[w], marker=marker, cmap='hot_r',
                             alpha=0.5, linestyle=linestyle)
                 plt.errorbar(X, 180/np.pi*(np.mod(_measw+np.pi/2, np.pi)-np.pi/2) + oCP*offset,
-                             fmt=',', yerr=180/np.pi*_errs[w], marker=None, color='k', alpha=0.2)
+                            fmt=',', yerr=180/np.pi*_errs[w], marker=None, color='k', alpha=0.2)
                 plt.ylabel(t.split(';')[0]+r': deg, mod 180')
             else:
                 res = (_meas[w]-_mod[w])/_errs[w]
                 plt.errorbar(X, _meas[w]+oV2*offset, fmt=',', yerr=_errs[w], marker=None,
-                             color='k', alpha=0.2)
+                            color='k', alpha=0.2)
                 plt.scatter(X, _meas[w]+oV2*offset, c=_wl[w], marker=marker, cmap='hot_r',
                             alpha=0.5, linestyle=linestyle)
                 plt.plot(X, _mod[w]+oV2*offset, '.k', alpha=0.4)

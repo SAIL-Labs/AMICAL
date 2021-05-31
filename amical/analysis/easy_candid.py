@@ -1,3 +1,6 @@
+import os
+from matplotlib import pyplot as plt
+
 import numpy as np
 from amical.externals import candid
 from termcolor import cprint
@@ -6,7 +9,8 @@ from uncertainties import ufloat, umath
 
 def candid_grid(input_data, step=10, rmin=20, rmax=400, diam=0, obs=['cp', 'v2'],
                 extra_error_cp=0, err_scale=1, extra_error_v2=0, instruments=None,
-                doNotFit=['diam*', ], ncore=1, verbose=False):
+                doNotFit=['diam*', ], ncore=1, save=False, outputfile=None,
+                verbose=False):
     """ This function is an user friendly interface between the users of amical
     pipeline and the CANDID analysis package (https://github.com/amerand/CANDID).
 
@@ -44,6 +48,12 @@ def candid_grid(input_data, step=10, rmin=20, rmax=400, diam=0, obs=['cp', 'v2']
     o.fitMap(rmax=rmax, rmin=rmin, ncore=ncore, fig=0,
              step=step, addParam={"diam*": diam}, doNotFit=doNotFit, verbose=verbose)
 
+    if save:
+        filename = os.path.basename(input_data) + '_detection_map_candid.pdf'
+        if outputfile is not None:
+            filename = outputfile
+        plt.savefig(filename, dpi=300)
+        
     fit = o.bestFit["best"]
     e_fit = o.bestFit["uncer"]
     chi2 = o.bestFit['chi2']
@@ -99,7 +109,8 @@ def candid_grid(input_data, step=10, rmin=20, rmax=400, diam=0, obs=['cp', 'v2']
 def candid_cr_limit(input_data, step=10, rmin=20, rmax=400,
                     extra_error_cp=0, err_scale=1, extra_error_v2=0,
                     obs=['cp', 'v2'], fitComp=None, ncore=1,
-                    diam=None, methods=['injection'], instruments=None):
+                    diam=None, methods=['injection'], instruments=None,
+                    save=False, outputfile=None):
     cprint(' | --- Start CANDID contrast limit --- :', 'green')
     o = candid.Open(input_data, extra_error=extra_error_cp,
                     err_scale=err_scale, extra_error_v2=extra_error_v2,
@@ -109,4 +120,10 @@ def candid_cr_limit(input_data, step=10, rmin=20, rmax=400,
     res = o.detectionLimit(rmin=rmin, rmax=rmax, step=step, drawMaps=True,
                            fratio=1, methods=methods, removeCompanion=fitComp,
                            ncore=ncore, diam=diam)
+
+    if save:
+        filename = os.path.basename(input_data) + '_lim_detection_candid.pdf'
+        if outputfile is not None:
+            filename = outputfile
+        plt.savefig(filename, dpi=300)
     return res

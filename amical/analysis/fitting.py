@@ -1,15 +1,14 @@
+import os
+from multiprocessing import Pool
+
+import amical
+import numpy as np
 from amical.analysis import models
 from amical.dpfit import leastsqFit
 from amical.tools import mas2rad, roundSciDigit
-
-import numpy as np
-from multiprocessing import Pool
-from tqdm import tqdm
-from scipy.interpolate import interp1d
 from matplotlib import pyplot as plt
-
-import amical
-
+from scipy.interpolate import interp1d
+from tqdm import tqdm
 
 err_pts_style = {'linestyle': "None", 'capsize': 1, 'ecolor': '#364f6b', 'mec': '#364f6b',
                  'marker': '.', 'elinewidth': 0.5, 'alpha': 1, 'ms': 14}
@@ -472,11 +471,37 @@ def compute_chi2_curve(obs, name_param, params, array_params, fitOnly,
     return fit, errors_chi2
 
 
-def plot_model(inputdata, param, extra_error_v2=0, extra_error_cp=0, err_scale=1,
-               d_freedom=1, v2_min=None, v2_max=1.1, cp_max=None, unit='m',
-               display=True):
+def plot_model(inputdata, param, save=False, outputfile=None, extra_error_v2=0,
+               extra_error_cp=0, err_scale=1, d_freedom=3, v2_min=None, v2_max=1.1,
+               cp_max=None, unit='m'):
     """ Plot the model compared to the data (V2 and CP) and the associated 
-    residuals. """
+    residuals. 
+
+    Parameters:
+    -----------
+
+    `inputdata`: {str}
+        Oifits file,\n
+    `param`: {dict}
+        Parameters of the fit (**tips**: use fit['best'] if you want to 
+        use the output of `amical.candid_grid()`.),\n
+    `save`: {boolean}
+        If True, figure is saved using the inputdata file as name followed 
+        by '_fit_candid.pdf'. Optionnaly, you can use `outputfile` to
+        change the output file name (e.g.: outputfile='my_fit.pdf'),\n
+    `extra_error_v2`: {float}
+        Additional uncertainty of the V2 (added quadraticaly),\n
+    `extra_error_cp`: {float}
+        Additional uncertainty of the CP (added quadraticaly),\n
+    `err_scale`: {float}
+        Scaling factor applied on the CP uncertainties usualy used to 
+        include the non-independant CP correlation,\n
+    `d_freedom` {int}:
+        Degree of freedom (3 by default: sep, theta and dm),\n
+    v2_min, v2_max, cp_max: {float}
+        Limits of the y-axis,\n
+
+    """
 
     d = amical.loadc(inputdata)
 
@@ -486,7 +511,7 @@ def plot_model(inputdata, param, extra_error_v2=0, extra_error_cp=0, err_scale=1
     model_target = select_model(param['model'])
 
     u, v, wl = d.u, d.v, d.wl
-    
+
     mod_v2 = comput_V2([u, v, wl], param, model_target)
 
     u1, u2, v1, v2 = d.u1, d.u2, d.v1, d.v2
@@ -516,61 +541,67 @@ def plot_model(inputdata, param, extra_error_v2=0, extra_error_cp=0, err_scale=1
     x_vis2 = d.bl * f_unit[unit]
     x_cp = d.bl_cp * f_unit[unit]
 
-    if display:
-        fig = plt.figure(constrained_layout=True, figsize=(11, 4))
-        axd = fig.subplot_mosaic([['vis', 'cp'], ['res_vis2', 'res_cp']],
-                                 gridspec_kw={'width_ratios': [2, 2],
-                                              'height_ratios': [3, 1]})
+    fig = plt.figure(constrained_layout=True, figsize=(11, 4))
+    axd = fig.subplot_mosaic([['vis', 'cp'], ['res_vis2', 'res_cp']],
+                             gridspec_kw={'width_ratios': [2, 2],
+                                          'height_ratios': [3, 1]})
 
-        axd['res_vis2'].sharex(axd['vis'])
-        axd['res_cp'].sharex(axd['cp'])
+    axd['res_vis2'].sharex(axd['vis'])
+    axd['res_cp'].sharex(axd['cp'])
 
-        axd['vis'].errorbar(x_vis2, d.vis2, yerr=e_vis2, **
-                            err_pts_style, color='#3d84a8')
-        axd['vis'].plot(x_vis2, mod_v2, 'x', color='#f6416c', zorder=100, ms=10,
-                        label='model ($\chi^2_r=%2.1f$)' % chi2_vis2)
-        axd['vis'].legend()
+    axd['vis'].errorbar(x_vis2, d.vis2, yerr=e_vis2, **
+                        err_pts_style, color='#3d84a8')
+    axd['vis'].plot(x_vis2, mod_v2, 'x', color='#f6416c', zorder=100, ms=10,
+                    label='model ($\chi^2_r=%2.1f$)' % chi2_vis2)
+    axd['vis'].legend()
 
-        if v2_min is not None:
-            axd['vis'].set_ylim(v2_min, v2_max)
-        axd['vis'].grid(alpha=.2)
-        axd['vis'].set_ylabel(r'V$^2$')
+    if v2_min is not None:
+        axd['vis'].set_ylim(v2_min, v2_max)
+    axd['vis'].grid(alpha=.2)
+    axd['vis'].set_ylabel(r'V$^2$')
 
-        axd['res_vis2'].plot(x_vis2, res_vis2, '.', color='#3d84a8')
-        axd['res_vis2'].axhspan(-1, 1, alpha=.2, color='#418fde')
-        axd['res_vis2'].axhspan(-2, 2, alpha=.2, color='#8bb8e8')
-        axd['res_vis2'].axhspan(-3, 3, alpha=.2, color='#c8d8eb')
-        if res_vis2.max() > 5:
-            res_mas = res_vis2.max()
-        else:
-            res_mas = 5
-        axd['res_cp'].set_ylim(-res_mas, res_mas)
-        axd['res_vis2'].set_ylim(-5, 5)
-        axd['res_vis2'].set_ylabel('Residual [$\sigma$]')
-        axd['res_vis2'].set_xlabel('Sp. Freq. [%s]' % label_unit[unit])
+    axd['res_vis2'].plot(x_vis2, res_vis2, '.', color='#3d84a8')
+    axd['res_vis2'].axhspan(-1, 1, alpha=.2, color='#418fde')
+    axd['res_vis2'].axhspan(-2, 2, alpha=.2, color='#8bb8e8')
+    axd['res_vis2'].axhspan(-3, 3, alpha=.2, color='#c8d8eb')
+    if res_vis2.max() > 5:
+        res_mas = res_vis2.max()
+    else:
+        res_mas = 5
+    axd['res_cp'].set_ylim(-res_mas, res_mas)
+    axd['res_vis2'].set_ylim(-5, 5)
+    axd['res_vis2'].set_ylabel('Residual [$\sigma$]')
+    axd['res_vis2'].set_xlabel('Sp. Freq. [%s]' % label_unit[unit])
 
-        axd['cp'].errorbar(x_cp, d.cp, yerr=e_cp, **
-                           err_pts_style, color='#2ca02c')
-        axd['cp'].plot(x_cp, mod_cp, 'x', color='#f6416c', zorder=100, ms=10,
-                       label='model ($\chi^2_r=%2.1f$)' % chi2_cp)
+    axd['cp'].errorbar(x_cp, d.cp, yerr=e_cp, **
+                       err_pts_style, color='#2ca02c')
+    axd['cp'].plot(x_cp, mod_cp, 'x', color='#f6416c', zorder=100, ms=10,
+                   label='model ($\chi^2_r=%2.1f$)' % chi2_cp)
 
-        if cp_max is not None:
-            axd['cp'].set_ylim(-cp_max, cp_max)
-        axd['cp'].grid(alpha=.2)
-        axd['cp'].set_ylabel('Closure phases [deg]')
-        axd['cp'].legend()
+    if cp_max is not None:
+        axd['cp'].set_ylim(-cp_max, cp_max)
+    axd['cp'].grid(alpha=.2)
+    axd['cp'].set_ylabel('Closure phases [deg]')
+    axd['cp'].legend()
 
-        axd['res_cp'].plot(x_cp, res_cp, '.', color='#1e7846')
-        axd['res_cp'].axhspan(-1, 1, alpha=.3, color='#28a16c')  # f5c893
-        axd['res_cp'].axhspan(-2, 2, alpha=.2, color='#28a16c')
-        axd['res_cp'].axhspan(-3, 3, alpha=.1, color='#28a16c')
-        if res_cp.max() > 5:
-            res_mas = res_cp.max()
-        else:
-            res_mas = 5
-        axd['res_cp'].set_ylim(-res_mas, res_mas)
-        axd['res_cp'].set_ylabel('Residual [$\sigma$]')
-        axd['res_cp'].set_xlabel('Sp. Freq. [%s]' % label_unit[unit])
+    axd['res_cp'].plot(x_cp, res_cp, '.', color='#1e7846')
+    axd['res_cp'].axhspan(-1, 1, alpha=.3, color='#28a16c')  # f5c893
+    axd['res_cp'].axhspan(-2, 2, alpha=.2, color='#28a16c')
+    axd['res_cp'].axhspan(-3, 3, alpha=.1, color='#28a16c')
+    if res_cp.max() > 5:
+        res_mas = res_cp.max()
+    else:
+        res_mas = 5
+    axd['res_cp'].set_ylim(-res_mas, res_mas)
+    axd['res_cp'].set_ylabel('Residual [$\sigma$]')
+    axd['res_cp'].set_xlabel('Sp. Freq. [%s]' % label_unit[unit])
+
+    if save:
+        filename = os.path.basename(inputdata) + '_fit_candid.pdf'
+        if outputfile is not None:
+            filename = outputfile
+        plt.savefig(filename, dpi=300)
+
     return mod_v2, mod_cp, chi2
 
 
