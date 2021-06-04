@@ -1146,6 +1146,8 @@ class Open:
             self._loadOifitsData(filename, reducePoly=reducePoly, largeCP=largeCP,
                                  err_scale=err_scale, extra_error=extra_error,
                                  extra_error_v2=extra_error_v2)
+        else:
+            raise FileNotFoundError(f"filename {filename} is not a valid file or directory")
 
         if verbose:
             print(' | compute aux data for companion injection')
