@@ -4,33 +4,21 @@
 (**A**perture **M**asking **I**nterferometry **C**alibration and **A**nalysis
 **L**ibrary)
 
-[![release](https://img.shields.io/github/v/release/SydneyAstrophotonicInstrumentationLab/AMICAL)](https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL)
-[![Supported Python Versions](https://img.shields.io/badge/python%20version-≥%203.7-important)](https://www.python.org/downloads/release/python-370/)
+[![PyPI](https://img.shields.io/pypi/v/amical)](https://pypi.org/project/amical/)
+[![Supported Python Versions](https://img.shields.io/pypi/v/amical)](https://img.shields.io/pypi/pyversions/amical)
 ![Licence](https://img.shields.io/github/license/SydneyAstrophotonicInstrumentationLab/AMICAL)
+
 ![CI](https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL/actions/workflows/ci.yml/badge.svg)
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/SydneyAstrophotonicInstrumentationLab/AMICAL/master.svg)](https://results.pre-commit.ci/latest/github/SydneyAstrophotonicInstrumentationLab/AMICAL/master)
+
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Imports:
 isort](https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336)](https://pycqa.github.io/isort/)
 
-## Install from source (for conda-based systems)
+## Installation
 
-It is recommended (though not mandatory) to create a separate environment with
-`conda create -n <env_name>`. Then, within your Conda env (`conda activate
-<env_name>`):
-
-```bash
-# Firstly, clone AMICAL repository on your computer
-git clone https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL.git
-
-cd AMICAL/
-
-# You may need to install pip inside your new environment
-conda install pip
-
-# Install AMICAL
-pip install -e .
-
+```shell
+$ python -m pip install amical
 ```
 
 ## What can AMICAL do for you ?
