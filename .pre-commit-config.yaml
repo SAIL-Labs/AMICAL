@@ -1,6 +1,12 @@
 # a curated list of available hooks
 # https://pre-commit.com/hooks.html
 
+exclude: "^(\
+doc/\
+|amical/tests/data/\
+|amical/internal_data\
+)"
+
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.0.1
@@ -27,11 +33,6 @@ repos:
     hooks:
       - id: isort
         additional_dependencies: ['toml==0.10.2']
-
-  - repo: https://github.com/pre-commit/mirrors-autopep8
-    rev: v1.5.7
-    hooks:
-      - id: autopep8
 
   - repo: https://github.com/PyCQA/flake8
     rev: 3.9.2
