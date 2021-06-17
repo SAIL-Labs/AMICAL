@@ -86,7 +86,7 @@ def cp_model_flux(params, u, v, wavels, model="constant"):
         )
     elif model == "ndof":
         ndof = params[2:].size
-        wavs = np.linspace(np.min(wavels), np.max((wavels)), ndof)
+        wavs = np.linspace(np.min(wavels), np.max(wavels), ndof)
         f = interp.interp1d(wavs, params[2:], kind="cubic")
         cons = f(wavels)
     elif model == "free":

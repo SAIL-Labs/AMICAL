@@ -369,9 +369,7 @@ def fits2obs(
                 % (wl_min, chr(955), wl_max)
             )
         if cond_uncer:
-            print(
-                r"-> Restriction on uncertainties: %s < %2.1f %%" % (chr(949), rel_max)
-            )
+            print(fr"-> Restriction on uncertainties: {chr(949)} < {rel_max:2.1f} %")
 
     return Obs
 
@@ -503,7 +501,7 @@ def compute_chi2_curve(
         dr1_r, dig = roundSciDigit(dr1_r)
         dr2_r = roundSciDigit(dr2_r)[0]
         fitted_param = float(np.round(fitted_param, dig))
-        print("sig_chi2: %s = %s - %s + %s" % (name_param, fitted_param, dr1_r, dr2_r))
+        print(f"sig_chi2: {name_param} = {fitted_param} - {dr1_r} + {dr2_r}")
     except ValueError:
         print("Try to increase the parameters bounds (chi2_r).")
         return None
@@ -527,7 +525,7 @@ def compute_chi2_curve(
         ".",
         color="#fc5185",
         ms=10,
-        label="fit: %s=%s±%s" % (name_param, fit_theta, fit_e_theta),
+        label=f"fit: {name_param}={fit_theta}±{fit_e_theta}",
     )
     plt.axvspan(
         fitted_param - dr1_r,
@@ -535,7 +533,7 @@ def compute_chi2_curve(
         ymin=ymin,
         ymax=ymax,
         color="#dbe4e8",
-        label=r"$\sigma_{m1}=$-%s/+%s" % (dr1_r, dr2_r),
+        label=fr"$\sigma_{{m1}}=$-{dr1_r}/+{dr2_r}",
     )
     plt.axvspan(
         fitted_param - fit_e_theta,
@@ -616,16 +614,14 @@ def plot_model(
     X = [u1, u2, u3, v1, v2, v3, wl]
     mod_cp = comput_CP(X, param, model_target)
 
-    chi2_cp = np.sum(((d.cp - mod_cp) ** 2 / (e_cp) ** 2)) / (
-        len(e_cp) - (d_freedom - 1)
-    )
-    chi2_vis2 = np.sum(((d.vis2 - mod_v2) ** 2 / (e_vis2) ** 2)) / (
+    chi2_cp = np.sum((d.cp - mod_cp) ** 2 / (e_cp) ** 2) / (len(e_cp) - (d_freedom - 1))
+    chi2_vis2 = np.sum((d.vis2 - mod_v2) ** 2 / (e_vis2) ** 2) / (
         len(e_vis2) - (d_freedom - 1)
     )
 
     chi2 = (
-        np.sum(((d.cp - mod_cp) ** 2 / (e_cp) ** 2))
-        + np.sum(((d.vis2 - mod_v2) ** 2 / (e_vis2) ** 2))
+        np.sum((d.cp - mod_cp) ** 2 / (e_cp) ** 2)
+        + np.sum((d.vis2 - mod_v2) ** 2 / (e_vis2) ** 2)
     ) / (len(e_cp) + len(e_vis2) - (d_freedom - 1))
 
     res_vis2 = (mod_v2 - d.vis2) / e_vis2

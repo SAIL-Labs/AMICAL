@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 @author: Anthony Soulain (University of Sydney)
 
@@ -948,11 +947,11 @@ def _plot_UV(ax1, l_dic, dic_color, diffWl=False):
         V = tmp.V
         band = tmp.band
         wl = tmp.wl
-        label = "%2.2f $\mu m$ (%s)" % (wl * 1e6, band)
+        label = fr"{wl * 1e6:2.2f} $\mu m$ ({band})"
         if diffWl:
             c1, c2 = dic_color[band], dic_color[band]
             if band not in l_band_al:
-                label = "%2.2f $\mu m$ (%s)" % (wl * 1e6, band)
+                label = fr"{wl * 1e6:2.2f} $\mu m$ ({band})"
                 l_band_al.append(band)
             else:
                 label = ""
@@ -1018,7 +1017,7 @@ def _plot_UV_ifu(ax1, fig, l_dic):
     position = fig.add_axes([0.22, 0.95, 0.1, 0.015])
     fig.colorbar(sc, cax=position, orientation="horizontal", drawedges=False)
     ax1.text(
-        0.53, 0.98, "$\lambda$ [µm]", ha="center", va="center", transform=ax1.transAxes
+        0.53, 0.98, r"$\lambda$ [µm]", ha="center", va="center", transform=ax1.transAxes
     )
     return l_bmax
 
@@ -1297,7 +1296,7 @@ def show(
         "m": "m",
         "rad": "rad$^{-1}$",
         "arcsec": "arcsec$^{-1}$",
-        "lambda": "M$\lambda$",
+        "lambda": r"M$\lambda$",
     }
 
     ax1.set_xlabel(r"U [%s]" % unitlabel[unit], fontsize=fontsize)
@@ -1356,7 +1355,7 @@ def show(
     ax3.xaxis.set_ticks_position("none")
     ax3.yaxis.set_ticks_position("none")
     ax3.set_xlabel("Spatial frequency [arcsec$^{-1}$]", fontsize=fontsize)
-    ax3.set_ylabel("Clos. $\phi$ [%s]" % unit_cp, fontsize=fontsize)
+    ax3.set_ylabel(r"Clos. $\phi$ [%s]" % unit_cp, fontsize=fontsize)
     ax3.axis([0, 1.2 * np.max(max_f_cp), cmin * conv_cp, cmax * conv_cp])
     ax3.grid(which="both", alpha=0.2)
 

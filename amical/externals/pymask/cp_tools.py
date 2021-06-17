@@ -206,7 +206,7 @@ def cp_model(params, u, v, wavels, model="constant"):
         )
     elif model == "ndof":
         ndof = params[2:].size
-        wavs = np.linspace(np.min(wavels), np.max((wavels)), ndof)
+        wavs = np.linspace(np.min(wavels), np.max(wavels), ndof)
         f = interp.interp1d(wavs, params[2:], kind="linear")
         cons = f(wavels)
     elif model == "free":
@@ -1984,8 +1984,8 @@ def find_extra_error(
     print("Max resid:" + str(np.max(np.abs(cp_resids))))
 
     n = 1000  # number of extra errors to try.
-    chis_null = np.zeros((n))
-    chis_bin = np.zeros((n))
+    chis_null = np.zeros(n)
+    chis_bin = np.zeros(n)
 
     extra_errors = np.logspace(-2, 2, num=n)
 

@@ -109,13 +109,13 @@ def candid_grid(
         posang = 360 + posang
 
     cr = 1 / f_u
-    cprint("\nResults binary fit (χ2 = %2.1f, nσ = %2.1f):" % (chi2, nsigma), "cyan")
+    cprint(f"\nResults binary fit (χ2 = {chi2:2.1f}, nσ = {nsigma:2.1f}):", "cyan")
     cprint("-------------------", "cyan")
 
-    print("Sep = %2.1f +/- %2.1f mas" % (s.nominal_value, s.std_dev))
-    print("Theta = %2.1f +/- %2.1f deg" % (posang.nominal_value, posang.std_dev))
-    print("CR = %2.1f +/- %2.1f" % (cr.nominal_value, cr.std_dev))
-    print("dm = %2.2f +/- %2.2f" % (dm.nominal_value, dm.std_dev))
+    print(f"Sep = {s.nominal_value:2.1f} +/- {s.std_dev:2.1f} mas")
+    print(f"Theta = {posang.nominal_value:2.1f} +/- {posang.std_dev:2.1f} deg")
+    print(f"CR = {cr.nominal_value:2.1f} +/- {cr.std_dev:2.1f}")
+    print(f"dm = {dm.nominal_value:2.2f} +/- {dm.std_dev:2.2f}")
     res = {
         "best": {
             "model": "binary_res",

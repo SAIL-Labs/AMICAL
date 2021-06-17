@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 import multiprocessing
 import os
 import sys
@@ -1346,12 +1344,12 @@ class Open:
             mjds.extend(list(set(d[-3].flatten())))
         self.allMJD = np.array(list(set(mjds)))
 
-        self.ALLobservables = list(set([c[0].split(";")[0] for c in self._rawData]))
-        self.ALLinstruments = list(set([c[0].split(";")[1] for c in self._rawData]))
+        self.ALLobservables = list({c[0].split(";")[0] for c in self._rawData})
+        self.ALLinstruments = list({c[0].split(";")[1] for c in self._rawData})
 
         # -- can be updated by user
-        self.observables = list(set([c[0].split(";")[0] for c in self._rawData]))
-        self.instruments = list(set([c[0].split(";")[1] for c in self._rawData]))
+        self.observables = list({c[0].split(";")[0] for c in self._rawData})
+        self.instruments = list({c[0].split(";")[1] for c in self._rawData})
 
         print(" | observables available: [", end=" ")
         print(", ".join(["'" + o + "'" for o in self.observables]) + "]")
@@ -2596,11 +2594,9 @@ class Open:
                 tmp["init"]["x"] *= -1
                 tmp["init"]["y"] *= -1
                 d = min(
-                    [
-                        (tmp["best"]["x"] - x["best"]["x"]) ** 2
-                        + (tmp["best"]["y"] - x["best"]["y"]) ** 2
-                        for x in allMin
-                    ]
+                    (tmp["best"]["x"] - x["best"]["x"]) ** 2
+                    + (tmp["best"]["y"] - x["best"]["y"]) ** 2
+                    for x in allMin
                 )
                 if d > 0.1 ** 2:
                     _allMin.append(tmp)
@@ -2684,7 +2680,7 @@ class Open:
         if CONFIG["chi2 scale"] != "auto":
             chi2Scale = CONFIG["chi2 scale"]
         else:
-            if self.chi2_UD / min([x["chi2"] for x in allMin]) >= 5:
+            if self.chi2_UD / min(x["chi2"] for x in allMin) >= 5:
                 chi2Scale = "log"
             else:
                 chi2Scale = "lin"
@@ -2734,7 +2730,7 @@ class Open:
             title += "\nfrom " + ", ".join(self.instruments)
             title += "\n" + self.titleFilename
             if not removeCompanion is None:
-                title += "\ncompanion removed at X=%3.2fmas, Y=%3.2fmas, F=%3.2f%%" % (
+                title += "\ncompanion removed at X={:3.2f}mas, Y={:3.2f}mas, F={:3.2f}%".format(
                     removeCompanion["x"],
                     removeCompanion["y"],
                     removeCompanion["f"],
@@ -2920,7 +2916,7 @@ class Open:
                     else:
                         print(
                             " | %6s=" % s,
-                            "%8.4f [%s]" % (allMin2[i]["best"][s], paramUnits(s)),
+                            "{:8.4f} [{}]".format(allMin2[i]["best"][s], paramUnits(s)),
                         )
 
             # -- http://www.aanda.org/articles/aa/pdf/2011/11/aa17719-11.pdf section 3.2
@@ -3557,7 +3553,7 @@ class Open:
                                 + n
                                 + "f +/- %."
                                 + n
-                                + "f" % (refFit["best"][k1], refFit["uncer"][k1])
+                                + "f".format(refFit["best"][k1], refFit["uncer"][k1])
                             )
                             plt.text(
                                 refFit["best"][k1],
@@ -3957,8 +3953,8 @@ class Open:
 
         # print('it actually took %4.1f seconds'%(time.time()-t0))
         X, Y = np.meshgrid(allX, allY)
-        vmin = (min([np.min(self.allf3s[m]) for m in methods]),)
-        vmax = (max([np.max(self.allf3s[m]) for m in methods]),)
+        vmin = (min(np.min(self.allf3s[m]) for m in methods),)
+        vmax = (max(np.max(self.allf3s[m]) for m in methods),)
         print("")
         if drawMaps and not fig is None:
             # -- draw the detection maps

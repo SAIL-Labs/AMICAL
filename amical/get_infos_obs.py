@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 @author: Anthony Soulain (University of Sydney)
 
@@ -165,7 +164,7 @@ def get_mask(ins, mask, first=0):
                 nrand.append(x)
         xycoords_sel = xycoords[nrand]
     except KeyError:
-        cprint("\n-- Error: maskname (%s) unknown for %s." % (mask, ins), "red")
+        cprint(f"\n-- Error: maskname ({mask}) unknown for {ins}.", "red")
         xycoords_sel = None
     return xycoords_sel
 
@@ -209,7 +208,7 @@ def get_wavelength(ins, filtname):
     try:
         wl = np.array(dic_filt[ins][filtname]) * 1e-6
     except KeyError:
-        cprint("--- Error: filtname <%s> not found for %s ---" % (filtname, ins), "red")
+        cprint(f"--- Error: filtname <{filtname}> not found for {ins} ---", "red")
         cprint("Available: %s" % list(dic_filt[ins].keys()), "red")
         wl = np.NaN
     return wl
