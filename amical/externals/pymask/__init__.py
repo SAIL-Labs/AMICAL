@@ -9,9 +9,9 @@
     from the oifits file, and a set of functions, cp_tools, for manipulating
     these data and fitting models.
 
-    Fitting is based on the MCMC Hammer algorithm (aka ensemble affine 
+    Fitting is based on the MCMC Hammer algorithm (aka ensemble affine
     invariant MCMC) or the MultiNest algorithm (aka multimodal nested
-    sampling). Both of these must be installed correctly or else 
+    sampling). Both of these must be installed correctly or else
     pymask won't work!
     See readme.txt for more details.
 

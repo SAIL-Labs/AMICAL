@@ -22,7 +22,7 @@ def phase_binary_flux(u, v, wavel, p,return_cvis=False):
         - p[0] = sep (mas)
         - p[1] = PA (deg) E of N.
         - p[2] = flux (primary is assumed to be 1)
-        
+
         optional:
         - p[2:] = contrast ratio for several wavelengths that we want
                  to calculate the cps over
@@ -44,7 +44,7 @@ def phase_binary_flux(u, v, wavel, p,return_cvis=False):
             spec = spec[0]
         l2 = spec
         l1 = 1 - l2
-        
+
         # phase-factor
         output_shape = list(u.shape)
         output_shape[-1] = np.size(wavel)
@@ -53,12 +53,12 @@ def phase_binary_flux(u, v, wavel, p,return_cvis=False):
         phi.imag = np.sin(-2*np.pi*(u*dra + v*ddec)/wavel)
 
         cvis = l1 + l2 * phi
-            
+
         phase = np.angle(cvis, deg=True)
         if return_cvis:
             return cvis
         else:
-            return np.mod(phase + 10980., 360.) - 180.0  
+            return np.mod(phase + 10980., 360.) - 180.0
 
  # =========================================================================
 def cp_model_flux(params,u,v,wavels,model='constant'):
@@ -93,7 +93,7 @@ def cp_model_flux(params,u,v,wavels,model='constant'):
             cons += coefficients[order]*xax**order
     else:
         raise NameError('Unknown model input to cp_model')
-        
+
     # vectorize the arrays to speed up multi-wavelength calculations
     u = u[...,np.newaxis] # (ncp x n_runs x 3 x 1) or (ncp x 3 x 1)
     v = v[...,np.newaxis] # (ncp x n_runs x 3 x 1) or (ncp x 3 x 1)
@@ -112,7 +112,7 @@ def cp_loglikelihood_proj_flux(params,u,v,wavel,proj_t3data,proj_t3err,proj,mode
     '''Calculate loglikelihood for projected closure phase data.
     Used both in the MultiNest and MCMC Hammer implementations.
     Here proj is the eigenvector array'''
-    
+
     # hacky way to introduce priors
 #    if (params[2] > 50000) or (params[2] < 0.):
 #        return -np.inf
@@ -120,18 +120,18 @@ def cp_loglikelihood_proj_flux(params,u,v,wavel,proj_t3data,proj_t3err,proj,mode
         return -np.inf
     if (params[1] > 360.) or (params[1] < 0.):
         return -np.inf
-        
+
     cps = cp_model_flux(params,u,v,wavel,model=model)
-    
+
     proj_mod_cps = project_cps(cps,proj)
-    
+
     chi2 = np.sum(((proj_t3data-proj_mod_cps)/proj_t3err)**2)
-    
+
     loglike = -chi2/2
     return loglike
 # =========================================================================
 
-    
+
 def chi2_grid(everything):
     '''Function for multiprocessing, does 2d chi2 grid for xy_grid'''
     cpo=everything['cpo']
@@ -140,9 +140,9 @@ def chi2_grid(everything):
     ys=everything['ys']
     seps=np.sqrt(x**2+ys**2)
     pas=np.angle(np.complex(0,1)*ys + np.complex(1,0)*x,True) % 360
-    
+
     projected  = everything['projected']
-    
+
     for ix in range(ys.size):
         for k,con in enumerate(everything['cons']):
             params = [seps[ix],pas[ix],con]
@@ -167,15 +167,15 @@ def xy_grid(cpo,nxy=30,ncon=32,xymax='Default', cmin=10.,cmax=500.,
     of separation and position angle.
 
     Written by A Cheetham, with some parts stolen from other pysco/pymask routines.'''
-    
+
     #------------------------
     # first, load your data!
     #------------------------
 
     ndata=cpo.ndata
-    
+
     u,v = cpo.u,cpo.v
-    
+
     cpo.t3err=np.sqrt(cpo.t3err**2+extra_error**2)
     cpo.t3err*=err_scale
 
@@ -194,11 +194,11 @@ def xy_grid(cpo,nxy=30,ncon=32,xymax='Default', cmin=10.,cmax=500.,
     xys= np.linspace(-xymax,xymax,nxy)
 #    cons = cmin  + (cmax-cmin)  * np.linspace(0,1,ncon)
     cons = np.linspace(cmin,cmax,ncon)
-    
+
     if fix_crat != False:
         cons=np.array([fix_crat])
         ncon=1
-    
+
     #------------------------
     # Calculate chi2 at each point
     #------------------------
@@ -228,7 +228,7 @@ def xy_grid(cpo,nxy=30,ncon=32,xymax='Default', cmin=10.,cmax=500.,
         print('Total time elapsed: '+str(tf-tic)+' seconds')
     chi2=np.array(chi2)
     best_ix=np.where(chi2 == np.amin(chi2))
-    
+
     #hack: if the best chi2 is at more than one location, take the first.
     bestx=xys[best_ix[0][0]]
     besty=xys[best_ix[1][0]]
@@ -252,7 +252,7 @@ def xy_grid(cpo,nxy=30,ncon=32,xymax='Default', cmin=10.,cmax=500.,
     names = ['Chi2','Likelihood','Best Contrast Ratio']
     plots = [np.min(chi2,axis=2),x_y,cons[np.argmin(chi2,axis=2)]]
     for ix,n in enumerate(names):
-    
+
         plt.figure(n)
         plt.clf()
         # Plot it with RA on the X axis
@@ -260,12 +260,12 @@ def xy_grid(cpo,nxy=30,ncon=32,xymax='Default', cmin=10.,cmax=500.,
         plt.colorbar()
         plt.ylabel('Dec (mas)')
         plt.xlabel('RA (mas)')
-        
+
         plt.plot([0],[0],'wo')
         plt.xlim(xys[-1],xys[0])
         plt.ylim(xys[0],xys[-1])
 
-    
+
     # ---------------------------------------------------------------
     #               And the detection limits that come for free!
     # ---------------------------------------------------------------
@@ -280,12 +280,12 @@ def xy_grid(cpo,nxy=30,ncon=32,xymax='Default', cmin=10.,cmax=500.,
                 detec_lim[x_ix,y_ix]=cons[-1]
             else:
                 detec_lim[x_ix,y_ix]=np.min(detectable_cons)
-                
+
     if plot_as_mags:
         detec_lim_plot = -2.5*np.log10(detec_lim)
     else:
         detec_lim_plot = detec_lim
-                            
+
     plt.figure(1)
     plt.clf()
 #    plt.imshow(detec_lim,extent=(xys[0],xys[-1],xys[0],xys[-1]),cmap=cmap)
@@ -297,8 +297,8 @@ def xy_grid(cpo,nxy=30,ncon=32,xymax='Default', cmin=10.,cmax=500.,
     plt.ylabel('Dec (mas)')
     plt.xlim(xys[-1],xys[0])
     plt.ylim(xys[0],xys[-1])
-    
-    # And we should also print whether the likelihood peak is a detection 
+
+    # And we should also print whether the likelihood peak is a detection
     #  according to the limits we just calculated
     limit_at_pos=detec_lim[best_ix[0][0],best_ix[1][0]]
     print('Contrast limit at best fit position: '+str(limit_at_pos))
@@ -306,8 +306,8 @@ def xy_grid(cpo,nxy=30,ncon=32,xymax='Default', cmin=10.,cmax=500.,
         print('Detection!')
     else:
         print('No significant detection found')
-    
- 
+
+
     data = {   'chi2'  : chi2,
             'like': like,
             'xys': xys,
@@ -316,4 +316,3 @@ def xy_grid(cpo,nxy=30,ncon=32,xymax='Default', cmin=10.,cmax=500.,
             'detec_lim':detec_lim}
     return data
  # =========================================================================
- 

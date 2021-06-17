@@ -8,7 +8,7 @@ AMICAL: Aperture Masking Interferometry Calibration and Analysis Library
 
 Set of functions to calibrate NRM data using a calibrator star data.
 
-------------------------------------------------------------------------- 
+-------------------------------------------------------------------------
 """
 
 import numpy as np
@@ -97,14 +97,14 @@ def _apply_sig_clip(data, e_data, sig_thres=2, ymin=0, ymax=1.2, var='V2', displ
 def _calc_correction_atm_vis2(data, corr_const=1, nf=100, display=False,
                               verbose=False, normalizedUncer=False):
     """
-    This function corrects V^2 for seeing and windshake. Use this on source and 
+    This function corrects V^2 for seeing and windshake. Use this on source and
     cal before division. Returns a multiplicative correction to the V^2.
 
     Parameters:
     -----------
     `data` {class}:
         class like containting results from extract_bs function,
-    `corr_const` {float}: 
+    `corr_const` {float}:
         Correction constant (0.4 is good for V for NIRC experiment).
     Returns:
     --------
@@ -164,7 +164,7 @@ def average_calib_files(list_nrm, sig_thres=2, display=False):
     `list_nrm` : {list}
         List of classes containing extracted NRM data (see bispect.py) of multiple calibrator files,\n
     `sig_thres` : {float}
-        Threshold of the sigma clipping (default: 2-sigma around the median is used),\n    
+        Threshold of the sigma clipping (default: 2-sigma around the median is used),\n
      """
     nfiles = len(list_nrm)
     l_pa = np.zeros(nfiles)
@@ -201,7 +201,7 @@ def average_calib_files(list_nrm, sig_thres=2, display=False):
 
     zero_uncer = (e_vis2_vs_file == 0)
     e_vis2_vs_file[zero_uncer] = np.max(e_vis2_vs_file)
-    
+
     cmn_vis2, std_vis2 = wtmn(vis2_vs_file, e_vis2_vs_file)
     cmn_cp, std_cp = wtmn(cp_vs_file, e_cp_vs_file)
 
@@ -228,7 +228,7 @@ def average_calib_files(list_nrm, sig_thres=2, display=False):
     return dict2class(res)
 
 
-def calibrate(res_t, res_c, clip=False, sig_thres=2, apply_phscorr=False, 
+def calibrate(res_t, res_c, clip=False, sig_thres=2, apply_phscorr=False,
               apply_atmcorr=False, normalize_err_indep=False, display=False):
     """ Calibrate v2 and cp from a science target and its calibrator.
 
@@ -242,7 +242,7 @@ def calibrate(res_t, res_c, clip=False, sig_thres=2, apply_phscorr=False,
         If True, sigma clipping is performed over the calibrator files (if any) to reject bad
         observables due to seeing conditions, centering, etc.,\n
     `sig_thres` : {float}
-        Threshold of the sigma clipping (default: 2-sigma around the median is used),\n    
+        Threshold of the sigma clipping (default: 2-sigma around the median is used),\n
     `apply_phscorr` : {bool}, optional
         If True, apply a phasor correction due to piston between holes, by default False.\n
     `apply_atmcorr` : {bool}, optional
@@ -312,9 +312,9 @@ def calibrate(res_t, res_c, clip=False, sig_thres=2, apply_phscorr=False,
                                std_v2_c**2*v2_t**2/cmn_v2_c**4)
     else:
         e_vis2_calib = np.sqrt(e_v2_t**2 + std_v2_c**2)
-        
+
     e_cp_calib = np.sqrt(e_cp_t**2 + std_cp_c**2) * err_scale
-    
+
     u1 = res_t.u[res_t.mask.bs2bl_ix[0, :]]
     v1 = res_t.v[res_t.mask.bs2bl_ix[0, :]]
     u2 = res_t.u[res_t.mask.bs2bl_ix[1, :]]

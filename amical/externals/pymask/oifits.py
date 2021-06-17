@@ -67,7 +67,7 @@ triple products, etc.  See the notes on the individual classes for a
 list of all the "hidden" attributes.
 
 For further information, contact Paul Boley (pboley@urfu.ru).
-   
+
 """
 
 import copy

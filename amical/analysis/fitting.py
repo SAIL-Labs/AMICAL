@@ -1,14 +1,15 @@
 import os
 from multiprocessing import Pool
 
-import amical
 import numpy as np
-from amical.analysis import models
-from amical.dpfit import leastsqFit
-from amical.tools import mas2rad, roundSciDigit
 from matplotlib import pyplot as plt
 from scipy.interpolate import interp1d
 from tqdm import tqdm
+
+import amical
+from amical.analysis import models
+from amical.dpfit import leastsqFit
+from amical.tools import mas2rad, roundSciDigit
 
 err_pts_style = {'linestyle': "None", 'capsize': 1, 'ecolor': '#364f6b', 'mec': '#364f6b',
                  'marker': '.', 'elinewidth': 0.5, 'alpha': 1, 'ms': 14}
@@ -181,7 +182,7 @@ def fits2obs(inputdata, use_flag=True, cond_wl=False, wl_min=None, wl_max=None,
     `extra_error_cp`: {float}
         Additional uncertainty of the CP (added quadraticaly),\n
     `err_scale`: {float}
-        Scaling factor applied on the CP uncertainties usualy used to 
+        Scaling factor applied on the CP uncertainties usualy used to
         include the non-independant CP correlation,\n
     `verbose`: {boolean}
         If True, display useful information about the data selection,\n
@@ -365,7 +366,7 @@ def compute_chi2_curve(obs, name_param, params, array_params, fitOnly,
                        normalizeErrors=False, fitCP=True, onlyCP=False,
                        ymin=0, ymax=3):
     """
-    Compute a 1D reduced chi2 curve to determine the pessimistic (fully correlated) 
+    Compute a 1D reduced chi2 curve to determine the pessimistic (fully correlated)
     uncertainties on one parameter (name_param).
 
     Parameters:
@@ -474,8 +475,8 @@ def compute_chi2_curve(obs, name_param, params, array_params, fitOnly,
 def plot_model(inputdata, param, save=False, outputfile=None, extra_error_v2=0,
                extra_error_cp=0, err_scale=1, d_freedom=3, v2_min=None, v2_max=1.1,
                cp_max=None, unit='m'):
-    """ Plot the model compared to the data (V2 and CP) and the associated 
-    residuals. 
+    """ Plot the model compared to the data (V2 and CP) and the associated
+    residuals.
 
     Parameters:
     -----------
@@ -483,10 +484,10 @@ def plot_model(inputdata, param, save=False, outputfile=None, extra_error_v2=0,
     `inputdata`: {str}
         Oifits file,\n
     `param`: {dict}
-        Parameters of the fit (**tips**: use fit['best'] if you want to 
+        Parameters of the fit (**tips**: use fit['best'] if you want to
         use the output of `amical.candid_grid()`.),\n
     `save`: {boolean}
-        If True, figure is saved using the inputdata file as name followed 
+        If True, figure is saved using the inputdata file as name followed
         by '_fit_candid.pdf'. Optionnaly, you can use `outputfile` to
         change the output file name (e.g.: outputfile='my_fit.pdf'),\n
     `extra_error_v2`: {float}
@@ -494,7 +495,7 @@ def plot_model(inputdata, param, save=False, outputfile=None, extra_error_v2=0,
     `extra_error_cp`: {float}
         Additional uncertainty of the CP (added quadraticaly),\n
     `err_scale`: {float}
-        Scaling factor applied on the CP uncertainties usualy used to 
+        Scaling factor applied on the CP uncertainties usualy used to
         include the non-independant CP correlation,\n
     `d_freedom` {int}:
         Degree of freedom (3 by default: sep, theta and dm),\n

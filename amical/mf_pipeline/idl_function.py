@@ -10,7 +10,7 @@ Matched filter sub-pipeline method.
 
 All required IDL function translated into python.
 
--------------------------------------------------------------------- 
+--------------------------------------------------------------------
 """
 
 import numpy as np

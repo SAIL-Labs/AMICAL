@@ -1,10 +1,11 @@
 import os
-from matplotlib import pyplot as plt
 
 import numpy as np
-from amical.externals import candid
+from matplotlib import pyplot as plt
 from termcolor import cprint
 from uncertainties import ufloat, umath
+
+from amical.externals import candid
 
 
 def candid_grid(input_data, step=10, rmin=20, rmax=400, diam=0, obs=['cp', 'v2'],
@@ -53,7 +54,7 @@ def candid_grid(input_data, step=10, rmin=20, rmax=400, diam=0, obs=['cp', 'v2']
         if outputfile is not None:
             filename = outputfile
         plt.savefig(filename, dpi=300)
-        
+
     fit = o.bestFit["best"]
     e_fit = o.bestFit["uncer"]
     chi2 = o.bestFit['chi2']

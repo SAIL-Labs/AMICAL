@@ -562,9 +562,9 @@ def hammer(cpo, ivar=[52., 192., 1.53], ndim='Default', nwalcps=50, plot=False,
 
 
 def detec_sim_loopfit(everything):
-    '''Function for multiprocessing in detec_limits. Takes a 
+    '''Function for multiprocessing in detec_limits. Takes a
     single separation and full angle, contrast lists.
-    For each sep,pa,contrast, it calculates 10,000 simulations of that binary 
+    For each sep,pa,contrast, it calculates 10,000 simulations of that binary
      (adding noise to each). A detection is defined as having chi2_bin - chi2_null <0
      It then counts the number of detections over all separations and'''
     detec_count = np.zeros((everything['nth'], everything['ncon']))
@@ -603,9 +603,9 @@ def detec_sim_loopfit(everything):
 
 
 def detec_sim_loopfit_cov(everything):
-    '''Function for multiprocessing in detec_limits. Takes a 
+    '''Function for multiprocessing in detec_limits. Takes a
     single separation and full angle, contrast lists.
-    For each sep,pa,contrast, it calculates 10,000 simulations of that binary 
+    For each sep,pa,contrast, it calculates 10,000 simulations of that binary
      (adding noise to each). A detection is defined as having chi2_bin - chi2_null <0
      It then counts the number of detections over all separations and'''
     detec_count = np.zeros((everything['nth'], everything['ncon']))
@@ -632,7 +632,7 @@ def detec_sim_loopfit_cov(everything):
 
 
 def detec_sim_loopfit_proj(everything):
-    '''Function for multiprocessing in detec_limits. Takes a 
+    '''Function for multiprocessing in detec_limits. Takes a
     single separation and full angle, contrast lists. Made for projected data'''
     detec_count = np.zeros((everything['nth'], everything['ncon']))
     proj = everything['proj']
@@ -674,12 +674,12 @@ def detec_limits(cpo, nsim=2000, nsep=32, nth=20, ncon=32, smin='Default', smax=
                  cmin=1.0001, cmax=500., extra_error=0, threads=0, save=False, projected=False,
                  use_cov=False, icpo=False, err_scale=1., no_plot=False,
                  linear_in_mags=False):
-    '''uses a Monte Carlo simulation to establish contrast-separation 
+    '''uses a Monte Carlo simulation to establish contrast-separation
     detection limits given an array of standard deviations per closure phase.
 
     Because different separation-contrast grid points are entirely
-    separate, this task is embarrassingly parallel. If you want to 
-    speed up the calculation, use multiprocessing with a threads 
+    separate, this task is embarrassingly parallel. If you want to
+    speed up the calculation, use multiprocessing with a threads
     argument equal to the number of available cores.
 
     Make nseps a multiple of threads! This uses the cores most efficiently.
@@ -693,7 +693,7 @@ def detec_limits(cpo, nsim=2000, nsep=32, nth=20, ncon=32, smin='Default', smax=
     Use_cov option allows the random clps to be generated using the sample covariance matrix.
 
     Note also that the calculation of the model closure phases could be done outside
-    the big loop, which would be efficient on CPU but not RAM. However, ACC 
+    the big loop, which would be efficient on CPU but not RAM. However, ACC
     tried adding this and ran out of RAM (8GB) on GPI data (8880 clps), so removed it.'''
 
     # Note that the accuracy of these sims are limited by the number of fake clps sets you take.
@@ -1255,7 +1255,7 @@ def chi2_grid(everything):
 
 
 def chi2_grid_cov(everything):
-    '''Function for multiprocessing, does 2d chi2 grid for coarse_grid, using 
+    '''Function for multiprocessing, does 2d chi2 grid for coarse_grid, using
     the covariance matrix instead of uncertainties'''
     cpo = everything['cpo']
     data_cp = cpo.t3data
@@ -1294,8 +1294,8 @@ def coarse_grid(cpo, nsep=32, nth=20, ncon=32, smin='Default', smax='Default',
     helpful for finding a good initial point for hammer or multinest.
 
     Because different separation-contrast grid points are entirely
-    separate, this task is embarrassingly parallel. If you want to 
-    speed up the calculation, use multiprocessing with a threads 
+    separate, this task is embarrassingly parallel. If you want to
+    speed up the calculation, use multiprocessing with a threads
     argument equal to the number of available cores.
 
     Make nseps a multiple of threads! This uses the cores most efficiently.
@@ -1479,7 +1479,7 @@ def multiple_companions_hammer(cpo, ivar=[[50., 0., 2.], [50., 90., 2.]], ndim='
                                nwalcps=50, plot=False, projected=False, niters=1000, threads=1, model='constant',
                                sep_prior=None, pa_prior=None, crat_prior=None, err_scale=1., extra_error=0.):
     '''Implementation of emcee, the MCMC Hammer, for closure phase
-    fitting to multiple companions. Requires a closure phase object cpo, and is best called with 
+    fitting to multiple companions. Requires a closure phase object cpo, and is best called with
     ivar chosen to be near the peak - it can fail to converge otherwise.
     See cp_model for details!
     Prior ranges introduce a flat (tophat) prior between the two values specified
@@ -1635,7 +1635,7 @@ def multiple_companions_hammer(cpo, ivar=[[50., 0., 2.], [50., 90., 2.]], ndim='
 
 def hammer_spectrum(cpo, params, ivar=[1.53], nwalcps=50, plot=False, model='free',
                     niters=1000, threads=1, crat_prior=None, err_scale=1., extra_error=0.):
-    '''ACC's modified version of hammer that allows fitting to a spectrum only, by 
+    '''ACC's modified version of hammer that allows fitting to a spectrum only, by
     fixing the position angle and separation of the companion. Made for HD142527
     Requires a closure phase object cpo, and is best called with
     ivar chosen to be near the peak - it can fail to converge otherwise.

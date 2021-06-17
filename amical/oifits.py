@@ -8,7 +8,7 @@ AMICAL: Aperture Masking Interferometry Calibration and Analysis Library
 
 OIFITS related function.
 
--------------------------------------------------------------------- 
+--------------------------------------------------------------------
 """
 
 import datetime
@@ -116,7 +116,7 @@ def _apply_flag(dict_calibrated, unit='arcsec'):
 def cal2dict(cal, target=None, pa=0, del_pa=0, snr=4,
              true_flag_v2=True, true_flag_t3=False, include_vis=False,
              oriented=-1, ind_hole=None):
-    """ Format class containing calibrated data into appropriate dictionnary 
+    """ Format class containing calibrated data into appropriate dictionnary
     format to be saved as oifits files.
 
     Parameters
@@ -142,7 +142,7 @@ def cal2dict(cal, target=None, pa=0, del_pa=0, snr=4,
         If True, include visibility amplitude in the oifits dictionnary,
          by default False,\n
     `oriented` {float}:
-        If oriented == -1, east assumed to the left in the image, otherwise 
+        If oriented == -1, east assumed to the left in the image, otherwise
         oriented == 1 (east to the right); (Default -1),\n
 
     Returns
@@ -423,12 +423,12 @@ def save(input_calibrated, oifits_file=None, datadir='Saveoifits',
     Parameters:
     -----------
 
-    `input_calibrated` {class}: 
-        Class or list of class containing all calibrated interferometric variable extracted 
+    `input_calibrated` {class}:
+        Class or list of class containing all calibrated interferometric variable extracted
         using calibrate (amical.calibration) function,\n
     `ind_hole` {int}:
-        By default, ind_hole is None, all the CP are considered ncp = N(N-1)(N-2)/6. If 
-        ind_hole is set, save only the independant CP including the given hole 
+        By default, ind_hole is None, all the CP are considered ncp = N(N-1)(N-2)/6. If
+        ind_hole is set, save only the independant CP including the given hole
         ncp = (N-1)(N-2)/2.\n
     `oifits_file` {str}:
         Name of the oifits file,\n
@@ -997,8 +997,8 @@ def show(inputList, diffWl=False, ind_hole=None, vmin=0, vmax=1.05, cmax=180, se
     `diffWl` {bool}:
         If True, differentiate the file (wavelenghts) by color,\n
     `ind_hole` {int}:
-        By default, ind_hole is None, all the CP are considered ncp = N(N-1)(N-2)/6. If 
-        ind_hole is set, show only the independant CP including the given hole 
+        By default, ind_hole is None, all the CP are considered ncp = N(N-1)(N-2)/6. If
+        ind_hole is set, show only the independant CP including the given hole
         ncp = (N-1)(N-2)/2.\n
     `vmin`, `vmax` {float}:
         Minimum and maximum visibilities (default: 0, 1.05),\n
@@ -1011,10 +1011,10 @@ def show(inputList, diffWl=False, ind_hole=None, vmin=0, vmax=1.05, cmax=180, se
     `unit_cp` {str}:
         Unit of the closure phases (default: 'deg'),\n
     `true_flag_v2` {bool}:
-        If inputs are classes from amical.calibrate, compute the true flag of vis2 
+        If inputs are classes from amical.calibrate, compute the true flag of vis2
         using snr parameter (default: True).\n
     `true_flag_t3` {bool}:
-        If inputs are classes from amical.calibrate, compute the true flag of cp 
+        If inputs are classes from amical.calibrate, compute the true flag of cp
         using snr parameter (default: True),\n
     `snr` {float}:
         If inputs are classes from amical.calibrate, use snr param to compute flag,

@@ -4,12 +4,11 @@ import warnings
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
+import oifits
 from matplotlib.patches import Rectangle
 from matplotlib.transforms import offset_copy
 from mpl_toolkits.mplot3d import Axes3D
 from numpy import arctan, pi, sort, sqrt
-
-import oifits
 
 
 def match_wavelength(template, oifitsobj):
@@ -105,7 +104,7 @@ def plot_full_visamp_vs_spatfreq(source, pmin=None, pmax=None, showerror=False):
 
     if pmin == None: pmin = posangles.min()
     if pmax == None: pmax = posangles.max()
-        
+
 
     for vis in source.vis:
         spatfreq = np.sqrt(vis.ucoord**2+vis.vcoord**2) / vis.wavelength.eff_wave / np.pi / 180.0 / 3600.0
@@ -174,7 +173,7 @@ def plot_visamp_vs_spatfreq(source, waveidx=None, pmin=None, pmax=None, fig=None
         ax = fig.axes[0]
         pmin = fig.pmin
         pmax = fig.pmax
-        cbarax = fig.axes[1]        
+        cbarax = fig.axes[1]
 
     for vis in source.vis:
         spatfreq = (np.sqrt(vis.ucoord**2+vis.vcoord**2) / vis.wavelength.eff_wave[waveidx] / np.pi / 180.0 / 3600.0).mean()
@@ -240,7 +239,7 @@ def get_ranges(data, value):
         i+=1
 
     return ranges
-        
+
 
 def plot_visamp_map(oifitsobj, width=0.1, height=0.1, colorcoding=None):
 
@@ -288,7 +287,7 @@ def plot_phases(oidata, uvplot=False, legend=False):
             w2 = vis.wavelength.eff_wave[bounds[1]]*1e6
             rect = matplotlib.patches.Rectangle((w1,-180), w2-w1, 360, color='lightblue')
             ax1.add_patch(rect)
-    
+
     names = []
 
     colors = ('black', 'red', 'green', 'blue', 'purple', 'teal', 'orange', 'cyan', 'darkred', 'darkgreen', 'darkblue', 'darkorange', 'grey', 'darkgrey', 'lightgrey')
@@ -356,7 +355,7 @@ def plot_visibilities(oidata, uvplot=False, legend=False, ploterror=False):
             w2 = vis.wavelength.eff_wave[bounds[1]]*1e6
             rect = matplotlib.patches.Rectangle((w1,0), w2-w1, 999, color='lightblue')
             ax1.add_patch(rect)
-    
+
     names = []
 
     colors = ('black', 'red', 'green', 'blue', 'purple', 'teal', 'orange', 'cyan', 'darkred', 'darkgreen', 'darkblue', 'darkorange', 'grey', 'darkgrey', 'lightgrey', 'pink')
@@ -433,7 +432,7 @@ def plot_gaussian_widths_vs_wavelength(oidata, uvplot=False, legend=False, plote
             w2 = vis.wavelength.eff_wave[bounds[1]]*1e6
             rect = matplotlib.patches.Rectangle((w1,0), w2-w1, 999, color='lightblue')
             ax1.add_patch(rect)
-    
+
     names = []
 
     colors = ('black', 'red', 'green', 'blue', 'purple', 'teal', 'orange', 'cyan', 'darkred', 'darkgreen', 'darkblue', 'darkorange', 'grey', 'darkgrey', 'lightgrey', 'pink')
@@ -502,7 +501,7 @@ def plot_cflux(oidata, uvplot=False, legend=False, ploterror=False):
             w2 = vis.wavelength.eff_wave[bounds[1]]*1e6
             rect = matplotlib.patches.Rectangle((w1,0), w2-w1, 999, color='lightblue')
             ax1.add_patch(rect)
-    
+
     names = []
 
     colors = ('black', 'red', 'green', 'blue', 'purple', 'teal', 'orange', 'cyan', 'darkred', 'darkgreen', 'darkblue', 'darkorange', 'grey', 'darkgrey', 'lightgrey', 'pink')
@@ -573,7 +572,7 @@ def plot_vis2(oidata, uvplot=False, legend=False, ploterror=False):
             w2 = vis.wavelength.eff_wave[bounds[1]]*1e6
             rect = matplotlib.patches.Rectangle((w1,0), w2-w1, 999, color='lightblue')
             ax1.add_patch(rect)
-    
+
     names = []
 
     colors = ('black', 'red', 'green', 'blue', 'purple', 'teal', 'orange', 'cyan', 'darkred', 'darkgreen', 'darkblue', 'darkorange', 'grey', 'darkgrey', 'lightgrey', 'pink')
@@ -635,7 +634,7 @@ def print_vis(vis):
 
     idx = list(np.where(vis.flag == False)[0])
     idx.reverse()
-    
+
     for i in idx:
         print "%6.3f %8.4f %8.4f"%(1e6*vis.wavelength.eff_wave[i], vis.visamp[i], vis.visamperr[i])
 
@@ -680,7 +679,7 @@ def plot_array(array, visibilities=None):
 
     ax.plot([0], [0], 'r+')
     plt.text(0, 0, '$\\vec{O}$', transform=transOffset, horizontalalignment='center', verticalalignment='top')
-    
+
     ax.annotate('N', xy=(0.05, 0.25), xytext=(0.05, 0.05), xycoords='axes fraction', textcoords='axes fraction', arrowprops={'width':2}, horizontalalignment='center', verticalalignment='bottom', family='serif', size='20')
 
     minx = np.min(xlist)
@@ -689,7 +688,7 @@ def plot_array(array, visibilities=None):
     maxy = np.max(ylist)
     centerx = (maxx - minx) / 2.0 + minx
     centery = (maxy - miny) / 2.0 + miny
-    
+
     width = 1.1*np.max([maxx - minx, maxy - miny])
 
     ax.set_xlim(centerx - width / 2.0, centerx + width / 2.0)

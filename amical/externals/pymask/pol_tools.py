@@ -21,7 +21,7 @@ def binary_model(u,v,wavel,p):
     - p[0] = sep (mas)
     - p[1] = PA (deg) E of N.
     - p[2] = contrast ratio (primary/secondary)
-    
+
     optional:
     - p[3] = angular size of primary (mas)
     - p[4] = angular size of secondary (mas)
@@ -42,7 +42,7 @@ def binary_model(u,v,wavel,p):
     # decompose into two "luminosity"
     l2 = 1. / (p[2] + 1)
     l1 = 1 - l2
-    
+
     # phase-factor
     phi = np.zeros(u.size, dtype=complex)
     phi.real = np.cos(-2*np.pi*(u*dra + v*ddec)/wavel)
@@ -65,12 +65,12 @@ def binary_model(u,v,wavel,p):
 def diff_vis_binary(u,v,wavel,p):
     ''' The expected differential visibility signal assuming a model of the form:
     separation, position angle, contrast.
-        This is just a really simple model that puts all of the complicated physics 
+        This is just a really simple model that puts all of the complicated physics
     into the contrast term.
         Contrast is really the polarization fraction with some factor due to the size
     of the object, but they are completely degenerate so I merged them.'''
-    
+
     # Get the expected signal from binary_model
     binary_cvis=binary_model(u,v,wavel,p)
-    
+
 # =========================================================================
