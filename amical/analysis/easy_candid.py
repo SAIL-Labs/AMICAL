@@ -8,9 +8,9 @@ from uncertainties import ufloat, umath
 from amical.externals import candid
 
 
-def candid_grid(input_data, step=10, rmin=20, rmax=400, diam=0, obs=['cp', 'v2'],
+def candid_grid(input_data, step=10, rmin=20, rmax=400, diam=0, obs=None,
                 extra_error_cp=0, err_scale=1, extra_error_v2=0, instruments=None,
-                doNotFit=['diam*', ], ncore=1, save=False, outputfile=None,
+                doNotFit=None, ncore=1, save=False, outputfile=None,
                 verbose=False):
     """ This function is an user friendly interface between the users of amical
     pipeline and the CANDID analysis package (https://github.com/amerand/CANDID).
@@ -38,6 +38,10 @@ def candid_grid(input_data, step=10, rmin=20, rmax=400, diam=0, obs=['cp', 'v2']
         Dictionnary of the results ('best'), uncertainties ('uncer'),
         reduced chi2 ('chi2') and sigma detection ('nsigma').
     """
+    if obs is None:
+        obs = ['cp', 'v2']
+    if doNotFit is None:
+        doNotFit = ['diam*']
 
     cprint(' | --- Start CANDID fitting --- :', 'green')
     o = candid.Open(input_data, extra_error=extra_error_cp,
@@ -109,9 +113,14 @@ def candid_grid(input_data, step=10, rmin=20, rmax=400, diam=0, obs=['cp', 'v2']
 
 def candid_cr_limit(input_data, step=10, rmin=20, rmax=400,
                     extra_error_cp=0, err_scale=1, extra_error_v2=0,
-                    obs=['cp', 'v2'], fitComp=None, ncore=1,
-                    diam=None, methods=['injection'], instruments=None,
+                    obs=None, fitComp=None, ncore=1,
+                    diam=None, methods=None, instruments=None,
                     save=False, outputfile=None):
+    if obs is None:
+        obs = ['cp', 'v2']
+    if methods is None:
+        methods = ['injection']
+
     cprint(' | --- Start CANDID contrast limit --- :', 'green')
     o = candid.Open(input_data, extra_error=extra_error_cp,
                     err_scale=err_scale, extra_error_v2=extra_error_v2,

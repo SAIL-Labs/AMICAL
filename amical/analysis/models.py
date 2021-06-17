@@ -211,8 +211,8 @@ def visClumpDebrisDisk(Utable, Vtable, Lambda, param):
 
     minorAxis = majorAxis * np.cos(inclination)
 
-    #majorAxis = majorAxis_c * np.cos(inclination) - minorAxis_c * np.sin(inclination)
-    #minorAxis = -majorAxis_c * np.sin(inclination) + minorAxis_c * np.cos(inclination)
+    # majorAxis = majorAxis_c * np.cos(inclination) - minorAxis_c * np.sin(inclination)
+    # minorAxis = -majorAxis_c * np.sin(inclination) + minorAxis_c * np.cos(inclination)
 
     u = Utable / Lambda
     v = Vtable / Lambda

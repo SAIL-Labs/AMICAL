@@ -4,8 +4,42 @@ from matplotlib import pyplot as plt
 from amical.externals import pymask
 
 
-def pymask_grid(input_data, ngrid=40, pa_prior=[0, 360], sep_prior=[0, 100], cr_prior=[1, 150],
+def pymask_grid(input_data, ngrid=40, pa_prior=None, sep_prior=None, cr_prior=None,
                 err_scale=1., extra_error_cp=0., ncore=1, verbose=False):
+    """ Compute chi2 map of a binary model over a regular grid.
+
+    Parameters:
+    -----------
+    `input_data` {str}:
+        Oifits file name,\n
+    `ngrid` {int}:
+        Number of points in the grid (for each parameters: pa, sep,
+        cr, i.e.: ngrid**3),\n
+    `pa_prior` {list}:
+        Bounds of the position angle (default: [0, 360]),\n
+    `sep_prior` {list}:
+        Bounds of the separation (default: [0, 100]),\n
+    `cr_prior` {list}:
+        Bounds of the contrast ratio (default: [0, 150]),\n
+    `err_scale` {float}:
+        Scaling factor apply on the errorbars (multiplicative),\n
+    `extra_error_cp` {float}:
+        Additional error [deg] (additive),\n
+    `ncore` {int}:
+        Number of threads used for multiprocessing.
+
+    Return:
+    -------
+    `like_grid` (np.array):
+        Compute likelyhood map.
+    """
+    if pa_prior is None:
+        pa_prior = [0, 360]
+    if sep_prior is None:
+        sep_prior = [0, 100]
+    if cr_prior is None:
+        cr_prior = [1, 150]
+
     cpo = pymask.cpo(input_data)
     like_grid = pymask.coarse_grid(cpo, nsep=ngrid, nth=ngrid, ncon=ngrid, thmin=pa_prior[0], thmax=pa_prior[1],
                                    smin=sep_prior[0], smax=sep_prior[1], cmin=cr_prior[0], cmax=cr_prior[1],
@@ -13,9 +47,12 @@ def pymask_grid(input_data, ngrid=40, pa_prior=[0, 360], sep_prior=[0, 100], cr_
     return like_grid
 
 
-def pymask_mcmc(input_data, initial_guess, niters=1000, pa_prior=[0, 360], sep_prior=None, cr_prior=None,
+def pymask_mcmc(input_data, initial_guess, niters=1000, pa_prior=None, sep_prior=None, cr_prior=None,
                 err_scale=1, extra_error_cp=0, ncore=1, burn_in=500, walkers=100, display=True,
                 verbose=True):
+    if pa_prior is None:
+        pa_prior = [0, 360]
+
     cpo = pymask.cpo(input_data)
     hammer_data = pymask.hammer(cpo, ivar=initial_guess, niters=niters, model='constant', nwalcps=walkers,
                                 sep_prior=sep_prior, pa_prior=pa_prior, crat_prior=cr_prior,

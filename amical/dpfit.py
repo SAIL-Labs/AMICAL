@@ -35,7 +35,7 @@ verboseTime = time.time()
 
 
 def leastsqFit(func, x, params, y, err=None, fitOnly=None,
-               verbose=False, doNotFit=[], epsfcn=1e-7,
+               verbose=False, doNotFit=None, epsfcn=1e-7,
                ftol=1e-5, fullOutput=True, normalizedUncer=True,
                follow=None):
     """
@@ -76,6 +76,10 @@ def leastsqFit(func, x, params, y, err=None, fitOnly=None,
     'cov': covariance matrix (normalized if normalizedUncer)
     'fitOnly': names of the columns of 'cov'
     """
+
+    if doNotFit is None:
+        doNotFit = []
+
     # -- fit all parameters by default
     if fitOnly is None:
         if len(doNotFit) > 0:
@@ -219,7 +223,7 @@ def leastsqFit(func, x, params, y, err=None, fitOnly=None,
 
 
 def bootstrap(func, x, params, y, err=None, fitOnly=None,
-              verbose=False, doNotFit=[], epsfcn=1e-7,
+              verbose=False, doNotFit=None, epsfcn=1e-7,
               ftol=1e-5, fullOutput=True, normalizedUncer=True,
               follow=None, Nboot=None):
     """
@@ -227,6 +231,9 @@ def bootstrap(func, x, params, y, err=None, fitOnly=None,
     is the 'normal' one, the Nboot following one are with ramdomization of data. If
     Nboot is not given, it is set to 10*len(x).
     """
+    if doNotFit is None:
+        doNotFit = []
+
     if Nboot is None:
         Nboot = 10*len(x)
     # first fit is the "normal" one
@@ -235,7 +242,7 @@ def bootstrap(func, x, params, y, err=None, fitOnly=None,
                        doNotFit=doNotFit, epsfcn=epsfcn,
                        ftol=ftol, fullOutput=True,
                        normalizedUncer=True)]
-    for k in range(Nboot):
+    for _ in range(Nboot):
         s = np.int_(len(x)*np.random.rand(len(x)))
         fits.append(leastsqFit(func, x[s], params, y[s],
                                err=err, fitOnly=fitOnly, verbose=False,

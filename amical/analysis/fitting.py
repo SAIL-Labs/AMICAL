@@ -227,12 +227,12 @@ def fits2obs(inputdata, use_flag=True, cond_wl=False, wl_min=None, wl_max=None,
     u1_data, v1_data, u2_data, v2_data = [], [], [], []
 
     for i in range(nbl):
-        for j in range(nwl):
+        for _ in range(nwl):
             u_data.append(data.u[i])
             v_data.append(data.v[i])
 
     for i in range(ncp):
-        for j in range(nwl):
+        for _ in range(nwl):
             u1_data.append(data.u1[i])
             v1_data.append(data.v1[i])
             u2_data.append(data.u2[i])

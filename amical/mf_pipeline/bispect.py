@@ -428,7 +428,7 @@ def _compute_corr_noise(complex_bs, ft_arr, fringe_peak):
     signal_map[corner_dist_map < npix / 16.0] = 1.0
 
     bias, dark_bias = 0, 0
-    for i in range(3):
+    for _ in range(3):
         signal_cond = signal_map == 0
         bias = np.median(aver_ps[signal_cond])
         dark_bias = np.median(aver_dps[signal_cond])
