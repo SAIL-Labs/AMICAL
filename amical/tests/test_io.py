@@ -18,7 +18,7 @@ def test_load_file(example_oifits):
     assert isinstance(s, dict)
 
 
-peakmethods = ['fft', 'gauss', 'square']
+peakmethods = ["fft", "gauss", "square"]
 
 
 @pytest.fixture(name="bss", scope="session")
@@ -31,12 +31,12 @@ def example_bss(global_datadir):
         bss[peakmethod] = amical.extract_bs(
             cube,
             fits_file,
-            targetname='test',
+            targetname="test",
             bs_multi_tri=False,
             maskname="g7",
             fw_splodge=0.7,
             display=False,
-            peakmethod=peakmethod
+            peakmethod=peakmethod,
         )
     return bss
 
@@ -65,17 +65,18 @@ def test_save(bss, tmpdir):
     cal = amical.calibrate(bs, bs)
     assert isinstance(cal, munch.Munch)
 
-    dic, savefile = amical.save(cal, oifits_file='test.oifits',
-                                datadir=tmpdir, fake_obj=True)
-    v2 = dic['OI_VIS2']['VIS2DATA']
-    cp = dic['OI_T3']['T3PHI']
+    dic, savefile = amical.save(
+        cal, oifits_file="test.oifits", datadir=tmpdir, fake_obj=True
+    )
+    v2 = dic["OI_VIS2"]["VIS2DATA"]
+    cp = dic["OI_T3"]["T3PHI"]
 
     assert isinstance(dic, dict)
     assert isinstance(savefile, str)
-    assert(isinstance(v2, np.ndarray))
-    assert(isinstance(cp, np.ndarray))
-    assert(len(v2) == 21)
-    assert(len(cp) == 35)
+    assert isinstance(v2, np.ndarray)
+    assert isinstance(cp, np.ndarray)
+    assert len(v2) == 21
+    assert len(cp) == 35
 
 
 @pytest.mark.slow
@@ -83,11 +84,7 @@ def test_save(bss, tmpdir):
 @pytest.mark.parametrize("ncore", [1, 2, 4])
 def test_candid_grid(example_oifits, ncore):
 
-    param_candid = {'rmin': 20,
-                    'rmax': 250,
-                    'step': 100,
-                    'ncore': ncore
-                    }
+    param_candid = {"rmin": 20, "rmax": 250, "step": 100, "ncore": ncore}
     fit1 = amical.candid_grid(example_oifits, **param_candid)
     assert isinstance(fit1, dict)
 
@@ -105,7 +102,7 @@ def test_loadc_file(example_oifits):
     assert isinstance(s, munch.Munch)
 
 
-@pytest.mark.parametrize("ins", ['NIRISS', 'SPHERE', 'VAMPIRES'])
+@pytest.mark.parametrize("ins", ["NIRISS", "SPHERE", "VAMPIRES"])
 def test_getPixel(ins):
     p = get_pixel_size(ins)
     assert isinstance(p, float)

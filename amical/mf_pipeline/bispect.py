@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 @author: Anthony Soulain (University of Sydney)
 
@@ -28,18 +27,31 @@ from termcolor import cprint
 from tqdm import tqdm
 
 from amical.get_infos_obs import get_mask
+from amical.mf_pipeline.ami_function import (
+    bs_multi_triangle,
+    compute_index_mask,
+    give_peak_info2d,
+    make_mf,
+    phase_chi2,
+    tri_pix,
+)
 from amical.tools import compute_pa, cov2cor
 
-from .ami_function import (bs_multi_triangle, compute_index_mask,
-                           give_peak_info2d, make_mf, phase_chi2, tri_pix)
 from .idl_function import dblarr, dist, regress_noc
 
 warnings.filterwarnings("ignore")
 
 
-def _compute_complex_bs(ft_arr, index_mask, fringe_peak, mf, dark_ps=None,
-                        closing_tri_pix=None, bs_multi_tri=False):
-    """ Compute the complex visibilities and the bispectrum of an input ft_arr (_construct_ft_arr()).
+def _compute_complex_bs(
+    ft_arr,
+    index_mask,
+    fringe_peak,
+    mf,
+    dark_ps=None,
+    closing_tri_pix=None,
+    bs_multi_tri=False,
+):
+    """Compute the complex visibilities and the bispectrum of an input ft_arr (_construct_ft_arr()).
     In addition, compute the phase phs of each frames, and some calibration array (relative to the
     dark frames).
 
@@ -81,21 +93,30 @@ def _compute_complex_bs(ft_arr, index_mask, fringe_peak, mf, dark_ps=None,
     avedps = np.zeros([npix, npix])
 
     # Extracted complex quantities
-    vis_arr = np.zeros((n_ps, n_baselines), dtype=[("complex", complex),
-                                                   ("phase", float),
-                                                   ("amplitude", float),
-                                                   ("squared", float)])
+    vis_arr = np.zeros(
+        (n_ps, n_baselines),
+        dtype=[
+            ("complex", complex),
+            ("phase", float),
+            ("amplitude", float),
+            ("squared", float),
+        ],
+    )
     bs_arr = np.zeros([n_ps, n_bispect]).astype(complex)
 
     # Calibration
     calib_v2 = np.zeros(n_baselines, dtype=[("dark", float), ("bias", float)])
-    phs = np.zeros((2, n_ps, n_baselines), dtype=[("value", float),
-                                                  ("err", float)])
+    phs = np.zeros((2, n_ps, n_baselines), dtype=[("value", float), ("err", float)])
 
     fluxes = np.zeros(n_ps)
 
-    for i in tqdm(range(n_ps), ncols=100, desc='Extracting in the cube',
-                  leave=False, file=sys.stdout):
+    for i in tqdm(
+        range(n_ps),
+        ncols=100,
+        desc="Extracting in the cube",
+        leave=False,
+        file=sys.stdout,
+    ):
         ft_frame = ft_arr[i]
         ps = np.abs(ft_frame) ** 2
 
@@ -115,8 +136,7 @@ def _compute_complex_bs(ft_arr, index_mask, fringe_peak, mf, dark_ps=None,
         # computed using make_mf function)
         cvis = np.zeros(n_baselines).astype(complex)
         for j in range(n_baselines):
-            pix = fringe_peak[j][:, 0].astype(
-                int), fringe_peak[j][:, 1].astype(int)
+            pix = fringe_peak[j][:, 0].astype(int), fringe_peak[j][:, 1].astype(int)
             gain = fringe_peak[j][:, 2]
 
             calib_v2["dark"][j] = np.sum(gain ** 2 * dps[pix])
@@ -124,16 +144,18 @@ def _compute_complex_bs(ft_arr, index_mask, fringe_peak, mf, dark_ps=None,
 
             ftf1 = np.roll(ft_frame, 1, axis=0)
             ftf2 = np.roll(ft_frame, -1, axis=0)
-            dummy = np.sum(ft_frame[pix] * np.conj(ftf1[pix]) +
-                           np.conj(ft_frame[pix]) * ftf2[pix])
+            dummy = np.sum(
+                ft_frame[pix] * np.conj(ftf1[pix]) + np.conj(ft_frame[pix]) * ftf2[pix]
+            )
 
             phs["value"][0, i, j] = np.arctan2(dummy.imag, dummy.real)
             phs["err"][0, i, j] = 1 / abs(dummy)
 
             ftf1 = np.roll(ft_frame, 1, axis=1)
             ftf2 = np.roll(ft_frame, -1, axis=1)
-            dummy = np.sum(ft_frame[pix] * np.conj(ftf1[pix]) +
-                           np.conj(ft_frame[pix]) * ftf2[pix])
+            dummy = np.sum(
+                ft_frame[pix] * np.conj(ftf1[pix]) + np.conj(ft_frame[pix]) * ftf2[pix]
+            )
 
             phs["value"][1, i, j] = np.arctan2(dummy.imag, dummy.real)
             phs["err"][1, i, j] = 1 / abs(dummy)
@@ -158,24 +180,32 @@ def _compute_complex_bs(ft_arr, index_mask, fringe_peak, mf, dark_ps=None,
             cvis_3 = cvis_fixed[bs2bl_ix[2, :]]
             bs_arr[i, :] = cvis_1 * cvis_2 * np.conj(cvis_3)
         else:
-            bs_arr = bs_multi_triangle(i, bs_arr, ft_frame, bs2bl_ix, mf,
-                                       closing_tri_pix,)
+            bs_arr = bs_multi_triangle(
+                i,
+                bs_arr,
+                ft_frame,
+                bs2bl_ix,
+                mf,
+                closing_tri_pix,
+            )
 
     ps = aveps / n_ps
     dps = avedps / n_ps
 
-    complex_bs = {'vis_arr': vis_arr,
-                  'bs_arr': bs_arr,
-                  'phs': phs,
-                  'calib_v2': calib_v2,
-                  'fluxes': fluxes,
-                  'ps': ps,
-                  'dps': dps}
+    complex_bs = {
+        "vis_arr": vis_arr,
+        "bs_arr": bs_arr,
+        "phs": phs,
+        "calib_v2": calib_v2,
+        "fluxes": fluxes,
+        "ps": ps,
+        "dps": dps,
+    }
     return complex_bs
 
 
 def _construct_ft_arr(cube):
-    """ Open the data cube and perform a series of roll (both axis) to avoid grid artefact
+    """Open the data cube and perform a series of roll (both axis) to avoid grid artefact
     (negative fft values). Remove the last row/column in case of odd array.
 
     Parameters:
@@ -217,24 +247,24 @@ def _show_complex_ps(ft_arr, i_frame=0):
     plt.imshow(ft_arr[i_frame].imag, cmap="gist_stern", origin="lower")
     plt.subplot(1, 3, 3)
     plt.title("Power spectrum (centred)")
-    plt.imshow(np.fft.fftshift(
-        abs(ft_arr[i_frame])), cmap="gist_stern", origin="lower")
+    plt.imshow(np.fft.fftshift(abs(ft_arr[i_frame])), cmap="gist_stern", origin="lower")
     plt.tight_layout()
     return fig
 
 
-def _show_peak_position(ft_arr, n_baselines, mf, maskname, peakmethod,
-                        i_fram=0, aver=False):
-    """ Show the expected position of the peak in the Fourier space using the
-    mask coordinates and the chosen method. """
+def _show_peak_position(
+    ft_arr, n_baselines, mf, maskname, peakmethod, i_fram=0, aver=False
+):
+    """Show the expected position of the peak in the Fourier space using the
+    mask coordinates and the chosen method."""
     dim1, dim2 = ft_arr.shape[1], ft_arr.shape[2]
     x, y = np.arange(dim1), np.arange(dim2)
     X, Y = np.meshgrid(x, y)
     lX, lY, lC = [], [], []
     for j in range(n_baselines):
-        l_x = X.ravel()[mf.pvct[mf.ix[0, j]: mf.ix[1, j]]]
-        l_y = Y.ravel()[mf.pvct[mf.ix[0, j]: mf.ix[1, j]]]
-        g = mf.gvct[mf.ix[0, j]: mf.ix[1, j]]
+        l_x = X.ravel()[mf.pvct[mf.ix[0, j] : mf.ix[1, j]]]
+        l_y = Y.ravel()[mf.pvct[mf.ix[0, j] : mf.ix[1, j]]]
+        g = mf.gvct[mf.ix[0, j] : mf.ix[1, j]]
 
         peak = [[l_y[k], l_x[k], g[k]] for k in range(len(l_x))]
 
@@ -254,8 +284,9 @@ def _show_peak_position(ft_arr, n_baselines, mf, maskname, peakmethod,
 
     fig, ax = plt.subplots(figsize=(9, 7))
     # plt.rc('xtick', labelsize=15)
-    ax.set_title("Expected splodge position with mask %s (method = %s)" %
-                 (maskname, peakmethod))
+    ax.set_title(
+        "Expected splodge position with mask %s (method = %s)" % (maskname, peakmethod)
+    )
     im = ax.imshow(ps, cmap="gist_stern", origin="lower")
     sc = ax.scatter(lX, lY, c=lC, s=20, cmap="viridis")
     divider = make_axes_locatable(ax)
@@ -266,23 +297,24 @@ def _show_peak_position(ft_arr, n_baselines, mf, maskname, peakmethod,
     cax2 = divider.new_horizontal(size="3%", pad=0.6, pack_start=True)
     fig.add_axes(cax2)
     cb2 = fig.colorbar(sc, cax=cax2)
-    cb2.ax.yaxis.set_ticks_position('left')
+    cb2.ax.yaxis.set_ticks_position("left")
     cb.set_label("Power Spectrum intensity")
     cb2.set_label("Relative weight [%]", fontsize=20)
     # x1, y1 = 23, 60
     # ax.set_xlim(x1, x1+8)
     # ax.set_ylim(y1, y1+8)
-    plt.subplots_adjust(top=0.965, bottom=0.035, left=0.025, right=0.965,
-                        hspace=0.2, wspace=0.2)
+    plt.subplots_adjust(
+        top=0.965, bottom=0.035, left=0.025, right=0.965, hspace=0.2, wspace=0.2
+    )
 
 
 def _show_norm_matrices(obs_norm, expert_plot=False):
-    """ Show covariances matrices of the V2, CP, and a combination
+    """Show covariances matrices of the V2, CP, and a combination
     bispectrum vs. V2."""
 
-    v2_cov = obs_norm['v2_cov']
-    cp_cov = obs_norm['cp_cov']
-    bs_v2_cov = obs_norm['bs_v2_cov']
+    v2_cov = obs_norm["v2_cov"]
+    cp_cov = obs_norm["cp_cov"]
+    bs_v2_cov = obs_norm["bs_v2_cov"]
 
     fig1 = plt.figure(figsize=(12, 6))
     plt.subplot(1, 2, 1)
@@ -311,61 +343,71 @@ def _show_norm_matrices(obs_norm, expert_plot=False):
     return fig1
 
 
-def _check_input_infos(hdr, targetname=None, filtname=None,
-                       instrum=None, verbose=True):
-    """ Extract informations from the header and fill the missing values with the
+def _check_input_infos(hdr, targetname=None, filtname=None, instrum=None, verbose=True):
+    """Extract informations from the header and fill the missing values with the
     input arguments. Return the infos class containing important informations of
     the input header (keys: target, seeing, instrument, ...)
     """
-    target = hdr.get('OBJECT')
-    filt = hdr.get('FILTER')
-    instrument = hdr.get('INSTRUME', instrum)
-    mod = hdr.get('HIERARCH ESO DET ID')
+    target = hdr.get("OBJECT")
+    filt = hdr.get("FILTER")
+    instrument = hdr.get("INSTRUME", instrum)
+    mod = hdr.get("HIERARCH ESO DET ID")
 
-    if (mod == 'IFS') & (instrument == 'SPHERE'):
-        instrument = instrument + '-' + mod
+    if (mod == "IFS") & (instrument == "SPHERE"):
+        instrument = instrument + "-" + mod
 
     # Check the target name
-    if (target is None) or (target == 'STD'):
-        if (targetname is not None):
+    if (target is None) or (target == "STD"):
+        if targetname is not None:
             target = targetname
             if verbose:
-                cprint("Warning: OBJECT is not in the header, targetname is used (%s)." %
-                       targetname, "green")
+                cprint(
+                    "Warning: OBJECT is not in the header, targetname is used (%s)."
+                    % targetname,
+                    "green",
+                )
         else:
             cprint("Error: target name not found (header or as input).", "red")
 
     # Check the filter used
-    if (filt is None):
-        if (filtname is not None):
+    if filt is None:
+        if filtname is not None:
             filt = filtname
             if verbose:
-                cprint("Warning: FILTER is not in the header, filtname is used (%s)." %
-                       filtname, "green")
+                cprint(
+                    "Warning: FILTER is not in the header, filtname is used (%s)."
+                    % filtname,
+                    "green",
+                )
         else:
             cprint("Error: filter not found (in the header or as input).", "red")
 
     # Check the instrument used
-    if (instrument is None):
+    if instrument is None:
         cprint("Error: instrum not found (in the header or as input).", "red")
 
     # Origin files
-    orig = hdr.get("ORIGFILE", 'SimulatedData')
-    if orig == 'SimulatedData':
-        orig = hdr.get("ARCFILE", 'SimulatedData')
+    orig = hdr.get("ORIGFILE", "SimulatedData")
+    if orig == "SimulatedData":
+        orig = hdr.get("ARCFILE", "SimulatedData")
 
     # Seeing informations
-    seeing_start = float(hdr.get('HIERARCH ESO TEL AMBI FWHM START', 0))
-    seeing_end = float(hdr.get('HIERARCH ESO TEL AMBI FWHM END', 0))
+    seeing_start = float(hdr.get("HIERARCH ESO TEL AMBI FWHM START", 0))
+    seeing_end = float(hdr.get("HIERARCH ESO TEL AMBI FWHM END", 0))
     seeing = np.mean([seeing_start, seeing_end])
 
-    infos = {'filtname': filt, 'target': target, 'instrument': instrument,
-             'orig': orig, 'seeing': seeing}
+    infos = {
+        "filtname": filt,
+        "target": target,
+        "instrument": instrument,
+        "orig": orig,
+        "seeing": seeing,
+    }
     return dict2class(infos)
 
 
 def _format_closing_triangle(index_mask):
-    """ Use the index_mask from compute_index_mask() to compute the list of
+    """Use the index_mask from compute_index_mask() to compute the list of
     closing triangle in an appropriate format (e.g.: [[0,1,2], [0,1,3], ..., [4,5,6]]
     for a 7 mask holes)."""
     bs2bl_ix = index_mask.bs2bl_ix
@@ -380,7 +422,7 @@ def _format_closing_triangle(index_mask):
 
 
 def _set_good_nblocks(n_blocks, n_ps, verbose=False):
-    """ Check the given n_blocks to do the statistic on
+    """Check the given n_blocks to do the statistic on
     different block size. If the n_blocks is 0 or greater
     than the frame number, n_blocks is set to n_ps.
     """
@@ -397,29 +439,27 @@ def _set_good_nblocks(n_blocks, n_ps, verbose=False):
 
 
 def _compute_corr_noise(complex_bs, ft_arr, fringe_peak):
-    """ Compute the bias (science and dark) and the correlated noise of the
+    """Compute the bias (science and dark) and the correlated noise of the
     Fourier transform (correlation between neighbouring terms in each
-    frame after removing the signal). """
+    frame after removing the signal)."""
     n_ps = ft_arr.shape[0]
     npix = ft_arr.shape[1]
 
-    v2_arr = complex_bs['vis_arr']['squared']
+    v2_arr = complex_bs["vis_arr"]["squared"]
 
     n_baselines = v2_arr.shape[1]
 
-    aver_ps = complex_bs['ps']
-    aver_dps = complex_bs['dps']
+    aver_ps = complex_bs["ps"]
+    aver_dps = complex_bs["dps"]
 
     signal_map = np.zeros([npix, npix])  # 2-D array where pixel=1 if signal
     # inside (i.e.: peak in the fft)
     for j in range(n_baselines):
-        pix = fringe_peak[j][:, 0].astype(
-            int), fringe_peak[j][:, 1].astype(int)
+        pix = fringe_peak[j][:, 0].astype(int), fringe_peak[j][:, 1].astype(int)
         signal_map[pix] = 1.0
 
     # Compute the center-symetric counterpart of the signal
-    signal_map += np.roll(np.roll(np.rot90(np.rot90(signal_map)),
-                                  1, axis=0), 1, axis=1)
+    signal_map += np.roll(np.roll(np.rot90(np.rot90(signal_map)), 1, axis=0), 1, axis=1)
 
     # Compute the distance map centered on each corners (origin in the fft)
     corner_dist_map = dist(npix)
@@ -446,22 +486,23 @@ def _compute_corr_noise(complex_bs, ft_arr, fringe_peak):
     return bias, dark_bias, autocor_noise
 
 
-def _unbias_v2_arr(v2_arr, npix, fringe_peak, bias, dark_bias, autocor_noise,
-                   unbias=True):
-    """ Unbias the squared visibilities array and add the dark bias substracted
-    twice instead of one. """
+def _unbias_v2_arr(
+    v2_arr, npix, fringe_peak, bias, dark_bias, autocor_noise, unbias=True
+):
+    """Unbias the squared visibilities array and add the dark bias substracted
+    twice instead of one."""
     n_baselines = v2_arr.shape[1]
 
     bias_arr = np.zeros(n_baselines)
     for j in range(n_baselines):
         im_peak = dblarr(npix, npix)
-        pix = fringe_peak[j][:, 0].astype(
-            int), fringe_peak[j][:, 1].astype(int)
+        pix = fringe_peak[j][:, 0].astype(int), fringe_peak[j][:, 1].astype(int)
         im_peak[pix] = fringe_peak[j][:, 2]
 
         autocor_mf = np.fft.ifft2(np.abs(np.fft.ifft2(im_peak)) ** 2).real
-        bias_arr[j] = (np.sum(autocor_mf * autocor_noise) *
-                       bias / autocor_noise[0, 0] * npix**2)
+        bias_arr[j] = (
+            np.sum(autocor_mf * autocor_noise) * bias / autocor_noise[0, 0] * npix ** 2
+        )
 
         if unbias:
             true_bias = bias_arr[j]
@@ -475,8 +516,8 @@ def _unbias_v2_arr(v2_arr, npix, fringe_peak, bias, dark_bias, autocor_noise,
 
 
 def _compute_v2_quantities(v2_arr, bias_arr, n_blocks):
-    """ Compute the squared visibilities quantities: - average ('v2') over the
-    cube, - covariance ('v2_cov'), - avar ('avar') and - 'err_avar'. """
+    """Compute the squared visibilities quantities: - average ('v2') over the
+    cube, - covariance ('v2_cov'), - avar ('avar') and - 'err_avar'."""
     n_ps = v2_arr.shape[0]
     n_baselines = v2_arr.shape[1]
 
@@ -509,18 +550,25 @@ def _compute_v2_quantities(v2_arr, bias_arr, n_blocks):
     x = np.arange(n_baselines)
     avar = v2_cov[x, x] * n_ps - bias_arr ** 2 * (1 + (2.0 * v2) / bias_arr)
     err_avar = np.sqrt(
-        2.0 / n_ps * (v2_cov[x, x]) ** 2 * n_ps ** 2 + 4.0 * v2_cov[x, x] * bias_arr ** 2)
+        2.0 / n_ps * (v2_cov[x, x]) ** 2 * n_ps ** 2
+        + 4.0 * v2_cov[x, x] * bias_arr ** 2
+    )
 
-    v2_quantities = {'v2': v2, 'v2_cov': v2_cov,
-                     'avar': avar, 'err_avar': err_avar,
-                     'v2_arr': v2_arr}
+    v2_quantities = {
+        "v2": v2,
+        "v2_cov": v2_cov,
+        "avar": avar,
+        "err_avar": err_avar,
+        "v2_arr": v2_arr,
+    }
     return v2_quantities
 
 
-def _compute_bs_quantities(bs_arr, v2, fluxes, index_mask, n_blocks,
-                           subtract_bs_bias=True):
-    """ Compute the bispectrum quantities: - average ('bs') over the
-    cube, - covariance ('bs_cov') and - variance ('bs_var'). """
+def _compute_bs_quantities(
+    bs_arr, v2, fluxes, index_mask, n_blocks, subtract_bs_bias=True
+):
+    """Compute the bispectrum quantities: - average ('bs') over the
+    cube, - covariance ('bs_cov') and - variance ('bs_var')."""
     n_cov = index_mask.n_cov
     n_bispect = index_mask.n_bispect
     bs2bl_ix = index_mask.bs2bl_ix
@@ -537,20 +585,20 @@ def _compute_bs_quantities(bs_arr, v2, fluxes, index_mask, n_blocks,
     if subtract_bs_bias:
         a = 1  # Computed values for non-amplified detector
         b = 2
-        bs_bias = a*(v2[bs2bl_ix[0, :]] + v2[bs2bl_ix[1, :]] +
-                     v2[bs2bl_ix[2, :]]) - b*np.mean(fluxes)
+        bs_bias = a * (
+            v2[bs2bl_ix[0, :]] + v2[bs2bl_ix[1, :]] + v2[bs2bl_ix[2, :]]
+        ) - b * np.mean(fluxes)
         # bs_bias = (v2[bs2bl_ix[0, :]] + v2[bs2bl_ix[1, :]] + v2[bs2bl_ix[2, :]] + np.mean(fluxes))
         bs = bs - bs_bias
 
     bs_var = _compute_bs_var(bs_arr, bs, n_blocks)
     bs_cov = _compute_bs_cov(bs_arr, bs, bscov2bs_ix, n_cov)
-    bs_quantities = {'bs': bs, 'bs_var': bs_var,
-                     'bs_cov': bs_cov, 'bs_arr': bs_arr}
+    bs_quantities = {"bs": bs, "bs_var": bs_var, "bs_cov": bs_cov, "bs_arr": bs_arr}
     return bs_quantities
 
 
 def _compute_bs_var(bs_arr, bs, n_blocks):
-    """ Compute the variance matrix of the bispectrum array. """
+    """Compute the variance matrix of the bispectrum array."""
     n_ps = bs_arr.shape[0]
     n_bispect = bs_arr.shape[1]
 
@@ -575,16 +623,19 @@ def _compute_bs_var(bs_arr, bs, n_blocks):
 
 
 def _compute_bs_cov(bs_arr, bs, bscov2bs_ix, n_cov):
-    """ Compute the covariance matrix of the bispectrum array. """
+    """Compute the covariance matrix of the bispectrum array."""
     n_ps = bs_arr.shape[0]
     bs_cov = np.zeros([2, n_cov])
     for j in range(n_cov):
-        temp1 = (bs_arr[:, bscov2bs_ix[0, j]] -
-                 bs[bscov2bs_ix[0, j]]) * np.conj(bs[bscov2bs_ix[0, j]])
-        temp2 = (bs_arr[:, bscov2bs_ix[1, j]] -
-                 bs[bscov2bs_ix[1, j]]) * np.conj(bs[bscov2bs_ix[1, j]])
-        denom = (abs(bs[bscov2bs_ix[0, j]]) *
-                 abs(bs[bscov2bs_ix[1, j]]) * (n_ps - 1) * n_ps)
+        temp1 = (bs_arr[:, bscov2bs_ix[0, j]] - bs[bscov2bs_ix[0, j]]) * np.conj(
+            bs[bscov2bs_ix[0, j]]
+        )
+        temp2 = (bs_arr[:, bscov2bs_ix[1, j]] - bs[bscov2bs_ix[1, j]]) * np.conj(
+            bs[bscov2bs_ix[1, j]]
+        )
+        denom = (
+            abs(bs[bscov2bs_ix[0, j]]) * abs(bs[bscov2bs_ix[1, j]]) * (n_ps - 1) * n_ps
+        )
 
         bs_cov[0, j] = np.sum(np.real(temp1) * np.real(temp2)) / denom
         bs_cov[1, j] = np.sum(np.imag(temp1) * np.imag(temp2)) / denom
@@ -592,12 +643,12 @@ def _compute_bs_cov(bs_arr, bs, bscov2bs_ix, n_cov):
 
 
 def _compute_cp_cov(bs_arr, bs, index_mask):
-    """ Compute the covariance matrix of the closure phase. """
+    """Compute the covariance matrix of the closure phase."""
     n_ps = bs_arr.shape[0]
     n_bispect = index_mask.n_bispect
 
     cp_cov = dblarr(n_bispect, n_bispect)
-    for i in tqdm(range(n_bispect), desc='CP covariance', ncols=100, leave=False):
+    for i in tqdm(range(n_bispect), desc="CP covariance", ncols=100, leave=False):
         for j in range(n_bispect):
             temp1 = (bs_arr[:, i] - bs[i]) * np.conj(bs[i])
             temp2 = (bs_arr[:, j] - bs[j]) * np.conj(bs[j])
@@ -607,7 +658,7 @@ def _compute_cp_cov(bs_arr, bs, index_mask):
 
 
 def _compute_bs_v2_cov(bs_arr, v2_arr, v2, bs, index_mask):
-    """ Compute covariance between power and bispectral amplitude. """
+    """Compute covariance between power and bispectral amplitude."""
     n_ps = bs_arr.shape[0]
     n_baselines = index_mask.n_baselines
     n_holes = index_mask.n_holes
@@ -629,21 +680,30 @@ def _compute_bs_v2_cov(bs_arr, v2_arr, v2, bs, index_mask):
     return bs_v2_cov
 
 
-def _normalize_all_obs(bs_quantities, v2_quantities, cvis_arr, cp_cov,
-                       bs_v2_cov, fluxes, index_mask, infos, expert_plot=False):
-    """ Normalize all observables by the appropriate factor proportional to
+def _normalize_all_obs(
+    bs_quantities,
+    v2_quantities,
+    cvis_arr,
+    cp_cov,
+    bs_v2_cov,
+    fluxes,
+    index_mask,
+    infos,
+    expert_plot=False,
+):
+    """Normalize all observables by the appropriate factor proportional to
     the averaged fluxes and the number of holes."""
-    bs_arr = bs_quantities['bs_arr']
-    v2_arr = v2_quantities['v2_arr']
+    bs_arr = bs_quantities["bs_arr"]
+    v2_arr = v2_quantities["v2_arr"]
 
-    v2 = v2_quantities['v2']
-    v2_cov = v2_quantities['v2_cov']
-    avar = v2_quantities['avar']
-    err_avar = v2_quantities['err_avar']
+    v2 = v2_quantities["v2"]
+    v2_cov = v2_quantities["v2_cov"]
+    avar = v2_quantities["avar"]
+    err_avar = v2_quantities["err_avar"]
 
-    bs = bs_quantities['bs']
-    bs_cov = bs_quantities['bs_cov']
-    bs_var = bs_quantities['bs_var']
+    bs = bs_quantities["bs"]
+    bs_cov = bs_quantities["bs_cov"]
+    bs_var = bs_quantities["bs_var"]
 
     n_holes = index_mask.n_holes
 
@@ -670,60 +730,67 @@ def _normalize_all_obs(bs_quantities, v2_quantities, cvis_arr, cp_cov,
 
     if expert_plot:
         plt.figure(figsize=(5, 4))
-        plt.title('DIAGNOSTIC PLOTS - V2 - %s' % infos.target)
-        plt.plot(v2_arr_norm[0], color='grey', alpha=.2, label='V$^2$ dispersion')
-        plt.plot(v2_arr_norm.T, color='grey', alpha=.2)
-        plt.plot(v2_norm, color='crimson', label='Raw V$^2$')
-        plt.grid(alpha=.2)
+        plt.title("DIAGNOSTIC PLOTS - V2 - %s" % infos.target)
+        plt.plot(v2_arr_norm[0], color="grey", alpha=0.2, label="V$^2$ dispersion")
+        plt.plot(v2_arr_norm.T, color="grey", alpha=0.2)
+        plt.plot(v2_norm, color="crimson", label="Raw V$^2$")
+        plt.grid(alpha=0.2)
         plt.legend()
-        plt.xlabel('# baselines')
-        plt.ylabel('Raw visibilities')
+        plt.xlabel("# baselines")
+        plt.ylabel("Raw visibilities")
         plt.tight_layout()
 
     # We compute the correlation matrix (to be used lated)
     v2_cor = cov2cor(v2_cov)[0]
 
-    norm_quantities = {'bs_arr': bs_arr_norm, 'v2_arr': v2_arr_norm,
-                       'cvis_arr': cvis_arr_norm, 'bs': bs_norm,
-                       'v2_cov': v2_cov_norm, 'bs_cov': bs_cov_norm,
-                       'avar': avar_norm, 'err_avar': err_avar_norm,
-                       'cp_cov': cp_cov_norm, 'bs_var': bs_var_norm,
-                       'bs_v2_cov': bs_v2_cov_norm, 'v2_cor': v2_cor
-                       }
+    norm_quantities = {
+        "bs_arr": bs_arr_norm,
+        "v2_arr": v2_arr_norm,
+        "cvis_arr": cvis_arr_norm,
+        "bs": bs_norm,
+        "v2_cov": v2_cov_norm,
+        "bs_cov": bs_cov_norm,
+        "avar": avar_norm,
+        "err_avar": err_avar_norm,
+        "cp_cov": cp_cov_norm,
+        "bs_var": bs_var_norm,
+        "bs_v2_cov": bs_v2_cov_norm,
+        "v2_cor": v2_cor,
+    }
     return v2_norm, norm_quantities
 
 
 def _compute_cp(obs_result, obs_norm, infos, expert_plot=False):
-    """ Compute the closure phases array (across the cube) and averaged cp using
+    """Compute the closure phases array (across the cube) and averaged cp using
     the normalized bispectrum (see _normalize_all_obs()). Note that for the CP, the
-    extracted quantities are computed after the normalisation. """
-    bs = obs_norm['bs']
-    bs_arr = obs_norm['bs_arr']
+    extracted quantities are computed after the normalisation."""
+    bs = obs_norm["bs"]
+    bs_arr = obs_norm["bs_arr"]
 
     cp = np.rad2deg(np.arctan2(bs.imag, bs.real))
     cp_arr = np.rad2deg([np.arctan2(i_bs.imag, i_bs.real) for i_bs in bs_arr])
 
-    obs_result['cp'] = cp
-    obs_norm['cp_arr'] = cp_arr
+    obs_result["cp"] = cp
+    obs_norm["cp_arr"] = cp_arr
 
     if expert_plot:
         plt.figure(figsize=(5, 4))
-        plt.title('DIAGNOSTIC PLOTS - CP - %s' % infos.target)
-        plt.plot(cp_arr[0], color='grey', alpha=.2, label='CP dispersion')
-        plt.plot(cp_arr.T, color='grey', alpha=.2)
-        plt.plot(cp, color='crimson', label='Raw CP')
-        plt.grid(alpha=.2)
+        plt.title("DIAGNOSTIC PLOTS - CP - %s" % infos.target)
+        plt.plot(cp_arr[0], color="grey", alpha=0.2, label="CP dispersion")
+        plt.plot(cp_arr.T, color="grey", alpha=0.2)
+        plt.plot(cp, color="crimson", label="Raw CP")
+        plt.grid(alpha=0.2)
         plt.legend()
-        plt.xlabel('# BS')
-        plt.ylabel('Raw closure phases [deg]')
+        plt.xlabel("# BS")
+        plt.ylabel("Raw closure phases [deg]")
         plt.tight_layout()
     return obs_result
 
 
 def _compute_t3_coord(mf, index_mask):
-    """ Compute the closure phases coordinates u1, u2, v1, v2
+    """Compute the closure phases coordinates u1, u2, v1, v2
     and the equivalent maximum baselines (used for the
-    spatial frequencies). """
+    spatial frequencies)."""
     n_bispect = index_mask.n_bispect
     bs2bl_ix = index_mask.bs2bl_ix
 
@@ -734,8 +801,7 @@ def _compute_t3_coord(mf, index_mask):
     u3coord = -(u1coord + u2coord)
     v3coord = -(v1coord + v2coord)
 
-    t3_coord = {"u1": u1coord, "u2": u2coord,
-                "v1": v1coord, "v2": v2coord}
+    t3_coord = {"u1": u1coord, "u2": u2coord, "v1": v1coord, "v2": v2coord}
 
     bl_cp = np.zeros(n_bispect)
     for k in range(n_bispect):
@@ -747,15 +813,15 @@ def _compute_t3_coord(mf, index_mask):
 
 
 def _compute_uncertainties(obs_result, obs_norm, naive_err=False):
-    """ Compute the uncertainties using the covariance matrix for the v2
+    """Compute the uncertainties using the covariance matrix for the v2
     and the variance matrix for the closure phase. Can also compute the
     so called naive error using the standard deviation of the cp and v2
-    quantities along the cube (`naive_err`=True, default=False). """
-    bs = obs_norm['bs']
-    bs_var = obs_norm['bs_var']
-    v2_cov = obs_norm['v2_cov']
-    cp_arr = obs_norm['cp_arr']
-    v2_arr = obs_norm['v2_arr']
+    quantities along the cube (`naive_err`=True, default=False)."""
+    bs = obs_norm["bs"]
+    bs_var = obs_norm["bs_var"]
+    v2_cov = obs_norm["v2_cov"]
+    cp_arr = obs_norm["cp_arr"]
+    v2_arr = obs_norm["v2_arr"]
 
     if not naive_err:
         e_cp = np.rad2deg(np.sqrt(bs_var[1] / abs(bs) ** 2))
@@ -764,21 +830,22 @@ def _compute_uncertainties(obs_result, obs_norm, naive_err=False):
         e_cp = np.std(cp_arr, axis=0)
         e_v2 = np.std(v2_arr, axis=0)
 
-    obs_result['e_cp'] = e_cp
-    obs_result['e_vis2'] = e_v2
+    obs_result["e_cp"] = e_cp
+    obs_result["e_vis2"] = e_v2
     return obs_result
 
 
-def _compute_phs_piston(complex_bs, index_mask, method='Nelder-Mead', tol=1e-4,
-                        verbose=False, display=False):
-    """ Compute the phase piston to determine the additional phase error due to
-    the wavefront differences between holes. """
+def _compute_phs_piston(
+    complex_bs, index_mask, method="Nelder-Mead", tol=1e-4, verbose=False, display=False
+):
+    """Compute the phase piston to determine the additional phase error due to
+    the wavefront differences between holes."""
     n_holes = index_mask.n_holes
     n_baselines = index_mask.n_baselines
 
     bl2h_ix = index_mask.bl2h_ix
 
-    ph_arr = complex_bs['vis_arr']['phase']
+    ph_arr = complex_bs["vis_arr"]["phase"]
 
     n_ps = ph_arr.shape[0]
     # In the MAPPIT-style, we define the relationship between hole phases
@@ -800,21 +867,23 @@ def _compute_phs_piston(complex_bs, index_mask, method='Nelder-Mead', tol=1e-4,
 
     for j in range(n_baselines):
         ph_err[j] = np.std(
-            ((ph_arr[:, j] - ph_mn[j] + 3 * np.pi) % (2 * np.pi)) - np.pi)
+            ((ph_arr[:, j] - ph_mn[j] + 3 * np.pi) % (2 * np.pi)) - np.pi
+        )
 
     ph_err = ph_err / np.sqrt(n_ps)
 
     p0 = np.zeros(n_holes)
-    res = minimize(phase_chi2, p0, method=method, tol=tol,
-                   args=(fitmat, ph_mn, ph_err))
+    res = minimize(phase_chi2, p0, method=method, tol=tol, args=(fitmat, ph_mn, ph_err))
 
     find_piston = None
     if verbose:
         print("\nDetermining piston using %s minimisation..." % method)
     if res.success:
         if verbose:
-            print("Phase Chi^2: ", phase_chi2(
-                res.x, fitmat, ph_mn, ph_err) / (n_baselines - n_holes + 1))
+            print(
+                "Phase Chi^2: ",
+                phase_chi2(res.x, fitmat, ph_mn, ph_err) / (n_baselines - n_holes + 1),
+            )
         find_piston = np.dot(res.x, fitmat)
     else:
         if verbose:
@@ -823,11 +892,22 @@ def _compute_phs_piston(complex_bs, index_mask, method='Nelder-Mead', tol=1e-4,
 
     if display:
         plt.figure()
-        plt.errorbar(np.arange(len(ph_mn)), np.rad2deg(ph_mn), yerr=np.rad2deg(ph_err),
-                     ls="None", ecolor="lightgray", marker=".",)
+        plt.errorbar(
+            np.arange(len(ph_mn)),
+            np.rad2deg(ph_mn),
+            yerr=np.rad2deg(ph_err),
+            ls="None",
+            ecolor="lightgray",
+            marker=".",
+        )
         if res.success:
-            plt.plot(np.rad2deg(find_piston[:-1]), ls="--", color="orange", lw=1,
-                     label=method + " minimisation",)
+            plt.plot(
+                np.rad2deg(find_piston[:-1]),
+                ls="--",
+                color="orange",
+                lw=1,
+                label=method + " minimisation",
+            )
             plt.legend()
         plt.grid(alpha=0.1)
         plt.ylabel(r"Mean phase [$\degree$]")
@@ -838,7 +918,7 @@ def _compute_phs_piston(complex_bs, index_mask, method='Nelder-Mead', tol=1e-4,
 
 
 def _calc_weight_reg(x, y, weights):
-    """ Apply a linear regression (IDL function) to fit the hole phase and error."""
+    """Apply a linear regression (IDL function) to fit the hole phase and error."""
     reg = regress_noc(x, y, weights)
     sig = cov2cor(reg.cov)[1]
     hole_ph = reg.coeff
@@ -847,14 +927,14 @@ def _calc_weight_reg(x, y, weights):
 
 
 def _compute_phs_error(complex_bs, fitmat, index_mask, npix, imsize=3):
-    """ Compute the phase error """
+    """Compute the phase error"""
     n_holes = index_mask.n_holes
     n_baselines = index_mask.n_baselines
     bl2h_ix = index_mask.bl2h_ix
 
-    phs_arr = complex_bs['phs']['value']
-    phserr_arr = complex_bs['phs']['err']
-    v2_arr = complex_bs['vis_arr']['squared']
+    phs_arr = complex_bs["phs"]["value"]
+    phserr_arr = complex_bs["phs"]["err"]
+    v2_arr = complex_bs["vis_arr"]["squared"]
 
     n_ps = phs_arr.shape[1]
 
@@ -874,19 +954,18 @@ def _compute_phs_error(complex_bs, fitmat, index_mask, npix, imsize=3):
     err, err_bias = np.zeros_like(v2_arr), np.zeros_like(v2_arr)
     for j in range(n_ps):
         y, weight = phs_arr[0, j, :], phserr_arr[0, j, :]
-        hole_phs[0, j, :], hole_err_phs[0, j,
-                                        :] = _calc_weight_reg(fitmat, y, weight)
+        hole_phs[0, j, :], hole_err_phs[0, j, :] = _calc_weight_reg(fitmat, y, weight)
         y, weight = phs_arr[1, j, :], phserr_arr[1, j, :]
-        hole_phs[1, j, :], hole_err_phs[1, j,
-                                        :] = _calc_weight_reg(fitmat, y, weight)
+        hole_phs[1, j, :], hole_err_phs[1, j, :] = _calc_weight_reg(fitmat, y, weight)
 
         tmp1 = hole_phs[0, j, bl2h_ix[0, :]] - hole_phs[0, j, bl2h_ix[1, :]]
         tmp2 = hole_phs[1, j, bl2h_ix[0, :]] - hole_phs[1, j, bl2h_ix[1, :]]
         err[j, :] = tmp1 ** 2 + tmp2 ** 2
-        err_bias[j, :] = ((hole_err_phs[0, j, bl2h_ix[0, :]] -
-                           hole_err_phs[0, j, bl2h_ix[1, :]]) ** 2
-                          + (hole_err_phs[1, j, bl2h_ix[0, :]] -
-                              hole_err_phs[1, j, bl2h_ix[1, :]]) ** 2)
+        err_bias[j, :] = (
+            hole_err_phs[0, j, bl2h_ix[0, :]] - hole_err_phs[0, j, bl2h_ix[1, :]]
+        ) ** 2 + (
+            hole_err_phs[1, j, bl2h_ix[0, :]] - hole_err_phs[1, j, bl2h_ix[1, :]]
+        ) ** 2
 
     predictor = np.zeros_like(v2_arr)
     for j in range(n_baselines):
@@ -903,28 +982,47 @@ def _compute_phs_error(complex_bs, fitmat, index_mask, npix, imsize=3):
 
 
 def _add_infos_header(infos, hdr, mf, pa, filename, maskname, npix):
-    """ Save important informations and some parts of the original header. """
-    infos['pixscale'] = mf.pixelSize
-    infos['pa'] = pa
-    infos['filename'] = filename
-    infos['maskname'] = maskname
-    infos['isz'] = npix
-    if 'SPHERE' not in infos.instrument:
-        infos['hdr'] = hdr
+    """Save important informations and some parts of the original header."""
+    infos["pixscale"] = mf.pixelSize
+    infos["pa"] = pa
+    infos["filename"] = filename
+    infos["maskname"] = maskname
+    infos["isz"] = npix
+    if "SPHERE" not in infos.instrument:
+        infos["hdr"] = hdr
 
     # Save keys of the original header (as needed):
-    add_keys = ['TELESCOP', 'DATE-OBS', 'MJD-OBS', 'OBSERVER']
-    if infos.orig != 'SimulatedData':
+    add_keys = ["TELESCOP", "DATE-OBS", "MJD-OBS", "OBSERVER"]
+    if infos.orig != "SimulatedData":
         for keys in add_keys:
             infos[keys.lower()] = hdr.get(keys)
     return infos
 
 
-def extract_bs(cube, filename, maskname, filtname=None, targetname=None, instrum=None,
-               bs_multi_tri=False, peakmethod='gauss', hole_diam=0.8, cutoff=1e-4,
-               fw_splodge=0.7, naive_err=False, n_wl=3, n_blocks=0, theta_detector=0,
-               scaling_uv=1, i_wl=None, unbias_v2=True, compute_cp_cov=True,
-               expert_plot=False, verbose=False, display=True,):
+def extract_bs(
+    cube,
+    filename,
+    maskname,
+    filtname=None,
+    targetname=None,
+    instrum=None,
+    bs_multi_tri=False,
+    peakmethod="gauss",
+    hole_diam=0.8,
+    cutoff=1e-4,
+    fw_splodge=0.7,
+    naive_err=False,
+    n_wl=3,
+    n_blocks=0,
+    theta_detector=0,
+    scaling_uv=1,
+    i_wl=None,
+    unbias_v2=True,
+    compute_cp_cov=True,
+    expert_plot=False,
+    verbose=False,
+    display=True,
+):
     """Compute the bispectrum (bs, v2, cp, etc.) from a data cube.
 
     Parameters:
@@ -987,17 +1085,18 @@ def extract_bs(cube, filename, maskname, filtname=None, targetname=None, instrum
         various quantities (see .mask.__dict__.keys()).
     """
     if verbose:
-        cprint("\n-- Starting extraction of observables --", 'cyan')
+        cprint("\n-- Starting extraction of observables --", "cyan")
     start_time = time.time()
 
     hdu = fits.open(filename)
     hdr = hdu[0].header
 
-    infos = _check_input_infos(hdr, targetname=targetname, filtname=filtname,
-                               instrum=instrum, verbose=False)
+    infos = _check_input_infos(
+        hdr, targetname=targetname, filtname=filtname, instrum=instrum, verbose=False
+    )
 
-    if 'INSTRUME' not in hdr.keys():
-        hdr['INSTRUME'] = infos['instrument']
+    if "INSTRUME" not in hdr.keys():
+        hdr["INSTRUME"] = infos["instrument"]
     # 1. Open the data cube and perform a series of roll (both axis) to avoid
     # grid artefact (negative fft values).
     # ------------------------------------------------------------------------
@@ -1021,15 +1120,26 @@ def extract_bs(cube, filename, maskname, filtname=None, targetname=None, instrum
 
     # 3. Compute the match filter mf
     # ------------------------------------------------------------------------
-    mf = make_mf(maskname, infos.instrument, infos.filtname, npix, peakmethod=peakmethod,
-                 fw_splodge=fw_splodge, n_wl=n_wl, cutoff=cutoff, hole_diam=hole_diam,
-                 scaling=scaling_uv, theta_detector=theta_detector, i_wl=i_wl,
-                 display=display,)
+    mf = make_mf(
+        maskname,
+        infos.instrument,
+        infos.filtname,
+        npix,
+        peakmethod=peakmethod,
+        fw_splodge=fw_splodge,
+        n_wl=n_wl,
+        cutoff=cutoff,
+        hole_diam=hole_diam,
+        scaling=scaling_uv,
+        theta_detector=theta_detector,
+        i_wl=i_wl,
+        display=display,
+    )
     if mf is None:
         return None
 
     # We store the principal results in the new dictionnary to be save at the end
-    obs_result = {'u': mf.u, 'v': mf.v, 'wl': mf.wl, 'e_wl': mf.e_wl}
+    obs_result = {"u": mf.u, "v": mf.v, "wl": mf.wl, "e_wl": mf.e_wl}
 
     # 4. Compute indices for the multiple triangle technique (tri_pix function)
     # -------------------------------------------------------------------------
@@ -1042,8 +1152,7 @@ def extract_bs(cube, filename, maskname, filtname=None, targetname=None, instrum
         sampledisk_r = minbl / 2 / mf.wl * mf.pixelSize * npix * fw_splodge
 
     if bs_multi_tri:
-        closing_tri_pix = tri_pix(npix, sampledisk_r, display=display,
-                                  verbose=verbose)
+        closing_tri_pix = tri_pix(npix, sampledisk_r, display=display, verbose=verbose)
     else:
         closing_tri_pix = None
 
@@ -1068,43 +1177,61 @@ def extract_bs(cube, filename, maskname, filtname=None, targetname=None, instrum
     if verbose:
         print("\nCalculating V^2 and BS...")
 
-    complex_bs = _compute_complex_bs(ft_arr, index_mask, fringe_peak, mf,
-                                     dark_ps=None, closing_tri_pix=closing_tri_pix,
-                                     bs_multi_tri=bs_multi_tri)
+    complex_bs = _compute_complex_bs(
+        ft_arr,
+        index_mask,
+        fringe_peak,
+        mf,
+        dark_ps=None,
+        closing_tri_pix=closing_tri_pix,
+        bs_multi_tri=bs_multi_tri,
+    )
 
-    cvis_arr = complex_bs['vis_arr']['complex']
-    v2_arr = complex_bs['vis_arr']['squared']
-    bs_arr = complex_bs['bs_arr']
-    fluxes = complex_bs['fluxes']
+    cvis_arr = complex_bs["vis_arr"]["complex"]
+    v2_arr = complex_bs["vis_arr"]["squared"]
+    bs_arr = complex_bs["bs_arr"]
+    fluxes = complex_bs["fluxes"]
 
     # 7. Compute correlated noise and bias at the peak position
     # ---------------------------------------------------------
-    bias, dark_bias, autocor_noise = _compute_corr_noise(complex_bs, ft_arr,
-                                                         fringe_peak)
+    bias, dark_bias, autocor_noise = _compute_corr_noise(
+        complex_bs, ft_arr, fringe_peak
+    )
 
-    v2_arr_unbiased, bias_arr = _unbias_v2_arr(v2_arr, npix, fringe_peak, bias, dark_bias,
-                                               autocor_noise, unbias=unbias_v2)
+    v2_arr_unbiased, bias_arr = _unbias_v2_arr(
+        v2_arr, npix, fringe_peak, bias, dark_bias, autocor_noise, unbias=unbias_v2
+    )
 
     # 8. Turn Arrays into means and covariance matrices
     # -------------------------------------------------
     v2_quantities = _compute_v2_quantities(v2_arr_unbiased, bias_arr, n_blocks)
 
-    bs_quantities = _compute_bs_quantities(bs_arr, v2_quantities['v2'], fluxes, index_mask,
-                                           n_blocks)
+    bs_quantities = _compute_bs_quantities(
+        bs_arr, v2_quantities["v2"], fluxes, index_mask, n_blocks
+    )
 
-    bs_v2_cov = _compute_bs_v2_cov(bs_arr, v2_arr_unbiased, v2_quantities['v2'],
-                                   bs_quantities['bs'], index_mask)
+    bs_v2_cov = _compute_bs_v2_cov(
+        bs_arr, v2_arr_unbiased, v2_quantities["v2"], bs_quantities["bs"], index_mask
+    )
 
     if compute_cp_cov:
-        cp_cov = _compute_cp_cov(bs_arr, bs_quantities['bs'], index_mask)
+        cp_cov = _compute_cp_cov(bs_arr, bs_quantities["bs"], index_mask)
     else:
         cp_cov = None
 
     # 9. Now normalize all extracted observables
-    vis2_norm, obs_norm = _normalize_all_obs(bs_quantities, v2_quantities, cvis_arr, cp_cov,
-                                             bs_v2_cov, fluxes, index_mask, infos,
-                                             expert_plot=expert_plot)
-    obs_result['vis2'] = vis2_norm
+    vis2_norm, obs_norm = _normalize_all_obs(
+        bs_quantities,
+        v2_quantities,
+        cvis_arr,
+        cp_cov,
+        bs_v2_cov,
+        fluxes,
+        index_mask,
+        infos,
+        expert_plot=expert_plot,
+    )
+    obs_result["vis2"] = vis2_norm
 
     if display:
         _show_norm_matrices(obs_norm, expert_plot=expert_plot)
@@ -1114,18 +1241,17 @@ def extract_bs(cube, filename, maskname, filtname=None, targetname=None, instrum
 
     t3_coord, bl_cp = _compute_t3_coord(mf, index_mask)
     bl_v2 = np.sqrt(mf.u ** 2 + mf.v ** 2)
-    obs_result['bl'] = bl_v2
-    obs_result['bl_cp'] = bl_cp
+    obs_result["bl"] = bl_v2
+    obs_result["bl_cp"] = bl_cp
 
     # 11. Now we compute the uncertainties using the covariance matrix (for v2)
     # and the variance matrix for the cp.
-    obs_result = _compute_uncertainties(obs_result, obs_norm,
-                                        naive_err=naive_err)
+    obs_result = _compute_uncertainties(obs_result, obs_norm, naive_err=naive_err)
 
     # 12. Compute scaling error due to phase error (piston) between holes.
     fitmat = _compute_phs_piston(complex_bs, index_mask, display=expert_plot)
     phs_v2corr = _compute_phs_error(complex_bs, fitmat, index_mask, npix)
-    obs_norm['phs_v2corr'] = phs_v2corr
+    obs_norm["phs_v2corr"] = phs_v2corr
 
     # 13. Compute the absolute oriention (North-up, East-left)
     # ------------------------------------------------------------------------
@@ -1134,25 +1260,25 @@ def extract_bs(cube, filename, maskname, filtname=None, targetname=None, instrum
     # Compile informations in the storage infos class
     infos = _add_infos_header(infos, hdr, mf, pa, filename, maskname, npix)
 
-    mask = {'bl2h_ix': index_mask.bl2h_ix,
-            'bs2bl_ix': index_mask.bs2bl_ix,
-            'closing_tri': closing_tri,
-            'xycoord': mf.xy_coords,
-            'n_holes': index_mask.n_holes,
-            'n_baselines': index_mask.n_baselines,
-            't3_coord': t3_coord
-            }
+    mask = {
+        "bl2h_ix": index_mask.bl2h_ix,
+        "bs2bl_ix": index_mask.bs2bl_ix,
+        "closing_tri": closing_tri,
+        "xycoord": mf.xy_coords,
+        "n_holes": index_mask.n_holes,
+        "n_baselines": index_mask.n_baselines,
+        "t3_coord": t3_coord,
+    }
 
     # Finally we store the computed matrices (cov, var, arr, etc,), the informations
     # and the mask parameters to the final output.
-    obs_result['mask'] = mask
-    obs_result['infos'] = infos
-    obs_result['matrix'] = obs_norm
+    obs_result["mask"] = mask
+    obs_result["infos"] = infos
+    obs_result["matrix"] = obs_norm
 
     t = time.time() - start_time
     m = t // 60
 
     if verbose:
-        cprint("\nDone (exec time: %d min %2.1f s)." %
-               (m, t - m * 60), color="magenta")
+        cprint("\nDone (exec time: %d min %2.1f s)." % (m, t - m * 60), color="magenta")
     return dict2class(obs_result)

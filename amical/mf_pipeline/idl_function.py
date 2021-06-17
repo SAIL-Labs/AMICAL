@@ -19,14 +19,14 @@ from termcolor import cprint
 
 
 def regress_noc(x, y, weights):
-    """ Python version of IDL regress_noc. """
+    """Python version of IDL regress_noc."""
     sx = x.shape
     sy = y.shape
-    nterm = sx[0]           # # OF TERMS
-    npts = sy[0]            # # OF OBSERVATIONS
+    nterm = sx[0]  # # OF TERMS
+    npts = sy[0]  # # OF OBSERVATIONS
 
     if (len(weights) != sy[0]) or (len(sx) != 2) or (sy[0] != sx[1]):
-        cprint('Incompatible arrays to compute slope error.', 'red')
+        cprint("Incompatible arrays to compute slope error.", "red")
 
     xwy = np.dot(x, (weights * y))
     wx = np.zeros([npts, nterm])
@@ -37,20 +37,14 @@ def regress_noc(x, y, weights):
     coeff = np.dot(cov, xwy)
     yfit = np.dot(x.T, coeff)
     if npts != nterm:
-        MSE = np.sum(weights * (yfit - y)**2) / (npts - nterm)
+        MSE = np.sum(weights * (yfit - y) ** 2) / (npts - nterm)
 
     var_yfit = np.zeros(npts)
 
     for i in range(npts):
-        var_yfit[i] = np.dot(np.dot(x[:, i].T, cov),
-                             x[:, i])  # Neter et al pg 233
+        var_yfit[i] = np.dot(np.dot(x[:, i].T, cov), x[:, i])  # Neter et al pg 233
 
-    dic = {'coeff': coeff,
-           'cov': cov,
-           'yfit': yfit,
-           'MSE': MSE,
-           'var_yfit': var_yfit
-           }
+    dic = {"coeff": coeff, "cov": cov, "yfit": yfit, "MSE": MSE, "var_yfit": var_yfit}
     return dict2class(dic)
 
 
@@ -67,11 +61,11 @@ def dist(naxis):
            [ 1.        ,  1.41421356,  2.23606798,  1.41421356]])
     """
     xx, yy = np.arange(naxis), np.arange(naxis)
-    xx2 = (xx-naxis//2)
-    yy2 = (naxis//2-yy)
+    xx2 = xx - naxis // 2
+    yy2 = naxis // 2 - yy
 
-    distance = np.sqrt(xx2**2 + yy2[:, np.newaxis]**2)
-    output = np.roll(distance, -1*(naxis//2), axis=(0, 1))
+    distance = np.sqrt(xx2 ** 2 + yy2[:, np.newaxis] ** 2)
+    output = np.roll(distance, -1 * (naxis // 2), axis=(0, 1))
     return output
 
 

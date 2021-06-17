@@ -5,10 +5,10 @@ from amical.tools import mas2rad
 
 
 def shiftFourier(Utable, Vtable, wl, C_in, x0, y0):
-    """ Shift the image (apply a phasor in Fourier space."""
+    """Shift the image (apply a phasor in Fourier space."""
     u = Utable / wl
     v = Vtable / wl
-    C_out = C_in * np.exp(-2j*np.pi*(u*x0+v*y0))
+    C_out = C_in * np.exp(-2j * np.pi * (u * x0 + v * y0))
     return C_out
 
 
@@ -31,8 +31,9 @@ def visUniformDisk(Utable, Vtable, Lambda, param):
     r = np.sqrt(u ** 2 + v ** 2)
 
     C_centered = 2 * special.j1(np.pi * r * diam) / (np.pi * r * diam)
-    C = shiftFourier(Utable, Vtable, Lambda, C_centered, mas2rad(param["x0"]),
-                     mas2rad(param["y0"]))
+    C = shiftFourier(
+        Utable, Vtable, Lambda, C_centered, mas2rad(param["x0"]), mas2rad(param["y0"])
+    )
     return C
 
 
@@ -46,18 +47,17 @@ def visPointSource(Utable, Vtable, Lambda, param):
         Shift along x and y position [rad].
     """
     C_centered = np.ones(np.size(Utable))
-    C = shiftFourier(Utable, Vtable, Lambda, C_centered,
-                     param["x0"], param["y0"])
+    C = shiftFourier(Utable, Vtable, Lambda, C_centered, param["x0"], param["y0"])
     return C
 
 
 def visBinary(Utable, Vtable, Lambda, param):
     sep = mas2rad(param["sep"])
     dm = param["dm"]
-    theta = np.deg2rad(90-param["theta"])
+    theta = np.deg2rad(90 - param["theta"])
 
     if dm < 0:
-        return np.array([np.nan]*len(Lambda))
+        return np.array([np.nan] * len(Lambda))
     f1 = 1
     f2 = f1 / 2.5 ** dm
     ftot = f1 + f2
@@ -76,11 +76,11 @@ def visBinary(Utable, Vtable, Lambda, param):
 def visBinary_res(Utable, Vtable, Lambda, param):
     sep = mas2rad(param["sep"])
     dm = param["dm"]
-    theta = np.deg2rad(90-param["theta"])
+    theta = np.deg2rad(90 - param["theta"])
     diam = param["diam"]
 
     if dm < 0:
-        return np.array([np.nan]*len(Lambda))
+        return np.array([np.nan] * len(Lambda))
     f1 = 1
     f2 = f1 / 2.5 ** dm
     ftot = f1 + f2
@@ -91,7 +91,7 @@ def visBinary_res(Utable, Vtable, Lambda, param):
     if diam == 0:
         p_s1 = {"x0": 0, "y0": 0}
     else:
-        p_s1 = {'diam': diam, "x0": 0, "y0": 0}
+        p_s1 = {"diam": diam, "x0": 0, "y0": 0}
     p_s2 = {"x0": sep * np.cos(theta), "y0": sep * np.sin(theta)}
 
     if diam == 0:
@@ -147,8 +147,8 @@ def visDebrisDisk(Utable, Vtable, Lambda, param):
         Shift along x and y position [rad].
     """
 
-    majorAxis = mas2rad(param["majorAxis"])*2
-    inclination = np.deg2rad(param['incl'])
+    majorAxis = mas2rad(param["majorAxis"]) * 2
+    inclination = np.deg2rad(param["incl"])
     posang = np.deg2rad(param["posang"])
     thickness = mas2rad(param["thickness"])
     cr_star = param["cr"]
@@ -167,8 +167,9 @@ def visDebrisDisk(Utable, Vtable, Lambda, param):
 
     C_centered = special.j0(np.pi * r)
     C_shifted = shiftFourier(Utable, Vtable, Lambda, C_centered, x0, y0)
-    C = C_shifted * visGaussianDisk(Utable, Vtable, Lambda,
-                                    {"fwhm": thickness, "x0": 0.0, "y0": 0.0})
+    C = C_shifted * visGaussianDisk(
+        Utable, Vtable, Lambda, {"fwhm": thickness, "x0": 0.0, "y0": 0.0}
+    )
 
     fstar = cr_star
     fdisk = 1
@@ -177,7 +178,7 @@ def visDebrisDisk(Utable, Vtable, Lambda, param):
     rel_star = fstar / total_flux
     rel_disk = fdisk / total_flux
 
-    p_s1 = {'x0': x0, 'y0': y0}
+    p_s1 = {"x0": x0, "y0": y0}
     s1 = rel_star * visPointSource(Utable, Vtable, Lambda, p_s1)
     s2 = rel_disk * C
     return s1 + s2
@@ -201,8 +202,8 @@ def visClumpDebrisDisk(Utable, Vtable, Lambda, param):
         Shift along x and y position [rad].
     """
 
-    majorAxis = mas2rad(param["majorAxis"])*2
-    inclination = np.deg2rad(param['incl'])
+    majorAxis = mas2rad(param["majorAxis"]) * 2
+    inclination = np.deg2rad(param["incl"])
     posang = np.deg2rad(param["posang"])
     thickness = mas2rad(param["thickness"])
     cr_star = param["cr"]
@@ -222,24 +223,23 @@ def visClumpDebrisDisk(Utable, Vtable, Lambda, param):
         + ((u * np.cos(posang) - v * np.sin(posang)) * minorAxis) ** 2
     )
 
-    d_clump = mas2rad(param['d_clump'])
-    cr_clump = param['cr_clump']/100.
+    d_clump = mas2rad(param["d_clump"])
+    cr_clump = param["cr_clump"] / 100.0
 
     x1 = 0
     y1 = majorAxis * np.cos(inclination)
-    x_clump = ((x1 * np.cos(posang) - y1 * np.sin(posang))/2.)
-    y_clump = ((x1 * np.sin(posang) + y1 * np.cos(posang))/2.)
+    x_clump = (x1 * np.cos(posang) - y1 * np.sin(posang)) / 2.0
+    y_clump = (x1 * np.sin(posang) + y1 * np.cos(posang)) / 2.0
 
-    p_clump = {"fwhm": d_clump,
-               "x0": x_clump,
-               "y0": y_clump}
+    p_clump = {"fwhm": d_clump, "x0": x_clump, "y0": y_clump}
 
     C_clump = visGaussianDisk(Utable, Vtable, Lambda, p_clump)
 
     C_centered = special.j0(np.pi * r)
     C_shifted = shiftFourier(Utable, Vtable, Lambda, C_centered, x0, y0)
-    C = C_shifted * visGaussianDisk(Utable, Vtable, Lambda,
-                                    {"fwhm": thickness, "x0": 0.0, "y0": 0.0})
+    C = C_shifted * visGaussianDisk(
+        Utable, Vtable, Lambda, {"fwhm": thickness, "x0": 0.0, "y0": 0.0}
+    )
 
     fstar = cr_star
     fdisk = 1
@@ -251,7 +251,7 @@ def visClumpDebrisDisk(Utable, Vtable, Lambda, param):
     rel_star = fstar / total_flux
     rel_disk = fdisk / total_flux
 
-    p_s1 = {'x0': x0, 'y0': y0}
+    p_s1 = {"x0": x0, "y0": y0}
     s1 = rel_star * visPointSource(Utable, Vtable, Lambda, p_s1)
     s2 = rel_disk * C
     deb_disk = s1 + s2

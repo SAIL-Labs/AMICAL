@@ -7,3 +7,4 @@ line-length = 88
 [tool.isort]
 profile = "black"
 combine_as_imports = true
+multi_line_output = 3

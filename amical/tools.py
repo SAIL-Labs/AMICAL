@@ -25,27 +25,27 @@ from scipy.signal import medfilt2d
 from termcolor import cprint
 from uncertainties import ufloat
 
-warnings.filterwarnings("ignore", module='astropy.io.votable.tree')
-warnings.filterwarnings("ignore", module='astropy.io.votable.xmlutil')
+warnings.filterwarnings("ignore", module="astropy.io.votable.tree")
+warnings.filterwarnings("ignore", module="astropy.io.votable.xmlutil")
 
 
 def linear(x, param):
     """Linear model used in dpfit"""
-    a = param['a']
-    b = param['b']
-    y = a*x + b
+    a = param["a"]
+    b = param["b"]
+    y = a * x + b
     return y
 
 
 def mas2rad(mas):
-    """ Convert angle in milli-arcsec to radians """
-    rad = mas * (10**(-3)) / (3600 * 180 / np.pi)
+    """Convert angle in milli-arcsec to radians"""
+    rad = mas * (10 ** (-3)) / (3600 * 180 / np.pi)
     return rad
 
 
 def rad2mas(rad):
-    """ Convert input angle in radians to milli-arcsec """
-    mas = rad * (3600. * 180 / np.pi) * 10.**3
+    """Convert input angle in radians to milli-arcsec"""
+    mas = rad * (3600.0 * 180 / np.pi) * 10.0 ** 3
     return mas
 
 
@@ -104,7 +104,7 @@ def norm_max(tab):
     `tab_norm` : {numpy.array}, {list}
         Normalized array.
     """
-    tab_norm = tab/np.max(tab)
+    tab_norm = tab / np.max(tab)
     return tab_norm
 
 
@@ -127,7 +127,7 @@ def crop_center(img, dim):
         Resized image.
     """
     b = img.shape[0]
-    position = (b//2, b//2)
+    position = (b // 2, b // 2)
     cutout = Cutout2D(img, position, dim)
     return cutout.data
 
@@ -193,26 +193,33 @@ def gauss_2d_asym(X, param):
 
     x, y = np.meshgrid(x_1d, y_1d)
 
-    fwhmx = param['fwhm_x']/pixel_scale
-    fwhmy = param['fwhm_y']/pixel_scale
+    fwhmx = param["fwhm_x"] / pixel_scale
+    fwhmy = param["fwhm_y"] / pixel_scale
 
-    sigma_x = (fwhmx / np.sqrt(8 * np.log(2)))
-    sigma_y = (fwhmy / np.sqrt(8 * np.log(2)))
+    sigma_x = fwhmx / np.sqrt(8 * np.log(2))
+    sigma_y = fwhmy / np.sqrt(8 * np.log(2))
 
-    amplitude = param['A']
-    x0 = dim//2 + param['x0']/pixel_scale
-    y0 = dim//2 + param['y0']/pixel_scale
-    theta = np.deg2rad(param['theta'])
+    amplitude = param["A"]
+    x0 = dim // 2 + param["x0"] / pixel_scale
+    y0 = dim // 2 + param["y0"] / pixel_scale
+    theta = np.deg2rad(param["theta"])
     size_x = len(x)
     size_y = len(y)
     im = np.zeros([size_y, size_x])
     x0 = float(x0)
     y0 = float(y0)
-    a = (np.cos(theta)**2)/(2*sigma_x**2) + (np.sin(theta)**2)/(2*sigma_y**2)
-    b = -(np.sin(2*theta))/(4*sigma_x**2) + (np.sin(2*theta))/(4*sigma_y**2)
-    c = (np.sin(theta)**2)/(2*sigma_x**2) + (np.cos(theta)**2)/(2*sigma_y**2)
-    im = amplitude*np.exp(- (a*((x-x0)**2) + 2*b*(x-x0)
-                             * (y-y0) + c*((y-y0)**2)))
+    a = (np.cos(theta) ** 2) / (2 * sigma_x ** 2) + (np.sin(theta) ** 2) / (
+        2 * sigma_y ** 2
+    )
+    b = -(np.sin(2 * theta)) / (4 * sigma_x ** 2) + (np.sin(2 * theta)) / (
+        4 * sigma_y ** 2
+    )
+    c = (np.sin(theta) ** 2) / (2 * sigma_x ** 2) + (np.cos(theta) ** 2) / (
+        2 * sigma_y ** 2
+    )
+    im = amplitude * np.exp(
+        -(a * ((x - x0) ** 2) + 2 * b * (x - x0) * (y - y0) + c * ((y - y0) ** 2))
+    )
     return im
 
 
@@ -222,13 +229,13 @@ def conv_fft(image, psf):
     """
     fft_im = np.fft.fft2(image)
     fft_psf = np.fft.fft2(psf)
-    fft_conv = fft_im*fft_psf
+    fft_conv = fft_im * fft_psf
     conv = abs(np.fft.fftshift(np.fft.ifft2(fft_conv)))
     return conv
 
 
 def plot_circle(d, x, y, hole_radius, sz=1, display=True):
-    """ Return an image with a disk = sz at x, y position and zero elsewhere"""
+    """Return an image with a disk = sz at x, y position and zero elsewhere"""
     chipsz = np.shape(d)[0]
 
     im = np.zeros([chipsz, chipsz])
@@ -246,14 +253,15 @@ def plot_circle(d, x, y, hole_radius, sz=1, display=True):
     r = hole_radius
     for c in range(n_circ):
         ind1 = int(max([0.0, xx[c] - r - 1]))
-        ind2 = int(min([info[1]-1, xx[c] + r + 1]))
+        ind2 = int(min([info[1] - 1, xx[c] + r + 1]))
         for i in np.arange(ind1, ind2, 1):
             ind3 = int(max([0.0, yy[c] - r - 1]))
             ind4 = int(min([info[2] - 1, yy[c] + r + 1]))
             for j in np.arange(ind3, ind4, 1):
                 r_d = np.sqrt(
-                    (float(i)-float(xx[c]))**2+(float(j)-float(yy[c]))**2)
-                if (r_d <= r):
+                    (float(i) - float(xx[c])) ** 2 + (float(j) - float(yy[c])) ** 2
+                )
+                if r_d <= r:
                     im[i, j] = sz
 
     if display:
@@ -289,8 +297,7 @@ def cov2cor(cov):
         for iy in range(cov.shape[1]):
             cyy = cov[iy, iy]
             if cyy < 0.0:
-                str_err = "diagonal cov[%d,%d]=%e is not positive" % (iy, iy,
-                                                                      cyy)
+                str_err = "diagonal cov[%d,%d]=%e is not positive" % (iy, iy, cyy)
                 raise ValueError(str_err)
             cor[ix, iy] = cov[ix, iy] / np.sqrt(cxx * cyy)
 
@@ -302,51 +309,60 @@ def sky_correction(imA, r1=100, dr=20, verbose=False):
     Perform background sky correction to be as close to zero as possible.
     """
     isz = imA.shape[0]
-    xc, yc = isz//2, isz//2
+    xc, yc = isz // 2, isz // 2
     xx, yy = np.arange(isz), np.arange(isz)
-    xx2 = (xx-xc)
-    yy2 = (yc-yy)
+    xx2 = xx - xc
+    yy2 = yc - yy
     r2 = r1 + dr
 
-    distance = np.sqrt(xx2**2 + yy2[:, np.newaxis]**2)
+    distance = np.sqrt(xx2 ** 2 + yy2[:, np.newaxis] ** 2)
     cond_bg = (r1 <= distance) & (distance <= r2)
 
     try:
         minA = imA.min()
-        imB = imA + 1.01*abs(minA)
+        imB = imA + 1.01 * abs(minA)
         backgroundB = np.mean(imB[cond_bg])
         imC = imB - backgroundB
         backgroundC = np.mean(imC[cond_bg])
     except IndexError:
         imC = imA.copy()
         backgroundC = 0
-        cprint('Warning: Background not computed', 'green')
-        cprint('-> check the inner and outer radius rings (checkrad option).', 'green')
+        cprint("Warning: Background not computed", "green")
+        cprint("-> check the inner and outer radius rings (checkrad option).", "green")
 
     return imC, backgroundC
 
 
 def super_gauss(dist, hwhm, m):
-    y = np.exp(-np.log(0.5) * (dist/hwhm)**m)
+    y = np.exp(-np.log(0.5) * (dist / hwhm) ** m)
     return y
 
 
 def super_gaussian(x, sigma, m, amp=1, x0=0):
     sigma = float(sigma)
     m = float(m)
-    return amp * ((np.exp(-(2 ** (2 * m - 1)) * np.log(2) * (((x - x0) ** 2) / ((sigma) ** 2)) ** (m))) ** 2)
+    return amp * (
+        (
+            np.exp(
+                -(2 ** (2 * m - 1))
+                * np.log(2)
+                * (((x - x0) ** 2) / ((sigma) ** 2)) ** (m)
+            )
+        )
+        ** 2
+    )
 
 
 def apply_windowing(img, window=80, m=3):
     isz = len(img)
     xx, yy = np.arange(isz), np.arange(isz)
-    xx2 = (xx-isz//2)
-    yy2 = (isz//2-yy)
+    xx2 = xx - isz // 2
+    yy2 = isz // 2 - yy
     # Distance map
-    distance = np.sqrt(xx2**2 + yy2[:, np.newaxis]**2)
+    distance = np.sqrt(xx2 ** 2 + yy2[:, np.newaxis] ** 2)
 
     # Super-gaussian windowing
-    window = super_gaussian(distance, sigma=window*2, m=m)
+    window = super_gaussian(distance, sigma=window * 2, m=m)
 
     # Apply the windowing
     img_apod = img * window
@@ -354,13 +370,13 @@ def apply_windowing(img, window=80, m=3):
 
 
 def compute_ufloat_arr(data, e_data):
-    """ Compute the array containing ufloat format used by uncertainties package. """
+    """Compute the array containing ufloat format used by uncertainties package."""
     u_data = np.array([ufloat(data[i], e_data[i]) for i in range(len(data))])
     return u_data
 
 
 def sanitize_array(dic):
-    """ Recursively convert values in a nested dictionnary from np.bool_ to builtin bool type
+    """Recursively convert values in a nested dictionnary from np.bool_ to builtin bool type
     This is required for json serialization.
     """
     d2 = dic.copy()
@@ -383,7 +399,7 @@ def wtmn(values, weights):
     ndim = values.ndim
 
     # Fast and numerically precise:
-    variance = np.average((values-mn)**2, weights=weights, axis=0)
+    variance = np.average((values - mn) ** 2, weights=weights, axis=0)
     std = np.sqrt(variance)
 
     if ndim == 2:
@@ -401,17 +417,17 @@ def wtmn(values, weights):
 
 
 def jd2lst(lng, jd):
-    '''Convert Julian date to LST '''
+    """Convert Julian date to LST"""
     c = [280.46061837, 360.98564736629, 0.000387933, 38710000.0]
     jd2000 = 2451545.0
     t0 = jd - jd2000
-    t = t0/36525.
+    t = t0 / 36525.0
 
     # Compute GST in seconds.
-    theta = c[0] + (c[1] * t0) + t**2*(c[2] - t / c[3])
+    theta = c[0] + (c[1] * t0) + t ** 2 * (c[2] - t / c[3])
 
     # Compute LST in hours.
-    lst = (theta + lng)/15.0
+    lst = (theta + lng) / 15.0
     neg = np.where(lst < 0.0)
     n = neg[0].size
     if n > 0:
@@ -422,18 +438,22 @@ def jd2lst(lng, jd):
 
 def compute_pa(hdr, n_ps, verbose=False, display=False):
 
-    list_fct_pa = {'SPHERE': sphere_parang,
-                   }
+    list_fct_pa = {
+        "SPHERE": sphere_parang,
+    }
 
-    instrument = hdr['INSTRUME']
+    instrument = hdr["INSTRUME"]
     if instrument not in list(list_fct_pa.keys()):
         try:
-            nframe = hdr['NAXIS3']
+            nframe = hdr["NAXIS3"]
         except KeyError:
             nframe = n_ps
         if verbose:
-            cprint('Warning: %s not in known pa computation -> set to zero.\n' %
-                   instrument, 'green')
+            cprint(
+                "Warning: %s not in known pa computation -> set to zero.\n"
+                % instrument,
+                "green",
+            )
         pa_exist = False
         l_pa = np.zeros(nframe)
     else:
@@ -445,10 +465,9 @@ def compute_pa(hdr, n_ps, verbose=False, display=False):
 
     if display and pa_exist:
         plt.figure(figsize=(4, 3))
-        plt.plot(l_pa, '.-',
-                 label=r'pa=%2.1f, $\sigma_{pa}$=%2.1f deg' % (pa, std_pa))
+        plt.plot(l_pa, ".-", label=r"pa=%2.1f, $\sigma_{pa}$=%2.1f deg" % (pa, std_pa))
         plt.legend(fontsize=7)
-        plt.grid(alpha=.2)
+        plt.grid(alpha=0.2)
         plt.xlabel("# frames")
         plt.ylabel("Position angle [deg]")
         plt.tight_layout()
@@ -464,55 +483,60 @@ def sphere_parang(hdr, n_dit_ifs=None):
     frame_number, frame_time, paralactic_angle
     """
 
-    r2d = 180/np.pi
-    d2r = np.pi/180
+    r2d = 180 / np.pi
+    d2r = np.pi / 180
 
-    detector = hdr['HIERARCH ESO DET ID']
-    if detector.strip() == 'IFS':
-        offset = 135.87-100.46  # from the SPHERE manual v4
-    elif detector.strip() == 'IRDIS':
+    detector = hdr["HIERARCH ESO DET ID"]
+    if detector.strip() == "IFS":
+        offset = 135.87 - 100.46  # from the SPHERE manual v4
+    elif detector.strip() == "IRDIS":
         # correspond to the difference between the PUPIL tracking ant the FIELD tracking for IRDIS taken here: http://wiki.oamp.fr/sphere/AstrometricCalibration (PUPOFFSET)
         offset = 135.87
     else:
         offset = 0
-        print('WARNING: Unknown instrument in create_parang_list_sphere: '+str(detector))
+        print(
+            "WARNING: Unknown instrument in create_parang_list_sphere: " + str(detector)
+        )
 
     try:
         # Get the correct RA and Dec from the header
-        actual_ra = hdr['HIERARCH ESO INS4 DROT2 RA']
-        actual_dec = hdr['HIERARCH ESO INS4 DROT2 DEC']
+        actual_ra = hdr["HIERARCH ESO INS4 DROT2 RA"]
+        actual_dec = hdr["HIERARCH ESO INS4 DROT2 DEC"]
 
         # These values were in weird units: HHMMSS.ssss
-        actual_ra_hr = np.floor(actual_ra/10000.)
-        actual_ra_min = np.floor(actual_ra/100. - actual_ra_hr*100.)
-        actual_ra_sec = (actual_ra - actual_ra_min*100. - actual_ra_hr*10000.)
+        actual_ra_hr = np.floor(actual_ra / 10000.0)
+        actual_ra_min = np.floor(actual_ra / 100.0 - actual_ra_hr * 100.0)
+        actual_ra_sec = actual_ra - actual_ra_min * 100.0 - actual_ra_hr * 10000.0
 
-        ra_deg = (actual_ra_hr + actual_ra_min/60. +
-                  actual_ra_sec/60./60.) * 360./24.
+        ra_deg = (
+            (actual_ra_hr + actual_ra_min / 60.0 + actual_ra_sec / 60.0 / 60.0)
+            * 360.0
+            / 24.0
+        )
 
         # the sign makes this complicated, so remove it now and add it back at the end
         sgn = np.sign(actual_dec)
         actual_dec *= sgn
 
-        actual_dec_deg = np.floor(actual_dec/10000.)
-        actual_dec_min = np.floor(actual_dec/100. - actual_dec_deg*100.)
-        actual_dec_sec = (actual_dec - actual_dec_min *
-                          100. - actual_dec_deg*10000.)
+        actual_dec_deg = np.floor(actual_dec / 10000.0)
+        actual_dec_min = np.floor(actual_dec / 100.0 - actual_dec_deg * 100.0)
+        actual_dec_sec = actual_dec - actual_dec_min * 100.0 - actual_dec_deg * 10000.0
 
-        dec_deg = (actual_dec_deg + actual_dec_min /
-                   60. + actual_dec_sec/60./60.)*sgn
-        geolat_rad = float(hdr['ESO TEL GEOLAT'])*d2r
+        dec_deg = (
+            actual_dec_deg + actual_dec_min / 60.0 + actual_dec_sec / 60.0 / 60.0
+        ) * sgn
+        geolat_rad = float(hdr["ESO TEL GEOLAT"]) * d2r
     except Exception:
-        print('WARNING: No RA/Dec Keywords found in header')
+        print("WARNING: No RA/Dec Keywords found in header")
         ra_deg = 0
         dec_deg = 0
         geolat_rad = 0
 
-    if 'NAXIS3' in hdr:
-        if detector.strip() == 'IFS':
+    if "NAXIS3" in hdr:
+        if detector.strip() == "IFS":
             n_frames = n_dit_ifs
         else:
-            n_frames = hdr['NAXIS3']
+            n_frames = hdr["NAXIS3"]
     else:
         n_frames = 1
 
@@ -521,11 +545,12 @@ def sphere_parang(hdr, n_dit_ifs=None):
     # This is what ACC thought should be used
     # total_exptime = hdr['ESO DET SEQ1 EXPTIME']
     # This is what the SPHERE DC uses
-    total_exptime = (Time(hdr['HIERARCH ESO DET FRAM UTC']) -
-                     Time(hdr['HIERARCH ESO DET SEQ UTC'])).sec
+    total_exptime = (
+        Time(hdr["HIERARCH ESO DET FRAM UTC"]) - Time(hdr["HIERARCH ESO DET SEQ UTC"])
+    ).sec
     # print total_exptime-total_exptime2
     delta_dit = total_exptime / n_frames
-    dit = hdr['ESO DET SEQ1 REALDIT']
+    dit = hdr["ESO DET SEQ1 REALDIT"]
 
     # Set up the array to hold the parangs
     parang_array = np.zeros((n_frames))
@@ -533,52 +558,60 @@ def sphere_parang(hdr, n_dit_ifs=None):
     # Output for debugging
     hour_angles = []
 
-    if ('ESO DET SEQ UTC' in hdr.keys()) and ('ESO TEL GEOLON' in hdr.keys()):
+    if ("ESO DET SEQ UTC" in hdr.keys()) and ("ESO TEL GEOLON" in hdr.keys()):
         # The SPHERE DC method
-        jd_start = Time(hdr['ESO DET SEQ UTC']).jd
-        lst_start = jd2lst(hdr['ESO TEL GEOLON'], jd_start)*3600
+        jd_start = Time(hdr["ESO DET SEQ UTC"]).jd
+        lst_start = jd2lst(hdr["ESO TEL GEOLON"], jd_start) * 3600
         # Use the old method
-        lst_start = float(hdr['LST'])
+        lst_start = float(hdr["LST"])
     else:
-        lst_start = 0.
-        print('WARNING: No LST keyword found in header')
+        lst_start = 0.0
+        print("WARNING: No LST keyword found in header")
 
     # delta dit and dit are in seconds so we need to multiply them by this factor to add them to an LST
-    time_to_lst = (24.*3600.)/(86164.1)
+    time_to_lst = (24.0 * 3600.0) / (86164.1)
 
-    if 'ESO INS4 COMB ROT' in hdr.keys() and hdr['ESO INS4 COMB ROT'] == 'PUPIL':
+    if "ESO INS4 COMB ROT" in hdr.keys() and hdr["ESO INS4 COMB ROT"] == "PUPIL":
 
         for i in range(n_frames):
 
-            ha_deg = ((lst_start+i*delta_dit*time_to_lst +
-                       time_to_lst*dit/2.)*15./3600)-ra_deg
+            ha_deg = (
+                (lst_start + i * delta_dit * time_to_lst + time_to_lst * dit / 2.0)
+                * 15.0
+                / 3600
+            ) - ra_deg
             hour_angles.append(ha_deg)
 
             # VLT TCS formula
-            f1 = float(np.cos(geolat_rad) * np.sin(d2r*ha_deg))
-            f2 = float(np.sin(geolat_rad) * np.cos(d2r*dec_deg) -
-                       np.cos(geolat_rad) * np.sin(d2r*dec_deg) * np.cos(d2r*ha_deg))
-            pa = -r2d*np.arctan2(-f1, f2)
+            f1 = float(np.cos(geolat_rad) * np.sin(d2r * ha_deg))
+            f2 = float(
+                np.sin(geolat_rad) * np.cos(d2r * dec_deg)
+                - np.cos(geolat_rad) * np.sin(d2r * dec_deg) * np.cos(d2r * ha_deg)
+            )
+            pa = -r2d * np.arctan2(-f1, f2)
 
-            pa = pa+offset
+            pa = pa + offset
 
             # Also correct for the derotator issues that were fixed on 12 July 2016 (MJD = 57581)
-            if hdr['MJD-OBS'] < 57581:
-                alt = hdr['ESO TEL ALT']
-                drot_begin = hdr['ESO INS4 DROT2 BEGIN']
+            if hdr["MJD-OBS"] < 57581:
+                alt = hdr["ESO TEL ALT"]
+                drot_begin = hdr["ESO INS4 DROT2 BEGIN"]
                 # Formula from Anne-Lise Maire
-                correction = np.arctan(
-                    np.tan((alt-2*drot_begin)*np.pi/180))*180/np.pi
+                correction = (
+                    np.arctan(np.tan((alt - 2 * drot_begin) * np.pi / 180))
+                    * 180
+                    / np.pi
+                )
                 pa += correction
 
-            pa = ((pa + 360) % 360)
+            pa = (pa + 360) % 360
             parang_array[i] = pa
 
     else:
-        if 'ARCFILE' in hdr.keys():
-            print(hdr['ARCFILE']+' does seem to be taken in pupil tracking.')
+        if "ARCFILE" in hdr.keys():
+            print(hdr["ARCFILE"] + " does seem to be taken in pupil tracking.")
         else:
-            print('Data does not seem to be taken in pupil tracking.')
+            print("Data does not seem to be taken in pupil tracking.")
 
         for i in range(n_frames):
             parang_array[i] = 0
@@ -587,12 +620,16 @@ def sphere_parang(hdr, n_dit_ifs=None):
     try:
         # The parang start and parang end refer to the start and end of the sequence, not in the middle of the first and last frame.
         # So we need to correct for that
-        expected_delta_parang = (hdr['HIERARCH ESO TEL PARANG END'] -
-                                 hdr['HIERARCH ESO TEL PARANG START']) * (n_frames-1)/n_frames
-        delta_parang = (parang_array[-1]-parang_array[0])
-        if np.abs(expected_delta_parang - delta_parang) > 1.:
+        expected_delta_parang = (
+            (hdr["HIERARCH ESO TEL PARANG END"] - hdr["HIERARCH ESO TEL PARANG START"])
+            * (n_frames - 1)
+            / n_frames
+        )
+        delta_parang = parang_array[-1] - parang_array[0]
+        if np.abs(expected_delta_parang - delta_parang) > 1.0:
             print(
-                "WARNING! Calculated parallactic angle change is >1degree more than expected!")
+                "WARNING! Calculated parallactic angle change is >1degree more than expected!"
+            )
 
     except Exception:
         pass
@@ -601,7 +638,7 @@ def sphere_parang(hdr, n_dit_ifs=None):
 
 
 def check_seeing_cond(list_nrm):
-    """ Extract the seeing conditions, parang, averaged vis2
+    """Extract the seeing conditions, parang, averaged vis2
     and cp of a list of nrm classes extracted with extract_bs
     function (bispect.py).
 
@@ -618,25 +655,27 @@ def check_seeing_cond(list_nrm):
         hdr = fits.open(nrm.infos.filename)[0].header
         pa = np.mean(sphere_parang(hdr))
         seeing = nrm.infos.seeing
-        mjd = hdr['MJD-OBS']
+        mjd = hdr["MJD-OBS"]
         l_vis2.append(np.mean(nrm.vis2))
         l_cp.append(np.mean(nrm.cp))
         l_seeing.append(seeing)
         l_pa.append(pa)
         l_mjd.append(mjd)
 
-    res = {'pa': l_pa,
-           'seeing': l_seeing,
-           'vis2': l_vis2,
-           'cp': l_cp,
-           'mjd': l_mjd,
-           'target': hdr['OBJECT']}
+    res = {
+        "pa": l_pa,
+        "seeing": l_seeing,
+        "vis2": l_vis2,
+        "cp": l_cp,
+        "mjd": l_mjd,
+        "target": hdr["OBJECT"],
+    }
 
     return dict2class(sanitize_array(res))
 
 
 def plot_seeing_cond(cond, lim_seeing=None):
-    """ Plot seeing condition between calibrator and target files. """
+    """Plot seeing condition between calibrator and target files."""
 
     # l_xmin, l_xmax = [], []
     # # for x in cond:
@@ -659,41 +698,40 @@ def plot_seeing_cond(cond, lim_seeing=None):
 
     fig = plt.figure()
     ax1 = plt.gca()
-    ax1.set_xlabel('mjd [days]')
+    ax1.set_xlabel("mjd [days]")
     ax2 = ax1.twinx()
     ax2.set_ylabel('Seeing ["]', color="#c62d42")
-    ax2.tick_params(axis='y', labelcolor="#c62d42")
-    ax1.set_ylabel('Uncalibrated mean V$^2$')
+    ax2.tick_params(axis="y", labelcolor="#c62d42")
+    ax1.set_ylabel("Uncalibrated mean V$^2$")
 
     for x in cond:
-        ax1.plot(x.mjd, x.vis2, '.', label=x.target)  # color="#20b2aa"
-        ax2.plot(x.mjd, x.seeing, '+', color="#c62d42")
+        ax1.plot(x.mjd, x.vis2, ".", label=x.target)  # color="#20b2aa"
+        ax2.plot(x.mjd, x.seeing, "+", color="#c62d42")
     # ax1.plot(cond_c.mjd, cond_c.vis2, '.',
     #          label="%s (cal)" % cond_c.target)
     # ax2.plot(cond_c.mjd, cond_c.seeing, '+',
     #          color="#c62d42", label='Seeing')
     if lim_seeing is not None:
-        ax2.axhline(lim_seeing, color='g',
-                    label='Seeing threshold')
+        ax2.axhline(lim_seeing, color="g", label="Seeing threshold")
     ax1.set_ylim(0, 1.2)
     ax2.set_ylim(0.6, 1.8)
     # ax1.set_xlim(xmin, xmax)
-    ax1.grid(alpha=.1, color='grey')
-    ax1.legend(loc='best', fontsize=9)
+    ax1.grid(alpha=0.1, color="grey")
+    ax1.legend(loc="best", fontsize=9)
     plt.tight_layout()
     plt.show(block=False)
     return fig
 
 
 def roundSciDigit(number):
-    """ Rounds a float number with a significant digit number. """
-    ff = str(number).split('.')[0]
-    d = str(number).split('.')[1]
+    """Rounds a float number with a significant digit number."""
+    ff = str(number).split(".")[0]
+    d = str(number).split(".")[1]
     d, ff = m.modf(number)
     if ff == 0:
-        res = str(d).split('.')[1]
+        res = str(d).split(".")[1]
         for i in range(len(res)):
-            if float(res[i]) != 0.:
+            if float(res[i]) != 0.0:
                 sig_digit = i + 1
                 break
     else:
@@ -703,22 +741,22 @@ def roundSciDigit(number):
 
 
 def save_bs_hdf5(bs, filename):
-    """ Save results from `amical.extract_bs()` into hdf5 file. """
-    if '.h5' not in filename:
-        filename += '.h5'
+    """Save results from `amical.extract_bs()` into hdf5 file."""
+    if ".h5" not in filename:
+        filename += ".h5"
 
     # Step 1 - Create hdf5 and hierarchy tree/grp
-    hf = h5py.File(filename, 'w')
+    hf = h5py.File(filename, "w")
 
-    grp_obs = hf.create_group('obs')
-    grp_matrix = hf.create_group('matrix')
-    grp_info = hf.create_group('infos')
-    grp_mask = hf.create_group('mask')
-    grp_hdr = hf.create_group('hdr')
+    grp_obs = hf.create_group("obs")
+    grp_matrix = hf.create_group("matrix")
+    grp_info = hf.create_group("infos")
+    grp_mask = hf.create_group("mask")
+    grp_hdr = hf.create_group("hdr")
 
     # Step 2 - Save observable (not in tree matrix, infos and mask).
     for key in bs:
-        if key not in ['matrix', 'mask', 'infos']:
+        if key not in ["matrix", "mask", "infos"]:
             grp_obs.create_dataset(key, data=bs[key])
 
     # Step 3 - Save matrix (contains all individual observable
@@ -734,16 +772,16 @@ def save_bs_hdf5(bs, filename):
     # well as u1, v1, u2, v2 coordinates (for the CP).
     mask = bs.mask
     for key in mask:
-        if (mask[key] is not None) and (key != 't3_coord'):
+        if (mask[key] is not None) and (key != "t3_coord"):
             grp_mask.create_dataset(key, data=mask[key])
-    t3_coord = mask['t3_coord']
+    t3_coord = mask["t3_coord"]
     for key in t3_coord:
         grp_mask.create_dataset(key, data=t3_coord[key])
 
     # Step 5 - Save informations (target, date, etc.).
     infos = bs.infos
     for i in infos:
-        if i != 'hdr':
+        if i != "hdr":
             grp_info.create_dataset(i, data=infos[i])
 
     # Step 6 - Save original header keywords.
@@ -757,44 +795,45 @@ def save_bs_hdf5(bs, filename):
 
 
 def load_bs_hdf5(filename):
-    """ Load hdf5 file and format as class like object (same
+    """Load hdf5 file and format as class like object (same
     format as `amical.extract_bs()`
     """
-    hf2 = h5py.File(filename, 'r')
+    hf2 = h5py.File(filename, "r")
 
-    dict_bs = {'matrix': {}, 'infos': {'hdr': {}}, 'mask': {}}
+    dict_bs = {"matrix": {}, "infos": {"hdr": {}}, "mask": {}}
 
-    obs = hf2['obs']
+    obs = hf2["obs"]
     for o in obs:
         dict_bs[o] = obs[o].value
 
-    matrix = hf2['matrix']
+    matrix = hf2["matrix"]
     for key in matrix:
-        dict_bs['matrix'][key] = matrix[key].value
+        dict_bs["matrix"][key] = matrix[key].value
 
-    if len(dict_bs['matrix']['cp_cov']) == 1:
-        dict_bs['matrix']['cp_cov'] = None
+    if len(dict_bs["matrix"]["cp_cov"]) == 1:
+        dict_bs["matrix"]["cp_cov"] = None
 
-    mask = hf2['mask']
+    mask = hf2["mask"]
     for key in mask:
-        if key not in ['u1', 'u2', 'v1', 'v2']:
-            dict_bs['mask'][key] = mask[key].value
+        if key not in ["u1", "u2", "v1", "v2"]:
+            dict_bs["mask"][key] = mask[key].value
 
-    t3_coord = {'u1': mask['u1'].value,
-                'u2': mask['u2'].value,
-                'v1': mask['v1'].value,
-                'v2': mask['v2'].value,
-                }
+    t3_coord = {
+        "u1": mask["u1"].value,
+        "u2": mask["u2"].value,
+        "v1": mask["v1"].value,
+        "v2": mask["v2"].value,
+    }
 
-    dict_bs['mask']['t3_coord'] = t3_coord
+    dict_bs["mask"]["t3_coord"] = t3_coord
 
-    infos = hf2['infos']
+    infos = hf2["infos"]
     for key in infos:
-        dict_bs['infos'][key] = infos[key].value
+        dict_bs["infos"][key] = infos[key].value
 
-    hdr = hf2['hdr']
+    hdr = hf2["hdr"]
     for key in hdr:
-        dict_bs['infos']['hdr'][key] = hdr[key].value
+        dict_bs["infos"]["hdr"][key] = hdr[key].value
 
     bs_save = dict2class(dict_bs)
     return bs_save
