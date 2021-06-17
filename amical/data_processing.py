@@ -105,7 +105,7 @@ def select_data(cube, clip_fact=0.5, clip=False, verbose=True, display=True):
         if (med_flux / std_flux) <= 5.0:
             cprint(
                 "\nStd of the fluxes along the cube < 5 (%2.1f):\n -> sigma clipping is suggested (clip=True)."
-                % ((med_flux / std_flux)),
+                % (med_flux / std_flux),
                 "cyan",
             )
 

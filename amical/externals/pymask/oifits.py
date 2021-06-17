@@ -170,7 +170,7 @@ def _notnone(x):
     return type(x) != type(None)
 
 
-class OI_TARGET(object):
+class OI_TARGET:
     def __init__(
         self,
         target,
@@ -235,7 +235,7 @@ class OI_TARGET(object):
         return not self.__eq__(other)
 
     def __str__(self):
-        return "%s: %s %s (%g)" % (
+        return "{}: {} {} ({:g})".format(
             self.target,
             self.raep0.ashms(),
             self.decep0.asdms(),
@@ -246,7 +246,7 @@ class OI_TARGET(object):
         print(str(self))
 
 
-class OI_WAVELENGTH(object):
+class OI_WAVELENGTH:
     def __init__(self, eff_wave, eff_band=None):
         self.eff_wave = np.array(eff_wave, dtype=double).reshape(-1)
         if _isnone(eff_band):
@@ -278,7 +278,7 @@ class OI_WAVELENGTH(object):
         print(str(self))
 
 
-class OI_VIS(object):
+class OI_VIS:
     """
     Class for storing visibility amplitude and differential phase data.
     To access the data, use the following hidden attributes:
@@ -404,7 +404,7 @@ class OI_VIS(object):
         print(str(self))
 
 
-class OI_VIS2(object):
+class OI_VIS2:
     """
     Class for storing squared visibility amplitude data.
     To access the data, use the following hidden attributes:
@@ -498,7 +498,7 @@ class OI_VIS2(object):
         print(str(self))
 
 
-class OI_T3(object):
+class OI_T3:
     """
     Class for storing triple product and closure phase data.
     To access the data, use the following hidden attributes:
@@ -608,7 +608,7 @@ class OI_T3(object):
         print(str(self))
 
 
-class OI_STATION(object):
+class OI_STATION:
     """This class corresponds to a single row (i.e. single
     station/telescope) of an OI_ARRAY table."""
 
@@ -636,10 +636,10 @@ class OI_STATION(object):
         return not self.__eq__(other)
 
     def __repr__(self):
-        return "%s/%s (%g m)" % (self.sta_name, self.tel_name, self.diameter)
+        return f"{self.sta_name}/{self.tel_name} ({self.diameter:g} m)"
 
 
-class OI_ARRAY(object):
+class OI_ARRAY:
     """Contains all the data for a single OI_ARRAY table.  Note the
     hidden convenience attributes latitude, longitude, and altitude."""
 
@@ -742,7 +742,7 @@ class OI_ARRAY(object):
         raise LookupError("No such station %s" % name)
 
 
-class oifits(object):
+class oifits:
     def __init__(self):
 
         self.header = None
@@ -1108,7 +1108,7 @@ class oifits(object):
             for key in self.wavelength.keys():
                 wavelengths += len(self.wavelength[key].eff_wave)
                 if recursive:
-                    print("'%s': %s" % (key, str(self.wavelength[key])))
+                    print(f"'{key}': {str(self.wavelength[key])}")
             if verbose:
                 print(
                     "%d wavelength table%s with %d wavelength%s in total"

@@ -109,8 +109,8 @@ class cpo:
         nv2 = len(data.vis2)
         vis2data = []
         vis2err = []
-        self.v2_u = np.zeros((nv2))
-        self.v2_v = np.zeros((nv2))
+        self.v2_u = np.zeros(nv2)
+        self.v2_v = np.zeros(nv2)
         for j, v2 in enumerate(data.vis2):
             vis2data.append(v2.vis2data)
             vis2err.append(v2.vis2err)
@@ -196,8 +196,8 @@ class icpo:
         nv2 = len(data.vis2)
         vis2data = []
         vis2err = []
-        self.v2_u = np.zeros((nv2))
-        self.v2_v = np.zeros((nv2))
+        self.v2_u = np.zeros(nv2)
+        self.v2_v = np.zeros(nv2)
         for j, v2 in enumerate(data.vis2):
             vis2data.append(v2.vis2data)
             vis2err.append(v2.vis2err)
@@ -257,7 +257,7 @@ class icpo:
         n_data_per_obs = []
         cal_cps = []
         targ_cps = []
-        print("Found {0:4d} bs files from IDL".format(len(bs_files)))
+        print(f"Found {len(bs_files):4d} bs files from IDL")
 
         # Loop through and load them
         for ix, f in enumerate(bs_files):

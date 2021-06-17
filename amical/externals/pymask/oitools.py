@@ -451,7 +451,7 @@ def plot_phases(oidata, uvplot=False, legend=False):
         title += ", %s" % (name)
 
     ax1.set_title(title)
-    ax1.set_xlabel("Wavelength ($\mu$m)")
+    ax1.set_xlabel(r"Wavelength ($\mu$m)")
     ax1.set_ylabel("Differential phase")
     if uvplot:
         ax2.set_title(title)
@@ -556,7 +556,7 @@ def plot_visibilities(oidata, uvplot=False, legend=False, ploterror=False):
             ax2.plot([-u, u], [-v, v], ".", label=label, color=color)
         names.append(vis.target.target)
         baselinemax = np.amax([np.sqrt(u ** 2 + v ** 2), baselinemax])
-        output += "%10s: %s, %5.2f m, %s\n" % (
+        output += "{:>10}: {}, {:5.2f} m, {}\n".format(
             line[0].get_color(),
             label,
             np.sqrt(u ** 2 + v ** 2),
@@ -575,7 +575,7 @@ def plot_visibilities(oidata, uvplot=False, legend=False, ploterror=False):
         title += ", %s" % (name)
 
     ax1.set_title(title)
-    ax1.set_xlabel("Wavelength ($\mu$m)")
+    ax1.set_xlabel(r"Wavelength ($\mu$m)")
     ax1.set_ylabel("Visibility")
     if uvplot:
         ax2.set_title(title)
@@ -659,7 +659,7 @@ def plot_gaussian_widths_vs_wavelength(
             ax2.plot([-u, u], [-v, v], ".", label=label, color=color)
         names.append(vis.target.target)
         baselinemax = np.amax([np.sqrt(u ** 2 + v ** 2), baselinemax])
-        output += "%10s: %s, %5.2f m, %s\n" % (
+        output += "{:>10}: {}, {:5.2f} m, {}\n".format(
             line[0].get_color(),
             label,
             np.sqrt(u ** 2 + v ** 2),
@@ -678,7 +678,7 @@ def plot_gaussian_widths_vs_wavelength(
         title += ", %s" % (name)
 
     ax1.set_title(title)
-    ax1.set_xlabel("Wavelength ($\mu$m)")
+    ax1.set_xlabel(r"Wavelength ($\mu$m)")
     ax1.set_ylabel("Gaussian width (mas)")
     if uvplot:
         ax2.set_title(title)
@@ -767,7 +767,7 @@ def plot_cflux(oidata, uvplot=False, legend=False, ploterror=False):
             ax2.plot([-u, u], [-v, v], ".", label=label, color=color)
         names.append(vis.target.target)
         baselinemax = np.amax([np.sqrt(u ** 2 + v ** 2), baselinemax])
-        output += "%10s: %s, %5.2f m, %s\n" % (
+        output += "{:>10}: {}, {:5.2f} m, {}\n".format(
             line[0].get_color(),
             label,
             np.sqrt(u ** 2 + v ** 2),
@@ -786,7 +786,7 @@ def plot_cflux(oidata, uvplot=False, legend=False, ploterror=False):
         title += ", %s" % (name)
 
     ax1.set_title(title)
-    ax1.set_xlabel("Wavelength ($\mu$m)")
+    ax1.set_xlabel(r"Wavelength ($\mu$m)")
     ax1.set_ylabel("Correlated flux (Jy)")
     if uvplot:
         ax2.set_title(title)
@@ -892,7 +892,7 @@ def plot_vis2(oidata, uvplot=False, legend=False, ploterror=False):
         title += ", %s" % (name)
 
     ax1.set_title(title)
-    ax1.set_xlabel("Wavelength ($\mu$m)")
+    ax1.set_xlabel(r"Wavelength ($\mu$m)")
     ax1.set_ylabel("Visibility")
     if uvplot:
         ax2.set_title(title)
@@ -913,7 +913,7 @@ def print_vis(vis):
             vis.timeobs,
         )
     )
-    print("# u = %6.2f v = %6.2f" % (vis.ucoord, vis.vcoord))
+    print(f"# u = {vis.ucoord:6.2f} v = {vis.vcoord:6.2f}")
     print("# Wavelength (um)       ")
     print("#        |V|")
     print("#                |V|_err")

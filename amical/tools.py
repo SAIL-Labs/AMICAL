@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 @author: Anthony Soulain (University of Sydney)
 
@@ -465,7 +464,7 @@ def compute_pa(hdr, n_ps, verbose=False, display=False):
 
     if display and pa_exist:
         plt.figure(figsize=(4, 3))
-        plt.plot(l_pa, ".-", label=r"pa=%2.1f, $\sigma_{pa}$=%2.1f deg" % (pa, std_pa))
+        plt.plot(l_pa, ".-", label=fr"pa={pa:2.1f}, $\sigma_{{pa}}$={std_pa:2.1f} deg")
         plt.legend(fontsize=7)
         plt.grid(alpha=0.2)
         plt.xlabel("# frames")
@@ -553,7 +552,7 @@ def sphere_parang(hdr, n_dit_ifs=None):
     dit = hdr["ESO DET SEQ1 REALDIT"]
 
     # Set up the array to hold the parangs
-    parang_array = np.zeros((n_frames))
+    parang_array = np.zeros(n_frames)
 
     # Output for debugging
     hour_angles = []

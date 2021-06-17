@@ -128,7 +128,7 @@ def pymask_mcmc(
             "Contrast Ratio = %2.1f +%2.1f/-%2.1f"
             % (res_corner["cr"], res_corner["delcrp"], res_corner["delcrm"])
         )
-        print("dm = %2.2f +%2.2f/-%2.2f mag" % (dm, e_dmp, e_dmm))
+        print(f"dm = {dm:2.2f} +{e_dmp:2.2f}/-{e_dmm:2.2f} mag")
 
     chain_sep = chain[:, :, 0].T
     chain_th = chain[:, :, 1].T

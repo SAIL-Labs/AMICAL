@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 @author: Anthony Soulain (University of Sydney)
 
@@ -29,7 +28,7 @@ def get_lambda(i_wl=None, filtname="YH", instrument="SPHERE-IFS"):
     if np.isnan(wl.any()):
         return None
 
-    print("\nInstrument: %s, spectral range: %s" % (instrument, filtname))
+    print(f"\nInstrument: {instrument}, spectral range: {filtname}")
     print("-----------------------------")
     print(
         "spectral coverage: %2.2f - %2.2f µm (step = %2.2f)"
@@ -62,7 +61,7 @@ def get_lambda(i_wl=None, filtname="YH", instrument="SPHERE-IFS"):
             wl_range,
             lw=5,
             alpha=0.5,
-            label="Selected (%2.2f-%2.2f µm)" % (wl_range[0], wl_range[-1]),
+            label=f"Selected ({wl_range[0]:2.2f}-{wl_range[-1]:2.2f} µm)",
         )
     plt.legend()
     plt.xlabel("Spectral channel")

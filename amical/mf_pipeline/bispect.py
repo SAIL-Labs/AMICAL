@@ -285,7 +285,7 @@ def _show_peak_position(
     fig, ax = plt.subplots(figsize=(9, 7))
     # plt.rc('xtick', labelsize=15)
     ax.set_title(
-        "Expected splodge position with mask %s (method = %s)" % (maskname, peakmethod)
+        f"Expected splodge position with mask {maskname} (method = {peakmethod})"
     )
     im = ax.imshow(ps, cmap="gist_stern", origin="lower")
     sc = ax.scatter(lX, lY, c=lC, s=20, cmap="viridis")

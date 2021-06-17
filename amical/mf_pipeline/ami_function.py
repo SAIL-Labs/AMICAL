@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 @author: Anthony Soulain (University of Sydney)
 
@@ -35,7 +34,7 @@ def _plot_mask_coord(xy_coords, maskname, instrument):
         marker = "o"
 
     fig = plt.figure(figsize=(6, 5.5))
-    plt.title("%s - mask %s" % (instrument, maskname), fontsize=14)
+    plt.title(f"{instrument} - mask {maskname}", fontsize=14)
 
     for i in range(xy_coords.shape[0]):
         plt.scatter(
@@ -194,8 +193,8 @@ def _peak_gauss_method(
     else:
         sampledisk_r = minbl / 2.0 / filt[0] * pixelsize * npix * fw_splodge
 
-    xspot = float(np.round((v[i] * pixelsize * npix + npix / 2.0)))
-    yspot = float(np.round((u[i] * pixelsize * npix + npix / 2.0)))
+    xspot = float(np.round(v[i] * pixelsize * npix + npix / 2.0))
+    yspot = float(np.round(u[i] * pixelsize * npix + npix / 2.0))
     mf = plot_circle(mf, xspot, yspot, sampledisk_r, display=False)
     mf = np.roll(mf, npix // 2, axis=0)
     mf = np.roll(mf, npix // 2, axis=1)
@@ -463,7 +462,7 @@ def make_mf(
                 index_mask=index_mask,
                 fw_splodge=fw_splodge,
                 **args,
-                hole_diam=hole_diam
+                hole_diam=hole_diam,
             )
         else:
             cprint(
@@ -992,9 +991,7 @@ def find_bad_holes(res_c, n_holes, bl2h_ix, bmax=6, verbose=False, display=False
     if display:
         plt.figure()
         plt.plot(X / 1e6, Y, ".", label="data")
-        plt.plot(
-            xm / 1e6, ym, "--", label="fit (a=%2.1e, b=%2.2f)" % (pfit[0], pfit[1])
-        )
+        plt.plot(xm / 1e6, ym, "--", label=f"fit (a={pfit[0]:2.1e}, b={pfit[1]:2.2f})")
         plt.grid(alpha=0.1)
         plt.legend()
         plt.xlim(0, xm.max() / 1e6)

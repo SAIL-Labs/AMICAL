@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 @author: Anthony Soulain (University of Sydney)
 
