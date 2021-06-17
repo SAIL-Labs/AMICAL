@@ -88,8 +88,8 @@ def pymask_cr_limit(input_data, nsim=100, err_scale=1, extra_error_cp=0, ncore=1
     cpo = pymask.cpo(input_data)
     lims_data = pymask.detec_limits(cpo, threads=ncore, nsim=nsim,
                                     nsep=nsep, ncon=ncrat, nth=nth,
-                                    smax=smax, cmax=cmax, cmin=cmin, 
-                                    smin=smin, 
+                                    smax=smax, cmax=cmax, cmin=cmin,
+                                    smin=smin,
                                     err_scale=err_scale, extra_error=extra_error_cp)
 
     limits = lims_data['limits']

@@ -8,7 +8,7 @@ AMICAL: Aperture Masking Interferometry Calibration and Analysis Library
 Function related to data cleaning (ghost, background correction,
 centering, etc.) and data selection (sigma-clipping, centered flux,).
 
--------------------------------------------------------------------- 
+--------------------------------------------------------------------
 """
 
 import numpy as np
@@ -65,14 +65,14 @@ def _apply_patch_ghost(cube, xc, yc, radius=20, dx=0, dy=-200, method='bg'):
 
 def select_data(cube, clip_fact=0.5, clip=False, verbose=True, display=True):
     """ Check the cleaned data cube using the position of the maximum in the
-    fft image (supposed to be zero). If not in zero position, the fram is 
+    fft image (supposed to be zero). If not in zero position, the fram is
     rejected. It can apply a sigma-clipping to select only the frames with the
     highest total fluxes.
 
     Parameters:
     -----------
     `cube` {array} -- Data cube,\n
-    `clip_fact` {float} -- Relative sigma if rejecting frames by 
+    `clip_fact` {float} -- Relative sigma if rejecting frames by
     sigma-clipping (default=False),\n
     `clip` {bool} -- If True, sigma-clipping is used,\n
     `verbose` {bool} -- If True, print informations in the terminal,\n
@@ -408,7 +408,7 @@ def select_clean_data(filename, isz=256, r1=100, dr=10, edge=0,
     function (known as windowing). The gaussian FWHM is set by the parameter `window`,\n
     `window` {float}: FWHM of the super-gaussian to apodise the image (smoothly go to zero
     on the edges),\n
-    `sky` {bool}: If True, the sky is remove using the annulus technique (computed between `r1` 
+    `sky` {bool}: If True, the sky is remove using the annulus technique (computed between `r1`
     and `r1` + `dr`),
     `darkfile` {str}: If specified (default: None), the input dark (master_dark averaged if
     multiple integrations) is substracted from the raw image,\n

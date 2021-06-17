@@ -5,7 +5,7 @@
 *__pycache__/
 *.DS_Store
 Simulated_NRMdata/.DS_Store
- 
-# Install files 
+
+# Install files
 *.txt
 PKG*

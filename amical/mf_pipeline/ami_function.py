@@ -16,13 +16,14 @@ All AMI related function, the most important are:
 """
 
 import numpy as np
+from matplotlib import pyplot as plt
+from munch import munchify as dict2class
+from termcolor import cprint
+
 from amical.dpfit import leastsqFit
 from amical.get_infos_obs import get_mask, get_pixel_size, get_wavelength
 from amical.mf_pipeline.idl_function import array_coords, dist
 from amical.tools import gauss_2d_asym, linear, norm_max, plot_circle
-from matplotlib import pyplot as plt
-from munch import munchify as dict2class
-from termcolor import cprint
 
 
 def _plot_mask_coord(xy_coords, maskname, instrument):
@@ -545,7 +546,7 @@ def compute_index_mask(n_holes, verbose=False):
                 Baselines to holes index,\n
     `bs2bl_ix`: numpy.array
         Bispectrum to baselines index,\n
-    `bl2bs_ix`	: numpy.array
+    `bl2bs_ix`    : numpy.array
         Baselines to bispectrum index,\n
     `bscov2bs_ix`: numpy.array,
         Bispectrum covariance to bispectrum index.

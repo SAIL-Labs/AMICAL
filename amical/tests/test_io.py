@@ -1,10 +1,11 @@
-import amical
 import munch
 import numpy as np
 import pytest
+from astropy.io import fits
+
+import amical
 from amical import load, loadc
 from amical.get_infos_obs import get_pixel_size
-from astropy.io import fits
 
 
 @pytest.fixture()
@@ -64,7 +65,7 @@ def test_save(bss, tmpdir):
     cal = amical.calibrate(bs, bs)
     assert isinstance(cal, munch.Munch)
 
-    dic, savefile = amical.save(cal, oifits_file='test.oifits', 
+    dic, savefile = amical.save(cal, oifits_file='test.oifits',
                                 datadir=tmpdir, fake_obj=True)
     v2 = dic['OI_VIS2']['VIS2DATA']
     cp = dic['OI_T3']['T3PHI']

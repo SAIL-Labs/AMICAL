@@ -8,7 +8,7 @@ AMICAL: Aperture Masking Interferometry Calibration and Analysis Library
 
 Fitting tools (developped by A. Merand).
 
--------------------------------------------------------------------- 
+--------------------------------------------------------------------
 """
 
 import time

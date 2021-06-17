@@ -8,7 +8,7 @@ AMICAL: Aperture Masking Interferometry Calibration and Analysis Library
 
 Set of functions to work with spectraly dispersed (IFU) NRM data.
 
-------------------------------------------------------------------------- 
+-------------------------------------------------------------------------
 """
 
 import numpy as np
@@ -72,8 +72,8 @@ def clean_data(list_file, isz=256, r1=100, dr=10, edge=0,
                f_kernel=3, verbose=False, ihdu=0, display=False):
     """ Clean data using the standard procedure amical.select_clean_data()
     for each file in list_file. For IFU mode of SPHERE, the different frames
-    are stored in different files and need to be reshaped into the appropriate 
-    4D datacube (i.e.: `cube_lambda.shape = [ndit, nlambda, isz, 
+    are stored in different files and need to be reshaped into the appropriate
+    4D datacube (i.e.: `cube_lambda.shape = [ndit, nlambda, isz,
     isz]`). Check amical.select_clean_data() for details about input parameters.
     """
 

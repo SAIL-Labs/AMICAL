@@ -19,8 +19,6 @@ import time
 import warnings
 
 import numpy as np
-from amical.get_infos_obs import get_mask
-from amical.tools import compute_pa, cov2cor
 from astropy.io import fits
 from matplotlib import pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -28,6 +26,9 @@ from munch import munchify as dict2class
 from scipy.optimize import minimize
 from termcolor import cprint
 from tqdm import tqdm
+
+from amical.get_infos_obs import get_mask
+from amical.tools import compute_pa, cov2cor
 
 from .ami_function import (bs_multi_triangle, compute_index_mask,
                            give_peak_info2d, make_mf, phase_chi2, tri_pix)
@@ -47,7 +48,7 @@ def _compute_complex_bs(ft_arr, index_mask, fringe_peak, mf, dark_ps=None,
     `ft_arr` {numpy.array}: Fourier transform of the input cube (from _construct_ft_arr()),\n
     `index_mask` {class/dict}: Object of indices computed with compute_index_mask(),\n
     `fringe_peak` {list}: List of fringe peak position and gain (see give_peak_info2d()),\n
-    `mf` {class/dict}:  Object containing the matched filter informations (expected peak 
+    `mf` {class/dict}:  Object containing the matched filter informations (expected peak
     positions, make_mf()),\n
     `dark_ps` {array}: Calibration cube of the dark associated with the observations (default:
     None),\n
@@ -64,7 +65,7 @@ def _compute_complex_bs(ft_arr, index_mask, fringe_peak, mf, dark_ps=None,
 
     >>> complex_bs['vis_arr'].shape()=[n_ps, n_baselines]
 
-    complex_bs['vis_arr'] is a structured numpy array containing the complex visibilities ('complex'), 
+    complex_bs['vis_arr'] is a structured numpy array containing the complex visibilities ('complex'),
     the phase ('phase'), the amplitude ('amplitude') and the squared visibilities ('squared'). complex_bs['calib_v2']
     contains the 'dark' and the 'bias' arrays, and complex_bs['phs'] contains the phase values ('value').
     and the associated errors ('err').
@@ -133,7 +134,7 @@ def _compute_complex_bs(ft_arr, index_mask, fringe_peak, mf, dark_ps=None,
             ftf2 = np.roll(ft_frame, -1, axis=1)
             dummy = np.sum(ft_frame[pix] * np.conj(ftf1[pix]) +
                            np.conj(ft_frame[pix]) * ftf2[pix])
-            
+
             phs["value"][1, i, j] = np.arctan2(dummy.imag, dummy.real)
             phs["err"][1, i, j] = 1 / abs(dummy)
 
@@ -198,7 +199,7 @@ def _construct_ft_arr(cube):
 
     i_ps = ft_arr.shape
     n_ps = i_ps[0]
-    
+
     return ft_arr, n_ps, n_pix
 
 
@@ -222,7 +223,7 @@ def _show_complex_ps(ft_arr, i_frame=0):
     return fig
 
 
-def _show_peak_position(ft_arr, n_baselines, mf, maskname, peakmethod, 
+def _show_peak_position(ft_arr, n_baselines, mf, maskname, peakmethod,
                         i_fram=0, aver=False):
     """ Show the expected position of the peak in the Fourier space using the
     mask coordinates and the chosen method. """
@@ -244,13 +245,13 @@ def _show_peak_position(ft_arr, n_baselines, mf, maskname, peakmethod,
 
     ft_frame = ft_arr[i_fram]
     ps = ft_frame.real
-    
+
     if aver:
         ps = np.zeros(ps.shape)
         for i_frame in ft_arr:
             ps += i_frame.real
         ps /= ft_arr.shape[0]
-        
+
     fig, ax = plt.subplots(figsize=(9, 7))
     # plt.rc('xtick', labelsize=15)
     ax.set_title("Expected splodge position with mask %s (method = %s)" %
@@ -276,7 +277,7 @@ def _show_peak_position(ft_arr, n_baselines, mf, maskname, peakmethod,
 
 
 def _show_norm_matrices(obs_norm, expert_plot=False):
-    """ Show covariances matrices of the V2, CP, and a combination 
+    """ Show covariances matrices of the V2, CP, and a combination
     bispectrum vs. V2."""
 
     v2_cov = obs_norm['v2_cov']
@@ -313,14 +314,14 @@ def _show_norm_matrices(obs_norm, expert_plot=False):
 def _check_input_infos(hdr, targetname=None, filtname=None,
                        instrum=None, verbose=True):
     """ Extract informations from the header and fill the missing values with the
-    input arguments. Return the infos class containing important informations of 
+    input arguments. Return the infos class containing important informations of
     the input header (keys: target, seeing, instrument, ...)
     """
     target = hdr.get('OBJECT')
     filt = hdr.get('FILTER')
     instrument = hdr.get('INSTRUME', instrum)
     mod = hdr.get('HIERARCH ESO DET ID')
-    
+
     if (mod == 'IFS') & (instrument == 'SPHERE'):
         instrument = instrument + '-' + mod
 
@@ -364,8 +365,8 @@ def _check_input_infos(hdr, targetname=None, filtname=None,
 
 
 def _format_closing_triangle(index_mask):
-    """ Use the index_mask from compute_index_mask() to compute the list of 
-    closing triangle in an appropriate format (e.g.: [[0,1,2], [0,1,3], ..., [4,5,6]] 
+    """ Use the index_mask from compute_index_mask() to compute the list of
+    closing triangle in an appropriate format (e.g.: [[0,1,2], [0,1,3], ..., [4,5,6]]
     for a 7 mask holes)."""
     bs2bl_ix = index_mask.bs2bl_ix
     bl2h_ix = index_mask.bl2h_ix
@@ -396,7 +397,7 @@ def _set_good_nblocks(n_blocks, n_ps, verbose=False):
 
 
 def _compute_corr_noise(complex_bs, ft_arr, fringe_peak):
-    """ Compute the bias (science and dark) and the correlated noise of the 
+    """ Compute the bias (science and dark) and the correlated noise of the
     Fourier transform (correlation between neighbouring terms in each
     frame after removing the signal). """
     n_ps = ft_arr.shape[0]
@@ -447,7 +448,7 @@ def _compute_corr_noise(complex_bs, ft_arr, fringe_peak):
 
 def _unbias_v2_arr(v2_arr, npix, fringe_peak, bias, dark_bias, autocor_noise,
                    unbias=True):
-    """ Unbias the squared visibilities array and add the dark bias substracted 
+    """ Unbias the squared visibilities array and add the dark bias substracted
     twice instead of one. """
     n_baselines = v2_arr.shape[1]
 
@@ -474,7 +475,7 @@ def _unbias_v2_arr(v2_arr, npix, fringe_peak, bias, dark_bias, autocor_noise,
 
 
 def _compute_v2_quantities(v2_arr, bias_arr, n_blocks):
-    """ Compute the squared visibilities quantities: - average ('v2') over the 
+    """ Compute the squared visibilities quantities: - average ('v2') over the
     cube, - covariance ('v2_cov'), - avar ('avar') and - 'err_avar'. """
     n_ps = v2_arr.shape[0]
     n_baselines = v2_arr.shape[1]
@@ -485,13 +486,13 @@ def _compute_v2_quantities(v2_arr, bias_arr, n_blocks):
 
     # Compute vis. squared average
     v2 = np.mean(v2_arr, axis=0)
-    
+
     # Compute vis. squared difference
     for j in range(n_baselines):
         for k in range(n_blocks):
             ind1 = k * n_ps // n_blocks
             ind2 = (k + 1) * n_ps // (n_blocks - 1)
-            v2_diff[k, j] = np.mean(v2_arr[ind1:ind2, j]) - v2[j]                
+            v2_diff[k, j] = np.mean(v2_arr[ind1:ind2, j]) - v2[j]
             # v2_diff[k, j] = np.mean(v2_arr[k, j]) - v2[j]
 
     # Compute vis. squared covariance
@@ -500,11 +501,11 @@ def _compute_v2_quantities(v2_arr, bias_arr, n_blocks):
             num = np.sum(v2_diff[:, j] * v2_diff[:, k])
             v2_cov[j, k] = num / (n_blocks - 1) / n_blocks
             # Additonal "/ n_blocks" in the original code ???
-    
-    # AS. Comparison with numpy cov matrices   
+
+    # AS. Comparison with numpy cov matrices
     # v2_cov_pyt = np.cov(v2_arr.T, bias=False)
     # v2_cov = v2_cov_pyt
-    
+
     x = np.arange(n_baselines)
     avar = v2_cov[x, x] * n_ps - bias_arr ** 2 * (1 + (2.0 * v2) / bias_arr)
     err_avar = np.sqrt(
@@ -518,7 +519,7 @@ def _compute_v2_quantities(v2_arr, bias_arr, n_blocks):
 
 def _compute_bs_quantities(bs_arr, v2, fluxes, index_mask, n_blocks,
                            subtract_bs_bias=True):
-    """ Compute the bispectrum quantities: - average ('bs') over the 
+    """ Compute the bispectrum quantities: - average ('bs') over the
     cube, - covariance ('bs_cov') and - variance ('bs_var'). """
     n_cov = index_mask.n_cov
     n_bispect = index_mask.n_bispect
@@ -630,7 +631,7 @@ def _compute_bs_v2_cov(bs_arr, v2_arr, v2, bs, index_mask):
 
 def _normalize_all_obs(bs_quantities, v2_quantities, cvis_arr, cp_cov,
                        bs_v2_cov, fluxes, index_mask, infos, expert_plot=False):
-    """ Normalize all observables by the appropriate factor proportional to 
+    """ Normalize all observables by the appropriate factor proportional to
     the averaged fluxes and the number of holes."""
     bs_arr = bs_quantities['bs_arr']
     v2_arr = v2_quantities['v2_arr']
@@ -662,7 +663,7 @@ def _normalize_all_obs(bs_quantities, v2_quantities, cvis_arr, cp_cov,
         cp_cov_norm = cp_cov / np.mean(fluxes ** 6) * n_holes ** 6
     except TypeError:
         cp_cov_norm = None
-    
+
     bs_cov_norm = bs_cov / np.mean(fluxes ** 6) * n_holes ** 6
     bs_v2_cov_norm = np.real(bs_v2_cov / np.mean(fluxes ** 5) * n_holes ** 5)
     bs_var_norm = bs_var / np.mean(fluxes ** 6) * n_holes ** 6
@@ -678,7 +679,7 @@ def _normalize_all_obs(bs_quantities, v2_quantities, cvis_arr, cp_cov,
         plt.xlabel('# baselines')
         plt.ylabel('Raw visibilities')
         plt.tight_layout()
-    
+
     # We compute the correlation matrix (to be used lated)
     v2_cor = cov2cor(v2_cov)[0]
 
@@ -704,7 +705,7 @@ def _compute_cp(obs_result, obs_norm, infos, expert_plot=False):
 
     obs_result['cp'] = cp
     obs_norm['cp_arr'] = cp_arr
-    
+
     if expert_plot:
         plt.figure(figsize=(5, 4))
         plt.title('DIAGNOSTIC PLOTS - CP - %s' % infos.target)
@@ -721,7 +722,7 @@ def _compute_cp(obs_result, obs_norm, infos, expert_plot=False):
 
 def _compute_t3_coord(mf, index_mask):
     """ Compute the closure phases coordinates u1, u2, v1, v2
-    and the equivalent maximum baselines (used for the 
+    and the equivalent maximum baselines (used for the
     spatial frequencies). """
     n_bispect = index_mask.n_bispect
     bs2bl_ix = index_mask.bs2bl_ix
@@ -748,14 +749,14 @@ def _compute_t3_coord(mf, index_mask):
 def _compute_uncertainties(obs_result, obs_norm, naive_err=False):
     """ Compute the uncertainties using the covariance matrix for the v2
     and the variance matrix for the closure phase. Can also compute the
-    so called naive error using the standard deviation of the cp and v2 
+    so called naive error using the standard deviation of the cp and v2
     quantities along the cube (`naive_err`=True, default=False). """
     bs = obs_norm['bs']
     bs_var = obs_norm['bs_var']
     v2_cov = obs_norm['v2_cov']
     cp_arr = obs_norm['cp_arr']
     v2_arr = obs_norm['v2_arr']
-    
+
     if not naive_err:
         e_cp = np.rad2deg(np.sqrt(bs_var[1] / abs(bs) ** 2))
         e_v2 = np.sqrt(np.diag(v2_cov))
@@ -922,7 +923,7 @@ def _add_infos_header(infos, hdr, mf, pa, filename, maskname, npix):
 def extract_bs(cube, filename, maskname, filtname=None, targetname=None, instrum=None,
                bs_multi_tri=False, peakmethod='gauss', hole_diam=0.8, cutoff=1e-4,
                fw_splodge=0.7, naive_err=False, n_wl=3, n_blocks=0, theta_detector=0,
-               scaling_uv=1, i_wl=None, unbias_v2=True, compute_cp_cov=True, 
+               scaling_uv=1, i_wl=None, unbias_v2=True, compute_cp_cov=True,
                expert_plot=False, verbose=False, display=True,):
     """Compute the bispectrum (bs, v2, cp, etc.) from a data cube.
 
@@ -980,7 +981,7 @@ def extract_bs(cube, filename, maskname, filtname=None, targetname=None, instrum
     Returns:
     --------
     `obs_result` {class object}:
-        Return all interferometric observables (.vis2, .e_vis2, .cp, .e_cp, etc.), information relative 
+        Return all interferometric observables (.vis2, .e_vis2, .cp, .e_cp, etc.), information relative
         to the used mask (.mask), the computed matrices and statistic (.matrix)
         and the important information (.infos). The .mask, .infos and .matrix are also class with
         various quantities (see .mask.__dict__.keys()).
@@ -1007,7 +1008,7 @@ def extract_bs(cube, filename, maskname, filtname=None, targetname=None, instrum
         n_holes = len(get_mask(infos.instrument, maskname))
     except TypeError:
         return None
-    
+
     # 2. Determine the number of different baselines (bl), bispectrums (bs) or
     # covariance matrices (cov) and associates each holes as couple for bl or
     # triplet for bs (or cp) using compute_index_mask function (see ami_function.py).
@@ -1022,7 +1023,7 @@ def extract_bs(cube, filename, maskname, filtname=None, targetname=None, instrum
     # ------------------------------------------------------------------------
     mf = make_mf(maskname, infos.instrument, infos.filtname, npix, peakmethod=peakmethod,
                  fw_splodge=fw_splodge, n_wl=n_wl, cutoff=cutoff, hole_diam=hole_diam,
-                 scaling=scaling_uv, theta_detector=theta_detector, i_wl=i_wl, 
+                 scaling=scaling_uv, theta_detector=theta_detector, i_wl=i_wl,
                  display=display,)
     if mf is None:
         return None
@@ -1070,7 +1071,7 @@ def extract_bs(cube, filename, maskname, filtname=None, targetname=None, instrum
     complex_bs = _compute_complex_bs(ft_arr, index_mask, fringe_peak, mf,
                                      dark_ps=None, closing_tri_pix=closing_tri_pix,
                                      bs_multi_tri=bs_multi_tri)
-    
+
     cvis_arr = complex_bs['vis_arr']['complex']
     v2_arr = complex_bs['vis_arr']['squared']
     bs_arr = complex_bs['bs_arr']
@@ -1098,7 +1099,7 @@ def extract_bs(cube, filename, maskname, filtname=None, targetname=None, instrum
         cp_cov = _compute_cp_cov(bs_arr, bs_quantities['bs'], index_mask)
     else:
         cp_cov = None
-        
+
     # 9. Now normalize all extracted observables
     vis2_norm, obs_norm = _normalize_all_obs(bs_quantities, v2_quantities, cvis_arr, cp_cov,
                                              bs_v2_cov, fluxes, index_mask, infos,
