@@ -67,7 +67,7 @@ def get_lambda(i_wl=None, filtname='YH', instrument='SPHERE-IFS'):
 
 
 def clean_data(list_file, isz=256, r1=100, dr=10, edge=0,
-               bad_map=None, add_bad=[], offx=0, offy=0,
+               bad_map=None, add_bad=None, offx=0, offy=0,
                clip_fact=0.5, apod=True, sky=True, window=None,
                f_kernel=3, verbose=False, ihdu=0, display=False):
     """ Clean data using the standard procedure amical.select_clean_data()
@@ -83,6 +83,10 @@ def clean_data(list_file, isz=256, r1=100, dr=10, edge=0,
                    'f_kernel': f_kernel, 'verbose': verbose, 'ihdu': ihdu,
                    'display': display
                    }
+
+    # Add check to create default add_bad list (not use mutable data)
+    if add_bad is None:
+        add_bad = []
 
     hdu = fits.open(list_file[0])
     hdr = hdu[0].header

@@ -201,9 +201,13 @@ def sky_correction(imA, r1=100, dr=20, verbose=False):
     return imC, backgroundC
 
 
-def fix_bad_pixels(image, bad_map, add_bad=[], x_stddev=1):
+def fix_bad_pixels(image, bad_map, add_bad=None, x_stddev=1):
     """ Replace bad pixels with values interpolated from their neighbors (interpolation
     is made with a gaussian kernel convolution)."""
+
+    if add_bad is None:
+        add_bad = []
+
     if len(add_bad) != 0:
         for j in range(len(add_bad)):
             bad_map[add_bad[j][1], add_bad[j][0]] = 1
@@ -215,7 +219,7 @@ def fix_bad_pixels(image, bad_map, add_bad=[], x_stddev=1):
     return fixed_image
 
 
-def show_clean_params(filename, isz, r1, dr, bad_map=None, add_bad=[],
+def show_clean_params(filename, isz, r1, dr, bad_map=None, add_bad=None,
                       edge=0, remove_bad=True, nframe=0, ihdu=0, f_kernel=3,
                       offx=0, offy=0, apod=False, window=None):
     """ Display the input parameters for the cleaning.
@@ -236,6 +240,10 @@ def show_clean_params(filename, isz, r1, dr, bad_map=None, add_bad=[],
     """
     data = fits.open(filename)[ihdu].data
     img0 = data[nframe]
+
+    # Add check to create default add_bad list (not use mutable data)
+    if add_bad is None:
+        add_bad = []
 
     if (bad_map is None) and (len(add_bad) != 0):
         bad_map = np.zeros(img0.shape)
@@ -334,7 +342,7 @@ def _remove_dark(img1, darkfile=None, ihdu=0,
 
 
 def clean_data(data, isz=None, r1=None, dr=None, edge=0,
-               bad_map=None, add_bad=[], apod=True,
+               bad_map=None, add_bad=None, apod=True,
                offx=0, offy=0, sky=True, window=None,
                darkfile=None, f_kernel=3, verbose=False):
     """ Clean data.
@@ -356,6 +364,11 @@ def clean_data(data, isz=None, r1=None, dr=None, edge=0,
     n_im = data.shape[0]
     cube_cleaned = []  # np.zeros([n_im, isz, isz])
     l_bad_frame = []
+
+    # Add check to create default add_bad list (not use mutable data)
+    if add_bad is None:
+        add_bad = []
+
     for i in tqdm(range(n_im), ncols=100, desc='Cleaning', leave=False):
         img0 = data[i]
         img0 = _apply_edge_correction(img0, edge=edge)
@@ -388,7 +401,7 @@ def clean_data(data, isz=None, r1=None, dr=None, edge=0,
 
 
 def select_clean_data(filename, isz=256, r1=100, dr=10, edge=0,
-                      clip=True, bad_map=None, add_bad=[], offx=0, offy=0,
+                      clip=True, bad_map=None, add_bad=None, offx=0, offy=0,
                       clip_fact=0.5, apod=True, sky=True, window=None,
                       darkfile=None, f_kernel=3, verbose=False, ihdu=0,
                       display=False):
@@ -439,6 +452,10 @@ def select_clean_data(filename, isz=256, r1=100, dr=10, edge=0,
     if isz > raw_size:
         raise ValueError(
             'Reshape factor is larger than the data size (choose a smaller isz).')
+
+    # Add check to create default add_bad list (not use mutable data)
+    if add_bad is None:
+        add_bad = []
 
     cube_cleaned = clean_data(cube, isz=isz, r1=r1, edge=edge,
                               bad_map=bad_map, add_bad=add_bad,
