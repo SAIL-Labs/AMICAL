@@ -41,7 +41,7 @@ def candid_grid(input_data, step=10, rmin=20, rmax=400, diam=0, obs=None,
     if obs is None:
         obs = ['cp', 'v2']
     if doNotFit is None:
-        doNotFit = ['diam*', ]
+        doNotFit = ['diam*']
 
     cprint(' | --- Start CANDID fitting --- :', 'green')
     o = candid.Open(input_data, extra_error=extra_error_cp,
