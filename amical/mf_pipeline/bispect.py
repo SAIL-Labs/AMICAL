@@ -1000,10 +1000,6 @@ def _add_infos_header(infos, hdr, mf, pa, filename, maskname, npix):
     for key in hdr_commentary_keys:
         hdr.remove(key, ignore_missing=True, remove_all=True)
 
-    # NOTE: Not sure this is needed with the above fix
-    if "SPHERE" not in infos.instrument:
-        infos["hdr"] = hdr
-
     # Save keys of the original header (as needed):
     add_keys = ["TELESCOP", "DATE-OBS", "MJD-OBS", "OBSERVER"]
     if infos.orig != "SimulatedData":
