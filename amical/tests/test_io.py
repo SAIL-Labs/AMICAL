@@ -48,7 +48,7 @@ def test_add_infos_header_commentary():
 
     # Create a fits header with commentary card
     hdr = fits.Header()
-    hdr['HISTORY'] = "History is a commentary card"
+    hdr["HISTORY"] = "History is a commentary card"
 
     # SimulatedData avoids requiring extra keys in infos
     infos = munch.Munch(orig="SimulatedData", instrument="unknown")
@@ -59,7 +59,6 @@ def test_add_infos_header_commentary():
 
     # Convert everything to munch object
     dict2class(infos)
-
 
 
 @pytest.mark.slow
