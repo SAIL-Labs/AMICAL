@@ -43,13 +43,14 @@ def example_bss(global_datadir):
     return bss
 
 
-def test_add_infos_header():
+def test_add_infos_header_commentary():
+    # Make sure that _add_infos_header handles _HeaderCommentaryCards from astropy
 
     # Create a fits header with commentary card
     hdr = fits.Header()
     hdr['HISTORY'] = "History is a commentary card"
 
-    # Make sure that simulated data and instrument is not sphere to include header
+    # SimulatedData avoids requiring extra keys in infos
     infos = munch.Munch(orig="SimulatedData", instrument="unknown")
 
     # Add hdr to infos laceholders for everything but hdr
