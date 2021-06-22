@@ -1,4 +1,5 @@
 import munch
+from munch import munchify as dict2class
 import numpy as np
 import pytest
 from astropy.io import fits
@@ -6,6 +7,7 @@ from astropy.io import fits
 import amical
 from amical import load, loadc
 from amical.get_infos_obs import get_pixel_size
+from amical.mf_pipeline.bispect import _add_infos_header
 
 
 @pytest.fixture()
@@ -39,6 +41,24 @@ def example_bss(global_datadir):
             peakmethod=peakmethod,
         )
     return bss
+
+
+def test_add_infos_header():
+
+    # Create a fits header with commentary card
+    hdr = fits.Header()
+    hdr['HISTORY'] = "History is a commentary card"
+
+    # Make sure that simulated data and instrument is not sphere to include header
+    infos = munch.Munch(orig="SimulatedData", instrument="unknown")
+
+    # Add hdr to infos laceholders for everything but hdr
+    mf = munch.Munch(pixelSize=1.0)
+    infos = _add_infos_header(infos, hdr, mf, 1.0, "afilename", "amaskname", 1)
+
+    # Convert everything to munch object
+    dict2class(infos)
+
 
 
 @pytest.mark.slow
