@@ -988,6 +988,19 @@ def _add_infos_header(infos, hdr, mf, pa, filename, maskname, npix):
     infos["filename"] = filename
     infos["maskname"] = maskname
     infos["isz"] = npix
+
+    # HACK: astropy _HeaderCommentaryCards are registered as mappings,
+    # so munch tries to access their keys, leading to attribute error
+    # to prevent this, we remove commentary cards as a temporary fix.
+    # See:
+    # https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL/issues/31
+    # https://github.com/astropy/astropy/issues/11866
+    hdr_commentary_keys = fits.Card._commentary_keywords
+    hdr = hdr.copy()
+    for key in hdr_commentary_keys:
+        hdr.remove(key, ignore_missing=True, remove_all=True)
+
+    # NOTE: Not sure this is needed with the above fix
     if "SPHERE" not in infos.instrument:
         infos["hdr"] = hdr
 
