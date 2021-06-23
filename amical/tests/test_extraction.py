@@ -15,7 +15,7 @@ def test_add_infos_header_commentary():
     # SimulatedData avoids requiring extra keys in infos
     infos = munch.Munch(orig="SimulatedData", instrument="unknown")
 
-    # Add hdr to infos laceholders for everything but hdr
+    # Add hdr to infos placeholders for everything but hdr
     mf = munch.Munch(pixelSize=1.0)
     infos = _add_infos_header(infos, hdr, mf, 1.0, "afilename", "amaskname", 1)
 
