@@ -43,7 +43,7 @@ nrm_file = 'my_nrm_data.fits'
 
 clean_param = {'isz': 69, # final cropped image size [pix]
                'r1': 31, # Inner radius to compute sky [pix]
-               'dr': 2, # Outer radius (r2 = r1 + dr) 
+               'dr': 2, # Outer radius (r2 = r1 + dr)
                'apod': True, # If True, apply windowing
                'window': 32 # FWHM of the super-gaussian (for windowing)
               }
@@ -146,9 +146,9 @@ calibrator signal from the raw closure phases and normalize the target
 visibilities by the calibrator’s visibilities.
 
 ```python
-# bs_t and bs_c are the results from amical.extract_bs() on the target and 
+# bs_t and bs_c are the results from amical.extract_bs() on the target and
 # calibrator respectively.
-cal = amical.calibrate(bs_t, bs_c) 
+cal = amical.calibrate(bs_t, bs_c)
 ```
 
 If several calibrators are available, the calibration factors are computed using
@@ -161,7 +161,7 @@ reject bad calibrator-source pairs using a sigma-clipping approach (`clip=True`,
 using a threshold value in sigma `sig_thres=2`).
 
 ```python             }
-cal = amical.calibrate(bs_t, [bs_c1, bs_c2, bs_c3], clip=True, sig_thres=2) 
+cal = amical.calibrate(bs_t, [bs_c1, bs_c2, bs_c3], clip=True, sig_thres=2)
 ```
 
 > Note: For ground based facilities, two additional corrections can be applied

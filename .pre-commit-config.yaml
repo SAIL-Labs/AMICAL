@@ -1,11 +1,7 @@
 # a curated list of available hooks
 # https://pre-commit.com/hooks.html
 
-exclude: "^(\
-doc/\
-|amical/tests/data/\
-|amical/internal_data\
-)"
+exclude: "(\\.fits|\\.fits\\.gz|\\.oifits)$"
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
