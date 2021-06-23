@@ -39,14 +39,15 @@ map generator, but you can add an unlimited number of bad pixels as the input
 list `add_bad` (e.g.: \[[24, 08], [31, 41]])).
 
 ```python
-nrm_file = 'my_nrm_data.fits'
+nrm_file = "my_nrm_data.fits"
 
-clean_param = {'isz': 69, # final cropped image size [pix]
-               'r1': 31, # Inner radius to compute sky [pix]
-               'dr': 2, # Outer radius (r2 = r1 + dr)
-               'apod': True, # If True, apply windowing
-               'window': 32 # FWHM of the super-gaussian (for windowing)
-              }
+clean_param = {
+    "isz": 69,  # final cropped image size [pix]
+    "r1": 31,  # Inner radius to compute sky [pix]
+    "dr": 2,  # Outer radius (r2 = r1 + dr)
+    "apod": True,  # If True, apply windowing
+    "window": 32,  # FWHM of the super-gaussian (for windowing)
+}
 
 # Firsly, check if the input parameters are valid
 amical.show_clean_params(nrm_file, **clean_param)
@@ -63,7 +64,9 @@ radius outside the fringes pattern, etc.), we can apply the cleaning step to the
 data.
 
 ```python
-cube_cleaned = amical.select_clean_data(nrm_file, **clean_param, clip=True, clip_fact=0.5)
+cube_cleaned = amical.select_clean_data(
+    nrm_file, **clean_param, clip=True, clip_fact=0.5
+)
 ```
 
 During the cleaning step, you can decide to apply a lucky imaging selection
@@ -116,9 +119,10 @@ target name are normally read from the fits file header.
 In case where headers are not compliant, you will need to provide the following keyword arguments: `filtname`, `instrum` and `targetname`.
 
 ```python
-params_ami = {"peakmethod": "fft",
-              "maskname": "g7", # 7 holes mask of NIRISS
-              }
+params_ami = {
+    "peakmethod": "fft",
+    "maskname": "g7",  # 7 holes mask of NIRISS
+}
 
 bs = amical.extract_bs(cube_cleaned, file_t, **params_ami)
 ```
@@ -204,7 +208,7 @@ Few other parameters are available to set the axe limites (`vmax`, `vmin`,
 (`true_flag_v2`, `true_flag_cp`), etc.
 
 ```python
-oifits_file = 'my_oifits_results.oifits'
+oifits_file = "my_oifits_results.oifits"
 
 amical.save(cal, oifits_file, pa=bs_t.infos.pa)
 ```
@@ -224,15 +228,16 @@ stand-alone packages).
 First, you can use CANDID to fit the data using a grid search approach.
 
 ```python
-inputdata = 'Saveoifits/my_oifits_results.oifits'
+inputdata = "Saveoifits/my_oifits_results.oifits"
 
-param_candid = {'rmin': 20,  # inner radius of the grid
-                'rmax': 250,  # outer radius of the grid
-                'step': 50,  # grid sampling
-                'ncore': 12  # core for multiprocessing
-                }
+param_candid = {
+    "rmin": 20,  # inner radius of the grid
+    "rmax": 250,  # outer radius of the grid
+    "step": 50,  # grid sampling
+    "ncore": 12,  # core for multiprocessing
+}
 
-fit1 = amical.candid_grid(inputdata, **param_candid, diam=0, doNotFit=['diam*'])
+fit1 = amical.candid_grid(inputdata, **param_candid, diam=0, doNotFit=["diam*"])
 ```
 
 <p align="center">
@@ -244,7 +249,7 @@ fit1 = amical.candid_grid(inputdata, **param_candid, diam=0, doNotFit=['diam*'])
 And an estimate of the contrast limit.
 
 ```python
-cr_candid = amical.candid_cr_limit(inputdata, **param_candid, fitComp=fit1['comp'])
+cr_candid = amical.candid_cr_limit(inputdata, **param_candid, fitComp=fit1["comp"])
 ```
 
 <p align="center">
