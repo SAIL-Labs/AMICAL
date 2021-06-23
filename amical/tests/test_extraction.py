@@ -1,5 +1,4 @@
 import munch
-from munch import munchify as dict2class
 from astropy.io import fits
 
 from amical.mf_pipeline.bispect import _add_infos_header
@@ -20,4 +19,4 @@ def test_add_infos_header_commentary():
     infos = _add_infos_header(infos, hdr, mf, 1.0, "afilename", "amaskname", 1)
 
     # Convert everything to munch object
-    dict2class(infos)
+    munch.munchify(infos)
