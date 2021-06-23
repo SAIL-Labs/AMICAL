@@ -19,6 +19,6 @@ def test_add_infos_simulated():
     mf = munch.Munch(pixelSize=1.0)
     infos = _add_infos_header(infos, hdr, mf, 1.0, "afilename", "amaskname", 1)
 
-    assert infos["DATE-OBS"] == hdr["DATE-OBS"]
-    assert infos["TELESCOP"] == hdr["TELESCOP"]
-    assert "OBSERVER" not in infos  # Keys that are not in hdr should not be in infos
+    assert infos["date-obs"] == hdr["DATE-OBS"]
+    assert infos["telescop"] == hdr["TELESCOP"]
+    assert "observer" not in infos  # Keys that are not in hdr should not be in infos
