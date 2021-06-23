@@ -1985,18 +1985,6 @@ def open(filename, quiet=True):
         if hdu.name == "OI_VIS":
             for row in data:
                 timeobs = get_timeobs(header, row)
-                # if "T" in header["DATE-OBS"]:
-                #     warnings.warn(
-                #         "Warning: DATE-OBS contains a timestamp, which is contradictory to the OIFITS2 standard",
-                #         UserWarning,
-                #     )
-                #     date = header["DATE-OBS"].split("T")[0].split("-")
-                # else:
-                #     date = header["DATE-OBS"].split("-")
-                # timeobs = datetime.datetime(
-                #     int(date[0]), int(date[1]), int(date[2])
-                # ) + datetime.timedelta(seconds=np.around(row.field("TIME"), 2))
-                # ) + datetime.timedelta(seconds=np.around(row.field("TIME"), 2))
                 int_time = row.field("INT_TIME")
                 visamp = np.reshape(row.field("VISAMP"), -1)
                 visamperr = np.reshape(row.field("VISAMPERR"), -1)
@@ -2044,17 +2032,6 @@ def open(filename, quiet=True):
         elif hdu.name == "OI_VIS2":
             for row in data:
                 timeobs = get_timeobs(header, row)
-                # if "T" in header["DATE-OBS"]:
-                #     warnings.warn(
-                #         "Warning: DATE-OBS contains a timestamp, which is contradictory to the OIFITS2 standard",
-                #         UserWarning,
-                #     )
-                #     date = header["DATE-OBS"].split("T")[0].split("-")
-                # else:
-                #     date = header["DATE-OBS"].split("-")
-                # timeobs = datetime.datetime(
-                #     int(date[0]), int(date[1]), int(date[2])
-                # ) + datetime.timedelta(seconds=np.around(row.field("TIME"), 2))
                 int_time = row.field("INT_TIME")
                 vis2data = np.reshape(row.field("VIS2DATA"), -1)
                 vis2err = np.reshape(row.field("VIS2ERR"), -1)
@@ -2088,17 +2065,6 @@ def open(filename, quiet=True):
         elif hdu.name == "OI_T3":
             for row in data:
                 timeobs = get_timeobs(header, row)
-                # if "T" in header["DATE-OBS"]:
-                #     warnings.warn(
-                #         "Warning: DATE-OBS contains a timestamp, which is contradictory to the OIFITS2 standard",
-                #         UserWarning,
-                #     )
-                #     date = header["DATE-OBS"].split("T")[0].split("-")
-                # else:
-                #     date = header["DATE-OBS"].split("-")
-                # timeobs = datetime.datetime(
-                #     int(date[0]), int(date[1]), int(date[2])
-                # ) + datetime.timedelta(seconds=np.around(row.field("TIME"), 2))
                 int_time = row.field("INT_TIME")
                 t3amp = np.reshape(row.field("T3AMP"), -1)
                 t3amperr = np.reshape(row.field("T3AMPERR"), -1)
