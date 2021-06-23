@@ -1899,7 +1899,7 @@ def get_timeobs(header, row):
         date = header["DATE-OBS"].split("T")[0].split("-")
     else:
         date = header["DATE-OBS"].split("-")
-    if date[0] != '':
+    if date[0] != "":
         timeobs = datetime.datetime(
             int(date[0]), int(date[1]), int(date[2])
         ) + datetime.timedelta(seconds=np.around(row.field("TIME"), 2))
