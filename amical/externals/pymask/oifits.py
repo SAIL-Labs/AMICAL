@@ -1891,6 +1891,10 @@ class oifits:
 
 
 def get_timeobs(header, row):
+    """
+    Get observation time based on information from oifits header and data row.
+    If no DATE-OBS is found in the header, only the TIME from `row` is used.
+    """
     if "T" in header["DATE-OBS"]:
         warnings.warn(
             "Warning: DATE-OBS contains a timestamp, which is contradictory to the OIFITS2 standard",
