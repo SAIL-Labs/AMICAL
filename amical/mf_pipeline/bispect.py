@@ -1000,6 +1000,9 @@ def _add_infos_header(infos, hdr, mf, pa, filename, maskname, npix):
     for key in hdr_commentary_keys:
         hdr.remove(key, ignore_missing=True, remove_all=True)
 
+    # Now that header is compatible with munc, we add it to infos
+    infos["hdr"] = hdr
+
     # Save keys of the original header (as needed):
     add_keys = ["TELESCOP", "DATE-OBS", "MJD-OBS", "OBSERVER"]
     if infos.orig != "SimulatedData":
