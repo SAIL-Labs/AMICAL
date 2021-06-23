@@ -59,11 +59,11 @@ if use_pymask:
         "pa_prior": [20, 80],  # Prior on the position angle
         "cr_prior": [230, 270],  # Prior on the contrast ratio
         "ncore": 12,  # core for multiprocessing
-        "extra_error": 0,
+        "extra_error_cp": 0,
         "err_scale": 1,
     }
 
-    # Pymask proposes to add some extra_error on the CP. This allows to take
+    # Pymask proposes to add some extra_error_cp on the CP. This allows to take
     # into account a possibly understimated uncertainties on the data. Indeed,
     # some bias due to mismatch between the calibrator and the science spectral type,
     # or some systematic temporal effect could produce additional errors not properly
