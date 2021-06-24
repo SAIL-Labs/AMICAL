@@ -1,6 +1,10 @@
 name: CI
 on:
   pull_request:
+    paths-ignore:
+      - "doc/**"
+      - README.md
+      - setup.cfg
   push:
     branches:
       - master
