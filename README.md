@@ -1,36 +1,24 @@
 <a href="https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL">
-<img src="doc/Figures/amical_logo.png" width="300"></a>
+<img src="https://raw.githubusercontent.com/SydneyAstrophotonicInstrumentationLab/AMICAL/master/doc/Figures/amical_logo.png" width="300"></a>
 
 (**A**perture **M**asking **I**nterferometry **C**alibration and **A**nalysis
 **L**ibrary)
 
-[![release](https://img.shields.io/github/v/release/SydneyAstrophotonicInstrumentationLab/AMICAL)](https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL)
-[![Supported Python Versions](https://img.shields.io/badge/python%20version-≥%203.7-important)](https://www.python.org/downloads/release/python-370/)
+[![PyPI](https://img.shields.io/pypi/v/amical)](https://pypi.org/project/amical/)
+[![Supported Python Versions](https://img.shields.io/pypi/pyversions/amical)](https://pypi.org/project/amical/)
 ![Licence](https://img.shields.io/github/license/SydneyAstrophotonicInstrumentationLab/AMICAL)
+
 ![CI](https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL/actions/workflows/ci.yml/badge.svg)
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/SydneyAstrophotonicInstrumentationLab/AMICAL/master.svg)](https://results.pre-commit.ci/latest/github/SydneyAstrophotonicInstrumentationLab/AMICAL/master)
+
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Imports:
 isort](https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336)](https://pycqa.github.io/isort/)
 
-## Install from source (for conda-based systems)
+## Installation
 
-It is recommended (though not mandatory) to create a separate environment with
-`conda create -n <env_name>`. Then, within your Conda env (`conda activate
-<env_name>`):
-
-```bash
-# Firstly, clone AMICAL repository on your computer
-git clone https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL.git
-
-cd AMICAL/
-
-# You may need to install pip inside your new environment
-conda install pip
-
-# Install AMICAL
-pip install -e .
-
+```shell
+$ python -m pip install amical
 ```
 
 ## What can AMICAL do for you ?
@@ -59,15 +47,15 @@ outputs obtained from a binary-like sources (star-star or star-planet). We
 interfaced these stand-alone packages with AMICAL to quickly estimate our
 scientific results (e.g., separation, position angle, contrast ratio, contrast
 limits, etc.) using different approaches (chi2 grid, MCMC, see
-[example_analysis.py](doc/example_analysis.py) for details).
+[example_analysis.py](https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL/blob/master/doc/example_analysis.py) for details).
 
 ## Getting started
 
-Looking for a quickstart into AMICAL? You can go through our **[tutorial](doc/tutorial.md)** explaining
+Looking for a quickstart into AMICAL? You can go through our **[tutorial](https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL/blob/master/doc/tutorial.md)** explaining
 how to use its different features.
 
 You can also have a look to the example scripts
-made for [NIRISS](doc/example_NIRISS.py) and [SPHERE](doc/example_NIRISS.py) or get details about the CANDID/Pymask uses with [example_analysis.py](doc/example_analysis.py).
+made for [NIRISS](https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL/blob/master/doc/example_NIRISS.py) and [SPHERE](https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL/blob/master/doc/example_NIRISS.py) or get details about the CANDID/Pymask uses with [example_analysis.py](https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL/blob/master/doc/example_analysis.py).
 
 ## Use policy and reference publication
 

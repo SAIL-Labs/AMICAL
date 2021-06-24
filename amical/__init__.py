@@ -8,4 +8,4 @@ from .mf_pipeline.bispect import extract_bs
 from .oifits import cal2dict, load, loadc, save, show
 from .tools import load_bs_hdf5, save_bs_hdf5
 
-__version__ = "1.3.0"
+__version__ = "1.3.1"
