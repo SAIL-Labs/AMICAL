@@ -4,7 +4,6 @@ on:
     paths-ignore:
       - "doc/**"
       - README.md
-      - setup.cfg
   push:
     branches:
       - master
