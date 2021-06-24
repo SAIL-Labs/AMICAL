@@ -1,5 +1,5 @@
 <a href="https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL">
-<img src="doc/Figures/amical_logo.png" width="300"></a>
+<img src="https://raw.githubusercontent.com/SydneyAstrophotonicInstrumentationLab/AMICAL/master/doc/Figures/amical_logo.png" width="300"></a>
 
 (**A**perture **M**asking **I**nterferometry **C**alibration and **A**nalysis
 **L**ibrary)
@@ -59,15 +59,15 @@ outputs obtained from a binary-like sources (star-star or star-planet). We
 interfaced these stand-alone packages with AMICAL to quickly estimate our
 scientific results (e.g., separation, position angle, contrast ratio, contrast
 limits, etc.) using different approaches (chi2 grid, MCMC, see
-[example_analysis.py](doc/example_analysis.py) for details).
+[example_analysis.py](https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL/blob/master/doc/example_analysis.py) for details).
 
 ## Getting started
 
-Looking for a quickstart into AMICAL? You can go through our **[tutorial](doc/tutorial.md)** explaining
+Looking for a quickstart into AMICAL? You can go through our **[tutorial](https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL/blob/master/doc/tutorial.md)** explaining
 how to use its different features.
 
 You can also have a look to the example scripts
-made for [NIRISS](doc/example_NIRISS.py) and [SPHERE](doc/example_NIRISS.py) or get details about the CANDID/Pymask uses with [example_analysis.py](doc/example_analysis.py).
+made for [NIRISS](https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL/blob/master/doc/example_NIRISS.py) and [SPHERE](https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL/blob/master/doc/example_NIRISS.py) or get details about the CANDID/Pymask uses with [example_analysis.py](https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL/blob/master/doc/example_analysis.py).
 
 ## Use policy and reference publication
 
