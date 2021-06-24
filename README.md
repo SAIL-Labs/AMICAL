@@ -5,7 +5,7 @@
 **L**ibrary)
 
 [![PyPI](https://img.shields.io/pypi/v/amical)](https://pypi.org/project/amical/)
-[![Supported Python Versions](https://img.shields.io/pypi/v/amical)](https://img.shields.io/pypi/pyversions/amical)
+[![Supported Python Versions](https://img.shields.io/pypi/pyversions/amical)](https://pypi.org/project/amical/)
 ![Licence](https://img.shields.io/github/license/SydneyAstrophotonicInstrumentationLab/AMICAL)
 
 ![CI](https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL/actions/workflows/ci.yml/badge.svg)
