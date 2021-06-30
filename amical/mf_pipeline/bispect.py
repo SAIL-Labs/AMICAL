@@ -1009,6 +1009,14 @@ def _add_infos_header(infos, hdr, mf, pa, filename, maskname, npix):
     if infos.orig != "SimulatedData":
         for keys in add_keys:
             infos[keys.lower()] = hdr.get(keys)
+    else:
+        # For simulated data, add keys only if they exist
+        # (missing keys will be filled later if needed)
+        for keys in add_keys:
+            try:
+                infos[keys.lower()] = hdr[keys]
+            except KeyError:
+                pass
     return infos
 
 

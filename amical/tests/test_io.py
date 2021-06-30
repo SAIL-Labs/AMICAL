@@ -5,12 +5,18 @@ from astropy.io import fits
 
 import amical
 from amical import load, loadc
+from amical.externals import pymask
 from amical.get_infos_obs import get_pixel_size
 
 
 @pytest.fixture()
 def example_oifits(global_datadir):
     return global_datadir / "test.oifits"
+
+
+@pytest.fixture()
+def example_oifits_no_date_obs(global_datadir):
+    return global_datadir / "test_no_date_obs.oifits"
 
 
 def test_load_file(example_oifits):
@@ -95,6 +101,11 @@ def test_pymask(example_oifits):
     assert isinstance(fit1, dict)
     fit2 = amical.pymask_grid([example_oifits])
     assert isinstance(fit2, dict)
+
+
+def test_pymask_oifits_no_date_obs(example_oifits_no_date_obs):
+    o = pymask.oifits.open(str(example_oifits_no_date_obs))
+    assert isinstance(o, pymask.oifits.oifits)
 
 
 def test_loadc_file(example_oifits):
