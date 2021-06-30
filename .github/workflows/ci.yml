@@ -44,3 +44,8 @@ jobs:
         flags: unittests
         name: codecov-umbrella
         fail_ci_if_error: true
+    - name: Run examples
+      run: |
+        cd doc
+        python example_NIRISS.py
+        python example_analysis.py
