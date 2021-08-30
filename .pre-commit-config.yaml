@@ -3,6 +3,9 @@
 
 exclude: "(\\.fits|\\.fits\\.gz|\\.oifits)$"
 
+ci:
+  autoupdate_schedule: "quarterly"
+
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.0.1
