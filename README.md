@@ -11,7 +11,7 @@
 ![CI](https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL/actions/workflows/ci.yml/badge.svg)
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/SydneyAstrophotonicInstrumentationLab/AMICAL/master.svg)](https://results.pre-commit.ci/latest/github/SydneyAstrophotonicInstrumentationLab/AMICAL/master)
 
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 ## Installation
 
