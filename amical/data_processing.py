@@ -10,16 +10,17 @@ centering, etc.) and data selection (sigma-clipping, centered flux,).
 
 --------------------------------------------------------------------
 """
-
 import numpy as np
-from astropy.convolution import Gaussian2DKernel, interpolate_replace_nans
+from astropy.convolution import Gaussian2DKernel
+from astropy.convolution import interpolate_replace_nans
 from astropy.io import fits
 from matplotlib import pyplot as plt
 from matplotlib.colors import PowerNorm
 from termcolor import cprint
 from tqdm import tqdm
 
-from amical.tools import apply_windowing, crop_max
+from amical.tools import apply_windowing
+from amical.tools import crop_max
 
 
 def _apply_patch_ghost(cube, xc, yc, radius=20, dx=0, dy=-200, method="bg"):

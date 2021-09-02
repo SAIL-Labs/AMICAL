@@ -11,7 +11,6 @@ All required IDL function translated into python.
 
 --------------------------------------------------------------------
 """
-
 import numpy as np
 from munch import munchify as dict2class
 from termcolor import cprint

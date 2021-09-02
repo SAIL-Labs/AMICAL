@@ -9,7 +9,6 @@ OIFITS related function.
 
 --------------------------------------------------------------------
 """
-
 import datetime
 import os
 

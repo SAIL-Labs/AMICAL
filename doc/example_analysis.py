@@ -18,9 +18,9 @@ extract the quantitative values of our simulated binary.
 
 --------------------------------------------------------------------
 """
+from matplotlib import pyplot as plt
 
 import amical
-from matplotlib import pyplot as plt
 
 # Your inputdata is an oifits file or a list of oifits.
 inputdata = "Saveoifits/example_fakebinary_NIRISS.oifits"
@@ -35,7 +35,7 @@ if use_candid:
         "rmin": 20,  # inner radius of the grid
         "rmax": 250,  # outer radius of the grid
         "step": 50,  # grid sampling
-        "ncore": 12,  # core for multiprocessing
+        "ncore": 2,  # core for multiprocessing
     }
 
     # If you want to save the figure locally as .pdf, use save=True (new feature

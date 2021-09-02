@@ -9,7 +9,8 @@ from tqdm import tqdm
 import amical
 from amical.analysis import models
 from amical.dpfit import leastsqFit
-from amical.tools import mas2rad, roundSciDigit
+from amical.tools import mas2rad
+from amical.tools import roundSciDigit
 
 err_pts_style = {
     "linestyle": "None",

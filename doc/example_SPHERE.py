@@ -1,5 +1,7 @@
-from matplotlib import pyplot as plt
 import os
+
+from matplotlib import pyplot as plt
+
 import amical
 
 plt.close("all")

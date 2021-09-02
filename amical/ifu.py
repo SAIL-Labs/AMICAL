@@ -9,7 +9,6 @@ Set of functions to work with spectraly dispersed (IFU) NRM data.
 
 -------------------------------------------------------------------------
 """
-
 import numpy as np
 from astropy.io import fits
 from matplotlib import pyplot as plt

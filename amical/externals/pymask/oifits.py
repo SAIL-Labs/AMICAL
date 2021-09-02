@@ -69,13 +69,13 @@ list of all the "hidden" attributes.
 For further information, contact Paul Boley (pboley@urfu.ru).
 
 """
-
 import copy
 import datetime
 import warnings
 
 import numpy as np
-from numpy import double, ma
+from numpy import double
+from numpy import ma
 
 try:
     import pyfits

@@ -39,17 +39,18 @@ repos:
     - id: pyupgrade
       args: [--py37-plus]
 
+  - repo: https://github.com/asottile/reorder_python_imports
+    rev: v2.6.0
+    hooks:
+      - id: reorder-python-imports
+
+
   - repo: https://github.com/psf/black
     rev: 21.8b0
     hooks:
       - id: black
         language_version: python3
 
-  # - repo: https://github.com/PyCQA/isort
-  #   rev: 5.8.0
-  #   hooks:
-  #     - id: isort
-  #       additional_dependencies: ['toml==0.10.2']
 
   - repo: https://github.com/PyCQA/flake8
     rev: 3.9.2

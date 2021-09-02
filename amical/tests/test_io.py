@@ -4,7 +4,8 @@ import pytest
 from astropy.io import fits
 
 import amical
-from amical import load, loadc
+from amical import load
+from amical import loadc
 from amical.externals import pymask
 from amical.get_infos_obs import get_pixel_size
 

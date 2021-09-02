@@ -10,14 +10,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy.interpolate as interp
 
-from .cp_tools import (
-    cp_loglikelihood,
-    cp_loglikelihood_proj,
-    cp_model,
-    mas2rad,
-    project_cps,
-    rad2mas,
-)
+from .cp_tools import cp_loglikelihood
+from .cp_tools import cp_loglikelihood_proj
+from .cp_tools import cp_model
+from .cp_tools import mas2rad
+from .cp_tools import project_cps
+from .cp_tools import rad2mas
 
 
 def phase_binary_flux(u, v, wavel, p, return_cvis=False):
