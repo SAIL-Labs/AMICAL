@@ -16,11 +16,13 @@ import sys
 import time
 import warnings
 
+import astropy
 import numpy as np
 from astropy.io import fits
 from matplotlib import pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from munch import munchify as dict2class
+from packaging.version import Version
 from scipy.optimize import minimize
 from termcolor import cprint
 from tqdm import tqdm
@@ -988,19 +990,21 @@ def _add_infos_header(infos, hdr, mf, pa, filename, maskname, npix):
     infos["maskname"] = maskname
     infos["isz"] = npix
 
-    # HACK: astropy _HeaderCommentaryCards are registered as mappings,
-    # so munch tries to access their keys, leading to attribute error
-    # to prevent this, we remove commentary cards as a temporary fix.
-    # (As of June 23 2021, with astropy version 4.2.1)
-    # See:
-    # https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL/issues/31
-    # https://github.com/astropy/astropy/issues/11866
-    hdr_commentary_keys = fits.Card._commentary_keywords
-    hdr = hdr.copy()
-    for key in hdr_commentary_keys:
-        hdr.remove(key, ignore_missing=True, remove_all=True)
+    if Version(astropy.__version__) < Version("5.0.0"):
+        # HACK: astropy _HeaderCommentaryCards are registered as mappings,
+        # so munch tries to access their keys, leading to attribute error
+        # to prevent this, we remove commentary cards as a temporary fix.
+        # (As of September 2 2021, with astropy version 4.3.1)
+        # See:
+        # https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL/issues/31
+        # https://github.com/astropy/astropy/issues/11866
+        # Resolved upstream with
+        # https://github.com/astropy/astropy/pull/11923
+        hdr_commentary_keys = fits.Card._commentary_keywords
+        hdr = hdr.copy()
+        for key in hdr_commentary_keys:
+            hdr.remove(key, ignore_missing=True, remove_all=True)
 
-    # Now that header is compatible with munch, we add it to infos
     infos["hdr"] = hdr
 
     # Save keys of the original header (as needed):
