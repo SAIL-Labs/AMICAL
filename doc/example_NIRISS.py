@@ -1,6 +1,7 @@
+import os
+
 from astropy.io import fits
 from matplotlib import pyplot as plt
-import os
 
 import amical
 

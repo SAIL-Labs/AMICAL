@@ -3,7 +3,8 @@ import os
 import numpy as np
 from matplotlib import pyplot as plt
 from termcolor import cprint
-from uncertainties import ufloat, umath
+from uncertainties import ufloat
+from uncertainties import umath
 
 from amical.externals import candid
 

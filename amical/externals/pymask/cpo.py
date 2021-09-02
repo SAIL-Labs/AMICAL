@@ -7,9 +7,10 @@ import scipy
 from scipy.io.idl import readsav
 from termcolor import cprint
 
-# import pymask.oifits
 from . import oifits
 from .cp_tools import project_cps
+
+# import pymask.oifits
 
 """------------------------------------------------------------------------
 cpo.py - Python class for manipulating oifits format closure phase data.

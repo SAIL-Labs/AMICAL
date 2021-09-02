@@ -9,7 +9,6 @@ Set of functions to calibrate NRM data using a calibrator star data.
 
 -------------------------------------------------------------------------
 """
-
 import numpy as np
 from astropy.io import fits
 from astropy.stats import sigma_clip

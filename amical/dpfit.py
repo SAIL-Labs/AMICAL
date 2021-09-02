@@ -9,7 +9,6 @@ Fitting tools (developped by A. Merand).
 
 --------------------------------------------------------------------
 """
-
 import time
 
 import numpy as np

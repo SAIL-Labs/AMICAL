@@ -12,7 +12,6 @@ and calc_bispect.pro).
 
 --------------------------------------------------------------------
 """
-
 import sys
 import time
 import warnings
@@ -26,18 +25,18 @@ from scipy.optimize import minimize
 from termcolor import cprint
 from tqdm import tqdm
 
+from .idl_function import dblarr
+from .idl_function import dist
+from .idl_function import regress_noc
 from amical.get_infos_obs import get_mask
-from amical.mf_pipeline.ami_function import (
-    bs_multi_triangle,
-    compute_index_mask,
-    give_peak_info2d,
-    make_mf,
-    phase_chi2,
-    tri_pix,
-)
-from amical.tools import compute_pa, cov2cor
-
-from .idl_function import dblarr, dist, regress_noc
+from amical.mf_pipeline.ami_function import bs_multi_triangle
+from amical.mf_pipeline.ami_function import compute_index_mask
+from amical.mf_pipeline.ami_function import give_peak_info2d
+from amical.mf_pipeline.ami_function import make_mf
+from amical.mf_pipeline.ami_function import phase_chi2
+from amical.mf_pipeline.ami_function import tri_pix
+from amical.tools import compute_pa
+from amical.tools import cov2cor
 
 warnings.filterwarnings("ignore")
 

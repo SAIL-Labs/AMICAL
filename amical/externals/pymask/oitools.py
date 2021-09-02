@@ -8,7 +8,10 @@ import oifits
 from matplotlib.patches import Rectangle
 from matplotlib.transforms import offset_copy
 from mpl_toolkits.mplot3d import Axes3D
-from numpy import arctan, pi, sort, sqrt
+from numpy import arctan
+from numpy import pi
+from numpy import sort
+from numpy import sqrt
 
 
 def match_wavelength(template, oifitsobj):

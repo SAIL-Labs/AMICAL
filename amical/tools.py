@@ -9,7 +9,6 @@ General tools.
 
 --------------------------------------------------------------------
 """
-
 import math as m
 import warnings
 

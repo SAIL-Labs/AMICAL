@@ -13,16 +13,21 @@ All AMI related function, the most important are:
 
 --------------------------------------------------------------------
 """
-
 import numpy as np
 from matplotlib import pyplot as plt
 from munch import munchify as dict2class
 from termcolor import cprint
 
 from amical.dpfit import leastsqFit
-from amical.get_infos_obs import get_mask, get_pixel_size, get_wavelength
-from amical.mf_pipeline.idl_function import array_coords, dist
-from amical.tools import gauss_2d_asym, linear, norm_max, plot_circle
+from amical.get_infos_obs import get_mask
+from amical.get_infos_obs import get_pixel_size
+from amical.get_infos_obs import get_wavelength
+from amical.mf_pipeline.idl_function import array_coords
+from amical.mf_pipeline.idl_function import dist
+from amical.tools import gauss_2d_asym
+from amical.tools import linear
+from amical.tools import norm_max
+from amical.tools import plot_circle
 
 
 def _plot_mask_coord(xy_coords, maskname, instrument):
