@@ -26,8 +26,7 @@ your new test pass, and finally refactor for code quality if needed.
 
 The code format is validated and automatically fixed via the
 [pre-commit](https://pre-commit.com) framework, most notably running
-[black](https://black.readthedocs.io/en/stable/),
-[isort](https://pycqa.github.io/isort/) and
+[black](https://black.readthedocs.io/en/stable/), and
 [flake8](https://flake8.pycqa.org/en/latest/).
 
 We recommend you install pre-commit on your working copy of the project, so
