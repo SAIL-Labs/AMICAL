@@ -13,6 +13,8 @@ All AMI related function, the most important are:
 
 --------------------------------------------------------------------
 """
+from pathlib import Path
+
 import numpy as np
 from matplotlib import pyplot as plt
 from munch import munchify as dict2class
@@ -56,7 +58,6 @@ def _plot_mask_coord(xy_coords, maskname, instrument):
     plt.ylabel("Aperture y-coordinate [m]", fontsize=12)
     plt.axis([-D / 2.0, D / 2.0, -D / 2.0, D / 2.0])
     plt.tight_layout()
-    plt.show(block=False)
     return fig
 
 
@@ -327,6 +328,9 @@ def make_mf(
     diag_plot=False,
     verbose=False,
     display=True,
+    save=False,
+    figdir=None,
+    filename=None,
 ):
     """
     Summary:
@@ -400,6 +404,8 @@ def make_mf(
 
     if display:
         _plot_mask_coord(xy_coords, maskname, instrument)
+        if save:
+            plt.savefig(figdir + Path(filename).stem + "_1.pdf")
 
     n_holes = xy_coords.shape[0]
 
@@ -554,7 +560,7 @@ def make_mf(
     im_uv = np.roll(np.fft.fftshift(mf_tot), 1, axis=1)
 
     if display:
-        plt.figure(figsize=(6, 6))
+        plt.figure(figsize=(9, 7))
         plt.title("(u-v) plan - mask %s" % (maskname), fontsize=14)
         plt.imshow(im_uv, origin="lower")
         plt.plot(npix // 2 + 1, npix // 2, "r+")
