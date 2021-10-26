@@ -472,26 +472,26 @@ def save(
         Name of the oifits file,\n
     `datadir` {str}:
         Folder name save the oifits files,\n
+    `pa` {float}:
+        Position angle of the observation (i.e.: north direction) [deg],\n
     `ind_hole` {int}:
         By default, ind_hole is None, all the CP are considered ncp = N(N-1)(N-2)/6. If
         ind_hole is set, save only the independant CP including the given hole
         ncp = (N-1)(N-2)/2.\n
-    `include_vis` {bool}:
-        If True, include OI_VIS table in the oifits,\n
     `fake_obj` {bool}:
         If True, observable are extracted from simulated data and so doesn't
         contain real target informations (simbad search is ignored),\n
-    `pa` {float}:
-        Position angle of the observation (i.e.: north direction) [deg],\n
+    `include_vis` {bool}:
+        If True, include OI_VIS table in the oifits,\n
     `true_flag_v2`, `true_flag_t3` {bool}:
         if True, the true flag are used using snr,\n
-    `origin` {str}:
-        String to use as ORIGIN key in oifits. 'Sydney University' is used if origin is
-        `None` (default=None).\n
     `snr` {float}:
         Limit snr used to compute flags (default=4),\n
     `verbose` {bool}:
         If True, print useful informations.
+    `origin` {str}:
+        String to use as ORIGIN key in oifits. 'Sydney University' is used if origin is
+        `None` (default=None).\n
 
     Returns:
     --------
