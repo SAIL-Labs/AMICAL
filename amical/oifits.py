@@ -510,7 +510,7 @@ def save(
         print("Error: oifits filename is not given, please specify oifits_file.")
         return None
 
-    if not isinstance(input_calibrated, list):
+    if type(input_calibrated) is not list:
         input_calibrated = [input_calibrated]
 
     if not isinstance(origin, (str, type(None))):
