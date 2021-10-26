@@ -105,7 +105,7 @@ def test_origin_type(cal, tmpdir):
 def test_save_origin(cal, tmpdir):
 
     og = "allo"
-    _, savefile = amical.save(
+    _dic, savefile = amical.save(
         cal,
         oifits_file="test_origin.oifits",
         datadir=tmpdir,
