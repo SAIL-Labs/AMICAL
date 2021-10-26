@@ -548,10 +548,7 @@ def save(
     hdu.header["DATE"] = datetime.datetime.now().strftime(
         format="%F"
     )  # , 'Creation date'
-    if origin is not None:
-        hdu.header["ORIGIN"] = origin
-    else:
-        hdu.header["ORIGIN"] = hdr.get("ORIGIN", "Sydney University")
+    hdu.header["ORIGIN"] = origin or hdr.get("ORIGIN", "Sydney University")
     hdu.header["CONTENT"] = "OIFITS2"
     hdu.header["DATE-OBS"] = hdr.get("date-obs", "")
     hdu.header["TELESCOP"] = hdr.get("TELESCOP", "")
