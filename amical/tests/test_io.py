@@ -93,7 +93,7 @@ def test_save(cal, tmpdir):
 def test_origin_type(cal, tmpdir):
 
     og = [50.0]
-    with pytest.raises(TypeError):
+    with pytest.raises(TypeError, match="origin should be a str or None"):
         amical.save(
             cal,
             oifits_file="test_origin.oifits",
