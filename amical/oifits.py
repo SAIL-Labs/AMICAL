@@ -450,6 +450,7 @@ def save(
     include_vis=False,
     true_flag_v2=True,
     true_flag_t3=False,
+    origin=None,
     snr=4,
     verbose=False,
 ):
@@ -466,12 +467,14 @@ def save(
     `input_calibrated` {class}:
         Class or list of class containing all calibrated interferometric variable extracted
         using calibrate (amical.calibration) function,\n
+    `oifits_file` {str}:
+        Name of the oifits file,\n
+    `datadir` {str}:
+        Folder name save the oifits files,\n
     `ind_hole` {int}:
         By default, ind_hole is None, all the CP are considered ncp = N(N-1)(N-2)/6. If
         ind_hole is set, save only the independant CP including the given hole
         ncp = (N-1)(N-2)/2.\n
-    `oifits_file` {str}:
-        Name of the oifits file,\n
     `include_vis` {bool}:
         If True, include OI_VIS table in the oifits,\n
     `fake_obj` {bool}:
@@ -481,10 +484,11 @@ def save(
         Position angle of the observation (i.e.: north direction) [deg],\n
     `true_flag_v2`, `true_flag_t3` {bool}:
         if True, the true flag are used using snr,\n
+    `origin` {str}:
+        String to use as ORIGIN key in oifits. 'Sydney University' is used if origin is
+        `None` (default=None).\n
     `snr` {float}:
         Limit snr used to compute flags (default=4),\n
-    `datadir` {str}:
-        Folder name save the oifits files,\n
     `verbose` {bool}:
         If True, print useful informations.
 
@@ -505,8 +509,12 @@ def save(
         print("Error: oifits filename is not given, please specify oifits_file.")
         return None
 
-    if type(input_calibrated) is not list:
+    if not isinstance(input_calibrated, list):
         input_calibrated = [input_calibrated]
+
+    if origin is not None:
+        if not isinstance(origin, str):
+            raise TypeError("origin should be a str or None")
 
     l_dic = []
     for ical in input_calibrated:
@@ -540,7 +548,10 @@ def save(
     hdu.header["DATE"] = datetime.datetime.now().strftime(
         format="%F"
     )  # , 'Creation date'
-    hdu.header["ORIGIN"] = "Sydney University"
+    if origin is not None:
+        hdu.header["ORIGIN"] = origin
+    else:
+        hdu.header["ORIGIN"] = hdr.get("ORIGIN", "Sydney University")
     hdu.header["CONTENT"] = "OIFITS2"
     hdu.header["DATE-OBS"] = hdr.get("date-obs", "")
     hdu.header["TELESCOP"] = hdr.get("TELESCOP", "")
