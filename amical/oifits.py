@@ -513,9 +513,8 @@ def save(
     if not isinstance(input_calibrated, list):
         input_calibrated = [input_calibrated]
 
-    if origin is not None:
-        if not isinstance(origin, str):
-            raise TypeError("origin should be a str or None")
+    if not isinstance(origin, (str, type(None))):
+        raise TypeError("origin should be a str or None")
 
     l_dic = []
     for ical in input_calibrated:
