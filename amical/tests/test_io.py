@@ -86,7 +86,6 @@ def test_save(cal, tmpdir):
     assert isinstance(cp, np.ndarray)
     assert len(v2) == 21
     assert len(cp) == 35
-    assert len(cp) == 35
     assert hdr["ORIGIN"] == "Sydney University"
 
 
