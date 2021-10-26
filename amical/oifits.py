@@ -450,9 +450,10 @@ def save(
     include_vis=False,
     true_flag_v2=True,
     true_flag_t3=False,
-    origin=None,
     snr=4,
     verbose=False,
+    *,
+    origin=None,
 ):
     """
     Summary:
