@@ -1558,6 +1558,10 @@ class Open:
                             diam = 1.8
                         if "UT" in hdu.data["TEL_NAME"][0]:
                             diam = 8.2
+                    else:
+                        raise NotImplementedError(
+                            "diam is used downstream as a divisor but it's 0"
+                        )
                 self.telArray[name] = diam
 
         # -- load all data:
