@@ -568,7 +568,8 @@ def save(
             if not raw:
                 msg = (
                     "The input seems to contain uncalibrated observables. Use raw=True"
-                    "to turn this warning off.")
+                    "to turn this warning off."
+                )
                 warnings.warn(msg, RuntimeWarning)
             iobs = wrap_raw(iobs)
         idic = cal2dict(
