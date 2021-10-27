@@ -8,3 +8,10 @@ line-length = 88
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
 ]
+filterwarnings = [
+    "error",
+    # imp is indirectly used by uncertainties, see https://github.com/lebigot/uncertainties/issues/145
+    "ignore:the imp module is deprecated in favour of importlib; see the module's documentation for alternative uses:DeprecationWarning",
+    # the deprecation warning message for imp changed in Python 3.10, so we ignore both versions
+    "ignore:the imp module is deprecated in favour of importlib and slated for removal in Python 3.12; see the module's documentation for alternative uses:DeprecationWarning",
+]
