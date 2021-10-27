@@ -14,7 +14,6 @@ and calc_bispect.pro).
 """
 import sys
 import time
-import warnings
 
 import numpy as np
 from astropy.io import fits
@@ -37,8 +36,6 @@ from amical.mf_pipeline.ami_function import phase_chi2
 from amical.mf_pipeline.ami_function import tri_pix
 from amical.tools import compute_pa
 from amical.tools import cov2cor
-
-warnings.filterwarnings("ignore")
 
 
 def _compute_complex_bs(

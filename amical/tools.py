@@ -10,7 +10,6 @@ General tools.
 --------------------------------------------------------------------
 """
 import math as m
-import warnings
 
 import h5py
 import matplotlib.pyplot as plt
@@ -22,9 +21,6 @@ from munch import munchify as dict2class
 from scipy.signal import medfilt2d
 from termcolor import cprint
 from uncertainties import ufloat
-
-warnings.filterwarnings("ignore", module="astropy.io.votable.tree")
-warnings.filterwarnings("ignore", module="astropy.io.votable.xmlutil")
 
 
 def linear(x, param):

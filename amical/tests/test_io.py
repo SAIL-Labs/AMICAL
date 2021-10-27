@@ -87,7 +87,6 @@ def test_save(bss, tmpdir):
 
 
 @pytest.mark.slow
-@pytest.mark.filterwarnings("ignore::RuntimeWarning")
 @pytest.mark.parametrize("ncore", [1, 2, 4])
 def test_candid_grid(example_oifits, ncore):
 
