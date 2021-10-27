@@ -11,7 +11,6 @@ OIFITS related function.
 """
 import datetime
 import os
-import warnings
 
 import numpy as np
 from astropy import units as u
@@ -565,12 +564,12 @@ def save(
     for iobs in observables:
         # If keys corresponding raw observables, make format compatible with calibrated
         if "cp" in iobs and "raw_t" not in iobs:
-            if not raw:
+            if not raw and verbose:
                 msg = (
                     "The input seems to contain uncalibrated observables. Use raw=True"
                     "to turn this warning off."
                 )
-                warnings.warn(msg, RuntimeWarning)
+                cprint(f"Warning: {msg}", "green")
             iobs = wrap_raw(iobs)
         idic = cal2dict(
             iobs,
