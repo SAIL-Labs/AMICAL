@@ -1542,6 +1542,7 @@ def coarse_grid(
             chi2 = pool.map(chi2_grid_cov, all_vars)
         else:
             chi2 = pool.map(chi2_grid, all_vars)
+        pool.close()
     tf = time.time()
     if tf - tic > 60:
         if verbose:
