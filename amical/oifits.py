@@ -566,8 +566,10 @@ def save(
         if "cp" in iobs and "raw_t" not in iobs:
             if not raw and verbose:
                 msg = (
-                    "The input seems to contain uncalibrated observables. Use raw=True"
-                    "to turn this warning off."
+                    "The input seems to contain uncalibrated observables."
+                    "Saving raw observables as oifits is provided only for convenience."
+                    "To re-use the observables in amical.calibrate(), they should be"
+                    "saved to a pickle file. Use raw=True to turn this warning off."
                 )
                 cprint(f"Warning: {msg}", "green")
             iobs = wrap_raw(iobs)
