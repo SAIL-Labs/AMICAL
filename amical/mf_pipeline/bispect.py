@@ -1105,8 +1105,8 @@ def extract_bs(
         cprint("\n-- Starting extraction of observables --", "cyan")
     start_time = time.time()
 
-    hdu = fits.open(filename)
-    hdr = hdu[0].header
+    with fits.open(filename) as hdu:
+        hdr = hdu[0].header
 
     infos = _check_input_infos(
         hdr, targetname=targetname, filtname=filtname, instrum=instrum, verbose=False

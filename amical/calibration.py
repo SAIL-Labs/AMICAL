@@ -199,8 +199,8 @@ def average_calib_files(list_nrm, sig_thres=2, display=False):
     # Fill array containing each vis2 and cp across files.
     for n in range(nfiles):
         nrm = list_nrm[n]
-        hdu = fits.open(nrm.infos.filename)
-        hdr = hdu[0].header
+        with fits.open(nrm.infos.filename) as hdu:
+            hdr = hdu[0].header
         try:
             # todo: Check parallactic angle param of a real NIRISS header.
             l_pa[n] = hdr["PARANG"]

@@ -644,9 +644,11 @@ def check_seeing_cond(list_nrm):
     """
     l_seeing, l_vis2, l_cp, l_pa, l_mjd = [], [], [], [], []
 
-    hdr = fits.open(list_nrm[0].infos.filename)[0].header
+    with fits.open(list_nrm[0].infos.filename) as fd:
+        hdr = fd[0].header
     for nrm in list_nrm:
-        hdr = fits.open(nrm.infos.filename)[0].header
+        with fits.open(nrm.infos.filename) as fd:
+            hdr = fd[0].header
         pa = np.mean(sphere_parang(hdr))
         seeing = nrm.infos.seeing
         mjd = hdr["MJD-OBS"]

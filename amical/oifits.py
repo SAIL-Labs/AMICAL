@@ -392,6 +392,8 @@ def load(
             except KeyError:
                 dic["OI_T3"]["BL"] = bl_cp
 
+    fitsHandler.close()
+
     dic["info"] = {h: hdr[h] for h in hdr}  # {'MJD': mjd,
 
     if "FILT" not in list(dic["info"].keys()):

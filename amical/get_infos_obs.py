@@ -174,8 +174,10 @@ def get_wavelength(ins, filtname):
 
     YJfile = pkg_resources.resource_stream("amical", "internal_data/ifs_wave_YJ.fits")
     YJHfile = pkg_resources.resource_stream("amical", "internal_data/ifs_wave_YJH.fits")
-    wave_YJ = fits.open(YJfile)[0].data
-    wave_YJH = fits.open(YJHfile)[0].data
+    with fits.open(YJfile) as fd:
+        wave_YJ = fd[0].data
+    with fits.open(YJHfile) as fd:
+        wave_YJH = fd[0].data
 
     dic_filt = {
         "NIRISS": {
