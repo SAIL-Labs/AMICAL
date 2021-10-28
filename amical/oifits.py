@@ -135,7 +135,7 @@ def wrap_raw(bs):
     u2 = bs.u[bs.mask.bs2bl_ix[1, :]]
     v2 = bs.v[bs.mask.bs2bl_ix[1, :]]
 
-    fake_cale_cal = {
+    fake_cal = {
         "vis2": bs.vis2,
         "e_vis2": bs.e_vis2,
         "cp": bs.cp,
@@ -151,7 +151,7 @@ def wrap_raw(bs):
         "raw_c": bs,
     }
 
-    return dict2class(fake_cale_cal)
+    return dict2class(fake_cal)
 
 
 def cal2dict(
