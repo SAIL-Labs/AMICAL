@@ -23,12 +23,14 @@ def main(argv: Optional[List[str]] = None) -> int:
     # __________________________________________________________________________
 
     clean_parser.add_argument(
-        "--datadir", default="data/", help="Repository containing the reduced NRM data."
+        "--datadir",
+        default="data/",
+        help="Repository containing the reduced NRM data (default: data/).",
     )
     clean_parser.add_argument(
         "--reduceddir",
         default="cleaned/",
-        help="Repository to save the cleaned NRM data (.fits).",
+        help="Repository to save the cleaned NRM data (as fits file, default: cleaned/).",
     )
 
     # Cleaning parameters of AMICAL
@@ -52,7 +54,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     clean_parser.add_argument(
         "--apod",
         action="store_true",
-        help="Perform apodisation using a super-gaussian function"
+        help="Perform apodisation using a super-gaussian function "
         + "(known as windowing)."
         + " The gaussian FWHM is set by the parameter `window`",
     )
@@ -127,12 +129,12 @@ def main(argv: Optional[List[str]] = None) -> int:
     extract_parser.add_argument(
         "--datadir",
         default="cleaned/",
-        help="Repository containing the cleaned NRM data.",
+        help="Repository containing the cleaned NRM data (default: %(default)s).",
     )
     extract_parser.add_argument(
         "--reduceddir",
         default="extracted/",
-        help="Repository to save the extracted bispectrum (.dpy).",
+        help="Repository to save the extracted bispectrum (as pickle .dpy files)(default: %(default)s).",
     )
 
     # Extracting parameters of AMICAL
@@ -142,13 +144,13 @@ def main(argv: Optional[List[str]] = None) -> int:
     extract_parser.add_argument(
         "--maskname",
         default="g7",
-        help="Name of the mask aperture.",
+        help="Name of the mask aperture (default: %(default)s).",
     )
     extract_parser.add_argument(
         "--peakmethod",
         choices=["fft", "gauss", "unique", "square"],
         default="fft",
-        help="Fourier sampling method.",
+        help="Fourier sampling method (default: %(default)s).",
     )
 
     # User params if missing informations from the header
@@ -170,6 +172,29 @@ def main(argv: Optional[List[str]] = None) -> int:
 
     # ## FOLLOWING PARAMETERS ARE RARELY CHANGED
     extract_parser.add_argument(
+        "--nwl",
+        default=3,
+        type=int,
+        help="Number of elements to sample the spectral filters (default: %(default)s).",
+    )
+    extract_parser.add_argument(
+        "--cutoff",
+        default=1e-4,
+        help="Cutoff limit between noise and signal for fft method (default: %(default)s).",
+    )
+    extract_parser.add_argument(
+        "--diam",
+        default=0.8,
+        help="Diameter of a single aperture (default: %(default)s).",
+    )
+    extract_parser.add_argument(
+        "--fw",
+        default=0.7,
+        type=float,
+        help="Relative size of the splodge used to compute multiple triangle indices "
+        + " and the fwhm of the 'gauss' technique (default: %(default)s).",
+    )
+    extract_parser.add_argument(
         "--multitri",
         action="store_true",
         help="Compute the CP over multiple triangles (Monnier method).",
@@ -179,54 +204,34 @@ def main(argv: Optional[List[str]] = None) -> int:
         action="store_false",
         help="Unbias the V2 using the Fourier base.",
     )
-    extract_parser.add_argument(
-        "--cutoff",
-        default=1e-4,
-        help="Cutoff limit between noise and signal for fft method.",
-    )
-    extract_parser.add_argument(
-        "--diam",
-        default=0.8,
-        help="Diameter of a single aperture.",
-    )
-    extract_parser.add_argument(
-        "--fw",
-        default=0.7,
-        type=float,
-        help="Relative size of the splodge used to compute multiple triangle indices "
-        + " and the fwhm of the 'gauss' technique.",
-    )
+
+    # Parameters to rotate and centrally-enlarge the mask position.
     extract_parser.add_argument(
         "--thetadet",
         default=0,
         type=float,
         help="Angle [deg] to rotate the mask compare to the detector (if the mask is not"
-        + "perfectly aligned with the detector, e.g.: VLT/VISIR).",
+        + "perfectly aligned with the detector, e.g.: VLT/VISIR) (default: %(default)s).",
     )
     extract_parser.add_argument(
         "--scaling",
         default=1,
         type=float,
-        help="Scaling factor to be applied to match the mask with data (e.g.: VAMPIRES).",
-    )
-    extract_parser.add_argument(
-        "--nwl",
-        default=3,
-        type=int,
-        help="Number of elements to sample the spectral filters.",
+        help="Scaling factor to be applied to match the mask with data (e.g.: VAMPIRES) (default: %(default)s).",
     )
     extract_parser.add_argument(
         "--iwl",
         default=None,
         type=int,
         help="Only used for IFU data (e.g.: IFS/SPHERE), select the desired spectral"
-        + " channel to retrieve the appropriate wavelength and mask positions,.",
+        + " channel to retrieve the appropriate wavelength and mask positions.",
     )
 
     # CLI parameters
     # __________________________________________________________________________
 
     extract_parser.add_argument(
+        "-a",
         "--all",
         action="store_true",
         help="Extract bispectrum from all data files in --datadir.",
@@ -251,6 +256,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         help="Plot the diagnostic figures.",
     )
     extract_parser.add_argument(
+        "-e",
         "--expert",
         action="store_true",
         help="Save additional plots.",
