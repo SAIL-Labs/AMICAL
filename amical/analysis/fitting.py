@@ -1,5 +1,6 @@
+import multiprocessing
 import os
-from multiprocessing import Pool
+import sys
 
 import numpy as np
 from matplotlib import pyplot as plt
@@ -11,6 +12,12 @@ from amical.analysis import models
 from amical.dpfit import leastsqFit
 from amical.tools import mas2rad
 from amical.tools import roundSciDigit
+
+if sys.platform == "darwin":
+    multiprocessing.set_start_method(
+        "fork", force=True
+    )  # this fixes loop in python 3.8 on MacOS
+
 
 err_pts_style = {
     "linestyle": "None",
@@ -152,7 +159,7 @@ def model_parallelized(obs, param, ncore=12):
     """
     Compute model for each data points in obs tuple (multiprocess version).
     """
-    pool = Pool(ncore)
+    pool = multiprocessing.Pool(ncore)
 
     b = np.array([param] * len(obs))
     c = b.reshape(len(obs), 1)
