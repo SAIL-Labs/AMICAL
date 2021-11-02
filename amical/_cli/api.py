@@ -90,18 +90,18 @@ def perform_clean(args):
         # Clean all files in --datadir
         for f in tqdm(l_file, ncols=100, desc="# files"):
             hdr = fits.open(f)[0].header
-            hdr["AMICAL"] = "CLEANED"
+            hdr["HIERARCH AMICAL step"] = "CLEANED"
             cube = amical.select_clean_data(f, **clean_param, display=True)
             f_clean = f.split("/")[-1].split(".fits")[0] + "_cleaned.fits"
             fits.writeto(args.reduceddir + f_clean, cube, header=hdr, overwrite=True)
     else:
         # Or clean just the specified file (in --datadir)
-        hdr["AMICAL step"] = "CLEANED"
+        hdr["HIERARCH AMICAL step"] = "CLEANED"
         now = datetime.now()
         dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
-        hdr["AMICAL time"] = dt_string
+        hdr["HIERARCH AMICAL time"] = dt_string
         for k in clean_param:
-            hdr["AMICAL params %s" % k] = clean_param[k]
+            hdr["HIERARCH AMICAL params %s" % k] = clean_param[k]
         cube = amical.select_clean_data(filename, **clean_param, display=True)
         f_clean = filename.split("/")[-1].split(".fits")[0] + "_cleaned.fits"
         fits.writeto(args.reduceddir + f_clean, cube, header=hdr, overwrite=True)
