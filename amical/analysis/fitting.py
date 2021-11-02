@@ -1,5 +1,5 @@
+import multiprocessing
 import os
-from multiprocessing import Pool
 
 import numpy as np
 from matplotlib import pyplot as plt
@@ -11,6 +11,8 @@ from amical.analysis import models
 from amical.dpfit import leastsqFit
 from amical.tools import mas2rad
 from amical.tools import roundSciDigit
+
+multiprocessing.set_start_method("fork")
 
 err_pts_style = {
     "linestyle": "None",
@@ -152,7 +154,7 @@ def model_parallelized(obs, param, ncore=12):
     """
     Compute model for each data points in obs tuple (multiprocess version).
     """
-    pool = Pool(ncore)
+    pool = multiprocessing.Pool(ncore)
 
     b = np.array([param] * len(obs))
     c = b.reshape(len(obs), 1)
