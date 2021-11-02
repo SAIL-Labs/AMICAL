@@ -379,12 +379,10 @@ def _check_input_infos(hdr, targetname=None, filtname=None, instrum=None, verbos
                     % filtname,
                     "green",
                 )
-        else:
-            cprint("Error: filter not found (in the header or as input).", "red")
 
     # Check the instrument used
     if instrument is None:
-        cprint("Error: instrum not found (in the header or as input).", "red")
+        raise OSError("instrum not found (in the header or as input).")
 
     # Origin files
     orig = hdr.get("ORIGFILE", "SimulatedData")
