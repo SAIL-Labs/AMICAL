@@ -28,7 +28,6 @@ inputdata = "Saveoifits/example_fakebinary_NIRISS.oifits"
 use_candid = True
 use_pymask = False
 
-
 # Analysis with CANDID package
 # ----------------------------
 if use_candid:
@@ -36,7 +35,7 @@ if use_candid:
         "rmin": 20,  # inner radius of the grid
         "rmax": 250,  # outer radius of the grid
         "step": 50,  # grid sampling
-        "ncore": 2,  # core for multiprocessing
+        "ncore": 1,  # core for multiprocessing
     }
 
     # If you want to save the figure locally as .pdf, use save=True (new feature
@@ -60,7 +59,7 @@ if use_pymask:
         "sep_prior": [100, 180],  # Prior on the separation
         "pa_prior": [20, 80],  # Prior on the position angle
         "cr_prior": [230, 270],  # Prior on the contrast ratio
-        "ncore": 12,  # core for multiprocessing
+        "ncore": 1,  # core for multiprocessing
         "extra_error_cp": 0,
         "err_scale": 1,
     }
@@ -94,7 +93,7 @@ if use_pymask:
     cr_pymask = amical.pymask_cr_limit(
         inputdata,
         nsim=500,
-        ncore=12,
+        ncore=1,
         smax=250,
         nsep=100,
         cmax=5000,

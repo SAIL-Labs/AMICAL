@@ -12,7 +12,7 @@ from amical.dpfit import leastsqFit
 from amical.tools import mas2rad
 from amical.tools import roundSciDigit
 
-multiprocessing.set_start_method("fork")
+multiprocessing.set_start_method("fork", force=True)
 
 err_pts_style = {
     "linestyle": "None",

@@ -11,7 +11,7 @@ import scipy.stats
 from matplotlib import pyplot as plt
 from scipy.special import factorial
 
-multiprocessing.set_start_method("fork")
+multiprocessing.set_start_method("fork", force=True)
 
 _fitsLoaded = False
 try:

@@ -9,7 +9,7 @@ import scipy.interpolate as interp
 from scipy.optimize import leastsq
 from tqdm import tqdm
 
-multiprocessing.set_start_method("fork")
+multiprocessing.set_start_method("fork", force=True)
 
 """------------------------------------------------------------------------
 cp_tools.py - a collection of functions useful for closure phase analysis
@@ -829,7 +829,7 @@ def detec_limits(
         plt.figure(0)
         plt.clf()
         contours = plt.contour(
-            ndetec, levels, colors=mycols, linewidth=2, extent=[smin, smax, cmin, cmax]
+            ndetec, levels, colors=mycols, extent=[smin, smax, cmin, cmax]
         )
         plt.clabel(contours)
         plt.contourf(seps, cons, ndetec, levels, cmap=plt.cm.bone)
