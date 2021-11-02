@@ -15,3 +15,8 @@ filterwarnings = [
     # the deprecation warning message for imp changed in Python 3.10, so we ignore both versions
     "ignore:the imp module is deprecated in favour of importlib and slated for removal in Python 3.12; see the module's documentation for alternative uses:DeprecationWarning",
 ]
+
+[tool.coverage.run]
+omit = [
+  "amical/externals/*",
+]
