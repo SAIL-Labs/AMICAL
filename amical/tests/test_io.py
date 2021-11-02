@@ -48,42 +48,74 @@ def example_bss(global_datadir):
     return bss
 
 
+@pytest.fixture(name="cal", scope="session")
+def example_cal_fft(bss):
+    bs = bss["fft"]
+    return amical.calibrate(bs, bs)
+
+
 @pytest.mark.slow
 def test_extraction(bss):
     assert isinstance(bss["gauss"], munch.Munch)
 
 
 @pytest.mark.slow
-def test_calibration(bss):
-    bs = bss["fft"]
-    cal = amical.calibrate(bs, bs)
+def test_calibration(cal):
     assert isinstance(cal, munch.Munch)
 
 
 @pytest.mark.slow
-def test_show(bss):
-    bs = bss["fft"]
-    cal = amical.calibrate(bs, bs)
+def test_show(cal):
     amical.show(cal)
 
 
-def test_save(bss, tmpdir):
-    bs = bss["fft"]
-    cal = amical.calibrate(bs, bs)
-    assert isinstance(cal, munch.Munch)
+def test_save(cal, tmpdir):
 
     dic, savefile = amical.save(
-        cal, oifits_file="test.oifits", datadir=tmpdir, fake_obj=True
+        cal, oifits_file="test_cal.oifits", datadir=tmpdir, fake_obj=True
     )
-    v2 = dic["OI_VIS2"]["VIS2DATA"]
-    cp = dic["OI_T3"]["T3PHI"]
 
     assert isinstance(dic, dict)
     assert isinstance(savefile, str)
+
+    hdr = fits.getheader(savefile)
+    v2 = dic["OI_VIS2"]["VIS2DATA"]
+    cp = dic["OI_T3"]["T3PHI"]
+
     assert isinstance(v2, np.ndarray)
     assert isinstance(cp, np.ndarray)
     assert len(v2) == 21
     assert len(cp) == 35
+    assert hdr["ORIGIN"] == "Sydney University"
+
+
+def test_origin_type(cal, tmpdir):
+
+    og = [50.0]
+    with pytest.raises(TypeError, match="origin should be a str or None"):
+        amical.save(
+            cal,
+            oifits_file="test_origin.oifits",
+            datadir=tmpdir,
+            fake_obj=True,
+            origin=og,
+        )
+
+
+def test_save_origin(cal, tmpdir):
+
+    og = "allo"
+    _dic, savefile = amical.save(
+        cal,
+        oifits_file="test_origin.oifits",
+        datadir=tmpdir,
+        fake_obj=True,
+        origin=og,
+    )
+
+    hdr = fits.getheader(savefile)
+
+    assert hdr["ORIGIN"] == og
 
 
 @pytest.mark.slow
