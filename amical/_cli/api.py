@@ -1,5 +1,6 @@
 import os
 import pickle
+import time
 from datetime import datetime
 from glob import glob
 
@@ -107,9 +108,29 @@ def perform_clean(args):
     return 0
 
 
-def perform_extract(args):
-    cprint("---- AMICAL extract process ----", "cyan")
+def _extract_bs_ifile(f, args, ami_param):
+    hdu = fits.open(f)
+    cube = hdu[0].data
+    hdu.close()
 
+    # Extract the bispectrum
+    bs = amical.extract_bs(cube, f, **ami_param, save=args.save)
+
+    if args.plot:
+        plt.show(block=True)
+
+    bs_file = f.split("/")[-1].split(".fits")[0] + "_bispectrum.dpy"
+
+    # Save as python pickled file
+    file = open(args.reduceddir + bs_file, "wb")
+    pickle.dump(bs, file)
+    file.close()
+    return 0
+
+
+def perform_extract(args):
+    cprint("---- AMICAL extract started ----", "cyan")
+    t0 = time.time()
     ami_param = {
         "peakmethod": args.peakmethod,
         "bs_multi_tri": args.multitri,
@@ -142,24 +163,11 @@ def perform_extract(args):
         os.mkdir(args.reduceddir)
 
     if not args.all:
-        f, hdr = select_data_file(args, process="extract")
-
-        # Open cleaned (or not) cube
-        hdu = fits.open(f)
-        cube = hdu[0].data
-        hdu.close()
-
-        # Extract the bispectrum
-        bs = amical.extract_bs(cube, f, **ami_param, save=args.save)
-
-        if args.plot:
-            plt.show(block=True)
-
-        bs_file = f.split("/")[-1].split(".fits")[0] + "_bispectrum.dpy"
-
-        # Save as python pickled file
-        file = open(args.reduceddir + bs_file, "wb")
-        pickle.dump(bs, file)
-        file.close()
-
+        f = select_data_file(args, process="extract")[0]
+        _extract_bs_ifile(f, args, ami_param)
+    else:
+        for f in tqdm(l_file, ncols=100, desc="# files"):
+            _extract_bs_ifile(f, args, ami_param)
+    t1 = time.time() - t0
+    cprint("---- AMICAL extract done (%2.1fs) ----" % t1, "cyan")
     return 0

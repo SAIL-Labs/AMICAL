@@ -117,7 +117,7 @@ def _compute_complex_bs(
         range(n_ps),
         ncols=100,
         desc="Extracting in the cube",
-        leave=True,
+        leave=False,
         file=sys.stdout,
     ):
         ft_frame = ft_arr[i]
@@ -743,8 +743,6 @@ def _normalize_all_obs(
         plt.xlabel("# baselines")
         plt.ylabel("Raw visibilities")
         plt.tight_layout()
-        if save:
-            plt.savefig()
 
     # We compute the correlation matrix (to be used lated)
     v2_cor = cov2cor(v2_cov)[0]
@@ -1029,11 +1027,8 @@ def _add_infos_header(infos, hdr, mf, pa, filename, maskname, npix):
 def produce_result_pdf(figdir, filename):
     # Call the PdfFileMerger
     mergedObject = PdfFileMerger()
-    from glob import glob
 
-    l_pdf = glob(figdir + "*.pdf")
-
-    for fileNumber in range(len(l_pdf) - 1):
+    for fileNumber in range(7):
         ifile = figdir + filename + "_" + str(fileNumber + 1) + ".pdf"
         mergedObject.append(PdfFileReader(ifile, "rb"))
         os.remove(ifile)
@@ -1191,7 +1186,6 @@ def extract_bs(
 
     figname = figdir + Path(filename).stem
     ifig = 2
-
     if save:
         plt.savefig(figname + "_%i.pdf" % ifig)
     ifig += 1
