@@ -10,7 +10,6 @@ General tools.
 --------------------------------------------------------------------
 """
 import math as m
-import warnings
 
 import h5py
 import matplotlib.pyplot as plt
@@ -22,9 +21,6 @@ from munch import munchify as dict2class
 from scipy.signal import medfilt2d
 from termcolor import cprint
 from uncertainties import ufloat
-
-warnings.filterwarnings("ignore", module="astropy.io.votable.tree")
-warnings.filterwarnings("ignore", module="astropy.io.votable.xmlutil")
 
 
 def linear(x, param):
@@ -648,9 +644,11 @@ def check_seeing_cond(list_nrm):
     """
     l_seeing, l_vis2, l_cp, l_pa, l_mjd = [], [], [], [], []
 
-    hdr = fits.open(list_nrm[0].infos.filename)[0].header
+    with fits.open(list_nrm[0].infos.filename) as fd:
+        hdr = fd[0].header
     for nrm in list_nrm:
-        hdr = fits.open(nrm.infos.filename)[0].header
+        with fits.open(nrm.infos.filename) as fd:
+            hdr = fd[0].header
         pa = np.mean(sphere_parang(hdr))
         seeing = nrm.infos.seeing
         mjd = hdr["MJD-OBS"]

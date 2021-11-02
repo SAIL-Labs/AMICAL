@@ -1557,6 +1557,8 @@ class Open:
                             diam = 1.8
                         if "UT" in hdu.data["TEL_NAME"][0]:
                             diam = 8.2
+                    else:
+                        diam = 6.5
                 self.telArray[name] = diam
 
         # -- load all data:
