@@ -1,5 +1,6 @@
 import multiprocessing
 import pickle
+import sys
 import time
 
 import corner
@@ -7,9 +8,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy.interpolate as interp
 from scipy.optimize import leastsq
-from tqdm import tqdm
 
-multiprocessing.set_start_method("fork", force=True)
+if sys.platform == "darwin":
+    multiprocessing.set_start_method(
+        "fork", force=True
+    )  # this fixes loop in python 3.8 on MacOS
+
 
 """------------------------------------------------------------------------
 cp_tools.py - a collection of functions useful for closure phase analysis

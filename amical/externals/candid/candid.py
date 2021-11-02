@@ -11,7 +11,11 @@ import scipy.stats
 from matplotlib import pyplot as plt
 from scipy.special import factorial
 
-multiprocessing.set_start_method("fork", force=True)
+if sys.platform == "darwin":
+    multiprocessing.set_start_method(
+        "fork", force=True
+    )  # this fixes loop in python 3.8 on MacOS
+
 
 _fitsLoaded = False
 try:
