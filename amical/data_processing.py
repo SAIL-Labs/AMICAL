@@ -335,7 +335,7 @@ def show_clean_params(
     max_val = img1[y0, x0]
     fig = plt.figure(figsize=(5, 5))
     plt.title("--- CLEANING PARAMETERS ---")
-    plt.imshow(img1, norm=PowerNorm(0.5), cmap="afmhot", vmin=0, vmax=max_val)
+    plt.imshow(img1, norm=PowerNorm(0.5, vmin=0, vmax=max_val), cmap="afmhot")
     plt.plot(x1, y1, label="Inner radius for sky subtraction")
     plt.plot(x2, y2, label="Outer radius for sky subtraction")
     if apod:
