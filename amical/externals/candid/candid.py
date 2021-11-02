@@ -11,7 +11,12 @@ import scipy.stats
 from matplotlib import pyplot as plt
 from scipy.special import factorial
 
-plt.ion()  # interactive mode
+if sys.platform == "darwin":
+    multiprocessing.set_start_method(
+        "fork", force=True
+    )  # this fixes loop in python 3.8 on MacOS
+
+
 _fitsLoaded = False
 try:
     from astropy.io import fits
@@ -1558,6 +1563,8 @@ class Open:
                             diam = 1.8
                         if "UT" in hdu.data["TEL_NAME"][0]:
                             diam = 8.2
+                    else:
+                        diam = 6.5
                 self.telArray[name] = diam
 
         # -- load all data:
@@ -1605,9 +1612,10 @@ class Open:
                     ep = []
                     for i in range(len(data)):
                         if all(np.isnan(data[i])) or all(np.isnan(err[i])):
-                            tmp = {
-                                "A" + str(j): np.nan for j in range(reducePoly + 1)
-                            }, {"A" + str(j): np.nan for j in range(reducePoly + 1)}
+                            tmp = (
+                                {"A" + str(j): np.nan for j in range(reducePoly + 1)},
+                                {"A" + str(j): np.nan for j in range(reducePoly + 1)},
+                            )
                         else:
                             tmp = _decomposeObs(
                                 self.wavel[ins], data[i], err[i], reducePoly
@@ -1807,9 +1815,10 @@ class Open:
                         if all(np.isnan(data[i])) or all(
                             np.isnan(hdu.data["VIS2ERR"][i])
                         ):
-                            tmp = {
-                                "A" + str(j): np.nan for j in range(reducePoly + 1)
-                            }, {"A" + str(j): np.nan for j in range(reducePoly + 1)}
+                            tmp = (
+                                {"A" + str(j): np.nan for j in range(reducePoly + 1)},
+                                {"A" + str(j): np.nan for j in range(reducePoly + 1)},
+                            )
                         else:
                             tmp = _decomposeObs(
                                 self.wavel[ins],
@@ -2057,216 +2066,6 @@ class Open:
         except:
             print("did not work")
         return
-
-    # def chi2Map(self, step=None, fratio=None, addCompanion=None, removeCompanion=None,
-    #             fig=0, diam=None, rmin=None, rmax=None, ncore=1):
-    #     """
-    #     Performs a chi2 map between rmin and rmax (should be defined) with step
-    #     "step". The diameter is taken as the best fit UD diameter (biased if
-    #     the data indeed contain a companion!).
-
-    #     If 'addCompanion' or 'removeCompanion' are defined, a companion will
-    #     be analytically added or removed from the data. define the companion
-    #     as {'x':mas, 'y':mas, 'f':fratio in %}. 'f' will be forced to be positive.
-    #     """
-    #     if step is None:
-    #         step = 1/5. * self.minSpatialScale
-    #         print(
-    #             ' | step= not given, using 1/5 X smallest spatial scale = %4.2f mas' % step)
-
-    #     # --
-    #     if rmin is None:
-    #         self.rmin = self.minSpatialScale
-    #         print(" | rmin= not given, set to smallest spatial scale: rmin=%5.2f mas" % (
-    #             self.rmin))
-    #     else:
-    #         self.rmin = rmin
-
-    #     if rmax is None:
-    #         self.rmax = 1.2*self.smearFov
-    #         print(
-    #             " | rmax= not given, set to 1.2*Field of View: rmax=%5.2f mas" % (self.rmax))
-    #     else:
-    #         self.rmax = rmax
-    #     self._estimateNsmear()
-
-    #     try:
-    #         N = int(np.ceil(2*self.rmax/step))
-    #     except:
-    #         print('ERROR: you should define rmax first!')
-    #         return
-    #     if fratio is None:
-    #         fratio = 1.0
-    #         print(' | fratio= not given -> using %.1f%%' % fratio)
-
-    #     print(' | observables:', self.observables, 'from', self.ALLobservables)
-    #     print(' | instruments:', self.instruments, 'from', self.ALLinstruments)
-
-    #     self._chi2Data = self._copyRawData()
-
-    #     if not addCompanion is None:
-    #         tmp = {k: addCompanion[k] for k in addCompanion.keys()}
-    #         tmp['f'] = np.abs(tmp['f'])
-    #         self._chi2Data = _injectCompanionData(
-    #             self._chi2Data, self._delta, tmp)
-    #     if not removeCompanion is None:
-    #         tmp = {k: removeCompanion[k] for k in removeCompanion.keys()}
-    #         tmp['f'] = -np.abs(tmp['f'])
-    #         self._chi2Data = _injectCompanionData(
-    #             self._chi2Data, self._delta, tmp)
-
-    #     # -- NO! the fitUD should not fix the diameter, the binary fit should:
-    #     # self.fitUD(forcedDiam=diam)
-    #     self.fitUD()
-
-    #     # -- prepare the grid
-    #     allX = np.linspace(-self.rmax, self.rmax, N)
-    #     allY = np.linspace(-self.rmax, self.rmax, N)
-    #     self.mapChi2 = np.zeros((N, N))
-    #     self.mapChi2[allX[None, :]**2+allY[:, None]**2 > self.rmax**2] = -1
-    #     self.mapChi2[allX[None, :]**2+allY[:, None]**2 < self.rmin**2] = -1
-    #     self._prog = 0.0
-    #     self._progTime = [time.time(), time.time()]
-
-    #     # -- parallel treatment:
-    #     print(' | Computing Map %dx%d' % (N, N), end=' ')
-    #     if not CONFIG['long exec warning'] is None:
-    #         # -- estimate how long it will take, in two passes
-    #         params, Ntest = [], 20*max(multiprocessing.cpu_count()-1, 1)
-    #         for i in range(Ntest):
-    #             o = np.random.rand()*2*np.pi
-    #             tmp = {'x': np.cos(o)*(self.rmax+self.rmin),
-    #                    'y': np.sin(o)*(self.rmax+self.rmin),
-    #                    'f': 1.0, 'diam*': self.diam, 'alpha*': self.alpha}
-    #             for _k in self.dwavel.keys():
-    #                 tmp['dwavel;'+_k] = self.dwavel[_k]
-    #             params.append(
-    #                 (tmp, self._chi2Data, self.observables, self.instruments))
-    #         est = self._estimateRunTime(_chi2Func, params, ncore=ncore)
-    #         est *= np.sum(self.mapChi2 >= 0)
-    #         print('... it should take about %d seconds' % (int(est)))
-    #         if not CONFIG['long exec warning'] is None and\
-    #                 est > CONFIG['long exec warning']:
-    #             print(" > WARNING: this will take too long. ")
-    #             print(
-    #                 " | Increase CONFIG['long exec warning'] if you want to run longer computations.")
-    #             print(" | e.g. "+__name__ +
-    #                   ".CONFIG['long exec warning'] = %d" % int(1.2*est))
-    #             print(
-    #                 " | set it to None and the warning will disapear... at your own risks!")
-    #             return
-    #     print('')
-    #     # -- done estimating time
-
-    #     # -- compute actual grid:
-    #     p = self._pool(ncore=ncore)
-
-    #     for i, x in enumerate(allX):
-    #         for j, y in enumerate(allY):
-    #             if self.mapChi2[j, i] == 0:
-    #                 params = {'x': x, 'y': y, 'f': fratio, 'diam*': self.diam,
-    #                           '_i': i, '_j': j, 'alpha*': self.alpha}
-    #                 for _k in self.dwavel.keys():
-    #                     params['dwavel;'+_k] = self.dwavel[_k]
-
-    #                 if p is None:
-    #                     # -- single thread:
-    #                     self._cb_chi2Map(_chi2Func(params, self._chi2Data,
-    #                                                self.observables, self.instruments))
-    #                 else:
-    #                     # -- multi-thread:
-    #                     p.apply_async(_chi2Func, (params, self._chi2Data,
-    #                                               self.observables, self.instruments),
-    #                                   callback=self._cb_chi2Map)
-    #     if not p is None:
-    #         p.close()
-    #         p.join()
-
-    #     # -- take care of unfitted zone, for esthetics
-    #     self.mapChi2[self.mapChi2 <= 0] = self.chi2_UD
-    #     X, Y = np.meshgrid(allX, allY)
-    #     x0 = X.flatten()[np.argmin(self.mapChi2.flatten())]
-    #     y0 = Y.flatten()[np.argmin(self.mapChi2.flatten())]
-    #     s0 = _nSigmas(self.chi2_UD,
-    #                   np.minimum(np.min(self.mapChi2), self.chi2_UD),
-    #                   self.ndata())
-    #     print(' | chi2 Min: %5.3f' % (np.min(self.mapChi2)))
-    #     print(' | at X,Y  : %6.2f, %6.2f mas' % (x0, y0))
-    #     #print(' | Nsigma  : %5.2f'%s0)
-    #     print(' | NDOF=%d' % (self.ndata()-1), end=' ')
-    #     print(' | n sigma detection: %5.2f (fully uncorrelated errors)' % s0)
-
-    #     # plt.close(fig)
-    #     # if CONFIG['suptitle']:
-    #     plt.figure(figsize=(9, 7))
-    #     plt.subplots_adjust(top=0.78, bottom=0.08,
-    #                         left=0.08, right=0.99, wspace=0.10)
-    #     title = "CANDID: $\chi^2$ Map for f$_\mathrm{ratio}$=%3.1f%% and " % (
-    #         fratio)
-    #     if self.ediam > 0:
-    #         title += r'fitted $\theta_\mathrm{UD}=%4.3f$ mas.' % (self.diam)
-    #     else:
-    #         title += r'fixed $\theta_\mathrm{UD}=%4.3f$ mas.' % (self.diam)
-    #     title += ' Using '+', '.join(self.observables)
-    #     title += '\nfrom '+', '.join(self.instruments)
-    #     title += '\n'+self.titleFilename
-    #     plt.suptitle(title, fontsize=10, fontweight='bold')
-    #     # else:
-    #     #     plt.figure(fig, figsize=(12/1.5,5.4/1.5))
-    #     #     plt.subplots_adjust(top=0.88, bottom=0.10,
-    #     #                         left=0.08, right=0.99, wspace=0.10)
-
-    #     ax1 = plt.subplot(121)
-    #     ax1.set_aspect('equal')
-
-    #     if CONFIG['chi2 scale'] == 'log':
-    #         tit = 'log10[$\chi^2_\mathrm{BIN}/\chi^2_\mathrm{UD}$] with $\chi^2_\mathrm{UD}$='
-    #         plt.pcolormesh(X, Y, np.log10(
-    #             self.mapChi2/self.chi2_UD), cmap=CONFIG['color map'])
-    #     else:
-    #         tit = '$\chi^2_\mathrm{BIN}/\chi^2_\mathrm{UD}$ with $\chi^2_\mathrm{UD}$='
-    #         plt.pcolormesh(X, Y, self.mapChi2/self.chi2_UD,
-    #                        cmap=CONFIG['color map'])
-    #     if self.chi2_UD > 0.05:
-    #         tit += '%4.2f' % (self.chi2_UD)
-    #     else:
-    #         tit += '%4.2e' % (self.chi2_UD)
-
-    #     plt.title(tit)
-
-    #     plt.colorbar(format='%0.2f')
-    #     plt.xlabel(r'E $\leftarrow\, \Delta \alpha$ (mas)')
-    #     plt.ylabel(r'$\Delta \delta\, \rightarrow$ N (mas)')
-    #     plt.xlim(self.rmax, -self.rmax)
-    #     plt.ylim(-self.rmax, self.rmax)
-
-    #     ax2 = plt.subplot(122, sharex=ax1, sharey=ax1)
-    #     # ax2.set_aspect('equal')
-
-    #     plt.title('detection ($\sigma$)')
-    #     plt.pcolormesh(X, Y,
-    #                    _nSigmas(self.chi2_UD,
-    #                             np.minimum(self.mapChi2, self.chi2_UD),
-    #                             self.ndata()),
-    #                    cmap=CONFIG['color map'])
-    #     plt.colorbar(format='%0.2f')
-    #     plt.xlabel(r'E $\leftarrow\, \Delta \alpha$ (mas)')
-
-    #     plt.xlim(self.rmax, -self.rmax)
-    #     plt.ylim(-self.rmax, self.rmax)
-    #     # ax1.set_aspect('equal', )  # 'datalim')
-    #     # -- make a crosshair around the minimum:
-    #     plt.plot([x0, x0], [y0-0.05*self.rmax, y0-0.1*self.rmax],
-    #              '-r', alpha=0.5, linewidth=2)
-    #     plt.plot([x0, x0], [y0+0.05*self.rmax, y0+0.1*self.rmax],
-    #              '-r', alpha=0.5, linewidth=2)
-    #     plt.plot([x0-0.05*self.rmax, x0-0.1*self.rmax],
-    #              [y0, y0], '-r', alpha=0.5, linewidth=2)
-    #     plt.plot([x0+0.05*self.rmax, x0+0.1*self.rmax],
-    #              [y0, y0], '-r', alpha=0.5, linewidth=2)
-    #     plt.text(0.9*x0, 0.9*y0, r'n$\sigma$=%3.1f' % s0, color='r')
-    #     plt.show()
-    #     return
 
     def _cb_fitFunc(self, r):
         """
@@ -3428,9 +3227,10 @@ class Open:
                     )
                     th = np.linspace(0, 2 * np.pi, 100)
                     _x, _y = sMa * np.cos(th), sma * np.sin(th)
-                    _x, _y = _x * np.cos(a) + _y * np.sin(a), _y * np.cos(
-                        a
-                    ) - _x * np.sin(a)
+                    _x, _y = (
+                        _x * np.cos(a) + _y * np.sin(a),
+                        _y * np.cos(a) - _x * np.sin(a),
+                    )
                     _x += np.mean(X)
                     _y += np.mean(Y)
                     res["ellipse"][k1 + k2] = (_x, _y)
@@ -3491,9 +3291,10 @@ class Open:
                         )
                         th = np.linspace(0, 2 * np.pi, 100)
                         _x, _y = sMa * np.cos(th), sma * np.sin(th)
-                        _x, _y = _x * np.cos(a) + _y * np.sin(a), _y * np.cos(
-                            a
-                        ) - _x * np.sin(a)
+                        _x, _y = (
+                            _x * np.cos(a) + _y * np.sin(a),
+                            _y * np.cos(a) - _x * np.sin(a),
+                        )
                         _x += refFit["best"][k1]
                         _y += refFit["best"][k2]
                         plt.plot(_x, _y, linestyle="--", color="r", linewidth=1)

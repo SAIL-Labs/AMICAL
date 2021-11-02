@@ -124,8 +124,8 @@ def clean_data(
     if add_bad is None:
         add_bad = []
 
-    hdu = fits.open(list_file[0])
-    hdr = hdu[0].header
+    with fits.open(list_file[0]) as fd:
+        hdr = fd[0].header
 
     nlambda = hdr["NAXIS3"]
     nframe = len(list_file)

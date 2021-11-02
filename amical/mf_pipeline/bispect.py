@@ -14,7 +14,6 @@ and calc_bispect.pro).
 """
 import sys
 import time
-import warnings
 
 import numpy as np
 from astropy.io import fits
@@ -37,8 +36,6 @@ from amical.mf_pipeline.ami_function import phase_chi2
 from amical.mf_pipeline.ami_function import tri_pix
 from amical.tools import compute_pa
 from amical.tools import cov2cor
-
-warnings.filterwarnings("ignore")
 
 
 def _compute_complex_bs(
@@ -1108,8 +1105,8 @@ def extract_bs(
         cprint("\n-- Starting extraction of observables --", "cyan")
     start_time = time.time()
 
-    hdu = fits.open(filename)
-    hdr = hdu[0].header
+    with fits.open(filename) as hdu:
+        hdr = hdu[0].header
 
     infos = _check_input_infos(
         hdr, targetname=targetname, filtname=filtname, instrum=instrum, verbose=False
