@@ -279,7 +279,8 @@ def show_clean_params(
     `nframe` {int}: Frame number to be shown (default: 0),\n
     `ihdu` {int}: Hdu number of the fits file. Normally 1 for NIRISS and 0 for SPHERE (default: 0).
     """
-    data = fits.open(filename)[ihdu].data
+    with fits.open(filename) as fd:
+        data = fd[ihdu].data
     img0 = data[nframe]
 
     # Add check to create default add_bad list (not use mutable data)
@@ -382,9 +383,8 @@ def _apply_edge_correction(img0, edge=0):
 
 def _remove_dark(img1, darkfile=None, ihdu=0, verbose=False):
     if darkfile is not None:
-        hdu = fits.open(darkfile)
-        dark = hdu[ihdu].data
-        hdu.close()
+        with fits.open(darkfile) as hdu:
+            dark = hdu[ihdu].data
         if verbose:
             print("Dark cube shape is:", dark.shape)
         master_dark = np.mean(dark, axis=0)
@@ -511,9 +511,9 @@ def select_clean_data(
     --------
     `cube_final` {np.array}: Cleaned and selected datacube.
     """
-    hdu = fits.open(filename)
-    cube = hdu[ihdu].data
-    hdr = hdu[0].header
+    with fits.open(filename) as hdu:
+        cube = hdu[ihdu].data
+        hdr = hdu[0].header
 
     ins = hdr.get("INSTRUME", None)
 

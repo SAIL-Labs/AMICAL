@@ -392,6 +392,8 @@ def load(
             except KeyError:
                 dic["OI_T3"]["BL"] = bl_cp
 
+    fitsHandler.close()
+
     dic["info"] = {h: hdr[h] for h in hdr}  # {'MJD': mjd,
 
     if "FILT" not in list(dic["info"].keys()):
@@ -452,6 +454,8 @@ def save(
     true_flag_t3=False,
     snr=4,
     verbose=False,
+    *,
+    origin=None,
 ):
     """
     Summary:
@@ -466,27 +470,30 @@ def save(
     `input_calibrated` {class}:
         Class or list of class containing all calibrated interferometric variable extracted
         using calibrate (amical.calibration) function,\n
+    `oifits_file` {str}:
+        Name of the oifits file,\n
+    `datadir` {str}:
+        Folder name save the oifits files,\n
+    `pa` {float}:
+        Position angle of the observation (i.e.: north direction) [deg],\n
     `ind_hole` {int}:
         By default, ind_hole is None, all the CP are considered ncp = N(N-1)(N-2)/6. If
         ind_hole is set, save only the independant CP including the given hole
         ncp = (N-1)(N-2)/2.\n
-    `oifits_file` {str}:
-        Name of the oifits file,\n
-    `include_vis` {bool}:
-        If True, include OI_VIS table in the oifits,\n
     `fake_obj` {bool}:
         If True, observable are extracted from simulated data and so doesn't
         contain real target informations (simbad search is ignored),\n
-    `pa` {float}:
-        Position angle of the observation (i.e.: north direction) [deg],\n
+    `include_vis` {bool}:
+        If True, include OI_VIS table in the oifits,\n
     `true_flag_v2`, `true_flag_t3` {bool}:
         if True, the true flag are used using snr,\n
     `snr` {float}:
         Limit snr used to compute flags (default=4),\n
-    `datadir` {str}:
-        Folder name save the oifits files,\n
     `verbose` {bool}:
         If True, print useful informations.
+    `origin` {str}:
+        String to use as ORIGIN key in oifits. 'Sydney University' is used if origin is
+        `None` (default=None).\n
 
     Returns:
     --------
@@ -507,6 +514,9 @@ def save(
 
     if type(input_calibrated) is not list:
         input_calibrated = [input_calibrated]
+
+    if not isinstance(origin, (str, type(None))):
+        raise TypeError("origin should be a str or None")
 
     l_dic = []
     for ical in input_calibrated:
@@ -540,7 +550,7 @@ def save(
     hdu.header["DATE"] = datetime.datetime.now().strftime(
         format="%F"
     )  # , 'Creation date'
-    hdu.header["ORIGIN"] = "Sydney University"
+    hdu.header["ORIGIN"] = origin or hdr.get("ORIGIN", "Sydney University")
     hdu.header["CONTENT"] = "OIFITS2"
     hdu.header["DATE-OBS"] = hdr.get("date-obs", "")
     hdu.header["TELESCOP"] = hdr.get("TELESCOP", "")

@@ -269,6 +269,7 @@ def xy_grid(
             all_vars.append(everything)
         pool = Pool(processes=threads)
         chi2 = pool.map(chi2_grid, all_vars)
+        pool.close()
     tf = time.time()
     if tf - tic > 60:
         print("Total time elapsed: " + str((tf - tic) / 60.0) + "mins")
