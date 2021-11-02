@@ -210,9 +210,11 @@ def get_wavelength(ins, filtname):
     try:
         wl = np.array(dic_filt[ins][filtname]) * 1e-6
     except KeyError:
-        cprint(f"--- Error: filtname <{filtname}> not found for {ins} ---", "red")
-        cprint("Available: %s" % list(dic_filt[ins].keys()), "red")
         wl = np.NaN
+        raise KeyError(
+            f"Missing input: filtname <{filtname}> not found for {ins} (Available: %s)"
+            % list(dic_filt[ins].keys())
+        )
     return wl
 
 
