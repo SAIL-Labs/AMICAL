@@ -60,7 +60,6 @@ def perform_clean(args):
         "apod": args.apod,
         "window": args.window,
         "f_kernel": args.kernel,
-        "sky": args.sky,
     }
 
     if not os.path.exists(args.datadir):
@@ -78,14 +77,15 @@ def perform_clean(args):
 
     if args.check:
         amical.show_clean_params(filename, **clean_param)
-        if args.plot:
-            plt.show(block=True)
+        plt.show(block=True)
         return 0
 
     if not os.path.exists(args.reduceddir):
         os.mkdir(args.reduceddir)
 
     clean_param["clip"] = args.clip
+    clean_param["sky"] = args.sky
+
     if args.all:
         # Clean all files in --datadir
         for f in tqdm(l_file, ncols=100, desc="# files"):
@@ -103,6 +103,8 @@ def perform_clean(args):
         for k in clean_param:
             hdr["HIERARCH AMICAL params %s" % k] = clean_param[k]
         cube = amical.select_clean_data(filename, **clean_param, display=True)
+        if args.plot:
+            plt.show()
         f_clean = filename.split("/")[-1].split(".fits")[0] + "_cleaned.fits"
         fits.writeto(args.reduceddir + f_clean, cube, header=hdr, overwrite=True)
     return 0
