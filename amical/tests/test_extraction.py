@@ -1,6 +1,6 @@
-import pytest
 import astropy
 import munch
+import pytest
 from astropy.io import fits
 from packaging.version import Version
 
@@ -20,6 +20,7 @@ def commentary_hdr():
     hdr["HISTORY"] = "History is a commentary card"
     return hdr
 
+
 @pytest.fixture()
 def astropy_versions():
 
@@ -29,14 +30,15 @@ def astropy_versions():
     return astropy_version, working_version
 
 
-
 @pytest.fixture
 def commentary_infos(infos, commentary_hdr):
 
     # Add hdr to infos placeholders for everything but hdr
     mf = munch.Munch(pixelSize=1.0)
 
-    return _add_infos_header(infos, commentary_hdr, mf, 1.0, "afilename", "amaskname", 1)
+    return _add_infos_header(
+        infos, commentary_hdr, mf, 1.0, "afilename", "amaskname", 1
+    )
 
 
 def test_add_infos_simulated(infos):
@@ -83,7 +85,9 @@ def test_astropy_version_warning(infos, commentary_hdr, astropy_versions, capfd)
     # Add hdr to infos placeholders for everything but hdr
     mf = munch.Munch(pixelSize=1.0)
 
-    infos = _add_infos_header(infos, commentary_hdr, mf, 1.0, "afilename", "amaskname", 1)
+    infos = _add_infos_header(
+        infos, commentary_hdr, mf, 1.0, "afilename", "amaskname", 1
+    )
     captured = capfd.readouterr()
 
     if Version(astropy_version) < Version(working_version):
