@@ -2,9 +2,9 @@ from argparse import ArgumentParser
 from typing import List
 from typing import Optional
 
-from amical._cli.api import perform_calibrate
-from amical._cli.api import perform_clean
-from amical._cli.api import perform_extract
+from amical._cli.commands.calibrate import perform_calibrate
+from amical._cli.commands.clean import perform_clean
+from amical._cli.commands.extract import perform_extract
 
 
 def main(argv: Optional[List[str]] = None) -> int:
