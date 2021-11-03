@@ -367,7 +367,7 @@ def _check_input_infos(hdr, targetname=None, filtname=None, instrum=None, verbos
                     "green",
                 )
         else:
-            cprint("Error: target name not found (header or as input).", "red")
+            cprint("Warning: target name not found (header or as input).", "green")
 
     # Check the filter used
     if filt is None:
