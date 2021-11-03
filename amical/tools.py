@@ -781,7 +781,7 @@ def save_bs_hdf5(bs, filename):
         if key != "hdr":
             info = infos[key]
             if info is None:
-                info = ""
+                info = "Unknown"
             grp_info.attrs[key] = info
 
     # Step 6 - Save original header keywords.
