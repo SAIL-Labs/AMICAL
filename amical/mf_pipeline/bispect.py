@@ -991,6 +991,8 @@ def _add_infos_header(infos, hdr, mf, pa, filename, maskname, npix):
     infos["maskname"] = maskname
     infos["isz"] = npix
 
+    # Raise a warning that old astropy version drop commentary cards, but only if
+    # there are any in the original header
     hdr_commentary_keys = fits.Card._commentary_keywords
     if any(hck in hdr for hck in hdr_commentary_keys) and (
         ASTROPY_VERSION < Version("5.0rc")
