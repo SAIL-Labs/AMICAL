@@ -14,6 +14,7 @@ and calc_bispect.pro).
 """
 import sys
 import time
+import warnings
 
 import astropy
 import numpy as np
@@ -989,13 +990,16 @@ def _add_infos_header(infos, hdr, mf, pa, filename, maskname, npix, verbose=True
 
     astropy_version = astropy.__version__
     working_version = "5.0rc1"
-    if Version(astropy_version) < Version(working_version):
+    hdr_commentary_keys = fits.Card._commentary_keywords
+    if any(hck in hdr for hck in hdr_commentary_keys) and (
+        Version(astropy_version) < Version(working_version)
+    ):
         if verbose:
-            cprint(
+            warnings.warn(
                 "Commentary cards are removed from the header with astropy"
                 f" version < {working_version}. Your astropy version is"
                 f" {astropy_version}",
-                "green",
+                RuntimeWarning,
             )
         # HACK: astropy _HeaderCommentaryCards are registered as mappings,
         # so munch tries to access their keys, leading to attribute error
@@ -1006,7 +1010,6 @@ def _add_infos_header(infos, hdr, mf, pa, filename, maskname, npix, verbose=True
         # https://github.com/astropy/astropy/issues/11866
         # Resolved upstream with
         # https://github.com/astropy/astropy/pull/11923
-        hdr_commentary_keys = fits.Card._commentary_keywords
         hdr = hdr.copy()
         for key in hdr_commentary_keys:
             hdr.remove(key, ignore_missing=True, remove_all=True)

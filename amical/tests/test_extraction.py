@@ -55,6 +55,7 @@ def test_add_infos_simulated(infos):
     assert "observer" not in infos.hdr  # Keys that are not in hdr should still not be
 
 
+@pytest.mark.filterwarnings("ignore: Commentary cards")
 def test_add_infos_header_commentary(commentary_infos):
     # Make sure that _add_infos_header handles _HeaderCommentaryCards from astropy
 
@@ -82,24 +83,13 @@ def test_commentary_infos_drops(commentary_infos):
     assert "HISTORY" in commentary_infos.hdr
 
 
-def test_astropy_version_warning(infos, commentary_hdr, capfd):
+def test_astropy_version_warning(infos, commentary_hdr):
     # Test that AMICAL warns about astropy < 5.0 removing commentary cards
 
     # Add hdr to infos placeholders for everything but hdr
     mf = munch.Munch(pixelSize=1.0)
 
-    infos = _add_infos_header(
-        infos, commentary_hdr, mf, 1.0, "afilename", "amaskname", 1
-    )
-    captured = capfd.readouterr()
-
-    if ASTROPY_VERSION < ASTROPY_WORKING:
-        # NOTE: Adding colors codes because output with cprint has them
-        msg = (
-            "\x1b[32mCommentary cards are removed from the header with astropy"
-            f" version < {ASTROPY_WORKING}. Your astropy version is"
-            f" {ASTROPY_VERSION}\x1b[0m\n"
+    with pytest.warns(RuntimeWarning, match="Commentary cards"):
+        infos = _add_infos_header(
+            infos, commentary_hdr, mf, 1.0, "afilename", "amaskname", 1
         )
-        assert captured.out == msg
-    else:
-        assert not captured.out
