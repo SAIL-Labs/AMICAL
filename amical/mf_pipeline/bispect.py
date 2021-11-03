@@ -979,7 +979,7 @@ def _compute_phs_error(complex_bs, fitmat, index_mask, npix, imsize=3):
     return phs_v2corr
 
 
-def _add_infos_header(infos, hdr, mf, pa, filename, maskname, npix):
+def _add_infos_header(infos, hdr, mf, pa, filename, maskname, npix, verbose=True):
     """Save important informations and some parts of the original header."""
     infos["pixscale"] = mf.pixelSize
     infos["pa"] = pa
@@ -987,7 +987,16 @@ def _add_infos_header(infos, hdr, mf, pa, filename, maskname, npix):
     infos["maskname"] = maskname
     infos["isz"] = npix
 
-    if Version(astropy.__version__) < Version("5.0.0"):
+    astropy_version = astropy.__version__
+    working_version = "5.0.0"
+    if Version(astropy_version) < Version(working_version):
+        if verbose:
+            cprint(
+                "Commentary cards are removed from the header with astropy"
+                f"version < {working_version}. Your astropy version is"
+                f"{astropy_version}",
+                "green",
+            )
         # HACK: astropy _HeaderCommentaryCards are registered as mappings,
         # so munch tries to access their keys, leading to attribute error
         # to prevent this, we remove commentary cards as a temporary fix.
