@@ -7,6 +7,11 @@ from packaging.version import Version
 from amical.mf_pipeline.bispect import _add_infos_header
 
 
+# Astropy versions for
+ASTROPY_VERSION = Version(astropy.__version__)
+ASTROPY_WORKING = Version("5.0rc")
+
+
 @pytest.fixture()
 def infos():
     # SimulatedData avoids requiring extra keys in infos
@@ -22,15 +27,6 @@ def commentary_hdr():
 
 
 @pytest.fixture()
-def astropy_versions():
-
-    astropy_version = astropy.__version__
-    working_version = "5.0rc1"
-
-    return astropy_version, working_version
-
-
-@pytest.fixture
 def commentary_infos(infos, commentary_hdr):
 
     # Add hdr to infos placeholders for everything but hdr
@@ -66,22 +62,28 @@ def test_add_infos_header_commentary(commentary_infos):
     munch.munchify(commentary_infos)
 
 
-ASTROPY_VERSION = Version(astropy.__version__)
-@pytest.mark.skipif(ASTROPY_VERSION < Version("5.0rc"), reason="...")
+@pytest.mark.skipif(
+    ASTROPY_VERSION < ASTROPY_WORKING,
+    reason="Munch cannot handle commentary cards for Astropy < 5.0",
+)
 def test_commentary_infos_keep(commentary_infos):
-     assert "HISTORY" in commentary_infos.hdr
+    assert "HISTORY" in commentary_infos.hdr
 
-@pytest.mark.skipif(ASTROPY_VERSION >= Version("5.0rc"), reason="...")
+
+@pytest.mark.skipif(
+    ASTROPY_VERSION >= ASTROPY_WORKING,
+    reason="Munch can handle commentary cards for Astropy 5.0+",
+)
+@pytest.mark.xfail(
+    ASTROPY_VERSION < ASTROPY_WORKING,
+    reason="AMICAL removes commentary cards from header with Astropy < 5.0",
+)
 def test_commentary_infos_drops(commentary_infos):
-     assert "HISTORY" not in commentary_infos.hdr
-    else:
-        assert "HISTORY" in commentary_infos.hdr
+    assert "HISTORY" in commentary_infos.hdr
 
 
-def test_astropy_version_warning(infos, commentary_hdr, astropy_versions, capfd):
+def test_astropy_version_warning(infos, commentary_hdr, capfd):
     # Test that AMICAL warns about astropy < 5.0 removing commentary cards
-
-    astropy_version, working_version = astropy_versions
 
     # Add hdr to infos placeholders for everything but hdr
     mf = munch.Munch(pixelSize=1.0)
@@ -91,12 +93,12 @@ def test_astropy_version_warning(infos, commentary_hdr, astropy_versions, capfd)
     )
     captured = capfd.readouterr()
 
-    if Version(astropy_version) < Version(working_version):
+    if ASTROPY_VERSION < ASTROPY_WORKING:
         # NOTE: Adding colors codes because output with cprint has them
         msg = (
             "\x1b[32mCommentary cards are removed from the header with astropy"
-            f" version < {working_version}. Your astropy version is"
-            f" {astropy_version}\x1b[0m\n"
+            f" version < {ASTROPY_WORKING}. Your astropy version is"
+            f" {ASTROPY_VERSION}\x1b[0m\n"
         )
         assert captured.out == msg
     else:
