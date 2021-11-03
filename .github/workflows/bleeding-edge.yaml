@@ -1,0 +1,56 @@
+name: CI (bleeding edge)
+# this workflow is heavily inspired from pandas, see
+# https://github.com/pandas-dev/pandas/blob/master/.github/workflows/python-dev.yml
+
+# goals: check stability against
+# - dev version of Python, numpy, matplotlib and astropy
+# - building with future pip default options
+
+on:
+  push:
+    branches:
+      - main
+  schedule:
+    # run this every day at 3 am UTC
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Dev upstream
+    timeout-minutes: 60
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: Set up Python Dev Version
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.10-dev
+
+    - name: Install dependencies
+      run: |
+        python3 -m pip install --upgrade pip
+        python3 -m pip install --upgrade setuptools wheel
+        python3 -m pip install git+https://github.com/numpy/numpy.git
+        python3 -m pip install git+https://github.com/matplotlib/matplotlib.git
+        python3 -m pip install git+https://github.com/astropy/astropy.git
+
+    - name: Build cmyt
+      run: |
+        python3 -m pip install .[dev] --no-build-isolation
+
+    - name: Generate coverage report
+      run: |
+        export MPLBACKEND=Agg
+        python -m pytest --cov=./ --cov-report=xml
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v1
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: true
