@@ -41,7 +41,7 @@ from amical.tools import compute_pa
 from amical.tools import cov2cor
 
 
-ASTROPY_VERSION = astropy.__version__
+ASTROPY_VERSION = Version(astropy.__version__)
 
 
 def _compute_complex_bs(
@@ -993,7 +993,7 @@ def _add_infos_header(infos, hdr, mf, pa, filename, maskname, npix):
 
     hdr_commentary_keys = fits.Card._commentary_keywords
     if any(hck in hdr for hck in hdr_commentary_keys) and (
-        Version(ASTROPY_VERSION) < Version("5.0rc")
+        ASTROPY_VERSION < Version("5.0rc")
     ):
         warnings.warn(
             "Commentary cards are removed from the header with astropy"
