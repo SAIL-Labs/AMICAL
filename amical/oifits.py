@@ -615,7 +615,7 @@ def save(
         ra = pmra = dec = pmdec = plx = [0]
         spectyp = ["fake"]
     else:
-        if name_star is not None:
+        if (name_star is not None) & (len(name_star) > 0):
             try:
                 query = customSimbad.query_object(name_star)
                 coord = SkyCoord(

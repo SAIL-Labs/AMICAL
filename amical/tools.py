@@ -770,20 +770,24 @@ def save_bs_hdf5(bs, filename):
     for key in mask:
         if (mask[key] is not None) and (key != "t3_coord"):
             grp_mask.create_dataset(key, data=mask[key])
+
     t3_coord = mask["t3_coord"]
     for key in t3_coord:
         grp_mask.create_dataset(key, data=t3_coord[key])
 
     # Step 5 - Save informations (target, date, etc.).
     infos = bs.infos
-    for i in infos:
-        if i != "hdr":
-            grp_info.create_dataset(i, data=infos[i])
+    for key in infos:
+        if key != "hdr":
+            info = infos[key]
+            if info is None:
+                info = ""
+            grp_info.attrs[key] = info
 
     # Step 6 - Save original header keywords.
     hdr = bs.infos.hdr
     for key in hdr:
-        grp_hdr.create_dataset(key, data=hdr[key])
+        grp_hdr.attrs[key] = hdr[key]
 
     # Last step - close hdf5
     hf.close()
@@ -794,42 +798,40 @@ def load_bs_hdf5(filename):
     """Load hdf5 file and format as class like object (same
     format as `amical.extract_bs()`
     """
-    hf2 = h5py.File(filename, "r")
-
     dict_bs = {"matrix": {}, "infos": {"hdr": {}}, "mask": {}}
+    with h5py.File(filename, "r") as hf2:
+        obs = hf2["obs"]
+        for o in obs:
+            dict_bs[o] = np.array(obs.get(o))
 
-    obs = hf2["obs"]
-    for o in obs:
-        dict_bs[o] = obs[o].value
+        matrix = hf2["matrix"]
+        for key in matrix:
+            dict_bs["matrix"][key] = np.array(matrix.get(key))
 
-    matrix = hf2["matrix"]
-    for key in matrix:
-        dict_bs["matrix"][key] = matrix[key].value
+        if len(dict_bs["matrix"]["cp_cov"]) == 1:
+            dict_bs["matrix"]["cp_cov"] = None
 
-    if len(dict_bs["matrix"]["cp_cov"]) == 1:
-        dict_bs["matrix"]["cp_cov"] = None
+        mask = hf2["mask"]
+        for key in mask:
+            if key not in ["u1", "u2", "v1", "v2"]:
+                dict_bs["mask"][key] = np.array(mask.get(key))
 
-    mask = hf2["mask"]
-    for key in mask:
-        if key not in ["u1", "u2", "v1", "v2"]:
-            dict_bs["mask"][key] = mask[key].value
+        t3_coord = {
+            "u1": np.array(mask.get("u1")),
+            "u2": np.array(mask.get("u2")),
+            "v1": np.array(mask.get("v1")),
+            "v2": np.array(mask.get("v2")),
+        }
 
-    t3_coord = {
-        "u1": mask["u1"].value,
-        "u2": mask["u2"].value,
-        "v1": mask["v1"].value,
-        "v2": mask["v2"].value,
-    }
+        dict_bs["mask"]["t3_coord"] = t3_coord
 
-    dict_bs["mask"]["t3_coord"] = t3_coord
+        infos = hf2["infos"]
+        for key in hf2["infos"].attrs.keys():
+            dict_bs["infos"][key] = infos.attrs[key]
 
-    infos = hf2["infos"]
-    for key in infos:
-        dict_bs["infos"][key] = infos[key].value
+        hdr = hf2["hdr"]
+        for key in hdr.attrs.keys():
+            dict_bs["infos"]["hdr"][key] = hdr.attrs[key]
 
-    hdr = hf2["hdr"]
-    for key in hdr:
-        dict_bs["infos"]["hdr"][key] = hdr[key].value
-
-    bs_save = dict2class(dict_bs)
+        bs_save = dict2class(dict_bs)
     return bs_save

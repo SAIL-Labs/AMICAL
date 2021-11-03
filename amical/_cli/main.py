@@ -139,7 +139,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     extract_parser.add_argument(
         "--outdir",
         default="extracted/",
-        help="Repository to save the extracted bispectrum (as pickle .dpy files)(default: %(default)s).",
+        help="Repository to save the extracted bispectrum (as hdf5 .h5 files)(default: %(default)s).",
     )
 
     # Extracting parameters of AMICAL

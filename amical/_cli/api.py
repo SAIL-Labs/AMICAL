@@ -1,5 +1,4 @@
 import os
-import pickle
 import time
 from datetime import datetime
 from glob import glob
@@ -41,7 +40,7 @@ def _select_data_file(args, process):
     if args.file >= 0:
         choosen_index = args.file
     else:
-        choosen_index = int(input("Which file to %s?\n" % process))
+        choosen_index = int(input("\nWhich file to %s?\n" % process))
 
     try:
         filename = l_file[choosen_index]
@@ -57,10 +56,10 @@ def _select_data_file(args, process):
 def _select_association_file(args):
     """Show report with the data found and allow to select the science target
     (SCI) to be calibrated and the calibrator (CAL)."""
-    l_file = sorted(glob("%s/*.dpy" % args.datadir))
+    l_file = sorted(glob("%s/*.h5" % args.datadir))
 
     if len(l_file) == 0:
-        raise OSError("No dpy files found in %s, check --datadir." % args.datadir)
+        raise OSError("No h5 files found in %s, check --datadir." % args.datadir)
 
     index_file = []
 
@@ -68,18 +67,14 @@ def _select_association_file(args):
 
     d = []
     for i, f in enumerate(l_file):
-        file = open(f, "rb")
-        bs = pickle.load(file)
-        file.close()
-
-        filename = f.split("/")[-1]
-
+        bs = amical.load_bs_hdf5(f)
+        filename = Path(f).stem
         hdr = bs.infos.hdr
         target = hdr.get("OBJECT", None)
         date = hdr.get("DATE-OBS", None)
         ins = hdr.get("INSTRUME", None)
 
-        if target is not None:
+        if target is not None or "":
             try:
                 source = _query_simbad(target)
             except Exception:
@@ -112,7 +107,7 @@ def _select_association_file(args):
 
 
 def _extract_bs_ifile(f, args, ami_param):
-    """Extract the bispectrum on individial file (f) and save them as pickle."""
+    """Extract the bispectrum on individial file (f) and save them as hdf5."""
     hdu = fits.open(f)
     cube = hdu[0].data
     hdu.close()
@@ -120,12 +115,9 @@ def _extract_bs_ifile(f, args, ami_param):
     # Extract the bispectrum
     bs = amical.extract_bs(cube, f, **ami_param, save=args.save)
 
-    bs_file = f.split("/")[-1].split(".fits")[0] + "_bispectrum.dpy"
+    bs_file = args.outdir + Path(f).stem + "_bispectrum"
 
-    # Save as python pickled file
-    file = open(args.outdir + bs_file, "wb")
-    pickle.dump(bs, file)
-    file.close()
+    amical.save_bs_hdf5(bs, bs_file)
     return 0
 
 
@@ -259,15 +251,11 @@ def perform_calibrate(args):
 
     sciname, calname = _select_association_file(args)
 
-    file = open(sciname, "rb")
-    bs_t = pickle.load(file)
-    file.close()
+    bs_t = amical.load_bs_hdf5(sciname)
 
     bs_c = []
     for x in calname:
-        file = open(x, "rb")
-        bs_c.append(pickle.load(file))
-        file.close()
+        bs_c = amical.load_bs_hdf5(x)
 
     display = False
     if len(bs_c) > 1:
