@@ -12,15 +12,7 @@ ASTROPY_VERSION = Version(astropy.__version__)
 
 
 @pytest.fixture()
-def commentary_hdr():
-    # Create a fits header with commentary card
-    hdr = fits.Header()
-    hdr["HISTORY"] = "History is a commentary card"
-    return hdr
-
-
-@pytest.fixture()
-def commentary_infos(commentary_hdr):
+def commentary_infos():
 
     # Add hdr to infos placeholders for everything but hdr
     mf = munch.Munch(pixelSize=1.0)
@@ -28,9 +20,11 @@ def commentary_infos(commentary_hdr):
     # SimulatedData avoids requiring extra keys in infos
     infos = munch.Munch(orig="SimulatedData", instrument="unknown")
 
-    return _add_infos_header(
-        infos, commentary_hdr, mf, 1.0, "afilename", "amaskname", 1
-    )
+    # Create a fits header with commentary card
+    hdr = fits.Header()
+    hdr["HISTORY"] = "History is a commentary card"
+
+    return _add_infos_header(infos, hdr, mf, 1.0, "afilename", "amaskname", 1)
 
 
 def test_add_infos_simulated():
@@ -86,7 +80,7 @@ def test_commentary_infos_drops(commentary_infos):
     ASTROPY_VERSION >= Version("5.0rc"),
     reason="There are no warnings raised for Astropy 5.0+",
 )
-def test_commentary_warning_astropy_version(commentary_hdr):
+def test_commentary_warning_astropy_version():
 
     # Add hdr to infos placeholders for everything but hdr
     mf = munch.Munch(pixelSize=1.0)
@@ -94,10 +88,12 @@ def test_commentary_warning_astropy_version(commentary_hdr):
     # SimulatedData avoids requiring extra keys in infos
     infos = munch.Munch(orig="SimulatedData", instrument="unknown")
 
+    # Create a fits header with commentary card
+    hdr = fits.Header()
+    hdr["HISTORY"] = "History is a commentary card"
+
     with pytest.warns(RuntimeWarning, match="Commentary cards"):
-        infos = _add_infos_header(
-            infos, commentary_hdr, mf, 1.0, "afilename", "amaskname", 1
-        )
+        infos = _add_infos_header(infos, hdr, mf, 1.0, "afilename", "amaskname", 1)
 
 
 @pytest.mark.skipif(
@@ -108,7 +104,7 @@ def test_commentary_warning_astropy_version(commentary_hdr):
     ASTROPY_VERSION >= Version("5.0rc"),
     reason="AMICAL should not raise a warning for commentary cards with astropy 5.0+",
 )
-def test_no_commentary_warning_astropy_version(commentary_hdr):
+def test_no_commentary_warning_astropy_version():
 
     # Add hdr to infos placeholders for everything but hdr
     mf = munch.Munch(pixelSize=1.0)
@@ -116,7 +112,9 @@ def test_no_commentary_warning_astropy_version(commentary_hdr):
     # SimulatedData avoids requiring extra keys in infos
     infos = munch.Munch(orig="SimulatedData", instrument="unknown")
 
+    # Create a fits header with commentary card
+    hdr = fits.Header()
+    hdr["HISTORY"] = "History is a commentary card"
+
     with pytest.warns(RuntimeWarning, match="Commentary cards"):
-        infos = _add_infos_header(
-            infos, commentary_hdr, mf, 1.0, "afilename", "amaskname", 1
-        )
+        infos = _add_infos_header(infos, hdr, mf, 1.0, "afilename", "amaskname", 1)
