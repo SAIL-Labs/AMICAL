@@ -324,14 +324,14 @@ def main(argv: Optional[List[str]] = None) -> int:
 
     args = parser.parse_args(argv)
 
+    retv = 1
     if args.command == "clean":
-        perform_clean(args)
+        retv = perform_clean(args)
     elif args.command == "extract":
-        perform_extract(args)
+        retv = perform_extract(args)
     elif args.command == "calibrate":
-        perform_calibrate(args)
-
-    return 0
+        retv = perform_calibrate(args)
+    return retv
 
 
 if __name__ == "__main__":
