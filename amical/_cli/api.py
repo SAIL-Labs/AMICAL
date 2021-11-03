@@ -3,9 +3,12 @@ import pickle
 import time
 from datetime import datetime
 from glob import glob
+from pathlib import Path
 
 from astropy.io import fits
+from astroquery.simbad import Simbad
 from matplotlib import pyplot as plt
+from tabulate import tabulate
 from termcolor import cprint
 from tqdm import tqdm
 
@@ -13,14 +16,16 @@ import amical
 
 
 def _select_data_file(args, process):
+    """Show report with the data found and allow to select one to be treated."""
     l_file = sorted(glob("%s/*.fits" % args.datadir))
 
     if len(l_file) == 0:
         raise OSError("No fits files found in %s, check --datadir." % args.datadir)
 
+    headers = ["FILENAME", "TARGET", "DATE", "INSTRUM", "INDEX"]
+
     index_file = []
-    print("\n  FILENAME   |   TARGET   |   DATE-OBS   |  index  ")
-    print("-----------------------------------------------------")
+    d = []
     for i, f in enumerate(l_file):
         hdu = fits.open(f)
         hdr = hdu[0].header
@@ -28,10 +33,10 @@ def _select_data_file(args, process):
         date = hdr.get("DATE-OBS", None)
         ins = hdr.get("INSTRUME", None)
         index_file.append(i)
-        print(
-            "  %s     %s     %s     %s     %i"
-            % (f.split("/")[-1], target, date, ins, i)
-        )
+        filename = f.split("/")[-1]
+        d.append([filename, target, date, ins, i])
+
+    print(tabulate(d, headers=headers))
 
     if args.file >= 0:
         choosen_index = args.file
@@ -49,6 +54,63 @@ def _select_data_file(args, process):
     return filename, hdr
 
 
+def _select_association_file(args):
+    """Show report with the data found and allow to select the science target
+    (SCI) to be calibrated and the calibrator (CAL)."""
+    l_file = sorted(glob("%s/*.dpy" % args.datadir))
+
+    if len(l_file) == 0:
+        raise OSError("No dpy files found in %s, check --datadir." % args.datadir)
+
+    index_file = []
+
+    headers = ["FILENAME", "TARGET", "DATE", "INSTRUM", "TYPE", "INDEX"]
+
+    d = []
+    for i, f in enumerate(l_file):
+        file = open(f, "rb")
+        bs = pickle.load(file)
+        file.close()
+
+        filename = f.split("/")[-1]
+
+        hdr = bs.infos.hdr
+        target = hdr.get("OBJECT", None)
+        date = hdr.get("DATE-OBS", None)
+        ins = hdr.get("INSTRUME", None)
+
+        if target is not None:
+            try:
+                source = _query_simbad(target)
+            except Exception:
+                source = "Unknown"
+        else:
+            target = "SIMU"
+            source = "Unknown"
+
+        d.append([filename, target, date, ins, source, i])
+        index_file.append(i)
+
+    print(tabulate(d, headers=headers))
+
+    text_calib = (
+        "Which file used as calibrator? (use space "
+        + "between index if multiple calibrators are available).\n"
+    )
+    sci_index = int(input("\nWhich file to be calibrated?\n"))
+    cal_index = [int(item) for item in input(text_calib).split()]
+
+    try:
+        sci_name = l_file[sci_index]
+        cal_name = [l_file[x] for x in cal_index]
+    except IndexError:
+        raise IndexError(
+            "Selected index (sci=%i/cal=%i) not valid (only %i files found)."
+            % (sci_index, cal_index, len(l_file))
+        )
+    return sci_name, cal_name
+
+
 def _extract_bs_ifile(f, args, ami_param):
     """Extract the bispectrum on individial file (f) and save them as pickle."""
     hdu = fits.open(f)
@@ -61,10 +123,24 @@ def _extract_bs_ifile(f, args, ami_param):
     bs_file = f.split("/")[-1].split(".fits")[0] + "_bispectrum.dpy"
 
     # Save as python pickled file
-    file = open(args.reduceddir + bs_file, "wb")
+    file = open(args.outdir + bs_file, "wb")
     pickle.dump(bs, file)
     file.close()
     return 0
+
+
+def _query_simbad(targetname):
+    """Check on Simbad if the target is supposed to be a calibrator or a science
+    source."""
+    customSimbad = Simbad()
+    customSimbad.add_votable_fields("otype")
+    res = customSimbad.query_object(targetname)
+    otype = res["OTYPE"][0]
+    if otype == "Star":
+        nrm_type = "CAL"
+    else:
+        nrm_type = "SCI"
+    return nrm_type
 
 
 def perform_clean(args):
@@ -98,8 +174,8 @@ def perform_clean(args):
         plt.show(block=True)
         return 0
 
-    if not os.path.exists(args.reduceddir):
-        os.mkdir(args.reduceddir)
+    if not os.path.exists(args.outdir):
+        os.mkdir(args.outdir)
 
     clean_param["clip"] = args.clip
     clean_param["sky"] = args.sky
@@ -111,7 +187,7 @@ def perform_clean(args):
             hdr["HIERARCH AMICAL step"] = "CLEANED"
             cube = amical.select_clean_data(f, **clean_param, display=True)
             f_clean = f.split("/")[-1].split(".fits")[0] + "_cleaned.fits"
-            fits.writeto(args.reduceddir + f_clean, cube, header=hdr, overwrite=True)
+            fits.writeto(args.outdir + f_clean, cube, header=hdr, overwrite=True)
     else:
         # Or clean just the specified file (in --datadir)
         hdr["HIERARCH AMICAL step"] = "CLEANED"
@@ -124,7 +200,7 @@ def perform_clean(args):
         if args.plot:
             plt.show()
         f_clean = filename.split("/")[-1].split(".fits")[0] + "_cleaned.fits"
-        fits.writeto(args.reduceddir + f_clean, cube, header=hdr, overwrite=True)
+        fits.writeto(args.outdir + f_clean, cube, header=hdr, overwrite=True)
     return 0
 
 
@@ -161,8 +237,8 @@ def perform_extract(args):
     if len(l_file) == 0:
         raise OSError("No fits files found in %s, check --datadir." % args.datadir)
 
-    if not os.path.exists(args.reduceddir):
-        os.mkdir(args.reduceddir)
+    if not os.path.exists(args.outdir):
+        os.mkdir(args.outdir)
 
     if not args.all:
         f = _select_data_file(args, process="extract")[0]
@@ -174,4 +250,52 @@ def perform_extract(args):
     cprint("---- AMICAL extract done (%2.1fs) ----" % t1, "cyan")
     if args.plot:
         plt.show(block=True)
+    return 0
+
+
+def perform_calibrate(args):
+    """CLI interface to calibrate the data with AMICAL (save calibrated oifits
+    files)."""
+
+    sciname, calname = _select_association_file(args)
+
+    file = open(sciname, "rb")
+    bs_t = pickle.load(file)
+    file.close()
+
+    bs_c = []
+    for x in calname:
+        file = open(x, "rb")
+        bs_c.append(pickle.load(file))
+        file.close()
+
+    display = False
+    if len(bs_c) > 1:
+        display = True
+
+    cal = amical.calibrate(
+        bs_t,
+        bs_c,
+        clip=args.clip,
+        normalize_err_indep=args.norm,
+        apply_atmcorr=args.atmcorr,
+        apply_phscorr=args.phscorr,
+        display=display,
+    )
+
+    # Position angle from North to East
+    pa = bs_t.infos.pa
+
+    cprint("\nPosition angle computed for the SCI data: pa = %2.3f deg" % pa, "cyan")
+
+    # Display and save the results as oifits
+    amical.show(cal, true_flag_t3=False, cmax=180, pa=pa)
+
+    if args.plot:
+        plt.show()
+
+    oifits_file = Path(bs_t.infos.filename).stem + "_calibrated.fits"
+
+    amical.save(cal, oifits_file=oifits_file, datadir=args.outdir)
+
     return 0

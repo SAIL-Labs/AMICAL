@@ -2,6 +2,7 @@ from argparse import ArgumentParser
 from typing import List
 from typing import Optional
 
+from amical._cli.api import perform_calibrate
 from amical._cli.api import perform_clean
 from amical._cli.api import perform_extract
 
@@ -25,44 +26,47 @@ def main(argv: Optional[List[str]] = None) -> int:
     clean_parser.add_argument(
         "--datadir",
         default="data/",
-        help="Repository containing the reduced NRM data (default: data/).",
+        help="Repository containing the reduced NRM data (default: %(default)s).",
     )
     clean_parser.add_argument(
-        "--reduceddir",
+        "--outdir",
         default="cleaned/",
-        help="Repository to save the cleaned NRM data (as fits file, default: cleaned/).",
+        help="Repository to save the cleaned NRM data (as fits files)(default: %(default)s).",
     )
 
     # Cleaning parameters of AMICAL
     # __________________________________________________________________________
 
     clean_parser.add_argument(
-        "--isz", default=149, type=int, help="Size of the cropped image [pix]."
+        "--isz",
+        default=149,
+        type=int,
+        help="Size of the cropped image [pix] (default: %(default)s).",
     )
     clean_parser.add_argument(
         "--r1",
         default=70,
         type=int,
-        help="Radius of the rings to compute background sky [pix].",
+        help="Radius of the rings to compute background sky [pix] (default: %(default)s).",
     )
     clean_parser.add_argument(
         "--dr",
         default=3,
         type=int,
-        help="Outer radius to compute sky (r2=r1+dr) [pix].",
+        help="Outer radius to compute sky (r2=r1+dr) [pix] (default: %(default)s).",
     )
     clean_parser.add_argument(
         "--apod",
         action="store_true",
         help="Perform apodisation using a super-gaussian function "
         + "(known as windowing)."
-        + " The gaussian FWHM is set by the parameter `window`",
+        + " The gaussian FWHM is set by the parameter `window`.",
     )
     clean_parser.add_argument(
         "--window",
         default=65,
         type=int,
-        help="FWHM used for windowing (used with --apod)",
+        help="FWHM used for windowing (used with --apod)(default: %(default)s)",
     )
     clean_parser.add_argument(
         "--sky",
@@ -72,14 +76,14 @@ def main(argv: Optional[List[str]] = None) -> int:
     )
     clean_parser.add_argument(
         "--clip",
-        action="store_false",
-        help="Perform sigma-clipping to reject bad frames.",
+        action="store_true",
+        help="Perform sigma-clipping to reject bad frames (default: %(default)s).",
     )
     clean_parser.add_argument(
         "--kernel",
         default=3,
         type=int,
-        help="kernel size used in the applied median filter (to find the center)",
+        help="kernel size used in the applied median filter (to find the center)(default: %(default)s)",
     )
 
     # CLI parameters
@@ -111,6 +115,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         help="Select the file index to be clean (default allows user selection).",
     )
     clean_parser.add_argument(
+        "-a",
         "--all",
         action="store_true",
         help="Clean all data files in --datadir.",
@@ -132,7 +137,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         help="Repository containing the cleaned NRM data (default: %(default)s).",
     )
     extract_parser.add_argument(
-        "--reduceddir",
+        "--outdir",
         default="extracted/",
         help="Repository to save the extracted bispectrum (as pickle .dpy files)(default: %(default)s).",
     )
@@ -231,19 +236,6 @@ def main(argv: Optional[List[str]] = None) -> int:
     # __________________________________________________________________________
 
     extract_parser.add_argument(
-        "-a",
-        "--all",
-        action="store_true",
-        help="Extract bispectrum from all data files in --datadir.",
-    )
-    extract_parser.add_argument(
-        "-f",
-        "--file",
-        default=-1,
-        type=int,
-        help="Select the file index to be extracted (default allows user selection).",
-    )
-    extract_parser.add_argument(
         "-s",
         "--save",
         action="store_true",
@@ -261,6 +253,74 @@ def main(argv: Optional[List[str]] = None) -> int:
         action="store_true",
         help="Save additional plots.",
     )
+    extract_parser.add_argument(
+        "-f",
+        "--file",
+        default=-1,
+        type=int,
+        help="Select the file index to be extracted (default allows user selection).",
+    )
+    extract_parser.add_argument(
+        "-a",
+        "--all",
+        action="store_true",
+        help="Extract bispectrum from all data files in --datadir.",
+    )
+
+    # __________________________________________________________________________
+    # CALIBRATE STEP
+    # __________________________________________________________________________
+
+    calibrate_parser = subparsers.add_parser(
+        "calibrate",
+        help="Calibrate the extracted NRM data with the associated calibrator.",
+    )
+    # INPUT and OUTPUT directory
+    # __________________________________________________________________________
+
+    calibrate_parser.add_argument(
+        "--datadir",
+        default="extracted/",
+        help="Repository containing the extracted bispectrum (default: %(default)s).",
+    )
+    calibrate_parser.add_argument(
+        "--outdir",
+        default="calibrated/",
+        help="Repository to save the calibrated oifits files (default: %(default)s).",
+    )
+
+    #  ## IMPORTANT PARAMS ##
+    calibrate_parser.add_argument(
+        "--clip",
+        action="store_true",
+        help="Sigma clipping is performed over the calibrator files (if any) to reject "
+        + "bad observables due to seeing conditions, centering, etc (default: %(default)s).",
+    )
+    calibrate_parser.add_argument(
+        "--norm",
+        action="store_true",
+        help="CP uncertaintities are normalized by np.sqrt(n_holes/3.) to not "
+        + "over use the non-independant closure phases (default: %(default)s).",
+    )
+    calibrate_parser.add_argument(
+        "--phscorr",
+        action="store_true",
+        help="Apply a phasor correction due to piston between holes (default: %(default)s).",
+    )
+    calibrate_parser.add_argument(
+        "--atmcorr",
+        action="store_true",
+        help="Apply a atmospheric correction on V2 from seeing and wind shacking issues (default: %(default)s).",
+    )
+
+    # CLI parameters
+    # __________________________________________________________________________
+    calibrate_parser.add_argument(
+        "-p",
+        "--plot",
+        action="store_true",
+        help="Plot the calibrated data.",
+    )
 
     args = parser.parse_args(argv)
 
@@ -269,9 +329,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     elif args.command == "extract":
         perform_extract(args)
     elif args.command == "calibrate":
-        pass
-    elif args.command == "analyse":
-        pass
+        perform_calibrate(args)
 
     return 0
 
