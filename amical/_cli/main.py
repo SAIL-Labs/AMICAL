@@ -236,10 +236,10 @@ def main(argv: Optional[List[str]] = None) -> int:
     # __________________________________________________________________________
 
     extract_parser.add_argument(
-        "-s",
-        "--save",
-        action="store_true",
-        help="Save the figures as pdf.",
+        "--save_to",
+        default=None,
+        type=str,
+        help="If save_to is set, figures are saved within it as pdf (default: %(default)s).",
     )
     extract_parser.add_argument(
         "-p",

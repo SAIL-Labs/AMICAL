@@ -74,13 +74,13 @@ def _select_association_file(args):
         date = hdr.get("DATE-OBS", None)
         ins = hdr.get("INSTRUME", None)
 
-        if target not in (None or ""):
+        if (target is not None) & (target != "Unknown"):
             try:
                 source = _query_simbad(target)
             except Exception:
                 source = "Unknown"
         else:
-            target = "SIMU"
+            target = "Unknown"
             source = "Unknown"
 
         d.append([filename, target, date, ins, source, i])
@@ -113,10 +113,9 @@ def _extract_bs_ifile(f, args, ami_param):
     hdu.close()
 
     # Extract the bispectrum
-    bs = amical.extract_bs(cube, f, **ami_param, save=args.save)
+    bs = amical.extract_bs(cube, f, **ami_param, save_to=args.save_to)
 
-    bs_file = args.outdir + Path(f).stem + "_bispectrum"
-
+    bs_file = os.path.join(args.outdir, Path(f).stem + "_bispectrum")
     amical.save_bs_hdf5(bs, bs_file)
     return 0
 
@@ -178,8 +177,8 @@ def perform_clean(args):
             hdr = fits.open(f)[0].header
             hdr["HIERARCH AMICAL step"] = "CLEANED"
             cube = amical.select_clean_data(f, **clean_param, display=True)
-            f_clean = f.split("/")[-1].split(".fits")[0] + "_cleaned.fits"
-            fits.writeto(args.outdir + f_clean, cube, header=hdr, overwrite=True)
+            f_clean = os.path.join(args.outdir, Path(f).stem + "_cleaned.fits")
+            fits.writeto(f_clean, cube, header=hdr, overwrite=True)
     else:
         # Or clean just the specified file (in --datadir)
         hdr["HIERARCH AMICAL step"] = "CLEANED"
@@ -191,8 +190,8 @@ def perform_clean(args):
         cube = amical.select_clean_data(filename, **clean_param, display=True)
         if args.plot:
             plt.show()
-        f_clean = filename.split("/")[-1].split(".fits")[0] + "_cleaned.fits"
-        fits.writeto(args.outdir + f_clean, cube, header=hdr, overwrite=True)
+        f_clean = os.path.join(args.outdir, Path(filename).stem + "_cleaned.fits")
+        fits.writeto(f_clean, cube, header=hdr, overwrite=True)
     return 0
 
 
@@ -274,16 +273,14 @@ def perform_calibrate(args):
     # Position angle from North to East
     pa = bs_t.infos.pa
 
-    cprint("\nPosition angle computed for the SCI data: pa = %2.3f deg" % pa, "cyan")
+    cprint("\nPosition angle computed for the data: pa = %2.3f deg" % pa, "cyan")
 
     # Display and save the results as oifits
-    amical.show(cal, true_flag_t3=False, cmax=180, pa=pa)
-
     if args.plot:
+        amical.show(cal, true_flag_t3=False, cmax=180, pa=pa)
         plt.show()
 
     oifits_file = Path(bs_t.infos.filename).stem + "_calibrated.fits"
 
     amical.save(cal, oifits_file=oifits_file, datadir=args.outdir)
-
     return 0
