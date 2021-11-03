@@ -284,10 +284,7 @@ def cal2dict(
     return dic
 
 
-def load(
-    filename,
-    filtname=None,
-):
+def load(filename, filtname=None):
     """Load an oifits file format and store it as dictionnary. The different keys are
     representative of the oifits standard structure ('OI_WAVELENGTH', 'OI_VIS2', etc.)
 
@@ -618,18 +615,22 @@ def save(
         ra = pmra = dec = pmdec = plx = [0]
         spectyp = ["fake"]
     else:
-        try:
-            query = customSimbad.query_object(name_star)
-            coord = SkyCoord(
-                query["RA"][0] + " " + query["DEC"][0], unit=(u.hourangle, u.deg)
-            )
-            ra = [coord.ra.deg]
-            dec = [coord.dec.deg]
-            spectyp = query["SP_TYPE"]
-            pmra = query["PMRA"]
-            pmdec = query["PMDEC"]
-            plx = query["PLX_VALUE"]
-        except Exception:
+        if name_star is not None:
+            try:
+                query = customSimbad.query_object(name_star)
+                coord = SkyCoord(
+                    query["RA"][0] + " " + query["DEC"][0], unit=(u.hourangle, u.deg)
+                )
+                ra = [coord.ra.deg]
+                dec = [coord.dec.deg]
+                spectyp = query["SP_TYPE"]
+                pmra = query["PMRA"]
+                pmdec = query["PMDEC"]
+                plx = query["PLX_VALUE"]
+            except Exception:
+                ra = pmra = dec = pmdec = plx = [0]
+                spectyp = ["fake"]
+        else:
             ra = pmra = dec = pmdec = plx = [0]
             spectyp = ["fake"]
 
@@ -1271,6 +1272,10 @@ def show(
             dic_color[filt] = list_color[i_c]
             i_c += 1
 
+    props = dict(boxstyle="round", facecolor="wheat", alpha=0.5)
+
+    textstr = "PA = %2.1f deg" % pa
+
     fontsize = 14
     fig = plt.figure(figsize=(16, 5.5))
     ax1 = plt.subplot2grid((2, 6), (0, 0), rowspan=2, colspan=2)
@@ -1300,6 +1305,16 @@ def show(
         handles, labels = ax1.get_legend_handles_labels()
         labels, handles = zip(*sorted(zip(labels, handles), key=lambda t: t[0]))
         ax1.legend(handles, labels, loc="best", fontsize=9)
+
+    plt.text(
+        0.02,
+        0.98,
+        textstr,
+        transform=ax1.transAxes,
+        fontsize=13,
+        verticalalignment="top",
+        bbox=props,
+    )
 
     unitlabel = {
         "m": "m",
