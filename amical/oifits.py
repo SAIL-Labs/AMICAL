@@ -615,7 +615,7 @@ def save(
         ra = pmra = dec = pmdec = plx = [0]
         spectyp = ["fake"]
     else:
-        if (name_star is not None) & (len(name_star) > 0):
+        if (name_star is not None) & (name_star != "Unknown"):
             try:
                 query = customSimbad.query_object(name_star)
                 coord = SkyCoord(
@@ -633,6 +633,9 @@ def save(
         else:
             ra = pmra = dec = pmdec = plx = [0]
             spectyp = ["fake"]
+
+    if name_star == "":
+        name_star = "Unknown"
 
     hdu = fits.BinTableHDU.from_columns(
         fits.ColDefs(
