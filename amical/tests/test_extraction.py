@@ -66,13 +66,14 @@ def test_add_infos_header_commentary(commentary_infos):
     munch.munchify(commentary_infos)
 
 
-def test_commentary_infos_keep(commentary_infos, astropy_versions):
-    # Check that commentary cards are removed or kept depending on astropy version
+ASTROPY_VERSION = Version(astropy.__version__)
+@pytest.mark.skipif(ASTROPY_VERSION < Version("5.0rc"), reason="...")
+def test_commentary_infos_keep(commentary_infos):
+     assert "HISTORY" in commentary_infos.hdr
 
-    astropy_version, working_version = astropy_versions
-
-    if Version(astropy_version) < Version(working_version):
-        assert "HISTORY" not in commentary_infos.hdr
+@pytest.mark.skipif(ASTROPY_VERSION >= Version("5.0rc"), reason="...")
+def test_commentary_infos_drops(commentary_infos):
+     assert "HISTORY" not in commentary_infos.hdr
     else:
         assert "HISTORY" in commentary_infos.hdr
 
