@@ -993,8 +993,8 @@ def _add_infos_header(infos, hdr, mf, pa, filename, maskname, npix, verbose=True
         if verbose:
             cprint(
                 "Commentary cards are removed from the header with astropy"
-                f"version < {working_version}. Your astropy version is"
-                f"{astropy_version}",
+                f" version < {working_version}. Your astropy version is"
+                f" {astropy_version}",
                 "green",
             )
         # HACK: astropy _HeaderCommentaryCards are registered as mappings,
