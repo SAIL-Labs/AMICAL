@@ -3,13 +3,13 @@ name: CI (bleeding edge)
 # https://github.com/pandas-dev/pandas/blob/master/.github/workflows/python-dev.yml
 
 # goals: check stability against
-# - dev version of Python, numpy, matplotlib and astropy
+# - dev version of numpy, matplotlib and astropy
 # - building with future pip default options
 
 on:
   push:
     branches:
-      - main
+      - master
   schedule:
     # run this every day at 3 am UTC
     - cron: '0 3 * * *'
@@ -26,10 +26,11 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Set up Python Dev Version
+    - name: Set up Python
       uses: actions/setup-python@v2
       with:
-        python-version: 3.10-dev
+        # we cannot use Python 3.10 for now, h5py (inherited dependency) isn't ready
+        python-version: '3.9'
 
     - name: Install dependencies
       run: |
@@ -38,8 +39,10 @@ jobs:
         python3 -m pip install git+https://github.com/numpy/numpy.git
         python3 -m pip install git+https://github.com/matplotlib/matplotlib.git
         python3 -m pip install git+https://github.com/astropy/astropy.git
+        # build-time dependencies for uncertainties + scipy with --no-build-isolation
+        python3 -m pip install pybind11 cython pkgconfig
 
-    - name: Build cmyt
+    - name: Build amical
       run: |
         python3 -m pip install .[dev] --no-build-isolation
 
