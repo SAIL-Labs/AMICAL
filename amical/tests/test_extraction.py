@@ -83,8 +83,30 @@ def test_commentary_infos_drops(commentary_infos):
     assert "HISTORY" in commentary_infos.hdr
 
 
-def test_astropy_version_warning(infos, commentary_hdr):
-    # Test that AMICAL warns about astropy < 5.0 removing commentary cards
+@pytest.mark.skipif(
+    ASTROPY_VERSION >= ASTROPY_WORKING,
+    reason="There are no warnings raised for Astropy 5.0+",
+)
+def test_commentary_warning_astropy_version(infos, commentary_hdr):
+
+    # Add hdr to infos placeholders for everything but hdr
+    mf = munch.Munch(pixelSize=1.0)
+
+    with pytest.warns(RuntimeWarning, match="Commentary cards"):
+        infos = _add_infos_header(
+            infos, commentary_hdr, mf, 1.0, "afilename", "amaskname", 1
+        )
+
+
+@pytest.mark.skipif(
+    ASTROPY_VERSION < ASTROPY_WORKING,
+    reason="Astropy < 5.0 should raise a warning for commentary cards",
+)
+@pytest.mark.xfail(
+    ASTROPY_VERSION >= ASTROPY_WORKING,
+    reason="AMICAL should not raise a warning for commentary cards with astropy 5.0+",
+)
+def test_no_commentary_warning_astropy_version(infos, commentary_hdr):
 
     # Add hdr to infos placeholders for everything but hdr
     mf = munch.Munch(pixelSize=1.0)
