@@ -85,6 +85,6 @@ def test_no_commentary_warning_astropy_version():
 
     with pytest.warns(
         RuntimeWarning,
-        match="Commentary cards are removed from the header with astropy"
+        match="Commentary cards are removed from the header with astropy",
     ):
         infos = _add_infos_header(infos, hdr, mf, 1.0, "afilename", "amaskname", 1)
