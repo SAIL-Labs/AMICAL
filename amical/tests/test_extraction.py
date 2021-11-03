@@ -24,7 +24,7 @@ def commentary_hdr():
 def astropy_versions():
 
     astropy_version = astropy.__version__
-    working_version = "5.0.0"
+    working_version = "5.0rc1"
 
     return astropy_version, working_version
 

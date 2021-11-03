@@ -988,7 +988,7 @@ def _add_infos_header(infos, hdr, mf, pa, filename, maskname, npix, verbose=True
     infos["isz"] = npix
 
     astropy_version = astropy.__version__
-    working_version = "5.0.0"
+    working_version = "5.0rc1"
     if Version(astropy_version) < Version(working_version):
         if verbose:
             cprint(
