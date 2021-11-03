@@ -9,7 +9,6 @@ from amical.mf_pipeline.bispect import _add_infos_header
 
 # Astropy versions for
 ASTROPY_VERSION = Version(astropy.__version__)
-ASTROPY_WORKING = Version("5.0rc")
 
 
 @pytest.fixture()
@@ -64,7 +63,7 @@ def test_add_infos_header_commentary(commentary_infos):
 
 
 @pytest.mark.skipif(
-    ASTROPY_VERSION < ASTROPY_WORKING,
+    ASTROPY_VERSION < Version("5.0rc"),
     reason="Munch cannot handle commentary cards for Astropy < 5.0",
 )
 def test_commentary_infos_keep(commentary_infos):
@@ -72,11 +71,11 @@ def test_commentary_infos_keep(commentary_infos):
 
 
 @pytest.mark.skipif(
-    ASTROPY_VERSION >= ASTROPY_WORKING,
+    ASTROPY_VERSION >= Version("5.0rc"),
     reason="Munch can handle commentary cards for Astropy 5.0+",
 )
 @pytest.mark.xfail(
-    ASTROPY_VERSION < ASTROPY_WORKING,
+    ASTROPY_VERSION < Version("5.0rc"),
     reason="AMICAL removes commentary cards from header with Astropy < 5.0",
 )
 def test_commentary_infos_drops(commentary_infos):
@@ -84,7 +83,7 @@ def test_commentary_infos_drops(commentary_infos):
 
 
 @pytest.mark.skipif(
-    ASTROPY_VERSION >= ASTROPY_WORKING,
+    ASTROPY_VERSION >= Version("5.0rc"),
     reason="There are no warnings raised for Astropy 5.0+",
 )
 def test_commentary_warning_astropy_version(infos, commentary_hdr):
@@ -99,11 +98,11 @@ def test_commentary_warning_astropy_version(infos, commentary_hdr):
 
 
 @pytest.mark.skipif(
-    ASTROPY_VERSION < ASTROPY_WORKING,
+    ASTROPY_VERSION < Version("5.0rc"),
     reason="Astropy < 5.0 should raise a warning for commentary cards",
 )
 @pytest.mark.xfail(
-    ASTROPY_VERSION >= ASTROPY_WORKING,
+    ASTROPY_VERSION >= Version("5.0rc"),
     reason="AMICAL should not raise a warning for commentary cards with astropy 5.0+",
 )
 def test_no_commentary_warning_astropy_version(infos, commentary_hdr):

@@ -41,6 +41,9 @@ from amical.tools import compute_pa
 from amical.tools import cov2cor
 
 
+ASTROPY_VERSION = astropy.__version__
+
+
 def _compute_complex_bs(
     ft_arr,
     index_mask,
@@ -988,17 +991,15 @@ def _add_infos_header(infos, hdr, mf, pa, filename, maskname, npix, verbose=True
     infos["maskname"] = maskname
     infos["isz"] = npix
 
-    astropy_version = astropy.__version__
-    working_version = "5.0rc1"
     hdr_commentary_keys = fits.Card._commentary_keywords
     if any(hck in hdr for hck in hdr_commentary_keys) and (
-        Version(astropy_version) < Version(working_version)
+        Version(ASTROPY_VERSION) < Version("5.0rc")
     ):
         if verbose:
             warnings.warn(
                 "Commentary cards are removed from the header with astropy"
-                f" version < {working_version}. Your astropy version is"
-                f" {astropy_version}",
+                f" version < 5.0. Your astropy version is"
+                f" {ASTROPY_VERSION}",
                 RuntimeWarning,
             )
         # HACK: astropy _HeaderCommentaryCards are registered as mappings,
