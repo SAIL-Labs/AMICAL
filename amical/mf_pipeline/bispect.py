@@ -1024,12 +1024,12 @@ def produce_result_pdf(figdir, filename):
     mergedObject = PdfFileMerger()
 
     for fileNumber in range(7):
-        ifile = figdir + filename + "_" + str(fileNumber + 1) + ".pdf"
+        ifile = os.path.join(figdir, f"{filename}_{fileNumber + 1}.pdf")
         mergedObject.append(PdfFileReader(ifile, "rb"))
         os.remove(ifile)
 
     # Write all the files into a file which is named as shown below
-    mergedObject.write(figdir + filename + "_DIAGNOSTIC_PLOTS.pdf")
+    mergedObject.write(os.path.join(figdir, filename + "_DIAGNOSTIC_PLOTS.pdf"))
     return 0
 
 
@@ -1054,7 +1054,7 @@ def extract_bs(
     unbias_v2=True,
     compute_cp_cov=True,
     expert_plot=False,
-    save=False,
+    save_to=None,
     verbose=False,
     display=True,
 ):
@@ -1106,6 +1106,8 @@ def extract_bs(
     `targetname` {str}:
         Name of the target to save in oifits file (if not in header of the
         cube),\n
+    `save_to` {str}:
+        Name of the repository to save the figures,\n
     `verbose` {bool}:
         If True, print usefull informations during the process.\n
     `display` {bool}:
@@ -1123,10 +1125,9 @@ def extract_bs(
         cprint("\n-- Starting extraction of observables --", "cyan")
     start_time = time.time()
 
-    figdir = "amical_save_fig/"
-    if save:
-        if not os.path.exists(figdir):
-            os.mkdir(figdir)
+    if save_to is not None:
+        if not os.path.exists(save_to):
+            os.mkdir(save_to)
 
     with fits.open(filename) as hdu:
         hdr = hdu[0].header
@@ -1174,15 +1175,15 @@ def extract_bs(
         theta_detector=theta_detector,
         i_wl=i_wl,
         display=display,
-        save=save,
-        figdir=figdir,
+        save_to=save_to,
         filename=filename,
     )
 
-    figname = figdir + Path(filename).stem
     ifig = 2
-    if save:
-        plt.savefig(figname + "_%i.pdf" % ifig)
+    if save_to is not None:
+        figname = os.path.join(save_to, Path(filename).stem)
+        plt.savefig(f"{figname}_{ifig}.pdf")
+
     ifig += 1
 
     if mf is None:
@@ -1211,17 +1212,17 @@ def extract_bs(
     # ------------------------------------------------------------------------
     if display:
         _show_complex_ps(ft_arr)
-        if save:
-            plt.savefig(figname + "_%i.pdf" % ifig)
+        if save_to is not None:
+            plt.savefig(f"{figname}_{ifig}.pdf")
         ifig += 1
 
         _show_peak_position(ft_arr, n_baselines, mf, maskname, peakmethod)
-        if save:
-            plt.savefig(figname + "_%i.pdf" % ifig)
+        if save_to is not None:
+            plt.savefig(f"{figname}_{ifig}.pdf")
         ifig += 1
 
     if verbose:
-        print("\nFilename: %s" % filename.split("/")[-1])
+        print("\nFilename: %s" % filename)
         print("# of frames = %i" % n_ps)
 
     n_blocks = _set_good_nblocks(n_blocks, n_ps)
@@ -1288,8 +1289,8 @@ def extract_bs(
         infos,
         expert_plot=True,
     )
-    if save:
-        plt.savefig(figname + "_%i.pdf" % ifig)
+    if save_to is not None:
+        plt.savefig(f"{figname}_{ifig}.pdf")
     ifig += 1
 
     obs_result["vis2"] = vis2_norm
@@ -1297,14 +1298,14 @@ def extract_bs(
     # 10. Now we compute the cp quantities and store them with the other observables
     obs_result = _compute_cp(obs_result, obs_norm, infos, expert_plot=True)
 
-    if save:
-        plt.savefig(figname + "_%i.pdf" % ifig)
+    if save_to is not None:
+        plt.savefig(f"{figname}_{ifig}.pdf")
     ifig += 1
 
     if display:
         _show_norm_matrices(obs_norm, expert_plot=expert_plot)
-        if save:
-            plt.savefig(figname + "_%i.pdf" % ifig)
+        if save_to is not None:
+            plt.savefig(f"{figname}_{ifig}.pdf")
         ifig += 1
 
     t3_coord, bl_cp = _compute_t3_coord(mf, index_mask)
@@ -1347,8 +1348,8 @@ def extract_bs(
     t = time.time() - start_time
     m = t // 60
 
-    if save:
-        produce_result_pdf(figdir, Path(filename).stem)
+    if save_to is not None:
+        produce_result_pdf(save_to, Path(filename).stem)
 
     if verbose:
         cprint("\nDone (exec time: %d min %2.1f s)." % (m, t - m * 60), color="magenta")
