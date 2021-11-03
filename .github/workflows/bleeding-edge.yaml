@@ -42,7 +42,7 @@ jobs:
         # build-time dependencies for uncertainties + scipy with --no-build-isolation
         python3 -m pip install pybind11 cython pkgconfig
 
-    - name: Build cmyt
+    - name: Build amical
       run: |
         python3 -m pip install .[dev] --no-build-isolation
 

@@ -9,6 +9,7 @@
 ![Licence](https://img.shields.io/github/license/SydneyAstrophotonicInstrumentationLab/AMICAL)
 
 ![CI](https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL/actions/workflows/ci.yml/badge.svg)
+[![CI (bleeding edge)](https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL/actions/workflows/bleeding-edge.yaml/badge.svg)](https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL/actions/workflows/bleeding-edge.yaml)
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/SydneyAstrophotonicInstrumentationLab/AMICAL/master.svg)](https://results.pre-commit.ci/latest/github/SydneyAstrophotonicInstrumentationLab/AMICAL/master)
 
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
