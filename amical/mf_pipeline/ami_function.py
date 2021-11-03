@@ -13,6 +13,7 @@ All AMI related function, the most important are:
 
 --------------------------------------------------------------------
 """
+import os
 from pathlib import Path
 
 import numpy as np
@@ -328,8 +329,7 @@ def make_mf(
     diag_plot=False,
     verbose=False,
     display=True,
-    save=False,
-    figdir=None,
+    save_to=None,
     filename=None,
 ):
     """
@@ -404,8 +404,9 @@ def make_mf(
 
     if display:
         _plot_mask_coord(xy_coords, maskname, instrument)
-        if save:
-            plt.savefig(figdir + Path(filename).stem + "_1.pdf")
+        if save_to is not None:
+            figname = os.path.join(save_to, Path(filename).stem)
+            plt.savefig(f"{figname}_{1}.pdf")
 
     n_holes = xy_coords.shape[0]
 
