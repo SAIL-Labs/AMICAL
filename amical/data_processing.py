@@ -545,6 +545,7 @@ def select_clean_data(
     verbose=False,
     ihdu=0,
     display=False,
+    *,
     show_bad_removed=True,
     show_nframe=0,
 ):
