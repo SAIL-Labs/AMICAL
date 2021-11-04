@@ -546,8 +546,8 @@ def select_clean_data(
     ihdu=0,
     display=False,
     *,
-    show_bad_removed=True,
-    show_nframe=0,
+    remove_bad=True,
+    nframe=0,
 ):
     """Clean and select good datacube (sigma-clipping using fluxes variations).
 
@@ -628,8 +628,8 @@ def select_clean_data(
             bad_map=bad_map,
             add_bad=add_bad,
             edge=edge,
-            remove_bad=show_bad_removed,
-            nframe=show_nframe,
+            remove_bad=remove_bad,
+            nframe=nframe,
             ihdu=ihdu,
             f_kernel=f_kernel,
             offx=offx,
