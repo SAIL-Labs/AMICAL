@@ -83,7 +83,7 @@ def crop_max(img, dim, offx=0, offy=0, filtmed=True, f=3):
         size_msg = (
             f"The specified cropped image size, {dim}, is greater than the distance to"
             " the PSF center in at least one dimension. The max size for this image is"
-            f" {isz_max}."
+            f" {isz_max}"
         )
         raise ValueError(size_msg)
     cutout = Cutout2D(img, (X, Y), dim)
