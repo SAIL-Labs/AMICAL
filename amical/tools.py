@@ -78,7 +78,9 @@ def crop_max(img, dim, offx=0, offy=0, filtmed=True, f=3):
     pos_max = np.where(im_med == im_med.max())
     X = pos_max[1][0] + offx
     Y = pos_max[0][0] + offy
-    isz_max = 2 * np.min([X, img.shape[1] - X, Y, img.shape[0] - Y]) + 1
+    isz_max = (
+        2 * np.min([X, img.shape[1] - X - 1, Y, img.shape[0] - Y - 1]) + 1
+    )
     if isz_max < dim:
         size_msg = (
             f"The specified cropped image size, {dim}, is greater than the distance to"
