@@ -19,7 +19,7 @@ def test_crop_max():
     size_msg = (
         f"The specified cropped image size, {isz_too_big}, is greater than the distance"
         " to the PSF center in at least one dimension. The max size for this image is"
-        f" {isz_max}."
+        f" {isz_max}"
     )
     with pytest.raises(ValueError, match=size_msg):
         # Above max size should raise the error
