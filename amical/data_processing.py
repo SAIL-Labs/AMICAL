@@ -299,6 +299,7 @@ def show_clean_params(
     with fits.open(filename) as fd:
         data = fd[ihdu].data
     img0 = data[nframe]
+    dims = img0.shape
 
     # Add check to create default add_bad list (not use mutable data)
     if add_bad is None:
@@ -365,6 +366,8 @@ def show_clean_params(
         "w--",
         label="Resized image",
     )
+    plt.xlim((0, dims[0] - 1))
+    plt.ylim((0, dims[1] - 1))
     if not noBadPixel:
         if remove_bad:
             label = "Fixed hot/bad pixels"
