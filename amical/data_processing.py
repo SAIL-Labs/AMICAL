@@ -199,7 +199,7 @@ def select_data(cube, clip_fact=0.5, clip=False, verbose=True, display=True):
     return cube_cleaned_checked
 
 
-def sky_correction(imA, r1=100, dr=20):
+def sky_correction(imA, r1=100, dr=20, verbose=False):
     """
     Perform background sky correction to be as close to zero as possible.
     """
@@ -242,6 +242,12 @@ def sky_correction(imA, r1=100, dr=20):
             "Background not computed, likely because specified radius is out of bounds",
             RuntimeWarning,
         )
+    elif verbose:
+        print(
+            f"Sky correction of {backgroundB} was subtracted,"
+            f" remaining background is {backgroundC}."
+        )
+
     return imC, backgroundC
 
 
@@ -464,7 +470,7 @@ def clean_data(
         img1 = _remove_dark(img1, darkfile=darkfile, verbose=verbose)
         im_rec_max = crop_max(img1, isz, offx=offx, offy=offy, f=f_kernel)[0]
         if sky:
-            img_biased = sky_correction(im_rec_max, r1=r1, dr=dr)[0]
+            img_biased = sky_correction(im_rec_max, r1=r1, dr=dr, verbose=verbose)[0]
         else:
             img_biased = im_rec_max.copy()
         img_biased[img_biased < 0] = 0  # Remove negative pixels
