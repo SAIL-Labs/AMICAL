@@ -7,9 +7,9 @@ from amical import tools
 def test_crop_max():
 
     img_size = 80  # Same size as NIRISS images
-    img = np.ones((img_size, img_size))
-    xmax, ymax = 17, 57
-    img[ymax, xmax] = img.max() * 5  # Add off-centered max pixel
+    img = np.random.random((img_size, img_size))
+    xmax, ymax = np.random.randint(0, high=img_size, size=2)
+    img[ymax, xmax] = img.max() * 3 + 1  # Add max pixel at pre-determined location
 
     # Pre-calculate expected max size
     isz_max = (
