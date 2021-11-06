@@ -175,12 +175,12 @@ def select_data(cube, clip_fact=0.5, clip=False, verbose=True, display=True):
         plt.figure(figsize=(7, 7))
         plt.subplot(2, 2, 1)
         plt.title("Best fram (%i)" % best_fr)
-        plt.imshow(cube[best_fr], norm=PowerNorm(0.5), cmap="afmhot", vmin=0)
+        plt.imshow(cube[best_fr], norm=PowerNorm(0.5, vmin=0), cmap="afmhot")
         plt.subplot(2, 2, 2)
         plt.imshow(np.fft.fftshift(fft_fram[best_fr]), cmap="gist_stern")
         plt.subplot(2, 2, 3)
         plt.title("Worst fram (%i) %s" % (worst_fr, ext))
-        plt.imshow(cube[worst_fr], norm=PowerNorm(0.5), cmap="afmhot", vmin=0)
+        plt.imshow(cube[worst_fr], norm=PowerNorm(0.5, vmin=0), cmap="afmhot")
         plt.subplot(2, 2, 4)
         plt.imshow(np.fft.fftshift(fft_fram[worst_fr]), cmap="gist_stern")
         plt.tight_layout()
@@ -352,7 +352,7 @@ def show_clean_params(
     max_val = img1[y0, x0]
     fig = plt.figure(figsize=(5, 5))
     plt.title("--- CLEANING PARAMETERS ---")
-    plt.imshow(img1, norm=PowerNorm(0.5), cmap="afmhot", vmin=0, vmax=max_val)
+    plt.imshow(img1, norm=PowerNorm(0.5, vmin=0, vmax=max_val), cmap="afmhot")
     plt.plot(x1, y1, label="Inner radius for sky subtraction")
     plt.plot(x2, y2, label="Outer radius for sky subtraction")
     if apod:
