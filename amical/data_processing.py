@@ -10,6 +10,8 @@ centering, etc.) and data selection (sigma-clipping, centered flux,).
 
 --------------------------------------------------------------------
 """
+import warnings
+
 import numpy as np
 from astropy.convolution import Gaussian2DKernel
 from astropy.convolution import interpolate_replace_nans
@@ -197,7 +199,7 @@ def select_data(cube, clip_fact=0.5, clip=False, verbose=True, display=True):
     return cube_cleaned_checked
 
 
-def sky_correction(imA, r1=100, dr=20, verbose=False):
+def sky_correction(imA, r1=100, dr=20):
     """
     Perform background sky correction to be as close to zero as possible.
     """
@@ -209,22 +211,37 @@ def sky_correction(imA, r1=100, dr=20, verbose=False):
     r2 = r1 + dr
 
     distance = np.sqrt(xx2 ** 2 + yy2[:, np.newaxis] ** 2)
-    cond_bg = (r1 <= distance) & (distance <= r2)
+    inner_cond = r1 <= distance
+    outer_cond = distance <= r2
+    cond_bg = inner_cond & outer_cond
 
-    try:
-        minA = imA.min()
-        imB = imA + 1.01 * abs(minA)
-        backgroundB = np.mean(imB[cond_bg])
-        imC = imB - backgroundB
-        backgroundC = np.mean(imC[cond_bg])
-    except IndexError:
+    do_bg = True
+    if not cond_bg.any():
+        do_bg = False
+    elif outer_cond.all():
+        warnings.warn(
+            "The outer radius is out of the image, using everything beyond r1 as background",
+            RuntimeWarning,
+        )
+
+    if do_bg:
+        try:
+            minA = imA.min()
+            imB = imA + 1.01 * abs(minA)
+            backgroundB = np.mean(imB[cond_bg])
+            imC = imB - backgroundB
+            backgroundC = np.mean(imC[cond_bg])
+        except IndexError:
+            do_bg = False
+
+    # Not using else because do_bg can change in except above
+    if not do_bg:
         imC = imA.copy()
         backgroundC = 0
-        if verbose:
-            cprint("Warning: Background not computed", "green")
-            cprint(
-                "-> check the inner and outer radius rings (checkrad option).", "green"
-            )
+        warnings.warn(
+            "Background not computed, likely because specified radius is out of bounds",
+            RuntimeWarning,
+        )
     return imC, backgroundC
 
 
@@ -444,7 +461,7 @@ def clean_data(
         img1 = _remove_dark(img1, darkfile=darkfile, verbose=verbose)
         im_rec_max = crop_max(img1, isz, offx=offx, offy=offy, f=f_kernel)[0]
         if sky:
-            img_biased = sky_correction(im_rec_max, r1=r1, dr=dr, verbose=verbose)[0]
+            img_biased = sky_correction(im_rec_max, r1=r1, dr=dr)[0]
         else:
             img_biased = im_rec_max.copy()
         img_biased[img_biased < 0] = 0  # Remove negative pixels
