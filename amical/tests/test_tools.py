@@ -12,7 +12,7 @@ def test_crop_max():
     img[ymax, xmax] = img.max() * 5  # Add off-centered max pixel
 
     # Pre-calculate expected max size
-    isz_max = 2 * np.min([xmax, img.shape[1] - xmax, ymax, img.shape[0] - ymax])
+    isz_max = 2 * np.min([xmax, img.shape[1] - xmax, ymax, img.shape[0] - ymax]) + 1
     isz_too_big = isz_max + 1
 
     # Using full message because we also check the suggested size
