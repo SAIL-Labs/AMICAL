@@ -468,6 +468,10 @@ def clean_data(
     if add_bad is None:
         add_bad = []
 
+    # If we have extra bad pixels, define bad_map with same shape as image
+    if (bad_map is None) and (len(add_bad) != 0):
+        bad_map = np.zeros(data.shape[1:])
+
     for i in tqdm(range(n_im), ncols=100, desc="Cleaning", leave=False):
         img0 = data[i]
         img0 = _apply_edge_correction(img0, edge=edge)
