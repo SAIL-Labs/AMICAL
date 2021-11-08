@@ -10,6 +10,8 @@ centering, etc.) and data selection (sigma-clipping, centered flux,).
 
 --------------------------------------------------------------------
 """
+import warnings
+
 import numpy as np
 from astropy.convolution import Gaussian2DKernel
 from astropy.convolution import interpolate_replace_nans
@@ -173,12 +175,12 @@ def select_data(cube, clip_fact=0.5, clip=False, verbose=True, display=True):
         plt.figure(figsize=(7, 7))
         plt.subplot(2, 2, 1)
         plt.title("Best fram (%i)" % best_fr)
-        plt.imshow(cube[best_fr], norm=PowerNorm(0.5), cmap="afmhot", vmin=0)
+        plt.imshow(cube[best_fr], norm=PowerNorm(0.5, vmin=0), cmap="afmhot")
         plt.subplot(2, 2, 2)
         plt.imshow(np.fft.fftshift(fft_fram[best_fr]), cmap="gist_stern")
         plt.subplot(2, 2, 3)
         plt.title("Worst fram (%i) %s" % (worst_fr, ext))
-        plt.imshow(cube[worst_fr], norm=PowerNorm(0.5), cmap="afmhot", vmin=0)
+        plt.imshow(cube[worst_fr], norm=PowerNorm(0.5, vmin=0), cmap="afmhot")
         plt.subplot(2, 2, 4)
         plt.imshow(np.fft.fftshift(fft_fram[worst_fr]), cmap="gist_stern")
         plt.tight_layout()
@@ -209,22 +211,43 @@ def sky_correction(imA, r1=100, dr=20, verbose=False):
     r2 = r1 + dr
 
     distance = np.sqrt(xx2 ** 2 + yy2[:, np.newaxis] ** 2)
-    cond_bg = (r1 <= distance) & (distance <= r2)
+    inner_cond = r1 <= distance
+    outer_cond = distance <= r2
+    cond_bg = inner_cond & outer_cond
 
-    try:
-        minA = imA.min()
-        imB = imA + 1.01 * abs(minA)
-        backgroundB = np.mean(imB[cond_bg])
-        imC = imB - backgroundB
-        backgroundC = np.mean(imC[cond_bg])
-    except IndexError:
+    do_bg = True
+    if not cond_bg.any():
+        do_bg = False
+    elif outer_cond.all():
+        warnings.warn(
+            "The outer radius is out of the image, using everything beyond r1 as background",
+            RuntimeWarning,
+        )
+
+    if do_bg:
+        try:
+            minA = imA.min()
+            imB = imA + 1.01 * abs(minA)
+            backgroundB = np.mean(imB[cond_bg])
+            imC = imB - backgroundB
+            backgroundC = np.mean(imC[cond_bg])
+        except IndexError:
+            do_bg = False
+
+    # Not using else because do_bg can change in except above
+    if not do_bg:
         imC = imA.copy()
         backgroundC = 0
-        if verbose:
-            cprint("Warning: Background not computed", "green")
-            cprint(
-                "-> check the inner and outer radius rings (checkrad option).", "green"
-            )
+        warnings.warn(
+            "Background not computed, likely because specified radius is out of bounds",
+            RuntimeWarning,
+        )
+    elif verbose:
+        print(
+            f"Sky correction of {backgroundB} was subtracted,"
+            f" remaining background is {backgroundC}."
+        )
+
     return imC, backgroundC
 
 
@@ -282,6 +305,7 @@ def show_clean_params(
     with fits.open(filename) as fd:
         data = fd[ihdu].data
     img0 = data[nframe]
+    dims = img0.shape
 
     # Add check to create default add_bad list (not use mutable data)
     if add_bad is None:
@@ -335,7 +359,7 @@ def show_clean_params(
     max_val = img1[y0, x0]
     fig = plt.figure(figsize=(5, 5))
     plt.title("--- CLEANING PARAMETERS ---")
-    plt.imshow(img1, norm=PowerNorm(0.5), cmap="afmhot", vmin=0, vmax=max_val)
+    plt.imshow(img1, norm=PowerNorm(0.5, vmin=0, vmax=max_val), cmap="afmhot")
     plt.plot(x1, y1, label="Inner radius for sky subtraction")
     plt.plot(x2, y2, label="Outer radius for sky subtraction")
     if apod:
@@ -348,6 +372,8 @@ def show_clean_params(
         "w--",
         label="Resized image",
     )
+    plt.xlim((0, dims[0] - 1))
+    plt.ylim((0, dims[1] - 1))
     if not noBadPixel:
         if remove_bad:
             label = "Fixed hot/bad pixels"
@@ -442,18 +468,45 @@ def clean_data(
             img1 = img0.copy()
 
         img1 = _remove_dark(img1, darkfile=darkfile, verbose=verbose)
-        im_rec_max = crop_max(img1, isz, offx=offx, offy=offy, f=f_kernel)[0]
-        if sky:
+
+        if isz is not None:
+            im_rec_max = crop_max(img1, isz, offx=offx, offy=offy, f=f_kernel)[0]
+        else:
+            im_rec_max = img1.copy()
+
+        if sky and dr is not None and r1 is not None:
             img_biased = sky_correction(im_rec_max, r1=r1, dr=dr, verbose=verbose)[0]
+        elif sky:
+            if r1 is None and dr is None:
+                none_kwarg = "r1 and dr are"
+            elif r1 is None:
+                none_kwarg = "r1 is"
+            elif dr is None:
+                none_kwarg = "dr is"
+            warnings.warn(
+                f"sky is set to True, but {none_kwarg} set to None. Skipping sky correction",
+                RuntimeWarning,
+            )
+            img_biased = im_rec_max.copy()
         else:
             img_biased = im_rec_max.copy()
         img_biased[img_biased < 0] = 0  # Remove negative pixels
 
-        if (img_biased.shape[0] != img_biased.shape[1]) or (img_biased.shape[0] != isz):
+        if (
+            (img_biased.shape[0] != img_biased.shape[1])
+            or (isz is not None and img_biased.shape[0] != isz)
+            or (isz is None and img_biased.shape[0] != img0.shape[0])
+        ):
             l_bad_frame.append(i)
         else:
-            if apod:
+            if apod and window is not None:
                 img = apply_windowing(img_biased, window=window)
+            elif apod:
+                warnings.warn(
+                    "apod is set to True, but window is None. Skipping apodisation",
+                    RuntimeWarning,
+                )
+                img = img_biased.copy()
             else:
                 img = img_biased.copy()
             cube_cleaned.append(img)
