@@ -26,6 +26,7 @@ def _select_data_file(args, process):
     for i, f in enumerate(l_file):
         hdu = fits.open(f)
         hdr = hdu[0].header
+        hdu.close()
         target = hdr.get("OBJECT", None)
         date = hdr.get("DATE-OBS", None)
         ins = hdr.get("INSTRUME", None)
@@ -42,7 +43,8 @@ def _select_data_file(args, process):
 
     try:
         filename = l_file[choosen_index]
-        hdr = fits.open(filename)[0].header
+        with fits.open(filename) as hdul:
+            hdr = hdul[0].header
     except IndexError:
         raise IndexError(
             "Selected index (%i) not valid (only %i files found)."
@@ -79,7 +81,7 @@ def perform_clean(args):
 
     if args.check:
         amical.show_clean_params(filename, **clean_param)
-        plt.show(block=True)
+        plt.show(block=False)
         return 0
 
     if not os.path.exists(args.outdir):
