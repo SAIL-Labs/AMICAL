@@ -1,7 +1,8 @@
 import numpy as np
 import pytest
 
-from amical.data_processing import sky_correction, clean_data
+from amical.data_processing import clean_data
+from amical.data_processing import sky_correction
 
 
 def test_sky_out_image():
