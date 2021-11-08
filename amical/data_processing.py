@@ -471,20 +471,27 @@ def clean_data(
 
     if (bad_map is None) and (len(add_bad) != 0):
         # If we have extra bad pixels, define bad_map with same shape as image
-        bad_map = np.zeros(data.shape[1:])
+        bad_map = np.zeros_like(data, dtype=bool)
     elif bad_map is not None:
         # Shape should match data
-        if bad_map.shape != data[0].shape:
+        if bad_map.ndim == 2 and bad_map.shape != data[0].shape:
             raise ValueError(
-                f"bad_map should have the same shape as a frame ({data[0].shape}),"
+                f"2D bad_map should have the same shape as a frame ({data[0].shape}),"
                 f" but has shape {bad_map.shape}"
             )
+        elif bad_map.ndim == 3 and bad_map.shape != data.shape:
+            raise ValueError(
+                f"3D bad_map should have the same shape as data cube ({data.shape}),"
+                f" but has shape {bad_map.shape}"
+            )
+        elif bad_map.ndim == 2:
+            bad_map = np.repeat(bad_map[np.newaxis, :], n_im, axis=0)
 
     for i in tqdm(range(n_im), ncols=100, desc="Cleaning", leave=False):
         img0 = data[i]
         img0 = _apply_edge_correction(img0, edge=edge)
         if bad_map is not None:
-            img1 = fix_bad_pixels(img0, bad_map, add_bad=add_bad)
+            img1 = fix_bad_pixels(img0, bad_map[i], add_bad=add_bad)
         else:
             img1 = img0.copy()
 

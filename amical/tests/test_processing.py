@@ -136,7 +136,28 @@ def test_fix_one_bad_pixel():
 
 
 @pytest.mark.usefixtures("close_figures")
+def test_clean_data_bmap_2d():
+    # Test regular 2d bad pixel map
+    n_im = 5
+    img_dim = 80
+    data = np.random.random((n_im, img_dim, img_dim))
+
+    bad_map = np.zeros((img_dim, img_dim), dtype=bool)
+    bad_map[tuple(np.random.randint(0, high=img_dim, size=2))] = 1
+
+    data[:, bad_map] = 1e5
+
+    cleaned = clean_data(data, sky=False, apod=False, bad_map=bad_map)
+    nobpix_list = [fix_bad_pixels(img, bad_map=bad_map) for img in data]
+
+    assert np.all([cleaned[i] == nobpix_list[i] for i in range(data.shape[0])])
+    assert np.all(cleaned[:, bad_map] != data[:, bad_map])
+    assert np.all(cleaned[:, ~bad_map] == data[:, ~bad_map])
+
+
+@pytest.mark.usefixtures("close_figures")
 def test_clean_data_no_bmap_add_bad():
+    # Test add_data kwarg when no bad_map
     n_im = 5
     img_dim = 80
     data = np.random.random((n_im, img_dim, img_dim))
@@ -148,7 +169,6 @@ def test_clean_data_no_bmap_add_bad():
     # Put value out of data bounds (0, 1) to make sure corrected != original
     data[bad_ind_3d] = 1e5
 
-    # Test case with non-emtpy add_bad but empty add_bad
     cleaned = clean_data(data, sky=False, apod=False, add_bad=add_bad)
     nobpix_list = [
         fix_bad_pixels(img, bad_map=np.zeros((img_dim, img_dim)), add_bad=add_bad)
@@ -181,6 +201,7 @@ def test_clean_data_bmap_2d():
 
 @pytest.mark.usefixtures("close_figures")
 def test_clean_data_bmap_add_bad_2d():
+    # Test combination of bad_map and add_bad in 2d
     n_im = 5
     img_dim = 80
     data = np.random.random((n_im, img_dim, img_dim))
@@ -191,7 +212,6 @@ def test_clean_data_bmap_add_bad_2d():
     bad_map = np.zeros((img_dim, img_dim), dtype=bool)
     bad_map[tuple(np.random.randint(0, high=img_dim, size=2))] = 1
 
-    # Test case with non-emtpy add_bad but empty add_bad
     cleaned = clean_data(data, sky=False, apod=False, bad_map=bad_map, add_bad=add_bad)
     nobpix_list = [
         fix_bad_pixels(img, bad_map=bad_map, add_bad=add_bad) for img in data
@@ -205,7 +225,9 @@ def test_clean_data_bmap_add_bad_2d():
     assert np.all(cleaned[:, ~full_bad_map] == data[:, ~full_bad_map])
 
 
+@pytest.mark.usefixtures("close_figures")
 def test_clean_data_bmap_2d_shape():
+    # Assert that bad shape raises error in 2d
     n_im = 5
     img_dim = 80
     data = np.random.random((n_im, img_dim, img_dim))
@@ -213,6 +235,75 @@ def test_clean_data_bmap_2d_shape():
     bad_map = np.zeros((img_dim, img_dim - 1), dtype=bool)
 
     with pytest.raises(
-        ValueError, match="bad_map should have the same shape as a frame"
+        ValueError, match="2D bad_map should have the same shape as a frame"
     ):
         clean_data(data, sky=False, apod=False, bad_map=bad_map)
+
+
+@pytest.mark.usefixtures("close_figures")
+def test_clean_data_bmap_3d():
+    # Test regular bad pixel map per-frame
+    n_im = 5
+    img_dim = 80
+    data = np.random.random((n_im, img_dim, img_dim))
+
+    bad_cube = np.zeros((n_im, img_dim, img_dim), dtype=bool)
+    for i in range(n_im):
+        bad_cube[(i, *np.random.randint(0, high=img_dim, size=2))] = 1
+
+    data[bad_cube] = 1e5
+
+    cleaned = clean_data(data, sky=False, apod=False, bad_map=bad_cube)
+    nobpix_list = [
+        fix_bad_pixels(img, bad_map=bmap) for img, bmap in zip(data, bad_cube)
+    ]
+
+    assert np.all([cleaned[i] == nobpix_list[i] for i in range(data.shape[0])])
+    assert np.all(cleaned[bad_cube] != data[bad_cube])
+    assert np.all(cleaned[~bad_cube] == data[~bad_cube])
+
+
+@pytest.mark.usefixtures("close_figures")
+def test_clean_data_bmap_3d_shape():
+    # Assert that bad shape raises error in 3d
+    n_im = 5
+    img_dim = 80
+    data = np.random.random((n_im, img_dim, img_dim))
+
+    bad_map = np.zeros((n_im, img_dim, img_dim - 1), dtype=bool)
+
+    with pytest.raises(
+        ValueError, match="3D bad_map should have the same shape as data cube"
+    ):
+        clean_data(data, sky=False, apod=False, bad_map=bad_map)
+
+
+@pytest.mark.usefixtures("close_figures")
+def test_clean_data_bmap_add_bad_3d():
+    # Test combination of 3d bad pixels with add_bad common for all dimensions
+    n_im = 5
+    img_dim = 80
+    data = np.random.random((n_im, img_dim, img_dim))
+
+    new_bad_ind = tuple(np.random.randint(0, high=img_dim, size=2))
+    new_bad_ind_3d = (slice(None),) + new_bad_ind
+    add_bad = [new_bad_ind[::-1]]
+
+    bad_cube = np.zeros((n_im, img_dim, img_dim), dtype=bool)
+    for i in range(n_im):
+        bad_cube[(i, *np.random.randint(0, high=img_dim, size=2))] = 1
+
+    data[bad_cube] = 1e5
+
+    cleaned = clean_data(data, sky=False, apod=False, bad_map=bad_cube, add_bad=add_bad)
+    nobpix_list = [
+        fix_bad_pixels(img, bad_map=bmap, add_bad=add_bad)
+        for img, bmap in zip(data, bad_cube)
+    ]
+
+    full_bad_cube = bad_cube.copy()
+    full_bad_cube[new_bad_ind_3d] = True
+
+    assert np.all([cleaned[i] == nobpix_list[i] for i in range(data.shape[0])])
+    assert np.all(cleaned[full_bad_cube] != data[full_bad_cube])
+    assert np.all(cleaned[~full_bad_cube] == data[~full_bad_cube])
