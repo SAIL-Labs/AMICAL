@@ -215,6 +215,10 @@ def sky_correction(imA, r1=100, dr=20, verbose=False):
         minA = imA.min()
         imB = imA + 1.01 * abs(minA)
         backgroundB = np.mean(imB[cond_bg])
+        if len(imB[cond_bg]) == 0:
+            backgroundB = 0
+        else:
+            backgroundB = np.mean(imB[cond_bg])
         imC = imB - backgroundB
         backgroundC = np.mean(imC[cond_bg])
     except IndexError:
@@ -433,6 +437,22 @@ def clean_data(
     if add_bad is None:
         add_bad = []
 
+    if sky:
+        if r1 > isz / 2.0:
+            sky = False
+            cprint("Warning: Background not computed (--sky ignored)", "green")
+            cprint("-> check the inner radius rings (--r1).", "green")
+            cprint(
+                "(You can use 'amical clean --check' to plot radii positions).", "green"
+            )
+        elif r1 + dr > isz / 2.0:
+            sky = False
+            cprint("Warning: Background not computed (--sky ignored)", "green")
+            cprint("-> check the outer radius ring (--dr).", "green")
+            cprint(
+                "(You can use 'amical clean --check' to plot radii positions).", "green"
+            )
+
     for i in tqdm(range(n_im), ncols=100, desc="Cleaning", leave=False):
         img0 = data[i]
         img0 = _apply_edge_correction(img0, edge=edge)
@@ -460,7 +480,7 @@ def clean_data(
     if verbose:
         print("Bad centering frame number:", l_bad_frame)
     cube_cleaned = np.array(cube_cleaned)
-    return cube_cleaned
+    return cube_cleaned, l_bad_frame
 
 
 def select_clean_data(
@@ -539,7 +559,7 @@ def select_clean_data(
     if add_bad is None:
         add_bad = []
 
-    cube_cleaned = clean_data(
+    cube_cleaned, l_bad_frame = clean_data(
         cube,
         isz=isz,
         r1=r1,
