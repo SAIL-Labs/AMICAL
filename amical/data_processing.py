@@ -468,18 +468,45 @@ def clean_data(
             img1 = img0.copy()
 
         img1 = _remove_dark(img1, darkfile=darkfile, verbose=verbose)
-        im_rec_max = crop_max(img1, isz, offx=offx, offy=offy, f=f_kernel)[0]
-        if sky:
+
+        if isz is not None:
+            im_rec_max = crop_max(img1, isz, offx=offx, offy=offy, f=f_kernel)[0]
+        else:
+            im_rec_max = img1.copy()
+
+        if sky and dr is not None and r1 is not None:
             img_biased = sky_correction(im_rec_max, r1=r1, dr=dr, verbose=verbose)[0]
+        elif sky:
+            if r1 is None and dr is None:
+                none_kwarg = "r1 and dr are"
+            elif r1 is None:
+                none_kwarg = "r1 is"
+            elif dr is None:
+                none_kwarg = "dr is"
+            warnings.warn(
+                f"sky is set to True, but {none_kwarg} set to None. Skipping sky correction",
+                RuntimeWarning,
+            )
+            img_biased = im_rec_max.copy()
         else:
             img_biased = im_rec_max.copy()
         img_biased[img_biased < 0] = 0  # Remove negative pixels
 
-        if (img_biased.shape[0] != img_biased.shape[1]) or (img_biased.shape[0] != isz):
+        if (
+            (img_biased.shape[0] != img_biased.shape[1])
+            or (isz is not None and img_biased.shape[0] != isz)
+            or (isz is None and img_biased.shape[0] != img0.shape[0])
+        ):
             l_bad_frame.append(i)
         else:
-            if apod:
+            if apod and window is not None:
                 img = apply_windowing(img_biased, window=window)
+            elif apod:
+                warnings.warn(
+                    "apod is set to True, but window is None. Skipping apodisation",
+                    RuntimeWarning,
+                )
+                img = img_biased.copy()
             else:
                 img = img_biased.copy()
             cube_cleaned.append(img)
