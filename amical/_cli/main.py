@@ -96,12 +96,6 @@ def main(argv: Optional[List[str]] = None) -> int:
         help="Check the cleaning parameters (plot relevant radius in the image).",
     )
     clean_parser.add_argument(
-        "-s",
-        "--save",
-        action="store_true",
-        help="Save the figures as pdf.",
-    )
-    clean_parser.add_argument(
         "-p",
         "--plot",
         action="store_true",
