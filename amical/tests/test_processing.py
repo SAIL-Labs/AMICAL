@@ -352,3 +352,17 @@ def test_clean_data_bmap_add_bad_3d():
     assert np.all([cleaned[i] == nobpix_list[i] for i in range(data.shape[0])])
     assert np.all(cleaned[full_bad_cube] != data[full_bad_cube])
     assert np.all(cleaned[~full_bad_cube] == data[~full_bad_cube])
+
+
+def test_clean_data_add_bad_3d_shape():
+    # Test combination of 3d bad pixels with add_bad 3d as well
+    n_im = 5
+    img_dim = 80
+    data = np.random.random((n_im, img_dim, img_dim))
+
+    add_bad = [
+        [(1, 2)],
+    ] * (n_im + 1)
+
+    with pytest.raises(ValueError, match="3D add_bad should have one list per frame"):
+        clean_data(data, sky=False, apod=False, add_bad=add_bad)

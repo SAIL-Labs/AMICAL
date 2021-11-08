@@ -472,8 +472,11 @@ def clean_data(
         ] * n_im
     else:
         add_bad = np.array(add_bad)
-        if add_bad.ndim == 2:
+        if add_bad.ndim == 2 and len(add_bad[0]) != 0:
             add_bad = np.repeat(add_bad[np.newaxis, :], n_im, axis=0)
+        elif add_bad.ndim == 3:
+            if add_bad.shape[0] != n_im:
+                raise ValueError("3D add_bad should have one list per frame")
 
     if (bad_map is None) and (len(add_bad) != 0):
         # If we have extra bad pixels, define bad_map with same shape as image
