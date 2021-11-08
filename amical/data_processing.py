@@ -467,7 +467,13 @@ def clean_data(
 
     # Add check to create default add_bad list (not use mutable data)
     if add_bad is None:
-        add_bad = []
+        add_bad = [
+            [],
+        ] * n_im
+    else:
+        add_bad = np.array(add_bad)
+        if add_bad.ndim == 2:
+            add_bad = np.repeat(add_bad[np.newaxis, :], n_im, axis=0)
 
     if (bad_map is None) and (len(add_bad) != 0):
         # If we have extra bad pixels, define bad_map with same shape as image
@@ -491,7 +497,7 @@ def clean_data(
         img0 = data[i]
         img0 = _apply_edge_correction(img0, edge=edge)
         if bad_map is not None:
-            img1 = fix_bad_pixels(img0, bad_map[i], add_bad=add_bad)
+            img1 = fix_bad_pixels(img0, bad_map[i], add_bad=add_bad[i])
         else:
             img1 = img0.copy()
 
