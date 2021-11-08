@@ -213,6 +213,7 @@ def test_calibrate_method(method, cli_datadir, tmp_path, monkeypatch):
     true_value_vis2 = 0.98479018
     true_value_wl = 4.286e-06
 
+    plt.close("all")
     assert len(output_file) == 1
     assert len(cal_keys) == 20
     assert cal.vis2[0] == pytest.approx(true_value_vis2, 1e-3)
