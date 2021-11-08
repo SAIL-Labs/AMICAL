@@ -14,16 +14,14 @@ import sys
 import warnings
 
 import numpy as np
-from astropy.convolution import Gaussian2DKernel
-from astropy.convolution import interpolate_replace_nans
+from astropy.convolution import Gaussian2DKernel, interpolate_replace_nans
 from astropy.io import fits
 from matplotlib import pyplot as plt
 from matplotlib.colors import PowerNorm
 from termcolor import cprint
 from tqdm import tqdm
 
-from amical.tools import apply_windowing
-from amical.tools import crop_max
+from amical.tools import apply_windowing, crop_max
 
 
 def _apply_patch_ghost(cube, xc, yc, radius=20, dx=0, dy=-200, method="bg"):
@@ -260,6 +258,7 @@ def fix_bad_pixels(image, bad_map, add_bad=None, x_stddev=1):
         add_bad = []
 
     if len(add_bad) != 0:
+        bad_map = bad_map.copy()  # Don't modify input bad pixel map, use a copy
         for j in range(len(add_bad)):
             bad_map[add_bad[j][1], add_bad[j][0]] = 1
 
