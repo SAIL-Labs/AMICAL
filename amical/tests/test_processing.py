@@ -203,3 +203,16 @@ def test_clean_data_bmap_add_bad_2d():
     assert np.all([cleaned[i] == nobpix_list[i] for i in range(data.shape[0])])
     assert np.all(cleaned[:, full_bad_map] != data[:, full_bad_map])
     assert np.all(cleaned[:, ~full_bad_map] == data[:, ~full_bad_map])
+
+
+def test_clean_data_bmap_2d_shape():
+    n_im = 5
+    img_dim = 80
+    data = np.random.random((n_im, img_dim, img_dim))
+
+    bad_map = np.zeros((img_dim, img_dim - 1), dtype=bool)
+
+    with pytest.raises(
+        ValueError, match="bad_map should have the same shape as a frame"
+    ):
+        clean_data(data, sky=False, apod=False, bad_map=bad_map)

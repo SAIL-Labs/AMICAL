@@ -469,9 +469,16 @@ def clean_data(
     if add_bad is None:
         add_bad = []
 
-    # If we have extra bad pixels, define bad_map with same shape as image
     if (bad_map is None) and (len(add_bad) != 0):
+        # If we have extra bad pixels, define bad_map with same shape as image
         bad_map = np.zeros(data.shape[1:])
+    elif bad_map is not None:
+        # Shape should match data
+        if bad_map.shape != data[0].shape:
+            raise ValueError(
+                f"bad_map should have the same shape as a frame ({data[0].shape}),"
+                f" but has shape {bad_map.shape}"
+            )
 
     for i in tqdm(range(n_im), ncols=100, desc="Cleaning", leave=False):
         img0 = data[i]
