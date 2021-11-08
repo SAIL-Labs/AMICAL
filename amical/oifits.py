@@ -116,6 +116,44 @@ def _apply_flag(dict_calibrated, unit="arcsec"):
     return cal_flagged
 
 
+def wrap_raw(bs):
+    """
+    Wrap extraction product to save it as oifits
+
+    `bs` : {munch.Munch}
+        Object returned by amical.extract_bs() with raw observables,\n
+
+    Returns
+    --------
+    `fake_cal` : {munch.Munch}
+        Object that stores the raw observables in a format compatible with the
+        output from amical.calibrate() and the input for `amical.save()`,\n
+    """
+
+    u1 = bs.u[bs.mask.bs2bl_ix[0, :]]
+    v1 = bs.v[bs.mask.bs2bl_ix[0, :]]
+    u2 = bs.u[bs.mask.bs2bl_ix[1, :]]
+    v2 = bs.v[bs.mask.bs2bl_ix[1, :]]
+
+    fake_cal = {
+        "vis2": bs.vis2,
+        "e_vis2": bs.e_vis2,
+        "cp": bs.cp,
+        "e_cp": bs.e_cp,
+        "u": bs.u,
+        "v": bs.v,
+        "wl": bs.wl,
+        "u1": u1,
+        "v1": v1,
+        "u2": u2,
+        "v2": v2,
+        "raw_t": bs,
+        "raw_c": bs,
+    }
+
+    return dict2class(fake_cal)
+
+
 def cal2dict(
     cal,
     target=None,
@@ -440,7 +478,7 @@ def loadc(filename):
 
 
 def save(
-    input_calibrated,
+    observables,
     oifits_file=None,
     datadir="Saveoifits",
     pa=0,
@@ -453,20 +491,21 @@ def save(
     verbose=False,
     *,
     origin=None,
+    raw=False,
 ):
     """
     Summary:
     --------
 
     Save the class object (from calibrate function) into oifits format. The input
-    input_calibrated can be a list of object for IFU data (e.g.: IFS-SPHERE).
+    observables can be a list of object for IFU data (e.g.: IFS-SPHERE).
 
     Parameters:
     -----------
 
-    `input_calibrated` {class}:
-        Class or list of class containing all calibrated interferometric variable extracted
-        using calibrate (amical.calibration) function,\n
+    `observables` {class}:
+        Class or list of class containing all calibrated interferometric variable
+        extracted using calibrate (amical.calibration) function,\n
     `oifits_file` {str}:
         Name of the oifits file,\n
     `datadir` {str}:
@@ -487,10 +526,13 @@ def save(
     `snr` {float}:
         Limit snr used to compute flags (default=4),\n
     `verbose` {bool}:
-        If True, print useful informations.
+        If True, print useful informations,
     `origin` {str}:
         String to use as ORIGIN key in oifits. 'Sydney University' is used if origin is
-        `None` (default=None).\n
+        `None` (default=None),\n
+    `raw` {bool}:
+        Set to True if the input is not calibrated. This will only silence the warning
+        shown otherwise when an uncalibrated input is detected (default=False).\n
 
     Returns:
     --------
@@ -501,7 +543,7 @@ def save(
 
     """
 
-    if input_calibrated is None:
+    if observables is None:
         cprint("\nError save : Wrong data format!", on_color="on_red")
         return None
 
@@ -509,16 +551,28 @@ def save(
         print("Error: oifits filename is not given, please specify oifits_file.")
         return None
 
-    if type(input_calibrated) is not list:
-        input_calibrated = [input_calibrated]
+    if type(observables) is not list:
+        observables = [observables]
 
     if not isinstance(origin, (str, type(None))):
         raise TypeError("origin should be a str or None")
 
     l_dic = []
-    for ical in input_calibrated:
+    for iobs in observables:
+        # If keys correspond to raw observables, make format compatible with calibrated
+        if "cp" in iobs and "raw_t" not in iobs:
+            if not raw and verbose:
+                msg = (
+                    "The input seems to contain uncalibrated observables."
+                    " Saving raw observables as oifits is provided only for"
+                    " convenience. To re-use the observables in amical.calibrate(),"
+                    " they should be saved to a pickle file. Use raw=True to turn this"
+                    " warning off."
+                )
+                cprint(f"Warning: {msg}", "green")
+            iobs = wrap_raw(iobs)
         idic = cal2dict(
-            ical,
+            iobs,
             pa=pa,
             include_vis=include_vis,
             true_flag_v2=true_flag_v2,
