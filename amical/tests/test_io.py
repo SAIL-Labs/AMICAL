@@ -69,7 +69,7 @@ def test_show(cal):
     amical.show(cal)
 
 
-def test_save(cal, tmpdir):
+def test_save_cal(cal, tmpdir):
 
     dic, savefile = amical.save(
         cal, oifits_file="test_cal.oifits", datadir=tmpdir, fake_obj=True
@@ -87,6 +87,27 @@ def test_save(cal, tmpdir):
     assert len(v2) == 21
     assert len(cp) == 35
     assert hdr["ORIGIN"] == "Sydney University"
+
+
+def test_save_raw(bss, tmpdir):
+    bs = bss["fft"]
+
+    dic, savefile = amical.save(
+        bs, oifits_file="test_raw.oifits", datadir=tmpdir, fake_obj=True
+    )
+
+    assert isinstance(dic, dict)
+    assert isinstance(savefile, str)
+
+    hdr = fits.getheader(savefile)
+    v2 = dic["OI_VIS2"]["VIS2DATA"]
+    cp = dic["OI_T3"]["T3PHI"]
+
+    assert isinstance(v2, np.ndarray)
+    assert isinstance(cp, np.ndarray)
+    assert len(v2) == 21
+    assert len(cp) == 35
+    assert hdr["OBJECT"] == hdr["CALIB"]
 
 
 def test_origin_type(cal, tmpdir):
