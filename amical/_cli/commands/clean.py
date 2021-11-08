@@ -81,7 +81,7 @@ def perform_clean(args):
 
     if args.check:
         amical.show_clean_params(filename, **clean_param)
-        plt.show(block=False)
+        plt.show(block=True)
         return 0
 
     if not os.path.exists(args.outdir):

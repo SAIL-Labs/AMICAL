@@ -306,35 +306,6 @@ def cov2cor(cov):
     return cor, sigma
 
 
-def sky_correction(imA, r1=100, dr=20, verbose=False):
-    """
-    Perform background sky correction to be as close to zero as possible.
-    """
-    isz = imA.shape[0]
-    xc, yc = isz // 2, isz // 2
-    xx, yy = np.arange(isz), np.arange(isz)
-    xx2 = xx - xc
-    yy2 = yc - yy
-    r2 = r1 + dr
-
-    distance = np.sqrt(xx2 ** 2 + yy2[:, np.newaxis] ** 2)
-    cond_bg = (r1 <= distance) & (distance <= r2)
-
-    try:
-        minA = imA.min()
-        imB = imA + 1.01 * abs(minA)
-        backgroundB = np.mean(imB[cond_bg])
-        imC = imB - backgroundB
-        backgroundC = np.mean(imC[cond_bg])
-    except IndexError:
-        imC = imA.copy()
-        backgroundC = 0
-        cprint("Warning: Background not computed", "green")
-        cprint("-> check the inner and outer radius rings (checkrad option).", "green")
-
-    return imC, backgroundC
-
-
 def super_gauss(dist, hwhm, m):
     y = np.exp(-np.log(0.5) * (dist / hwhm) ** m)
     return y

@@ -39,13 +39,13 @@ def main(argv: Optional[List[str]] = None) -> int:
 
     clean_parser.add_argument(
         "--isz",
-        default=149,
+        default=None,
         type=int,
         help="Size of the cropped image [pix] (default: %(default)s).",
     )
     clean_parser.add_argument(
         "--r1",
-        default=70,
+        default=32,
         type=int,
         help="Radius of the rings to compute background sky [pix] (default: %(default)s).",
     )

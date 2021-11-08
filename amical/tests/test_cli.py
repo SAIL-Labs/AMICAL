@@ -46,7 +46,6 @@ def test_clean(cli_datadir, tmp_path, monkeypatch):
 def test_flag_clean(flag, cli_datadir, tmp_path, monkeypatch):
     monkeypatch.setattr("builtins.input", lambda _: "0")
     isz = 78
-
     plt.close("all")
     res = main(
         [
@@ -63,25 +62,6 @@ def test_flag_clean(flag, cli_datadir, tmp_path, monkeypatch):
     assert plt.gcf().number == 2
     # Ensure to close figures for the next tests.
     plt.close("all")
-    assert res == 0
-
-
-def test_plot_clean(cli_datadir, tmp_path, monkeypatch):
-    monkeypatch.setattr("builtins.input", lambda _: "0")
-    isz = 78
-    res = main(
-        [
-            "clean",
-            "--datadir",
-            str(cli_datadir),
-            "--outdir",
-            str(tmp_path),
-            "--isz",
-            str(isz),
-            "--check",
-        ]
-    )
-    assert plt.gcf().number == 1
     assert res == 0
 
 

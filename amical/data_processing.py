@@ -459,22 +459,6 @@ def clean_data(
     if add_bad is None:
         add_bad = []
 
-    if sky:
-        if r1 > isz / 2.0:
-            sky = False
-            cprint("Warning: Background not computed (--sky ignored)", "green")
-            cprint("-> check the inner radius rings (--r1).", "green")
-            cprint(
-                "(You can use 'amical clean --check' to plot radii positions).", "green"
-            )
-        elif r1 + dr > isz / 2.0:
-            sky = False
-            cprint("Warning: Background not computed (--sky ignored)", "green")
-            cprint("-> check the outer radius ring (--dr).", "green")
-            cprint(
-                "(You can use 'amical clean --check' to plot radii positions).", "green"
-            )
-
     for i in tqdm(range(n_im), ncols=100, desc="Cleaning", leave=False):
         img0 = data[i]
         img0 = _apply_edge_correction(img0, edge=edge)
@@ -529,7 +513,7 @@ def clean_data(
     if verbose:
         print("Bad centering frame number:", l_bad_frame)
     cube_cleaned = np.array(cube_cleaned)
-    return cube_cleaned, l_bad_frame
+    return cube_cleaned
 
 
 def select_clean_data(
@@ -598,17 +582,11 @@ def select_clean_data(
                 % (seeing_start, seeing_end, seeing)
             )
 
-    raw_size = cube.shape[1]
-    if isz > raw_size:
-        raise ValueError(
-            "Reshape factor is larger than the data size (choose a smaller isz)."
-        )
-
     # Add check to create default add_bad list (not use mutable data)
     if add_bad is None:
         add_bad = []
 
-    cube_cleaned, l_bad_frame = clean_data(
+    cube_cleaned = clean_data(
         cube,
         isz=isz,
         r1=r1,
