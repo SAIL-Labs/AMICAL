@@ -466,7 +466,8 @@ def clean_data(
     l_bad_frame = []
 
     # Add check to create default add_bad list (not use mutable data)
-    if add_bad is None:
+    if add_bad is None or len(add_bad) == 0:
+        # Reshape add_bad to simplify indexing in loop
         add_bad = [
             [],
         ] * n_im
