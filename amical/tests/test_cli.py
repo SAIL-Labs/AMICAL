@@ -13,6 +13,14 @@ from amical._cli.main import main
 valid_commands = ["clean", "extract", "calibrate"]
 
 
+@pytest.fixture()
+def close_figures():
+    plt.close("all")
+    yield
+    plt.close("all")
+
+
+@pytest.mark.usefixtures("close_figures")
 def test_clean(cli_datadir, tmp_path, monkeypatch):
     monkeypatch.setattr("builtins.input", lambda _: "0")
     isz = 78
@@ -42,11 +50,11 @@ def test_clean(cli_datadir, tmp_path, monkeypatch):
     assert res == 0
 
 
+@pytest.mark.usefixtures("close_figures")
 @pytest.mark.parametrize("flag", ["--apod", "--sky", "--clip"])
 def test_flag_clean(flag, cli_datadir, tmp_path, monkeypatch):
     monkeypatch.setattr("builtins.input", lambda _: "0")
     isz = 78
-    plt.close("all")
     res = main(
         [
             "clean",
@@ -60,11 +68,10 @@ def test_flag_clean(flag, cli_datadir, tmp_path, monkeypatch):
         ]
     )
     assert plt.gcf().number == 2
-    # Ensure to close figures for the next tests.
-    plt.close("all")
     assert res == 0
 
 
+@pytest.mark.usefixtures("close_figures")
 def test_extract(cli_datadir, tmp_path, monkeypatch):
     monkeypatch.setattr("builtins.input", lambda _: "0")
 
@@ -97,8 +104,8 @@ def test_extract(cli_datadir, tmp_path, monkeypatch):
     assert bs.cp[0] == pytest.approx(true_value_cp, 1e-1)
 
 
+@pytest.mark.usefixtures("close_figures")
 def test_calibrate(cli_datadir, tmp_path, monkeypatch):
-    plt.close("all")
     monkeypatch.setattr("builtins.input", lambda _: "0")
     for i in range(2):
         monkeypatch.setattr("builtins.input", lambda _: str(i))
@@ -120,9 +127,6 @@ def test_calibrate(cli_datadir, tmp_path, monkeypatch):
         monkeypatch.setattr("builtins.input", lambda _: str(i))
         main(["extract", "--datadir", str(tmp_path), "--outdir", str(tmp_path)])
 
-    monkeypatch.setattr("builtins.input", lambda _: "1")
-    monkeypatch.setattr("builtins.input", lambda _: "0")
-
     responses = iter(["1", "0"])
     monkeypatch.setattr("builtins.input", lambda msg: next(responses))
 
@@ -142,9 +146,9 @@ def test_calibrate(cli_datadir, tmp_path, monkeypatch):
     assert cal.wl[0] == pytest.approx(true_value_wl, 1e-9)
 
 
+@pytest.mark.usefixtures("close_figures")
 @pytest.mark.parametrize("method", ["fft", "gauss", "unique", "square"])
 def test_calibrate_method(method, cli_datadir, tmp_path, monkeypatch):
-    plt.close("all")
     monkeypatch.setattr("builtins.input", lambda _: "0")
 
     for i in range(2):
@@ -193,7 +197,6 @@ def test_calibrate_method(method, cli_datadir, tmp_path, monkeypatch):
     true_value_vis2 = 0.98479018
     true_value_wl = 4.286e-06
 
-    plt.close("all")
     assert len(output_file) == 1
     assert len(cal_keys) == 20
     assert cal.vis2[0] == pytest.approx(true_value_vis2, 1e-3)
