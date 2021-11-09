@@ -271,6 +271,58 @@ def fix_bad_pixels(image, bad_map, add_bad=None, x_stddev=1):
     return fixed_image
 
 
+def _get_3d_bad_pixels(bad_map, add_bad, data):
+    """
+    Format 3d bad pixel cube from arbitrary bad pixel input
+
+    Parameters
+    ----------
+    `bad_map` {np.ndarray}: Bad pixel map in 2d or 3d (can also be None)\n
+    `add_bad` {list}: list of bad pixel coordinates\n
+    `data` {np.ndarray}: Array with the data corresponding to the bad pixel map\n
+
+    Returns:
+    --------
+    `bad_map` {np.array}: 3d bad map with same shape as data cube
+    `add_bad` {list}: add_bad list compatible with 3d dataset
+    """
+    n_im = data.shape[0]
+
+    # Add check to create default add_bad list (not use mutable data)
+    if add_bad is None or len(add_bad) == 0:
+        # Reshape add_bad to simplify indexing in loop
+        add_bad = [
+            [],
+        ] * n_im
+    else:
+        add_bad = np.array(add_bad)
+        if add_bad.ndim == 2 and len(add_bad[0]) != 0:
+            add_bad = np.repeat(add_bad[np.newaxis, :], n_im, axis=0)
+        elif add_bad.ndim == 3:
+            if add_bad.shape[0] != n_im:
+                raise ValueError("3D add_bad should have one list per frame")
+
+    if (bad_map is None) and (len(add_bad) != 0):
+        # If we have extra bad pixels, define bad_map with same shape as image
+        bad_map = np.zeros_like(data, dtype=bool)
+    elif bad_map is not None:
+        # Shape should match data
+        if bad_map.ndim == 2 and bad_map.shape != data[0].shape:
+            raise ValueError(
+                f"2D bad_map should have the same shape as a frame ({data[0].shape}),"
+                f" but has shape {bad_map.shape}"
+            )
+        elif bad_map.ndim == 3 and bad_map.shape != data.shape:
+            raise ValueError(
+                f"3D bad_map should have the same shape as data cube ({data.shape}),"
+                f" but has shape {bad_map.shape}"
+            )
+        elif bad_map.ndim == 2:
+            bad_map = np.repeat(bad_map[np.newaxis, :], n_im, axis=0)
+
+    return bad_map, add_bad
+
+
 def show_clean_params(
     filename,
     isz,
@@ -317,12 +369,9 @@ def show_clean_params(
         )
         isz = dims[0]
 
-    # Add check to create default add_bad list (not use mutable data)
-    if add_bad is None:
-        add_bad = []
-
-    if (bad_map is None) and (len(add_bad) != 0):
-        bad_map = np.zeros(img0.shape)
+    bad_map, add_bad = _get_3d_bad_pixels(bad_map, add_bad, data)
+    bmap0 = bad_map[nframe]
+    ab0 = add_bad[nframe]
 
     if edge != 0:
         img0[:, 0:edge] = 0
@@ -330,7 +379,7 @@ def show_clean_params(
         img0[0:edge, :] = 0
         img0[-edge:-1, :] = 0
     if (bad_map is not None) & (remove_bad):
-        img1 = fix_bad_pixels(img0, bad_map, add_bad=add_bad)
+        img1 = fix_bad_pixels(img0, bmap0, add_bad=ab0)
     else:
         img1 = img0.copy()
     cropped_infos = crop_max(img1, isz, offx=offx, offy=offy, f=f_kernel)
@@ -338,10 +387,11 @@ def show_clean_params(
 
     noBadPixel = False
     bad_pix_x, bad_pix_y = [], []
-    if (bad_map is not None) & (len(add_bad) != 0):
-        for j in range(len(add_bad)):
-            bad_map[add_bad[j][1], add_bad[j][0]] = 1
-        bad_pix = np.where(bad_map == 1)
+    if np.any(bmap0):
+        if len(ab0) != 0:
+            for j in range(len(ab0)):
+                bmap0[ab0[j][1], ab0[j][0]] = 1
+        bad_pix = np.where(bmap0 == 1)
         bad_pix_x = bad_pix[0]
         bad_pix_y = bad_pix[1]
     else:
@@ -392,6 +442,7 @@ def show_clean_params(
         plt.scatter(
             bad_pix_y,
             bad_pix_x,
+            color="None",
             marker="s",
             edgecolors="r",
             facecolors="None",
@@ -465,37 +516,7 @@ def clean_data(
     cube_cleaned = []  # np.zeros([n_im, isz, isz])
     l_bad_frame = []
 
-    # Add check to create default add_bad list (not use mutable data)
-    if add_bad is None or len(add_bad) == 0:
-        # Reshape add_bad to simplify indexing in loop
-        add_bad = [
-            [],
-        ] * n_im
-    else:
-        add_bad = np.array(add_bad)
-        if add_bad.ndim == 2 and len(add_bad[0]) != 0:
-            add_bad = np.repeat(add_bad[np.newaxis, :], n_im, axis=0)
-        elif add_bad.ndim == 3:
-            if add_bad.shape[0] != n_im:
-                raise ValueError("3D add_bad should have one list per frame")
-
-    if (bad_map is None) and (len(add_bad) != 0):
-        # If we have extra bad pixels, define bad_map with same shape as image
-        bad_map = np.zeros_like(data, dtype=bool)
-    elif bad_map is not None:
-        # Shape should match data
-        if bad_map.ndim == 2 and bad_map.shape != data[0].shape:
-            raise ValueError(
-                f"2D bad_map should have the same shape as a frame ({data[0].shape}),"
-                f" but has shape {bad_map.shape}"
-            )
-        elif bad_map.ndim == 3 and bad_map.shape != data.shape:
-            raise ValueError(
-                f"3D bad_map should have the same shape as data cube ({data.shape}),"
-                f" but has shape {bad_map.shape}"
-            )
-        elif bad_map.ndim == 2:
-            bad_map = np.repeat(bad_map[np.newaxis, :], n_im, axis=0)
+    bad_map, add_bad = _get_3d_bad_pixels(bad_map, add_bad, data)
 
     for i in tqdm(range(n_im), ncols=100, desc="Cleaning", leave=False):
         img0 = data[i]
