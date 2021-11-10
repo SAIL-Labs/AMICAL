@@ -44,7 +44,7 @@ def _select_association_file(args):
         date = hdr.get("DATE-OBS", None)
         ins = hdr.get("INSTRUME", None)
 
-        if (target is not None) & (target != "Unknown"):
+        if target not in (None, "Unknown"):
             try:
                 source = _query_simbad(target)
             except Exception:
