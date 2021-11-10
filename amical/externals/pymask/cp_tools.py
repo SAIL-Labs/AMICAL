@@ -348,11 +348,7 @@ def hammer(
     if verbose:
         print("Time elapsed =", tf - t0, "s")
 
-    chain = sampler.flatchain
-
-    # Remove the burn in
-    chain = chain[burn_in:]
-
+    chain = sampler.get_chain(discard=burn_in, thin=15, flat=True)
     seps = chain[:, 0]
     ths = chain[:, 1]
     cs = chain[:, 2:][:, 0]
@@ -479,7 +475,7 @@ def hammer(
         "delpa": dth,
         "con": meanc,
         "delcon": dc,
-        "chain": sampler.chain,
+        "chain": sampler.get_chain(),
     }
     data2 = {
         "sep": res_p[0],
@@ -491,7 +487,7 @@ def hammer(
         "cr": res_p[2],
         "delcrm": err_m[2],
         "delcrp": err_p[2],
-        "chain": sampler.chain,
+        "chain": sampler.get_chain(),
     }
 
     return data, data2

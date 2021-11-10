@@ -6,18 +6,12 @@ from astropy.io import fits
 import amical
 from amical import load
 from amical import loadc
-from amical.externals import pymask
 from amical.get_infos_obs import get_pixel_size
 
 
 @pytest.fixture()
 def example_oifits(global_datadir):
     return global_datadir / "test.oifits"
-
-
-@pytest.fixture()
-def example_oifits_no_date_obs(global_datadir):
-    return global_datadir / "test_no_date_obs.oifits"
 
 
 def test_load_file(example_oifits):
@@ -28,35 +22,42 @@ def test_load_file(example_oifits):
 peakmethods = ["fft", "gauss", "square"]
 
 
-@pytest.fixture(name="bss", scope="session")
-def example_bss(global_datadir):
+@pytest.mark.parametrize("peakmethod", ["fft", "gauss", "square", "unique"])
+def test_extract(peakmethod, global_datadir):
     fits_file = global_datadir / "test.fits"
     with fits.open(fits_file) as fh:
         cube = fh[0].data
-    bss = {}
-    for peakmethod in peakmethods:
-        bss[peakmethod] = amical.extract_bs(
-            cube,
-            fits_file,
-            targetname="test",
-            bs_multi_tri=False,
-            maskname="g7",
-            fw_splodge=0.7,
-            display=False,
-            peakmethod=peakmethod,
-        )
-    return bss
+    bs = amical.extract_bs(
+        cube,
+        fits_file,
+        targetname="test",
+        bs_multi_tri=False,
+        maskname="g7",
+        fw_splodge=0.7,
+        display=False,
+        peakmethod=peakmethod,
+    )
+    bs_keys = list(bs.keys())
+    assert isinstance(bs, munch.Munch)
+    assert len(bs_keys) == 13
 
 
 @pytest.fixture(name="cal", scope="session")
-def example_cal_fft(bss):
-    bs = bss["fft"]
+def example_cal_fft(global_datadir):
+    fits_file = global_datadir / "test.fits"
+    with fits.open(fits_file) as fh:
+        cube = fh[0].data
+    bs = amical.extract_bs(
+        cube,
+        fits_file,
+        targetname="test",
+        bs_multi_tri=False,
+        maskname="g7",
+        fw_splodge=0.7,
+        display=False,
+        peakmethod="fft",
+    )
     return amical.calibrate(bs, bs)
-
-
-@pytest.mark.slow
-def test_extraction(bss):
-    assert isinstance(bss["gauss"], munch.Munch)
 
 
 @pytest.mark.slow
@@ -89,8 +90,20 @@ def test_save_cal(cal, tmpdir):
     assert hdr["ORIGIN"] == "Sydney University"
 
 
-def test_save_raw(bss, tmpdir):
-    bs = bss["fft"]
+def test_save_raw(global_datadir, tmpdir):
+    fits_file = global_datadir / "test.fits"
+    with fits.open(fits_file) as fh:
+        cube = fh[0].data
+    bs = amical.extract_bs(
+        cube,
+        fits_file,
+        targetname="test",
+        bs_multi_tri=False,
+        maskname="g7",
+        fw_splodge=0.7,
+        display=False,
+        peakmethod="fft",
+    )
 
     dic, savefile = amical.save(
         bs, oifits_file="test_raw.oifits", datadir=tmpdir, fake_obj=True
@@ -137,28 +150,6 @@ def test_save_origin(cal, tmpdir):
     hdr = fits.getheader(savefile)
 
     assert hdr["ORIGIN"] == og
-
-
-@pytest.mark.slow
-@pytest.mark.parametrize("ncore", [1, 2, 4])
-def test_candid_grid(example_oifits, ncore):
-
-    param_candid = {"rmin": 20, "rmax": 250, "step": 100, "ncore": ncore}
-    fit1 = amical.candid_grid(example_oifits, **param_candid)
-    assert isinstance(fit1, dict)
-
-
-@pytest.mark.slow
-def test_pymask(example_oifits):
-    fit1 = amical.pymask_grid(str(example_oifits))
-    assert isinstance(fit1, dict)
-    fit2 = amical.pymask_grid([example_oifits])
-    assert isinstance(fit2, dict)
-
-
-def test_pymask_oifits_no_date_obs(example_oifits_no_date_obs):
-    o = pymask.oifits.open(str(example_oifits_no_date_obs))
-    assert isinstance(o, pymask.oifits.oifits)
 
 
 def test_loadc_file(example_oifits):
