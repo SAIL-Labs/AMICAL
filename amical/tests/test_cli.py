@@ -1,4 +1,4 @@
-from glob import glob
+from pathlib import Path
 
 import munch
 import numpy as np
@@ -40,7 +40,7 @@ def test_clean(cli_datadir, tmp_path, monkeypatch):
     with fits.open(input_file[0]) as hdu:
         data = hdu[0].data
 
-    saved_file = glob(str(tmp_path) + "/*.fits")
+    saved_file = list(Path(tmp_path).glob("*.fits"))
     with fits.open(saved_file[0]) as hdu:
         data_cleaned = hdu[0].data
 
@@ -89,7 +89,7 @@ def test_extract(cli_datadir, tmp_path, monkeypatch):
     )
     main(["extract", "--datadir", str(tmp_path), "--outdir", str(tmp_path)])
 
-    output_file = sorted(glob(str(tmp_path) + "/*.h5"))
+    output_file = sorted(Path(tmp_path).glob("*.h5"))
 
     bs = load_bs_hdf5(output_file[0])
     bs_keys = list(bs.keys())
@@ -132,7 +132,7 @@ def test_calibrate(cli_datadir, tmp_path, monkeypatch):
 
     main(["calibrate", "--datadir", str(tmp_path), "--outdir", str(tmp_path)])
 
-    output_file = sorted(glob(str(tmp_path) + "/*calibrated.fits"))
+    output_file = sorted(Path(tmp_path).glob("*calibrated.fits"))
 
     cal = loadc(output_file[0])
     cal_keys = list(cal.keys())
@@ -187,7 +187,7 @@ def test_calibrate_method(method, cli_datadir, tmp_path, monkeypatch):
 
     main(["calibrate", "--datadir", str(tmp_path), "--outdir", str(tmp_path)])
 
-    output_file = sorted(glob(str(tmp_path) + "/*calibrated.fits"))
+    output_file = sorted(Path(tmp_path).glob("*calibrated.fits"))
 
     cal = loadc(output_file[0])
     cal_keys = list(cal.keys())
