@@ -107,7 +107,6 @@ def test_extract(cli_datadir, tmp_path, monkeypatch):
 
 @pytest.mark.usefixtures("close_figures")
 def test_calibrate(cli_datadir, tmp_path, monkeypatch):
-    monkeypatch.setattr("builtins.input", lambda _: "0")
     for i in range(2):
         monkeypatch.setattr("builtins.input", lambda _: str(i))
 
@@ -151,8 +150,6 @@ def test_calibrate(cli_datadir, tmp_path, monkeypatch):
 @pytest.mark.usefixtures("close_figures")
 @pytest.mark.parametrize("method", ["fft", "gauss", "unique", "square"])
 def test_calibrate_method(method, cli_datadir, tmp_path, monkeypatch):
-    monkeypatch.setattr("builtins.input", lambda _: "0")
-
     for i in range(2):
         monkeypatch.setattr("builtins.input", lambda _: str(i))
 
@@ -184,9 +181,6 @@ def test_calibrate_method(method, cli_datadir, tmp_path, monkeypatch):
             ]
         )
         assert ret == 0
-
-    monkeypatch.setattr("builtins.input", lambda _: "1")
-    monkeypatch.setattr("builtins.input", lambda _: "0")
 
     responses = iter(["1", "0"])
     monkeypatch.setattr("builtins.input", lambda msg: next(responses))
