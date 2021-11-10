@@ -36,7 +36,7 @@ def test_clean(cli_datadir, tmp_path, monkeypatch):
         ]
     )
 
-    input_file = sorted(glob(str(cli_datadir) + "/*.fits"))
+    input_file = sorted(cli_datadir.glob("*.fits"))
     with fits.open(input_file[0]) as hdu:
         data = hdu[0].data
 
