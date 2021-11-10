@@ -24,7 +24,7 @@ def close_figures():
 def test_clean(cli_datadir, tmp_path, monkeypatch):
     monkeypatch.setattr("builtins.input", lambda _: "0")
     isz = 78
-    res = main(
+    ret = main(
         [
             "clean",
             "--datadir",
@@ -47,7 +47,7 @@ def test_clean(cli_datadir, tmp_path, monkeypatch):
     assert len(saved_file) == 1
     assert isinstance(data, np.ndarray)
     assert data_cleaned.shape[1] == isz
-    assert res == 0
+    assert ret == 0
 
 
 @pytest.mark.usefixtures("close_figures")
@@ -55,7 +55,7 @@ def test_clean(cli_datadir, tmp_path, monkeypatch):
 def test_flag_clean(flag, cli_datadir, tmp_path, monkeypatch):
     monkeypatch.setattr("builtins.input", lambda _: "0")
     isz = 78
-    res = main(
+    ret = main(
         [
             "clean",
             "--datadir",
@@ -68,7 +68,7 @@ def test_flag_clean(flag, cli_datadir, tmp_path, monkeypatch):
         ]
     )
     assert plt.gcf().number == 2
-    assert res == 0
+    assert ret == 0
 
 
 @pytest.mark.usefixtures("close_figures")
@@ -76,7 +76,7 @@ def test_extract(cli_datadir, tmp_path, monkeypatch):
     monkeypatch.setattr("builtins.input", lambda _: "0")
 
     isz = 78
-    main(
+    ret = main(
         [
             "clean",
             "--datadir",
@@ -102,6 +102,7 @@ def test_extract(cli_datadir, tmp_path, monkeypatch):
     assert len(bs_keys) == 13
     assert bs.vis2[0] == pytest.approx(true_value_v2, 1e-1)
     assert bs.cp[0] == pytest.approx(true_value_cp, 1e-1)
+    assert ret == 0
 
 
 @pytest.mark.usefixtures("close_figures")
@@ -111,7 +112,7 @@ def test_calibrate(cli_datadir, tmp_path, monkeypatch):
         monkeypatch.setattr("builtins.input", lambda _: str(i))
 
         isz = 78
-        main(
+        ret = main(
             [
                 "clean",
                 "--datadir",
@@ -144,6 +145,7 @@ def test_calibrate(cli_datadir, tmp_path, monkeypatch):
     assert len(cal_keys) == 20
     assert cal.vis2[0] == pytest.approx(true_value_vis2, 1e-3)
     assert cal.wl[0] == pytest.approx(true_value_wl, 1e-9)
+    assert ret == 0
 
 
 @pytest.mark.usefixtures("close_figures")
@@ -155,7 +157,7 @@ def test_calibrate_method(method, cli_datadir, tmp_path, monkeypatch):
         monkeypatch.setattr("builtins.input", lambda _: str(i))
 
         isz = 78
-        main(
+        ret = main(
             [
                 "clean",
                 "--datadir",
@@ -166,10 +168,11 @@ def test_calibrate_method(method, cli_datadir, tmp_path, monkeypatch):
                 str(isz),
             ]
         )
+        assert ret == 0
 
     for i in range(2):
         monkeypatch.setattr("builtins.input", lambda _: str(i))
-        main(
+        ret = main(
             [
                 "extract",
                 "--datadir",
@@ -180,6 +183,7 @@ def test_calibrate_method(method, cli_datadir, tmp_path, monkeypatch):
                 method,
             ]
         )
+        assert ret == 0
 
     monkeypatch.setattr("builtins.input", lambda _: "1")
     monkeypatch.setattr("builtins.input", lambda _: "0")
