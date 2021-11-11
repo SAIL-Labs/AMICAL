@@ -3,6 +3,7 @@ import pytest
 from matplotlib import pyplot as plt
 
 import amical
+from amical.data_processing import _get_3d_bad_pixels
 from amical.data_processing import clean_data
 from amical.data_processing import fix_bad_pixels
 from amical.data_processing import sky_correction
@@ -354,7 +355,7 @@ def test_clean_data_bmap_add_bad_3d():
     assert np.all(cleaned[~full_bad_cube] == data[~full_bad_cube])
 
 
-def test_clean_data_add_bad_3d_shape():
+def test_3d_bad_pix_abad_3d_shape():
     # Test combination of 3d bad pixels with add_bad 3d as well
     n_im = 5
     img_dim = 80
@@ -365,4 +366,32 @@ def test_clean_data_add_bad_3d_shape():
     ] * (n_im + 1)
 
     with pytest.raises(ValueError, match="3D add_bad should have one list per frame"):
-        clean_data(data, sky=False, apod=False, add_bad=add_bad)
+        _get_3d_bad_pixels(None, add_bad, data)
+
+
+def test_3d_bad_pix_bmap_2d_shape():
+    # Assert that bad shape raises error in 2d
+    n_im = 5
+    img_dim = 80
+    data = np.random.random((n_im, img_dim, img_dim))
+
+    bad_map = np.zeros((img_dim, img_dim - 1), dtype=bool)
+
+    with pytest.raises(
+        ValueError, match="2D bad_map should have the same shape as a frame"
+    ):
+        _get_3d_bad_pixels(bad_map, None, data)
+
+
+def test_3d_bad_pix_bmap_3d_shape():
+    # Assert that bad shape raises error in 3d
+    n_im = 5
+    img_dim = 80
+    data = np.random.random((n_im, img_dim, img_dim))
+
+    bad_map = np.zeros((n_im, img_dim, img_dim - 1), dtype=bool)
+
+    with pytest.raises(
+        ValueError, match="3D bad_map should have the same shape as data cube"
+    ):
+        _get_3d_bad_pixels(bad_map, None, data)
