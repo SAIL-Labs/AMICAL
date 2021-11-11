@@ -532,12 +532,18 @@ def clean_data(
         img1 = _remove_dark(img1, darkfile=darkfile, verbose=verbose)
 
         if isz is not None:
-            im_rec_max = crop_max(img1, isz, offx=offx, offy=offy, f=f_kernel)[0]
+            # Get expected center for sky correction
+            filtmed = f_kernel is not None
+            center = crop_max(
+                img1, isz, offx=offx, offy=offy, filtmed=filtmed, f=f_kernel
+            )[1]
         else:
-            im_rec_max = img1.copy()
+            center = None
 
         if sky and dr is not None and r1 is not None:
-            img_biased = sky_correction(im_rec_max, r1=r1, dr=dr, verbose=verbose)[0]
+            img_biased = sky_correction(
+                img1, r1=r1, dr=dr, verbose=verbose, center=center
+            )[0]
         elif sky:
             if r1 is None and dr is None:
                 none_kwarg = "r1 and dr are"
@@ -549,28 +555,37 @@ def clean_data(
                 f"sky is set to True, but {none_kwarg} set to None. Skipping sky correction",
                 RuntimeWarning,
             )
-            img_biased = im_rec_max.copy()
+            img_biased = img1.copy()
         else:
-            img_biased = im_rec_max.copy()
+            img_biased = img1.copy()
         img_biased[img_biased < 0] = 0  # Remove negative pixels
 
+        if isz is not None:
+            # Get expected center for sky correction
+            filtmed = f_kernel is not None
+            im_rec_max = crop_max(
+                img1, isz, offx=offx, offy=offy, filtmed=filtmed, f=f_kernel
+            )[0]
+        else:
+            im_rec_max = img1.copy()
+
         if (
-            (img_biased.shape[0] != img_biased.shape[1])
-            or (isz is not None and img_biased.shape[0] != isz)
-            or (isz is None and img_biased.shape[0] != img0.shape[0])
+            (im_rec_max.shape[0] != im_rec_max.shape[1])
+            or (isz is not None and im_rec_max.shape[0] != isz)
+            or (isz is None and im_rec_max.shape[0] != img0.shape[0])
         ):
             l_bad_frame.append(i)
         else:
             if apod and window is not None:
-                img = apply_windowing(img_biased, window=window)
+                img = apply_windowing(im_rec_max, window=window)
             elif apod:
                 warnings.warn(
                     "apod is set to True, but window is None. Skipping apodisation",
                     RuntimeWarning,
                 )
-                img = img_biased.copy()
+                img = im_rec_max.copy()
             else:
-                img = img_biased.copy()
+                img = im_rec_max.copy()
             cube_cleaned.append(img)
     if verbose:
         print("Bad centering frame number:", l_bad_frame)

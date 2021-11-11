@@ -38,7 +38,7 @@ def test_sky_inner_only():
     img_dim = 80
     img = np.ones((img_dim, img_dim))
 
-    # Inner radius beyond image corners
+    # Outer radius beyond image corners
     r1 = np.sqrt(2 * (img_dim / 2) ** 2) - 10
     dr = 100
 
@@ -47,6 +47,25 @@ def test_sky_inner_only():
         match="The outer radius is out of the image, using everything beyond r1 as background",
     ):
         sky_correction(img, r1=r1, dr=dr)
+
+
+@pytest.mark.usefixtures("close_figures")
+def test_clean_sky_out_crop():
+
+    n_im = 5
+    img_dim = 80
+    data = np.ones((n_im, img_dim, img_dim))
+    xmax, ymax = (40, 41)
+    data[:, ymax, xmax] = data.max() * 3 + 1  # Add max pixel at pre-determined location
+
+    isz = 67
+
+    r1 = int(np.sqrt(2 * (isz / 2) ** 2) + 2)
+
+    clean_cube = clean_data(data, isz=isz, r1=r1, dr=2, f_kernel=None, apod=False)
+
+    # Make sure did not just remove everything
+    assert len(clean_cube) != 0
 
 
 @pytest.mark.usefixtures("close_figures")
