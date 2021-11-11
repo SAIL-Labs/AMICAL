@@ -69,6 +69,19 @@ def test_clean_sky_out_crop():
 
 
 @pytest.mark.usefixtures("close_figures")
+def test_sky_dr_none():
+    # Make sure dr=None does not crash
+    img_dim = 80
+    img = np.ones((img_dim, img_dim))
+
+    # Outer radius beyond image corners
+    r1 = np.sqrt(2 * (img_dim / 2) ** 2) - 10
+    dr = None
+
+    sky_correction(img, r1=r1, dr=dr)
+
+
+@pytest.mark.usefixtures("close_figures")
 def test_clean_data_none_kwargs():
     # Test clean_data when the "main" kwargs are set to None
     n_im = 5

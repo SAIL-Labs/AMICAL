@@ -212,17 +212,20 @@ def sky_correction(imA, r1=100, dr=20, verbose=False, *, center=None):
     xx, yy = np.arange(isz), np.arange(isz)
     xx2 = xx - xc
     yy2 = yc - yy
-    r2 = r1 + dr
 
     distance = np.sqrt(xx2 ** 2 + yy2[:, np.newaxis] ** 2)
     inner_cond = r1 <= distance
-    outer_cond = distance <= r2
+    if dr is not None:
+        r2 = r1 + dr
+        outer_cond = distance <= r2
+    else:
+        outer_cond = True
     cond_bg = inner_cond & outer_cond
 
     do_bg = True
     if not cond_bg.any():
         do_bg = False
-    elif outer_cond.all():
+    elif dr is not None and np.all(outer_cond):
         warnings.warn(
             "The outer radius is out of the image, using everything beyond r1 as background",
             RuntimeWarning,
