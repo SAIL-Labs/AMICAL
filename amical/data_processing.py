@@ -543,7 +543,7 @@ def clean_data(
         else:
             center = None
 
-        if sky and dr is not None and r1 is not None:
+        if sky and r1 is not None:
             img_biased = sky_correction(
                 img1, r1=r1, dr=dr, verbose=verbose, center=center
             )[0]
@@ -552,8 +552,6 @@ def clean_data(
                 none_kwarg = "r1 and dr are"
             elif r1 is None:
                 none_kwarg = "r1 is"
-            elif dr is None:
-                none_kwarg = "dr is"
             warnings.warn(
                 f"sky is set to True, but {none_kwarg} set to None. Skipping sky correction",
                 RuntimeWarning,

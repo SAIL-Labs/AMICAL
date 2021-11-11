@@ -150,6 +150,17 @@ def test_fix_bad_pixel_no_bad():
     assert np.all(data == no_bpix)
 
 
+def test_clean_data_dr_none():
+    # Test clean_data with dr=None (i.e. single sky delimiter)
+    n_im = 5
+    img_dim = 80
+    data = np.random.random((n_im, img_dim, img_dim))
+
+    r1 = int(np.sqrt(2 * (img_dim / 2) ** 2) - 2)  # working r1
+
+    clean_data(data, r1=r1, apod=False)
+
+
 def test_fix_one_bad_pixel():
 
     img_dim = 80
