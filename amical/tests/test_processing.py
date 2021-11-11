@@ -7,6 +7,7 @@ from amical.data_processing import _get_3d_bad_pixels
 from amical.data_processing import clean_data
 from amical.data_processing import fix_bad_pixels
 from amical.data_processing import sky_correction
+from amical.tools import crop_max
 
 
 @pytest.fixture()
@@ -417,3 +418,28 @@ def test_3d_bad_pix_bmap_3d_shape():
         ValueError, match="3D bad_map should have the same shape as data cube"
     ):
         _get_3d_bad_pixels(bad_map, None, data)
+
+
+def test_sky_crop_order():
+
+    # Fixed size and center
+    isz = 67
+    xmax, ymax = (40, 41)
+
+    img_dim = 80
+    img = np.random.random((img_dim, img_dim))
+    img[ymax, xmax] = img.max() * 3 + 1  # Add max pixel at pre-determined location
+
+    r1 = 20
+    dr = 2
+
+    # Correct then crop
+    correct = sky_correction(img, r1=r1, dr=dr, center=(xmax, ymax))[0]
+    correct_crop = crop_max(correct, isz, filtmed=False)[0]
+
+    # Crop then correct
+    cropped, center = crop_max(img, isz, filtmed=False)
+    crop_correct = sky_correction(cropped, r1=r1, dr=dr)[0]
+
+    assert center == (xmax, ymax)
+    assert np.all(correct_crop == crop_correct)
