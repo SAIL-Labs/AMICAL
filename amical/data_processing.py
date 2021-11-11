@@ -403,15 +403,15 @@ def show_clean_params(
     else:
         noBadPixel = True
 
-    r2 = r1 + dr
     theta = np.linspace(0, 2 * np.pi, 100)
     x0 = pos[0]
     y0 = pos[1]
-
     x1 = r1 * np.cos(theta) + x0
     y1 = r1 * np.sin(theta) + y0
-    x2 = r2 * np.cos(theta) + x0
-    y2 = r2 * np.sin(theta) + y0
+    if dr is not None:
+        r2 = r1 + dr
+        x2 = r2 * np.cos(theta) + x0
+        y2 = r2 * np.sin(theta) + y0
     if window is not None:
         r3 = window
         x3 = r3 * np.cos(theta) + x0
@@ -426,8 +426,11 @@ def show_clean_params(
     fig = plt.figure(figsize=(5, 5))
     plt.title("--- CLEANING PARAMETERS ---")
     plt.imshow(img1, norm=PowerNorm(0.5, vmin=0, vmax=max_val), cmap="afmhot")
-    plt.plot(x1, y1, label="Inner radius for sky subtraction")
-    plt.plot(x2, y2, label="Outer radius for sky subtraction")
+    if dr is not None:
+        plt.plot(x1, y1, label="Inner radius for sky subtraction")
+        plt.plot(x2, y2, label="Outer radius for sky subtraction")
+    else:
+        plt.plot(x1, y1, label="Boundary for sky subtraction")
     if apod:
         if window is not None:
             plt.plot(x3, y3, "--", label="Super-gaussian windowing")
