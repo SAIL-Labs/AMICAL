@@ -200,12 +200,15 @@ def select_data(cube, clip_fact=0.5, clip=False, verbose=True, display=True):
     return cube_cleaned_checked
 
 
-def sky_correction(imA, r1=100, dr=20, verbose=False):
+def sky_correction(imA, r1=100, dr=20, verbose=False, *, center=None):
     """
     Perform background sky correction to be as close to zero as possible.
     """
     isz = imA.shape[0]
-    xc, yc = isz // 2, isz // 2
+    if center is None:
+        xc, yc = isz // 2, isz // 2
+    else:
+        xc, yc = center
     xx, yy = np.arange(isz), np.arange(isz)
     xx2 = xx - xc
     yy2 = yc - yy
