@@ -200,11 +200,7 @@ def select_data(cube, clip_fact=0.5, clip=False, verbose=True, display=True):
     return cube_cleaned_checked
 
 
-def sky_correction(imA, r1=100, dr=20, verbose=False, *, center=None):
-    """
-    Perform background sky correction to be as close to zero as possible.
-    """
-    isz = imA.shape[0]
+def _get_ring_mask(r1, dr, isz, center=None):
     if center is None:
         xc, yc = isz // 2, isz // 2
     else:
@@ -212,7 +208,6 @@ def sky_correction(imA, r1=100, dr=20, verbose=False, *, center=None):
     xx, yy = np.arange(isz), np.arange(isz)
     xx2 = xx - xc
     yy2 = yc - yy
-
     distance = np.sqrt(xx2 ** 2 + yy2[:, np.newaxis] ** 2)
     inner_cond = r1 <= distance
     if dr is not None:
@@ -222,14 +217,50 @@ def sky_correction(imA, r1=100, dr=20, verbose=False, *, center=None):
         outer_cond = True
     cond_bg = inner_cond & outer_cond
 
-    do_bg = True
-    if not cond_bg.any():
-        do_bg = False
-    elif dr is not None and np.all(outer_cond):
+    if dr is not None and np.all(outer_cond):
         warnings.warn(
             "The outer radius is out of the image, using everything beyond r1 as background",
             RuntimeWarning,
         )
+
+    return cond_bg
+
+
+def sky_correction(imA, r1=None, dr=None, verbose=False, *, center=None, mask=None):
+    """
+    Perform background sky correction to be as close to zero as possible.
+    This requires either a radius (r1) to define the background boundary, optionally with a
+    ring width dr, or a boolean mask with the same shape as the image.
+    """
+    # FUTURE: Future AMICAL release should raise error
+    if r1 is None and mask is None:
+        warnings.warn(
+            "The default value of r1 and dr is now None. Either mask or r1 must be set"
+            " explicitely. In the future, this will result in an error."
+            " Setting r1=100 and dr=20",
+            PendingDeprecationWarning,
+        )
+        r1 = 100
+        dr = 20
+
+    if r1 is not None and mask is not None:
+        raise TypeError("Only one of mask and r1 can be specified")
+    elif r1 is None and dr is not None:
+        raise TypeError("dr cannot be set when r1 is None")
+    elif r1 is not None:
+        isz = imA.shape[0]
+        cond_bg = _get_ring_mask(r1, dr, isz, center=center)
+    elif mask is not None:
+        if mask.shape != imA.shape:
+            raise ValueError("mask should have the same shape as image")
+        elif not mask.any():
+            warnings.warn(
+                "Background not computed because mask has no True values",
+                RuntimeWarning,
+            )
+        cond_bg = mask
+
+    do_bg = cond_bg.any()
 
     if do_bg:
         try:

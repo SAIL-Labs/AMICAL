@@ -4,6 +4,7 @@ from matplotlib import pyplot as plt
 
 import amical
 from amical.data_processing import _get_3d_bad_pixels
+from amical.data_processing import _get_ring_mask
 from amical.data_processing import clean_data
 from amical.data_processing import fix_bad_pixels
 from amical.data_processing import sky_correction
@@ -80,6 +81,88 @@ def test_sky_dr_none():
     dr = None
 
     sky_correction(img, r1=r1, dr=dr)
+
+
+@pytest.mark.usefixtures("close_figures")
+def test_sky_correction_mask_all():
+    # Check that full correction mask gives expected result
+    img_dim = 80
+    img = np.random.random((img_dim, img_dim))
+    mask = img.astype(bool)
+
+    img_sky = sky_correction(img, mask=mask)[0]
+
+    img_corr = img + 1.01 * np.abs(img.min())
+    img_corr = img_corr - np.mean(img_corr[mask])
+
+    assert np.all(img_sky == img_corr)
+
+
+def test_sky_correction_mask_zeros():
+    # Check that empty correction mask gives warning and does nothing
+    img_dim = 80
+    img = np.random.random((img_dim, img_dim))
+    mask = np.zeros_like(img, dtype=bool)
+
+    with pytest.warns(
+        RuntimeWarning,
+        match="Background not computed because mask has no True values",
+    ):
+        img_corr = sky_correction(img, mask=mask)[0]
+
+    assert np.all(img_corr == img)
+
+
+def test_sky_ring_mask():
+    img_dim = 80
+    img = np.random.random((img_dim, img_dim))
+
+    r1 = 20
+    dr = 2
+    mask = _get_ring_mask(r1, dr, img.shape[0])
+
+    img_mask = sky_correction(img, mask=mask)[0]
+    img_ring = sky_correction(img, r1=r1, dr=dr)[0]
+
+    assert np.all(img_mask == img_ring)
+
+
+def test_sky_correction_deprecation():
+    # Check deprecation warning is raised for r1 and dr
+    img_dim = 400  # Big image because default r1=100
+    img = np.random.random((img_dim, img_dim))
+
+    # FUTURE: Future AMICAL release should raise error, see sky_correction()
+    msg = (
+        "The default value of r1 and dr is now None. Either mask or r1 must be set"
+        " explicitely. In the future, this will result in an error."
+        " Setting r1=100 and dr=20"
+    )
+    with pytest.warns(
+        PendingDeprecationWarning,
+        match=msg,
+    ):
+        img_default = sky_correction(img)[0]
+
+    img_corr = sky_correction(img, r1=100, dr=20)[0]
+
+    assert np.all(img_corr == img_default)
+
+
+def test_sky_correction_errors():
+
+    img_dim = 80
+    img = np.random.random((img_dim, img_dim))
+
+    # Test both r1 and mask given
+    with pytest.raises(TypeError, match="Only one of mask and r1 can be specified"):
+        sky_correction(img, r1=20, mask=np.ones_like(img, dtype=bool))
+    # Test dr but no r1
+    with pytest.raises(TypeError, match="dr cannot be set when r1 is None"):
+        sky_correction(img, dr=5, mask=np.ones_like(img, dtype=bool))
+    # Test bad mask shape
+    with pytest.raises(ValueError, match="mask should have the same shape as image"):
+        sky_correction(img, mask=np.ones(5))
 
 
 @pytest.mark.usefixtures("close_figures")
