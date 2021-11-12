@@ -363,8 +363,8 @@ def _get_3d_bad_pixels(bad_map, add_bad, data):
 def show_clean_params(
     filename,
     isz,
-    r1,
-    dr,
+    r1=None,
+    dr=None,
     bad_map=None,
     add_bad=None,
     edge=0,
@@ -376,6 +376,8 @@ def show_clean_params(
     offy=0,
     apod=False,
     window=None,
+    *,
+    mask=None,
 ):
     """Display the input parameters for the cleaning.
 
@@ -437,12 +439,20 @@ def show_clean_params(
     theta = np.linspace(0, 2 * np.pi, 100)
     x0 = pos[0]
     y0 = pos[1]
-    x1 = r1 * np.cos(theta) + x0
-    y1 = r1 * np.sin(theta) + y0
-    if dr is not None:
-        r2 = r1 + dr
-        x2 = r2 * np.cos(theta) + x0
-        y2 = r2 * np.sin(theta) + y0
+    if r1 is not None:
+        x1 = r1 * np.cos(theta) + x0
+        y1 = r1 * np.sin(theta) + y0
+        if dr is not None:
+            r2 = r1 + dr
+            x2 = r2 * np.cos(theta) + x0
+            y2 = r2 * np.sin(theta) + y0
+        sky_method = "ring"
+    elif mask is not None:
+        breakpoint()
+        bg_coords = np.where(mask == 1)
+        bg_x = bg_coords[0]
+        bg_y = bg_coords[1]
+        sky_method = "mask"
     if window is not None:
         r3 = window
         x3 = r3 * np.cos(theta) + x0
@@ -457,11 +467,22 @@ def show_clean_params(
     fig = plt.figure(figsize=(5, 5))
     plt.title("--- CLEANING PARAMETERS ---")
     plt.imshow(img1, norm=PowerNorm(0.5, vmin=0, vmax=max_val), cmap="afmhot")
-    if dr is not None:
-        plt.plot(x1, y1, label="Inner radius for sky subtraction")
-        plt.plot(x2, y2, label="Outer radius for sky subtraction")
-    else:
-        plt.plot(x1, y1, label="Boundary for sky subtraction")
+    if sky_method == "ring":
+        if dr is not None:
+            plt.plot(x1, y1, label="Inner radius for sky subtraction")
+            plt.plot(x2, y2, label="Outer radius for sky subtraction")
+        else:
+            plt.plot(x1, y1, label="Boundary for sky subtraction")
+    elif sky_method == "mask":
+        plt.scatter(
+            bg_y,
+            bg_x,
+            color="None",
+            marker="s",
+            edgecolors="C0",
+            s=20,
+            label="Pixels used for sky subtraction",
+        )
     if apod:
         if window is not None:
             plt.plot(x3, y3, "--", label="Super-gaussian windowing")
