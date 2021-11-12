@@ -421,17 +421,17 @@ def test_3d_bad_pix_bmap_3d_shape():
 
 
 def test_sky_crop_order():
-
-    # Fixed size and center
-    isz = 67
-    xmax, ymax = (40, 41)
+    # Test that order of cropping and subtraction doesn't affect result if inside cropped image
 
     img_dim = 80
     img = np.random.random((img_dim, img_dim))
+    xmax, ymax = np.random.randint(20, high=img_dim - 20, size=2)
     img[ymax, xmax] = img.max() * 3 + 1  # Add max pixel at pre-determined location
 
-    r1 = 20
+    isz = 2 * np.min([xmax, img.shape[1] - xmax - 1, ymax, img.shape[0] - ymax - 1]) + 1
+
     dr = 2
+    r1 = isz // 2 - dr
 
     # Correct then crop
     correct = sky_correction(img, r1=r1, dr=dr, center=(xmax, ymax))[0]
@@ -441,5 +441,38 @@ def test_sky_crop_order():
     cropped, center = crop_max(img, isz, filtmed=False)
     crop_correct = sky_correction(cropped, r1=r1, dr=dr)[0]
 
+    # Make sure find expected center
     assert center == (xmax, ymax)
-    assert np.all(correct_crop == crop_correct)
+
+    # Use 10 * machine precision to make sure passes
+    assert np.all(np.abs(correct_crop - crop_correct) < 10 * np.finfo(float).eps)
+
+
+def test_clean_crop_order():
+    # Test that clean_data performs both subtraction and cropping as expected
+
+    img_dim = 80
+    n_im = 5
+    data = np.random.random((n_im, img_dim, img_dim))
+    xmax, ymax = np.random.randint(20, high=img_dim - 20, size=2)
+    data[:, ymax, xmax] = data.max() * 3 + 1  # Add max pixel at pre-determined location
+
+    isz = (
+        2 * np.min([xmax, data.shape[2] - xmax - 1, ymax, data.shape[1] - ymax - 1]) + 1
+    )
+
+    dr = 2
+    r1 = isz // 2 - dr
+
+    # Clean cube all at once
+    cube = data.copy()
+    cube_clean = clean_data(cube, isz=isz, r1=r1, dr=dr, apod=False, f_kernel=None)
+    img_cube_clean = cube_clean[0]
+
+    # Correct then crop
+    img = data.copy()[0]
+    correct = sky_correction(img, r1=r1, dr=dr, center=(xmax, ymax))[0]
+    correct[correct < 0] = 0
+    img_correct_crop = crop_max(correct, isz, filtmed=False)[0]
+
+    assert np.all(np.abs(img_correct_crop - img_cube_clean) < 10 * np.finfo(float).eps)
