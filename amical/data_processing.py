@@ -24,6 +24,7 @@ from tqdm import tqdm
 
 from amical.tools import apply_windowing
 from amical.tools import crop_max
+from amical.tools import find_max
 
 
 def _apply_patch_ghost(cube, xc, yc, radius=20, dx=0, dy=-200, method="bg"):
@@ -593,9 +594,7 @@ def clean_data(
         if isz is not None:
             # Get expected center for sky correction
             filtmed = f_kernel is not None
-            center = crop_max(
-                img1, isz, offx=offx, offy=offy, filtmed=filtmed, f=f_kernel
-            )[1]
+            center = find_max(img1, filtmed=filtmed, f=f_kernel)
         else:
             center = None
 
