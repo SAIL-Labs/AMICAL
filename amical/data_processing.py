@@ -568,10 +568,10 @@ def clean_data(
             # Get expected center for sky correction
             filtmed = f_kernel is not None
             im_rec_max = crop_max(
-                img1, isz, offx=offx, offy=offy, filtmed=filtmed, f=f_kernel
+                img_biased, isz, offx=offx, offy=offy, filtmed=filtmed, f=f_kernel
             )[0]
         else:
-            im_rec_max = img1.copy()
+            im_rec_max = img_biased.copy()
 
         if (
             (im_rec_max.shape[0] != im_rec_max.shape[1])
