@@ -175,7 +175,7 @@ def test_clean_data_none_kwargs():
     # sky=True raises a warning by default because required kwargs are None
     with pytest.warns(
         RuntimeWarning,
-        match="sky is set to True, but .* set to None. Skipping sky correction",
+        match="sky is set to True, but r1 and mask are set to None. Skipping sky correction",
     ):
         cube_clean_sky = clean_data(data)
 

@@ -448,7 +448,6 @@ def show_clean_params(
             y2 = r2 * np.sin(theta) + y0
         sky_method = "ring"
     elif mask is not None:
-        breakpoint()
         bg_coords = np.where(mask == 1)
         bg_x = bg_coords[0]
         bg_y = bg_coords[1]
@@ -556,6 +555,8 @@ def clean_data(
     darkfile=None,
     f_kernel=3,
     verbose=False,
+    *,
+    mask=None,
 ):
     """Clean data.
 
@@ -598,17 +599,13 @@ def clean_data(
         else:
             center = None
 
-        if sky and r1 is not None:
+        if sky and (r1 is not None or mask is not None):
             img_biased = sky_correction(
-                img1, r1=r1, dr=dr, verbose=verbose, center=center
+                img1, r1=r1, dr=dr, verbose=verbose, center=center, mask=mask
             )[0]
         elif sky:
-            if r1 is None and dr is None:
-                none_kwarg = "r1 and dr are"
-            elif r1 is None:
-                none_kwarg = "r1 is"
             warnings.warn(
-                f"sky is set to True, but {none_kwarg} set to None. Skipping sky correction",
+                "sky is set to True, but r1 and mask are set to None. Skipping sky correction",
                 RuntimeWarning,
             )
             img_biased = img1.copy()
@@ -652,8 +649,8 @@ def clean_data(
 def select_clean_data(
     filename,
     isz=256,
-    r1=100,
-    dr=10,
+    r1=None,
+    dr=None,
     edge=0,
     clip=True,
     bad_map=None,
@@ -672,6 +669,7 @@ def select_clean_data(
     *,
     remove_bad=True,
     nframe=0,
+    mask=None,
 ):
     """Clean and select good datacube (sigma-clipping using fluxes variations).
 
@@ -725,6 +723,21 @@ def select_clean_data(
     if add_bad is None:
         add_bad = []
 
+    if r1 is None and mask is None and sky:
+        warnings.warn(
+            "The default value of r1 is now None. Either r1 or mask should be set explicitely. This will raise an error in the future.",
+            PendingDeprecationWarning,
+        )
+        r1 = 100
+        if dr is None:
+            dr = 10
+    elif r1 is not None and dr is None and mask is None and sky:
+        warnings.warn(
+            "The default value of dr is now None. dr must be set explicitely to be used.",
+            PendingDeprecationWarning,
+        )
+        dr = 10
+
     if display:
         show_clean_params(
             filename,
@@ -760,6 +773,7 @@ def select_clean_data(
         offy=offy,
         darkfile=darkfile,
         verbose=verbose,
+        mask=mask,
     )
 
     if cube_cleaned is None:
