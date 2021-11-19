@@ -15,7 +15,9 @@ filterwarnings = [
     # the deprecation warning message for imp changed in Python 3.10, so we ignore both versions
     "ignore:the imp module is deprecated in favour of importlib and slated for removal in Python 3.12; see the module's documentation for alternative uses:DeprecationWarning",
     # this warning is emmited from astropy 5.0, it needs to be fixed upstream
-    "ignore:The distutils package is deprecated and slated for removal in Python 3.12. Use setuptools or check PEP 632 for potential alternatives:DeprecationWarning"
+    "ignore:The distutils package is deprecated and slated for removal in Python 3.12. Use setuptools or check PEP 632 for potential alternatives:DeprecationWarning",
+    # emmited from numpy 1.22dev
+    "ignore:The distutils.sysconfig module is deprecated, use sysconfig instead:DeprecationWarning",
 ]
 
 [tool.coverage.run]
