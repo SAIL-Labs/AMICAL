@@ -35,8 +35,7 @@ jobs:
       run: |
         python3 -m pip install --upgrade pip
         python3 -m pip install --upgrade setuptools wheel
-        # getting numpy's nightly wheels to aleviate that it sometimes doens't compile properly
-        python3 -m pip install -i https://pypi.anaconda.org/scipy-wheels-nightly/simple numpy
+        python3 -m pip install git+https://github.com/numpy/numpy.git
         python3 -m pip install git+https://github.com/matplotlib/matplotlib.git
         python3 -m pip install git+https://github.com/astropy/astropy.git
         # build-time dependencies for uncertainties + scipy with --no-build-isolation
