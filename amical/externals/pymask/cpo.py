@@ -4,7 +4,7 @@ import logging
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy
-from scipy.io.idl import readsav
+from scipy.io import readsav
 from termcolor import cprint
 
 from . import oifits
