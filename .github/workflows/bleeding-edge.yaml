@@ -33,17 +33,24 @@ jobs:
 
     - name: Install dependencies
       run: |
-        python3 -m pip install --upgrade pip
-        python3 -m pip install --upgrade setuptools wheel
-        python3 -m pip install git+https://github.com/numpy/numpy.git
-        python3 -m pip install git+https://github.com/matplotlib/matplotlib.git
-        python3 -m pip install git+https://github.com/astropy/astropy.git
+        python -m pip install --upgrade pip
+        python -m pip install --upgrade setuptools wheel
+        python -m pip install git+https://github.com/numpy/numpy.git
+
+        python -m pip install git+https://github.com/matplotlib/matplotlib.git
+        python -m pip install git+https://github.com/astropy/astropy.git
+
         # build-time dependencies for uncertainties + scipy with --no-build-isolation
-        python3 -m pip install pybind11 cython pkgconfig
+        python -m pip install pybind11 cython pkgconfig
+
+        # using nighlty wheels for scicy because a release may
+        # result in downgrading numpy, which will cause ABI imcompatibilities at import time
+        # and building scipy from source triples our build time
+        python -m pip install -i https://pypi.anaconda.org/scipy-wheels-nightly/simple scipy
 
     - name: Build amical
       run: |
-        python3 -m pip install .[dev] --no-build-isolation
+        python -m pip install .[dev] --no-build-isolation
 
     - name: Generate coverage report
       run: |
