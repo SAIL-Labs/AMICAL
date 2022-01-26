@@ -26,7 +26,7 @@ def _query_simbad(targetname):
 def _select_association_file(args):
     """Show report with the data found and allow to select the science target
     (SCI) to be calibrated and the calibrator (CAL)."""
-    l_file = sorted(glob("%s/*.h5" % args.datadir))
+    l_file = sorted(glob(os.path.join(datadir, "*.h5"))
 
     if len(l_file) == 0:
         raise OSError("No h5 files found in %s, check --datadir." % args.datadir)
