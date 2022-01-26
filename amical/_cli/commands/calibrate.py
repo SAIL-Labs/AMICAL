@@ -30,7 +30,8 @@ def _select_association_file(args):
     l_file = sorted(glob(os.path.join(args.datadir, "*.h5")))
 
     if len(l_file) == 0:
-        raise OSError("No h5 files found in %s, check --datadir." % args.datadir)
+        print("No h5 files found in %s, check --datadir." % args.datadir)
+        return 1
 
     index_file = []
 
@@ -70,10 +71,11 @@ def _select_association_file(args):
         sci_name = l_file[sci_index]
         cal_name = [l_file[x] for x in cal_index]
     except IndexError:
-        raise IndexError(
+        print(
             "Selected index (sci=%i/cal=%i) not valid (only %i files found)."
             % (sci_index, cal_index, len(l_file))
         )
+        raise SystemExit
     return sci_name, cal_name
 
 
@@ -87,10 +89,7 @@ def perform_calibrate(args):
     for x in calname:
         bs_c = amical.load_bs_hdf5(x)
 
-    display = False
-    if len(bs_c) > 1:
-        display = True
-
+    display = len(bs_c) > 1
     cal = amical.calibrate(
         bs_t,
         bs_c,

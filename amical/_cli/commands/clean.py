@@ -17,7 +17,8 @@ def _select_data_file(args, process):
     l_file = sorted(glob("%s/*.fits" % args.datadir))
 
     if len(l_file) == 0:
-        raise OSError("No fits files found in %s, check --datadir." % args.datadir)
+        print("No fits files found in %s, check --datadir." % args.datadir)
+        return 1
 
     headers = ["FILENAME", "TARGET", "DATE", "INSTRUM", "INDEX"]
 
@@ -42,11 +43,12 @@ def _select_data_file(args, process):
 
     try:
         filename = l_file[choosen_index]
-    except IndexError as exc:
-        raise IndexError(
+    except IndexError:
+        print(
             "Selected index (%i) not valid (only %i files found)."
             % (choosen_index, len(l_file))
-        ) from exc
+        )
+        raise SystemExit
     else:
         with fits.open(filename) as hdul:
             hdr = hdul[0].header
@@ -67,14 +69,16 @@ def perform_clean(args):
     }
 
     if not os.path.exists(args.datadir):
-        raise OSError(
+        print(
             "%s directory not found, check --datadir. AMICAL look for data only in this specified directory."
             % args.datadir
         )
+        return 1
 
     l_file = sorted(glob("%s/*.fits" % args.datadir))
     if len(l_file) == 0:
-        raise OSError("No fits files found in %s, check --datadir." % args.datadir)
+        print("No fits files found in %s, check --datadir." % args.datadir)
+        return 1
 
     if not args.all:
         filename, hdr = _select_data_file(args, process="clean")
