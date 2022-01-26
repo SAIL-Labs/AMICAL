@@ -12,9 +12,11 @@ and calc_bispect.pro).
 
 --------------------------------------------------------------------
 """
+import os
 import sys
 import time
 import warnings
+from pathlib import Path
 
 import astropy
 import numpy as np
@@ -23,6 +25,8 @@ from matplotlib import pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from munch import munchify as dict2class
 from packaging.version import Version
+from PyPDF2 import PdfFileMerger
+from PyPDF2 import PdfFileReader
 from scipy.optimize import minimize
 from termcolor import cprint
 from tqdm import tqdm
@@ -369,7 +373,7 @@ def _check_input_infos(hdr, targetname=None, filtname=None, instrum=None, verbos
                     "green",
                 )
         else:
-            cprint("Error: target name not found (header or as input).", "red")
+            cprint("Warning: target name not found (header or as input).", "green")
 
     # Check the filter used
     if filt is None:
@@ -381,12 +385,10 @@ def _check_input_infos(hdr, targetname=None, filtname=None, instrum=None, verbos
                     % filtname,
                     "green",
                 )
-        else:
-            cprint("Error: filter not found (in the header or as input).", "red")
 
     # Check the instrument used
     if instrument is None:
-        cprint("Error: instrum not found (in the header or as input).", "red")
+        raise OSError("instrum not found (in the header or as input).")
 
     # Origin files
     orig = hdr.get("ORIGFILE", "SimulatedData")
@@ -692,6 +694,7 @@ def _normalize_all_obs(
     index_mask,
     infos,
     expert_plot=False,
+    save=False,
 ):
     """Normalize all observables by the appropriate factor proportional to
     the averaged fluxes and the number of holes."""
@@ -731,7 +734,7 @@ def _normalize_all_obs(
     bs_var_norm = bs_var / np.mean(fluxes ** 6) * n_holes ** 6
 
     if expert_plot:
-        plt.figure(figsize=(5, 4))
+        plt.figure(figsize=(12, 6))
         plt.title("DIAGNOSTIC PLOTS - V2 - %s" % infos.target)
         plt.plot(v2_arr_norm[0], color="grey", alpha=0.2, label="V$^2$ dispersion")
         plt.plot(v2_arr_norm.T, color="grey", alpha=0.2)
@@ -776,7 +779,7 @@ def _compute_cp(obs_result, obs_norm, infos, expert_plot=False):
     obs_norm["cp_arr"] = cp_arr
 
     if expert_plot:
-        plt.figure(figsize=(5, 4))
+        plt.figure(figsize=(12, 6))
         plt.title("DIAGNOSTIC PLOTS - CP - %s" % infos.target)
         plt.plot(cp_arr[0], color="grey", alpha=0.2, label="CP dispersion")
         plt.plot(cp_arr.T, color="grey", alpha=0.2)
@@ -1034,6 +1037,20 @@ def _add_infos_header(infos, hdr, mf, pa, filename, maskname, npix):
     return infos
 
 
+def produce_result_pdf(figdir, filename):
+    # Call the PdfFileMerger
+    mergedObject = PdfFileMerger()
+
+    for fileNumber in range(7):
+        ifile = os.path.join(figdir, f"{filename}_{fileNumber + 1}.pdf")
+        mergedObject.append(PdfFileReader(ifile, "rb"))
+        os.remove(ifile)
+
+    # Write all the files into a file which is named as shown below
+    mergedObject.write(os.path.join(figdir, filename + "_DIAGNOSTIC_PLOTS.pdf"))
+    return 0
+
+
 def extract_bs(
     cube,
     filename,
@@ -1055,6 +1072,7 @@ def extract_bs(
     unbias_v2=True,
     compute_cp_cov=True,
     expert_plot=False,
+    save_to=None,
     verbose=False,
     display=True,
 ):
@@ -1106,6 +1124,8 @@ def extract_bs(
     `targetname` {str}:
         Name of the target to save in oifits file (if not in header of the
         cube),\n
+    `save_to` {str}:
+        Name of the repository to save the figures,\n
     `verbose` {bool}:
         If True, print usefull informations during the process.\n
     `display` {bool}:
@@ -1122,6 +1142,10 @@ def extract_bs(
     if verbose:
         cprint("\n-- Starting extraction of observables --", "cyan")
     start_time = time.time()
+
+    if save_to is not None:
+        if not os.path.exists(save_to):
+            os.mkdir(save_to)
 
     with fits.open(filename) as hdu:
         hdr = hdu[0].header
@@ -1169,7 +1193,17 @@ def extract_bs(
         theta_detector=theta_detector,
         i_wl=i_wl,
         display=display,
+        save_to=save_to,
+        filename=filename,
     )
+
+    ifig = 2
+    if save_to is not None:
+        figname = os.path.join(save_to, Path(filename).stem)
+        plt.savefig(f"{figname}_{ifig}.pdf")
+
+    ifig += 1
+
     if mf is None:
         return None
 
@@ -1196,10 +1230,17 @@ def extract_bs(
     # ------------------------------------------------------------------------
     if display:
         _show_complex_ps(ft_arr)
+        if save_to is not None:
+            plt.savefig(f"{figname}_{ifig}.pdf")
+        ifig += 1
+
         _show_peak_position(ft_arr, n_baselines, mf, maskname, peakmethod)
+        if save_to is not None:
+            plt.savefig(f"{figname}_{ifig}.pdf")
+        ifig += 1
 
     if verbose:
-        print("\nFilename: %s" % filename.split("/")[-1])
+        print("\nFilename: %s" % filename)
         print("# of frames = %i" % n_ps)
 
     n_blocks = _set_good_nblocks(n_blocks, n_ps)
@@ -1264,15 +1305,26 @@ def extract_bs(
         fluxes,
         index_mask,
         infos,
-        expert_plot=expert_plot,
+        expert_plot=True,
     )
+    if save_to is not None:
+        plt.savefig(f"{figname}_{ifig}.pdf")
+    ifig += 1
+
     obs_result["vis2"] = vis2_norm
+
+    # 10. Now we compute the cp quantities and store them with the other observables
+    obs_result = _compute_cp(obs_result, obs_norm, infos, expert_plot=True)
+
+    if save_to is not None:
+        plt.savefig(f"{figname}_{ifig}.pdf")
+    ifig += 1
 
     if display:
         _show_norm_matrices(obs_norm, expert_plot=expert_plot)
-
-    # 10. Now we compute the cp quantities and store them with the other observables
-    obs_result = _compute_cp(obs_result, obs_norm, infos, expert_plot=expert_plot)
+        if save_to is not None:
+            plt.savefig(f"{figname}_{ifig}.pdf")
+        ifig += 1
 
     t3_coord, bl_cp = _compute_t3_coord(mf, index_mask)
     bl_v2 = np.sqrt(mf.u ** 2 + mf.v ** 2)
@@ -1313,6 +1365,9 @@ def extract_bs(
 
     t = time.time() - start_time
     m = t // 60
+
+    if save_to is not None:
+        produce_result_pdf(save_to, Path(filename).stem)
 
     if verbose:
         cprint("\nDone (exec time: %d min %2.1f s)." % (m, t - m * 60), color="magenta")

@@ -582,12 +582,6 @@ def select_clean_data(
                 % (seeing_start, seeing_end, seeing)
             )
 
-    raw_size = cube.shape[1]
-    if isz > raw_size:
-        raise ValueError(
-            "Reshape factor is larger than the data size (choose a smaller isz)."
-        )
-
     # Add check to create default add_bad list (not use mutable data)
     if add_bad is None:
         add_bad = []
