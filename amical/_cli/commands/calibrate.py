@@ -41,9 +41,9 @@ def _select_association_file(datadir: str):
         bs = amical.load_bs_hdf5(f)
         filename = Path(f).stem
         hdr = bs.infos.hdr
-        target = hdr.get("OBJECT", None)
-        date = hdr.get("DATE-OBS", None)
-        ins = hdr.get("INSTRUME", None)
+        target = hdr.get("OBJECT")
+        date = hdr.get("DATE-OBS")
+        ins = hdr.get("INSTRUME")
 
         if target not in (None, "Unknown"):
             try:
