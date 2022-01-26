@@ -61,7 +61,7 @@ def _select_association_file(datadir: str):
 
     text_calib = (
         "Which file used as calibrator? (use space "
-        + "between index if multiple calibrators are available).\n"
+        "between index if multiple calibrators are available).\n"
     )
     sci_index = int(input("\nWhich file to be calibrated?\n"))
     cal_index = [int(item) for item in input(text_calib).split()]
