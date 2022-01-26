@@ -78,8 +78,7 @@ def _select_association_file(args):
 
 
 def perform_calibrate(args):
-    """CLI interface to calibrate the data with AMICAL (save calibrated oifits
-    files)."""
+    """Calibrate the data with AMICAL (save calibrated oifits files)"""
 
     sciname, calname = _select_association_file(args)
     bs_t = amical.load_bs_hdf5(sciname)
