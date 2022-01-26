@@ -24,9 +24,8 @@ def _select_data_file(args, process):
     index_file = []
     d = []
     for i, f in enumerate(l_file):
-        hdu = fits.open(f)
-        hdr = hdu[0].header
-        hdu.close()
+        with fits.open(f) as hdu:
+            hdr = hdu[0].header
         target = hdr.get("OBJECT", None)
         date = hdr.get("DATE-OBS", None)
         ins = hdr.get("INSTRUME", None)
