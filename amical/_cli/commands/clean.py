@@ -55,7 +55,7 @@ def _select_data_file(args, process):
 
 
 def perform_clean(args):
-    """CLI interface to clean the data with AMICAL."""
+    """Clean the data with AMICAL."""
     cprint("---- AMICAL clean process ----", "cyan")
 
     clean_param = {
