@@ -43,13 +43,14 @@ def _select_data_file(args, process):
 
     try:
         filename = l_file[choosen_index]
-        with fits.open(filename) as hdul:
-            hdr = hdul[0].header
-    except IndexError:
+    except IndexError as exc:
         raise IndexError(
             "Selected index (%i) not valid (only %i files found)."
             % (choosen_index, len(l_file))
-        )
+        ) from exc
+    else:
+        with fits.open(filename) as hdul:
+            hdr = hdul[0].header
     return filename, hdr
 
 
