@@ -1,6 +1,7 @@
 import os
 from glob import glob
 from pathlib import Path
+import sys
 
 from astroquery.simbad import Simbad
 from matplotlib import pyplot as plt
@@ -30,7 +31,9 @@ def _select_association_file(args):
     l_file = sorted(glob(os.path.join(args.datadir, "*.h5")))
 
     if len(l_file) == 0:
-        print("No h5 files found in %s, check --datadir." % args.datadir)
+        print(
+            "No h5 files found in %s, check --datadir." % args.datadir, file=sys.stderr
+        )
         return 1
 
     index_file = []
