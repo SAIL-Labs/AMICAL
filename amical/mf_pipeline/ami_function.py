@@ -963,17 +963,13 @@ def bs_multi_triangle(i, bs_arr, ft_frame, bs2bl_ix, mf, closing_tri_pix):
     return bs_arr
 
 
-def find_bad_holes(res_c, n_holes, bl2h_ix, bmax=6, verbose=False, display=False):
+def find_bad_holes(bs, bmax=6, verbose=False, display=False):
     """Find bad apertures using a linear fit of the v2 vs. spatial frequencies.
 
     Parameters
     ----------
-    `res_c` : {class}
-        Class containing NRM data of the calibrator (bispect.py),\n
-    `n_holes` : {int}
-        Number of apertures,\n
-    `bl2h_ix` : {array}
-        Baselines to apertures (holes) indices,\n
+    `bs` : {class}
+        Class containing NRM data (bispect.py),\n
     `bmax` : {int}, optional
         Maximum baseline used to plot the fit, by default 6,\n
     `verbose` : {bool}, optional
@@ -986,16 +982,19 @@ def find_bad_holes(res_c, n_holes, bl2h_ix, bmax=6, verbose=False, display=False
     `bad_holes`: {array}
         List of determined bad holes,
     """
-    u = res_c.u / res_c.wl
-    v = res_c.v / res_c.wl
+    u = bs.u / bs.wl
+    v = bs.v / bs.wl
     X = np.sqrt(u ** 2 + v ** 2)
-    Y = np.log(res_c.v2)
+    Y = np.log(bs.vis2)
+
+    n_holes = bs.mask.n_holes
+    bl2h_ix = bs.mask.bl2h_ix
 
     param = {"a": 1, "b": 0}
 
     fit = leastsqFit(linear, X, param, Y, verbose=verbose)
 
-    xm = np.linspace(0, bmax, 100) / res_c.wl
+    xm = np.linspace(0, bmax, 100) / bs.wl
     ym = linear(xm, fit["best"])
 
     pfit = list(fit["best"].values())
@@ -1013,9 +1012,8 @@ def find_bad_holes(res_c, n_holes, bl2h_ix, bmax=6, verbose=False, display=False
 
     bad_holes = []
     for j in range(n_holes):
-        pass
         w = np.where((bl2h_ix[0, :] == j) | (bl2h_ix[1, :] == j))
-        if (np.mean(res_c.v2[w] / np.exp(fit["model"][w]))) <= 0.3:
+        if (np.mean(bs.vis2[w] / np.exp(fit["model"][w]))) <= 0.3:
             bad_holes.append(j)
 
     bad_holes = np.unique(bad_holes)
@@ -1023,7 +1021,7 @@ def find_bad_holes(res_c, n_holes, bl2h_ix, bmax=6, verbose=False, display=False
     return bad_holes
 
 
-def find_bad_BL_BS(bad_holes, bl2h_ix, bs2bl_ix):
+def find_bad_BL_BS(bad_holes, bs):
     """
     Give indices of bad BS and V2 using a given bad holes list.
 
@@ -1047,6 +1045,10 @@ def find_bad_BL_BS(bad_holes, bl2h_ix, bs2bl_ix):
         Good bispectrum indices.
 
     """
+
+    bl2h_ix = bs.mask.bl2h_ix
+    bs2bl_ix = bs.mask.bs2bl_ix
+
     n_baselines = bl2h_ix.shape[1]
     n_bispect = bs2bl_ix.shape[1]
 
