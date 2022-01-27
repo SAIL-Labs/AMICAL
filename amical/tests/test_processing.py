@@ -105,7 +105,5 @@ def test_clean(global_datadir):
     )
 
     assert type(cube_clean) == np.ndarray
-    assert plt.gcf().number == 4
     assert im1.shape == cube_clean.shape
     assert im2.shape == cube_clean.shape
-    plt.close("all")
