@@ -8,6 +8,8 @@ import amical
 from amical import load
 from amical import loadc
 from amical.get_infos_obs import get_pixel_size
+from amical.mf_pipeline.ami_function import find_bad_BL_BS
+from amical.mf_pipeline.ami_function import find_bad_holes
 
 
 @pytest.fixture()
@@ -50,7 +52,8 @@ def test_extract(peakmethod, global_datadir):
     assert len(bs_keys) == 13
 
 
-def test_extract_multitri(global_datadir):
+@pytest.mark.usefixtures("close_figures")
+def test_extract_multitri(global_datadir, tmp_path):
     fits_file = global_datadir / "test.fits"
     with fits.open(fits_file) as fh:
         cube = fh[0].data
@@ -61,7 +64,11 @@ def test_extract_multitri(global_datadir):
         bs_multi_tri=True,
         maskname="g7",
         fw_splodge=0.7,
-        display=False,
+        display=True,
+        expert_plot=True,
+        naive_err=True,
+        verbose=True,
+        save_to=str(tmp_path),
         peakmethod="fft",
     )
     bs_keys = list(bs.keys())
@@ -135,7 +142,6 @@ def test_show(cal):
 
 
 def test_save_cal(cal, tmpdir):
-
     dic, savefile = amical.save(
         cal, oifits_file="test_cal.oifits", datadir=tmpdir, fake_obj=True
     )
@@ -154,6 +160,29 @@ def test_save_cal(cal, tmpdir):
     assert hdr["ORIGIN"] == "Sydney University"
 
 
+def test_save_cal_1hole(cal, tmpdir):
+    dic, savefile = amical.save(
+        cal,
+        oifits_file="test_cal.oifits",
+        datadir=tmpdir,
+        fake_obj=True,
+        ind_hole=0,
+    )
+
+    assert isinstance(dic, dict)
+    assert isinstance(savefile, str)
+
+    hdr = fits.getheader(savefile)
+    v2 = dic["OI_VIS2"]["VIS2DATA"]
+    cp = dic["OI_T3"]["T3PHI"]
+
+    assert isinstance(v2, np.ndarray)
+    assert isinstance(cp, np.ndarray)
+    assert len(v2) == 21
+    assert len(cp) == 15
+    assert hdr["ORIGIN"] == "Sydney University"
+
+
 def test_save_raw(global_datadir, tmpdir):
     fits_file = global_datadir / "test.fits"
     with fits.open(fits_file) as fh:
@@ -161,7 +190,7 @@ def test_save_raw(global_datadir, tmpdir):
     bs = amical.extract_bs(
         cube,
         fits_file,
-        targetname="test",
+        targetname="WR104",
         bs_multi_tri=False,
         maskname="g7",
         fw_splodge=0.7,
@@ -170,7 +199,7 @@ def test_save_raw(global_datadir, tmpdir):
     )
 
     dic, savefile = amical.save(
-        bs, oifits_file="test_raw.oifits", datadir=tmpdir, fake_obj=True
+        bs, oifits_file="test_raw.oifits", datadir=tmpdir, fake_obj=False
     )
 
     assert isinstance(dic, dict)
@@ -188,7 +217,6 @@ def test_save_raw(global_datadir, tmpdir):
 
 
 def test_origin_type(cal, tmpdir):
-
     og = [50.0]
     with pytest.raises(TypeError, match="origin should be a str or None"):
         amical.save(
@@ -225,3 +253,37 @@ def test_loadc_file(example_oifits):
 def test_getPixel(ins):
     p = get_pixel_size(ins)
     assert isinstance(p, float)
+
+
+@pytest.mark.usefixtures("close_figures")
+def test_bad_holes(global_datadir):
+    fits_file = global_datadir / "test.fits"
+    with fits.open(fits_file) as fh:
+        cube = fh[0].data
+
+    bs = amical.extract_bs(
+        cube,
+        fits_file,
+        targetname="test",
+        bs_multi_tri=False,
+        maskname="g7",
+        fw_splodge=0.7,
+        display=False,
+        peakmethod="fft",
+    )
+
+    bad_hole = find_bad_holes(bs, display=True, verbose=True)
+    index_onebad = find_bad_BL_BS([0], bs)
+    index_twobad = find_bad_BL_BS([0, 3], bs)
+    index_nobad = find_bad_BL_BS(bad_hole, bs)
+
+    n_holes = bs.mask.n_holes
+    n_bl_good = n_holes * (n_holes - 1) / 2.0
+    n_holes -= 1
+    n_bl_onebad = n_holes * (n_holes - 1) / 2.0
+    n_holes -= 1
+    n_bl_twobad = n_holes * (n_holes - 1) / 2.0
+
+    assert n_bl_good == len(index_nobad[2])
+    assert n_bl_onebad == len(index_onebad[2])
+    assert n_bl_twobad == len(index_twobad[2])

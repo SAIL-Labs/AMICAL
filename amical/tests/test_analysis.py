@@ -208,6 +208,12 @@ def test_pymask_grid(example_oifits):
 
 
 @pytest.mark.usefixtures("close_figures")
+def test_pymask_cr(example_oifits):
+    res = amical.pymask_cr_limit(str(example_oifits), nsim=10, ncore=4)
+    assert isinstance(res, dict)
+
+
+@pytest.mark.usefixtures("close_figures")
 def test_pymask_mcmc(example_oifits):
     param_pymask = {
         "sep_prior": [100, 180],
