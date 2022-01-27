@@ -3348,13 +3348,13 @@ class Open:
                                 marker=".",
                                 capsize=2,
                             )
-                            n = str(int(2 - np.log10(refFit["uncer"][k1])))
+                            n = int(2 - np.log10(refFit["uncer"][k1]))
+                            fmt = f".{n}f"
                             form = (
-                                r"least sq. fit\n%."
-                                + n
-                                + "f +/- %."
-                                + n
-                                + "f".format(refFit["best"][k1], refFit["uncer"][k1])
+                                "least sq. fit\n"
+                                + "{:^{}}".format(refFit["best"][k1], fmt)
+                                + " +/- "
+                                + "{:^{}}".format(refFit["uncer"][k1], fmt)
                             )
                             plt.text(
                                 refFit["best"][k1],
