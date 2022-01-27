@@ -90,9 +90,7 @@ def test_clean(global_datadir):
         "add_bad": [[39, 39]],
     }
 
-    cube_clean = amical.select_clean_data(
-        fits_file, clip=True, **clean_param, display=True
-    )
+    cube_clean = amical.select_clean_data(fits_file, clip=True, **clean_param)
 
     amical.show_clean_params(fits_file, **clean_param)
     amical.show_clean_params(fits_file, **clean_param, remove_bad=False)
