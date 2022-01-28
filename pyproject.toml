@@ -25,9 +25,14 @@ omit = [
   "amical/externals/*",
 ]
 
+[tool.coverage.report]
+omit = [
+  "amical/externals/*",
+  "amical/dpfit.py",
+]
 
 [tool.mypy]
-python_version = 3.7
+python_version = 3.8
 ignore_missing_imports = true
 warn_unused_configs = true
 warn_unused_ignores = true
