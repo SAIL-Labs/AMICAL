@@ -41,9 +41,7 @@ def select_model(name):
     elif name == "binary_res":
         model = models.visBinary_res
     elif name == "edisk":
-        model = models.visEllipticakUniformDisk
-    elif name == "debrisDisk":
-        model = models.visDebrisDisk
+        model = models.visEllipticalDisk
     elif name == "clumpyDebrisDisk":
         model = models.visClumpDebrisDisk
     else:
@@ -57,10 +55,10 @@ def check_params_model(param):
     isValid = True
     log = ""
     if param["model"] == "edisk":
-        elong = param["elong"]
-        minorAxis = mas2rad(param["minorAxis"])
-        angle = np.deg2rad(param["angle"])
-        if (elong < 1) or (angle < 0) or (angle > np.pi) or (minorAxis < 0):
+        elong = np.cos(np.deg2rad(param["incl"]))
+        majorAxis = mas2rad(param["majorAxis"])
+        posang = np.deg2rad(param["posang"])
+        if (elong < 1) or (posang < 0) or (posang > 180) or (majorAxis < 0):
             log = "# elong > 1,\n# minorAxis > 0 mas,\n# 0 < angle < 180 deg.\n"
             isValid = False
 
@@ -362,7 +360,7 @@ def fits2obs(
 
     N_cp_rest = len(obs) - N_v2_rest
 
-    Obs = np.array(obs)
+    Obs = np.array(obs, dtype=object)
 
     if verbose:
         print(
@@ -772,7 +770,7 @@ def smartfit(
 
     errs = [o[-1] for o in obs]
     if normalizeErrors:
-        errs = _normalize_err_obs(obs)
+        errs = _normalize_err_obs(obs, verbose=False)
 
     # -- avoid fitting string parameters
     tmp = list(filter(lambda x: isinstance(first_guess[x], str), first_guess.keys()))
