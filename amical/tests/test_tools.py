@@ -40,6 +40,6 @@ def test_SPHERE_parang(global_datadir):
     with fits.open(global_datadir / "hdr_sphere.fits") as hdu:
         hdr = hdu[0].header
     n_ps = 1
-    pa = tools.compute_pa(hdr, n_ps=n_ps)
+    pa = tools.compute_pa(hdr, n_ps=n_ps, display=True)
     true_pa = 109  # Human value
     assert pa == pytest.approx(true_pa, 0.01)

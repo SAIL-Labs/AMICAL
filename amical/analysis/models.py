@@ -129,22 +129,24 @@ def visGaussianDisk(Utable, Vtable, Lambda, param):
     return C
 
 
-def visDebrisDisk(Utable, Vtable, Lambda, param):
+def visEllipticalDisk(Utable, Vtable, Lambda, param):
     """
     Compute complex visibility of an elliptical thick ring.
 
     Params:
     -------
     majorAxis: {float}
-        Major axis of the disk [rad],\n
-    minorAxis: {float}
-        Minor axis of the disk [rad],\n
-    angle: {float}
-        Orientation of the disk [rad],\n
+        Major axis of the disk [mas],\n
+    incl: {float}
+        Inclination [deg],\n
+    posang: {float}
+        Orientation of the disk [deg],\n
     thickness: {float}
-        Thickness of the ring [rad],\n
+        Thickness of the ring [mas],\n
+    cr: {float}
+        Contrast ratio with the star,\n
     x0, y0: {float}
-        Shift along x and y position [rad].
+        Position of the star (relative to the center) [mas].
     """
 
     majorAxis = mas2rad(param["majorAxis"]) * 2
@@ -178,7 +180,7 @@ def visDebrisDisk(Utable, Vtable, Lambda, param):
     rel_star = fstar / total_flux
     rel_disk = fdisk / total_flux
 
-    p_s1 = {"x0": x0, "y0": y0}
+    p_s1 = {"x0": mas2rad(x0), "y0": mas2rad(y0)}
     s1 = rel_star * visPointSource(Utable, Vtable, Lambda, p_s1)
     s2 = rel_disk * C
     return s1 + s2

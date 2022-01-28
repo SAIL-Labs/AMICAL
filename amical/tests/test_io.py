@@ -2,11 +2,19 @@ import munch
 import numpy as np
 import pytest
 from astropy.io import fits
+from matplotlib import pyplot as plt
 
 import amical
 from amical import load
 from amical import loadc
 from amical.get_infos_obs import get_pixel_size
+
+
+@pytest.fixture()
+def close_figures():
+    plt.close("all")
+    yield
+    plt.close("all")
 
 
 @pytest.fixture()
@@ -42,6 +50,25 @@ def test_extract(peakmethod, global_datadir):
     assert len(bs_keys) == 13
 
 
+def test_extract_multitri(global_datadir):
+    fits_file = global_datadir / "test.fits"
+    with fits.open(fits_file) as fh:
+        cube = fh[0].data
+    bs = amical.extract_bs(
+        cube,
+        fits_file,
+        targetname="test",
+        bs_multi_tri=True,
+        maskname="g7",
+        fw_splodge=0.7,
+        display=False,
+        peakmethod="fft",
+    )
+    bs_keys = list(bs.keys())
+    assert isinstance(bs, munch.Munch)
+    assert len(bs_keys) == 13
+
+
 @pytest.fixture(name="cal", scope="session")
 def example_cal_fft(global_datadir):
     fits_file = global_datadir / "test.fits"
@@ -58,6 +85,43 @@ def example_cal_fft(global_datadir):
         peakmethod="fft",
     )
     return amical.calibrate(bs, bs)
+
+
+def test_cal_atmcorr(global_datadir):
+    fits_file = global_datadir / "test.fits"
+    with fits.open(fits_file) as fh:
+        cube = fh[0].data
+    bs = amical.extract_bs(
+        cube,
+        fits_file,
+        targetname="test",
+        bs_multi_tri=False,
+        maskname="g7",
+        fw_splodge=0.7,
+        display=False,
+        peakmethod="fft",
+    )
+
+    cal = amical.calibrate(bs, bs, apply_atmcorr=True)
+    assert isinstance(cal, munch.Munch)
+
+
+def test_cal_phscorr(global_datadir):
+    fits_file = global_datadir / "test.fits"
+    with fits.open(fits_file) as fh:
+        cube = fh[0].data
+    bs = amical.extract_bs(
+        cube,
+        fits_file,
+        targetname="test",
+        bs_multi_tri=False,
+        maskname="g7",
+        fw_splodge=0.7,
+        display=False,
+        peakmethod="fft",
+    )
+    cal = amical.calibrate(bs, bs, apply_atmcorr=True)
+    assert isinstance(cal, munch.Munch)
 
 
 @pytest.mark.slow
