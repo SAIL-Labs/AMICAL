@@ -1,4 +1,7 @@
 import os
+from typing import List
+from typing import Optional
+from typing import Union
 
 import numpy as np
 from matplotlib import pyplot as plt
@@ -10,40 +13,40 @@ from amical.externals import candid
 
 
 def candid_grid(
-    input_data,
-    step=10,
-    rmin=20,
-    rmax=400,
-    diam=0,
-    obs=None,
-    extra_error_cp=0,
-    err_scale=1,
-    extra_error_v2=0,
+    input_data: Union[str, List[str]],
+    step: int = 10,
+    rmin: float = 20,
+    rmax: float = 400,
+    diam: float = 0,
+    obs: Optional[List[str]] = None,
+    extra_error_cp: float = 0,
+    err_scale: float = 1,
+    extra_error_v2: float = 0,
     instruments=None,
     doNotFit=None,
-    ncore=1,
-    save=False,
-    outputfile=None,
-    verbose=False,
+    ncore: int = 1,
+    save: bool = False,
+    outputfile: Optional[str] = None,
+    verbose: bool = False,
 ):
     """This function is an user friendly interface between the users of amical
     pipeline and the CANDID analysis package (https://github.com/amerand/CANDID).
 
     Parameters:
     -----------
-    `input_data` {str or list}:
+    `input_data`:
         oifits file names or list of oifits files,\n
-    `step` {int}:
+    `step`:
         step used to compute the binary grid positions,\n
-    `rmin`, `rmax` {float}:
+    `rmin`, `rmax`:
         Bounds of the grid [mas],\n
-    `diam` {float}:
+    `diam`:
         Stellar diameter of the primary star [mas] (default=0),\n
-    `obs` {list}:
+    `obs`:
         List of observables to be fitted (default: ['cp', 'v2']),\n
-    `doNotFit` {list}:
+    `doNotFit`:
         Parameters not fitted (default: ['diam*']),\n
-    `verbose` {boolean}:
+    `verbose`:
         print some informations {default: False}.
 
     Outputs:
@@ -80,7 +83,11 @@ def candid_grid(
     )
 
     if save:
-        filename = os.path.basename(input_data) + "_detection_map_candid.pdf"
+        if isinstance(input_data, list):
+            first_input = input_data[0]
+        else:
+            first_input = input_data
+        filename = os.path.basename(first_input) + "_detection_map_candid.pdf"
         if outputfile is not None:
             filename = outputfile
         plt.savefig(filename, dpi=300)
@@ -137,20 +144,20 @@ def candid_grid(
 
 
 def candid_cr_limit(
-    input_data,
-    step=10,
-    rmin=20,
-    rmax=400,
-    extra_error_cp=0,
-    err_scale=1,
-    extra_error_v2=0,
+    input_data: Union[str, List[str]],
+    step: int = 10,
+    rmin: float = 20,
+    rmax: float = 400,
+    extra_error_cp: float = 0,
+    err_scale: float = 1,
+    extra_error_v2: float = 0,
     obs=None,
     fitComp=None,
-    ncore=1,
+    ncore: int = 1,
     diam=None,
     methods=None,
     instruments=None,
-    save=False,
+    save: bool = False,
     outputfile=None,
 ):
     if obs is None:
@@ -181,7 +188,11 @@ def candid_cr_limit(
     )
 
     if save:
-        filename = os.path.basename(input_data) + "_lim_detection_candid.pdf"
+        if isinstance(input_data, list):
+            first_input = input_data[0]
+        else:
+            first_input = input_data
+        filename = os.path.basename(first_input) + "_lim_detection_candid.pdf"
         if outputfile is not None:
             filename = outputfile
         plt.savefig(filename, dpi=300)
