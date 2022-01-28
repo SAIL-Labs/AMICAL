@@ -47,3 +47,21 @@ jobs:
         flags: unittests
         name: codecov-umbrella
         fail_ci_if_error: false
+
+coverage:
+  status:
+    patch:
+      default:
+        # basic
+        target: auto
+        threshold: 0%
+        base: auto
+        # advanced
+        branches:
+          - master
+        if_ci_failed: ignore #success, failure, error, ignore
+        only_pulls: false
+        flags:
+          - "unit"
+        paths:
+          - "src"
