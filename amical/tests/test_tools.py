@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+from astropy.io import fits
 
 from amical import tools
 
@@ -33,3 +34,12 @@ def test_crop_max():
     assert center_pos == (xmax, ymax)
     assert img_cropped.shape[0] == isz_max
     assert img_cropped.shape[0] == img_cropped.shape[1]
+
+
+def test_SPHERE_parang(global_datadir):
+    with fits.open(global_datadir / "hdr_sphere.fits") as hdu:
+        hdr = hdu[0].header
+    n_ps = 1
+    pa = tools.compute_pa(hdr, n_ps=n_ps)
+    true_pa = 109  # Human value
+    assert pa == pytest.approx(true_pa, 0.01)

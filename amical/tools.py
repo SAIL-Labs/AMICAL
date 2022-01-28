@@ -20,7 +20,6 @@ from astropy.time import Time
 from munch import munchify as dict2class
 from scipy.signal import medfilt2d
 from termcolor import cprint
-from uncertainties import ufloat
 
 
 def linear(x, param):
@@ -110,55 +109,6 @@ def norm_max(tab):
     return tab_norm
 
 
-def crop_center(img, dim):
-    """
-    Short Summary
-    -------------
-    Resize an image on the center.
-
-    Parameters
-    ----------
-    `img` : {numpy.array}
-        input image,\n
-    `dim` : {int}
-        resized dimension.
-
-    Returns
-    -------
-    `cutout`: {numpy.array}
-        Resized image.
-    """
-    b = img.shape[0]
-    position = (b // 2, b // 2)
-    cutout = Cutout2D(img, position, dim)
-    return cutout.data
-
-
-def crop_position(img, X, Y, dim):
-    """
-    Short Summary
-    -------------
-    Resize an image on a defined position.
-
-    Parameters
-    ----------
-    `img` : {numpy.array}
-        input image,\n
-    `X`, `Y` : {int}
-        Position to resize (new center of the image),\n
-    `dim` : {int}
-        resized dimension.
-
-    Returns
-    -------
-    `cutout`: {numpy.array}
-        Resized image.
-    """
-    position = (X, Y)
-    cutout = Cutout2D(img, position, dim)
-    return cutout.data
-
-
 def gauss_2d_asym(X, param):
     """
     Short Summary
@@ -223,17 +173,6 @@ def gauss_2d_asym(X, param):
         -(a * ((x - x0) ** 2) + 2 * b * (x - x0) * (y - y0) + c * ((y - y0) ** 2))
     )
     return im
-
-
-def conv_fft(image, psf):
-    """
-    Compute 2D convolution with the PSF, passing through Fourier space.
-    """
-    fft_im = np.fft.fft2(image)
-    fft_psf = np.fft.fft2(psf)
-    fft_conv = fft_im * fft_psf
-    conv = abs(np.fft.fftshift(np.fft.ifft2(fft_conv)))
-    return conv
 
 
 def plot_circle(d, x, y, hole_radius, sz=1, display=True):
@@ -306,11 +245,6 @@ def cov2cor(cov):
     return cor, sigma
 
 
-def super_gauss(dist, hwhm, m):
-    y = np.exp(-np.log(0.5) * (dist / hwhm) ** m)
-    return y
-
-
 def super_gaussian(x, sigma, m, amp=1, x0=0):
     sigma = float(sigma)
     m = float(m)
@@ -342,13 +276,7 @@ def apply_windowing(img, window=80, m=3):
     return img_apod
 
 
-def compute_ufloat_arr(data, e_data):
-    """Compute the array containing ufloat format used by uncertainties package."""
-    u_data = np.array([ufloat(data[i], e_data[i]) for i in range(len(data))])
-    return u_data
-
-
-def sanitize_array(dic):
+def sanitize_array(dic):  # pragma: no cover
     """Recursively convert values in a nested dictionnary from np.bool_ to builtin bool type
     This is required for json serialization.
     """
@@ -401,10 +329,10 @@ def jd2lst(lng, jd):
 
     # Compute LST in hours.
     lst = (theta + lng) / 15.0
-    neg = np.where(lst < 0.0)
-    n = neg[0].size
+    cond_neg = lst < 0.0
+    n = lst[cond_neg].size
     if n > 0:
-        lst[neg] = 24.0 + (lst[neg] % 24)
+        lst[cond_neg] = 24.0 + (lst[cond_neg] % 24)
     lst = lst % 24
     return lst
 
@@ -610,7 +538,7 @@ def sphere_parang(hdr, n_dit_ifs=None):
     return parang_array
 
 
-def check_seeing_cond(list_nrm):
+def check_seeing_cond(list_nrm):  # pragma: no cover
     """Extract the seeing conditions, parang, averaged vis2
     and cp of a list of nrm classes extracted with extract_bs
     function (bispect.py).
@@ -649,28 +577,8 @@ def check_seeing_cond(list_nrm):
     return dict2class(sanitize_array(res))
 
 
-def plot_seeing_cond(cond, lim_seeing=None):
+def plot_seeing_cond(cond, lim_seeing=None):  # pragma: no cover
     """Plot seeing condition between calibrator and target files."""
-
-    # l_xmin, l_xmax = [], []
-    # # for x in cond:
-
-    # #     try:
-    # #         m_mjd = abs(np.min(np.diff(x.mjd)))/2.
-    # #     except ValueError:
-
-    # #     xmin = np.min([x.mjd.min(), x.mjd.min()])-m_mjd
-    # #     xmax = np.max([x.mjd.max(), x.mjd.max()])+m_mjd
-    # #     l_xmin.append(xmin)
-    # #     l_xmax.append(xmax)
-
-    # xmin = np.min(l_xmin)
-    # xmax = np.min(l_xmax)
-
-    # m_mjd=abs(np.min(np.diff(cond_t.mjd)))/2.
-    # xmin=np.min([cond_c.mjd.min(), cond_t.mjd.min()])-m_mjd
-    # xmax=np.max([cond_c.mjd.max(), cond_t.mjd.max()])+m_mjd
-
     fig = plt.figure()
     ax1 = plt.gca()
     ax1.set_xlabel("mjd [days]")
@@ -680,17 +588,12 @@ def plot_seeing_cond(cond, lim_seeing=None):
     ax1.set_ylabel("Uncalibrated mean V$^2$")
 
     for x in cond:
-        ax1.plot(x.mjd, x.vis2, ".", label=x.target)  # color="#20b2aa"
+        ax1.plot(x.mjd, x.vis2, ".", label=x.target)
         ax2.plot(x.mjd, x.seeing, "+", color="#c62d42")
-    # ax1.plot(cond_c.mjd, cond_c.vis2, '.',
-    #          label="%s (cal)" % cond_c.target)
-    # ax2.plot(cond_c.mjd, cond_c.seeing, '+',
-    #          color="#c62d42", label='Seeing')
     if lim_seeing is not None:
         ax2.axhline(lim_seeing, color="g", label="Seeing threshold")
     ax1.set_ylim(0, 1.2)
     ax2.set_ylim(0.6, 1.8)
-    # ax1.set_xlim(xmin, xmax)
     ax1.grid(alpha=0.1, color="grey")
     ax1.legend(loc="best", fontsize=9)
     plt.tight_layout()
@@ -766,7 +669,7 @@ def save_bs_hdf5(bs, filename):
     # Step 6 - Save original header keywords.
     hdr = bs.infos.hdr
     for key in hdr:
-        grp_hdr.attrs[key] = hdr[key]
+        grp_hdr.attrs[key] = str(hdr[key])
 
     # Last step - close hdf5
     hf.close()
