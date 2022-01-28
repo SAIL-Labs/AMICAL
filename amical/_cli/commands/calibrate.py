@@ -1,7 +1,7 @@
 import os
+import sys
 from glob import glob
 from pathlib import Path
-import sys
 
 from astroquery.simbad import Simbad
 from matplotlib import pyplot as plt
