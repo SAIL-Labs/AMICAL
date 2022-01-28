@@ -1305,7 +1305,7 @@ def extract_bs(
         fluxes,
         index_mask,
         infos,
-        expert_plot=True,
+        expert_plot=display,
     )
     if save_to is not None:
         plt.savefig(f"{figname}_{ifig}.pdf")
@@ -1314,7 +1314,7 @@ def extract_bs(
     obs_result["vis2"] = vis2_norm
 
     # 10. Now we compute the cp quantities and store them with the other observables
-    obs_result = _compute_cp(obs_result, obs_norm, infos, expert_plot=True)
+    obs_result = _compute_cp(obs_result, obs_norm, infos, expert_plot=display)
 
     if save_to is not None:
         plt.savefig(f"{figname}_{ifig}.pdf")
