@@ -50,14 +50,16 @@ def perform_extract(args):
     }
 
     if not os.path.exists(args.datadir):
-        raise OSError(
+        print(
             "%s directory not found, check --datadir. AMICAL look for data only in this specified directory."
             % args.datadir
         )
+        return 1
 
     l_file = sorted(glob("%s/*.fits" % args.datadir))
     if len(l_file) == 0:
-        raise OSError("No fits files found in %s, check --datadir." % args.datadir)
+        print("No fits files found in %s, check --datadir." % args.datadir)
+        return 1
 
     if not os.path.exists(args.outdir):
         os.mkdir(args.outdir)
