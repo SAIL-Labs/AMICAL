@@ -1,6 +1,11 @@
 import pathlib
 
+import matplotlib
 import pytest
+
+
+def pytest_configure(config):
+    matplotlib.use("Agg")
 
 
 @pytest.fixture(scope="session")
