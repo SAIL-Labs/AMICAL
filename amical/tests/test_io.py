@@ -8,8 +8,9 @@ import amical
 from amical import load
 from amical import loadc
 from amical.get_infos_obs import get_pixel_size
-from amical.mf_pipeline.ami_function import find_bad_BL_BS
-from amical.mf_pipeline.ami_function import find_bad_holes
+
+# from amical.mf_pipeline.ami_function import find_bad_BL_BS
+# from amical.mf_pipeline.ami_function import find_bad_holes
 
 
 @pytest.fixture()
@@ -255,35 +256,35 @@ def test_getPixel(ins):
     assert isinstance(p, float)
 
 
-@pytest.mark.usefixtures("close_figures")
-def test_bad_holes(global_datadir):
-    fits_file = global_datadir / "test.fits"
-    with fits.open(fits_file) as fh:
-        cube = fh[0].data
+# @pytest.mark.usefixtures("close_figures")
+# def test_bad_holes(global_datadir):
+#     fits_file = global_datadir / "test.fits"
+#     with fits.open(fits_file) as fh:
+#         cube = fh[0].data
 
-    bs = amical.extract_bs(
-        cube,
-        fits_file,
-        targetname="test",
-        bs_multi_tri=False,
-        maskname="g7",
-        fw_splodge=0.7,
-        display=False,
-        peakmethod="fft",
-    )
+#     bs = amical.extract_bs(
+#         cube,
+#         fits_file,
+#         targetname="test",
+#         bs_multi_tri=False,
+#         maskname="g7",
+#         fw_splodge=0.7,
+#         display=False,
+#         peakmethod="fft",
+#     )
 
-    bad_hole = find_bad_holes(bs, display=True, verbose=True)
-    index_onebad = find_bad_BL_BS([0], bs)
-    index_twobad = find_bad_BL_BS([0, 3], bs)
-    index_nobad = find_bad_BL_BS(bad_hole, bs)
+#     bad_hole = find_bad_holes(bs, display=True, verbose=True)
+#     index_onebad = find_bad_BL_BS([0], bs)
+#     index_twobad = find_bad_BL_BS([0, 3], bs)
+#     index_nobad = find_bad_BL_BS(bad_hole, bs)
 
-    n_holes = bs.mask.n_holes
-    n_bl_good = n_holes * (n_holes - 1) / 2.0
-    n_holes -= 1
-    n_bl_onebad = n_holes * (n_holes - 1) / 2.0
-    n_holes -= 1
-    n_bl_twobad = n_holes * (n_holes - 1) / 2.0
+#     n_holes = bs.mask.n_holes
+#     n_bl_good = n_holes * (n_holes - 1) / 2.0
+#     n_holes -= 1
+#     n_bl_onebad = n_holes * (n_holes - 1) / 2.0
+#     n_holes -= 1
+#     n_bl_twobad = n_holes * (n_holes - 1) / 2.0
 
-    assert n_bl_good == len(index_nobad[2])
-    assert n_bl_onebad == len(index_onebad[2])
-    assert n_bl_twobad == len(index_twobad[2])
+#     assert n_bl_good == len(index_nobad[2])
+#     assert n_bl_onebad == len(index_onebad[2])
+#     assert n_bl_twobad == len(index_twobad[2])
