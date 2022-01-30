@@ -40,3 +40,4 @@ warn_unused_configs = true
 warn_unused_ignores = true
 warn_unreachable = true
 show_error_context = true
+show_error_codes = true
