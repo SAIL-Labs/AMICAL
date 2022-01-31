@@ -1,4 +1,5 @@
 import munch
+import numpy as np
 import pytest
 from astropy.io import fits
 from matplotlib import pyplot as plt
@@ -96,93 +97,91 @@ def example_cal_fft(global_datadir):
     return amical.calibrate(bs, bs)
 
 
-# def test_cal_atmcorr(global_datadir):
-#     fits_file = global_datadir / "test.fits"
-#     with fits.open(fits_file) as fh:
-#         cube = fh[0].data
-#     bs = amical.extract_bs(
-#         cube,
-#         fits_file,
-#         targetname="test",
-#         bs_multi_tri=False,
-#         maskname="g7",
-#         fw_splodge=0.7,
-#         display=False,
-#         peakmethod="fft",
-#     )
+def test_cal_atmcorr(global_datadir):
+    fits_file = global_datadir / "test.fits"
+    with fits.open(fits_file) as fh:
+        cube = fh[0].data
+    bs = amical.extract_bs(
+        cube,
+        fits_file,
+        targetname="test",
+        bs_multi_tri=False,
+        maskname="g7",
+        fw_splodge=0.7,
+        display=False,
+        peakmethod="fft",
+    )
 
-#     cal = amical.calibrate(bs, bs, apply_atmcorr=True)
-#     assert isinstance(cal, munch.Munch)
-
-
-# def test_cal_phscorr(global_datadir):
-#     fits_file = global_datadir / "test.fits"
-#     with fits.open(fits_file) as fh:
-#         cube = fh[0].data
-#     bs = amical.extract_bs(
-#         cube,
-#         fits_file,
-#         targetname="test",
-#         bs_multi_tri=False,
-#         maskname="g7",
-#         fw_splodge=0.7,
-#         display=False,
-#         peakmethod="fft",
-#     )
-#     cal = amical.calibrate(bs, bs, apply_atmcorr=True)
-#     assert isinstance(cal, munch.Munch)
+    cal = amical.calibrate(bs, bs, apply_atmcorr=True)
+    assert isinstance(cal, munch.Munch)
 
 
-@pytest.mark.slow
+def test_cal_phscorr(global_datadir):
+    fits_file = global_datadir / "test.fits"
+    with fits.open(fits_file) as fh:
+        cube = fh[0].data
+    bs = amical.extract_bs(
+        cube,
+        fits_file,
+        targetname="test",
+        bs_multi_tri=False,
+        maskname="g7",
+        fw_splodge=0.7,
+        display=False,
+        peakmethod="fft",
+    )
+    cal = amical.calibrate(bs, bs, apply_atmcorr=True)
+    assert isinstance(cal, munch.Munch)
+
+
 def test_calibration(cal):
     assert isinstance(cal, munch.Munch)
 
 
-@pytest.mark.slow
 def test_show(cal):
     amical.show(cal)
 
 
-# def test_save_cal(cal, tmpdir):
-#     dic, savefile = amical.save(
-#         cal, oifits_file="test_cal.oifits", datadir=tmpdir, fake_obj=True
-#     )
+def test_save_cal(cal, tmpdir):
+    dic, savefile = amical.save(
+        cal, oifits_file="test_cal.oifits", datadir=tmpdir, fake_obj=True
+    )
 
-#     assert isinstance(dic, dict)
-#     assert isinstance(savefile, str)
+    assert isinstance(dic, dict)
+    assert isinstance(savefile, str)
 
-#     hdr = fits.getheader(savefile)
-#     v2 = dic["OI_VIS2"]["VIS2DATA"]
-#     cp = dic["OI_T3"]["T3PHI"]
+    hdr = fits.getheader(savefile)
+    v2 = dic["OI_VIS2"]["VIS2DATA"]
+    cp = dic["OI_T3"]["T3PHI"]
 
-#     assert isinstance(v2, np.ndarray)
-#     assert isinstance(cp, np.ndarray)
-#     assert len(v2) == 21
-#     assert len(cp) == 35
-#     assert hdr["ORIGIN"] == "Sydney University"
+    assert isinstance(v2, np.ndarray)
+    assert isinstance(cp, np.ndarray)
+    assert len(v2) == 21
+    assert len(cp) == 35
+    assert hdr["ORIGIN"] == "Sydney University"
 
 
-# def test_save_cal_1hole(cal, tmpdir):
-#     dic, savefile = amical.save(
-#         cal,
-#         oifits_file="test_cal.oifits",
-#         datadir=tmpdir,
-#         fake_obj=True,
-#         ind_hole=0,
-#     )
+def test_save_cal_1hole(cal, tmpdir):
+    dic, savefile = amical.save(
+        cal,
+        oifits_file="test_cal.oifits",
+        datadir=tmpdir,
+        fake_obj=True,
+        ind_hole=0,
+    )
 
-#     assert isinstance(dic, dict)
-#     assert isinstance(savefile, str)
+    assert isinstance(dic, dict)
+    assert isinstance(savefile, str)
 
-#     hdr = fits.getheader(savefile)
-#     v2 = dic["OI_VIS2"]["VIS2DATA"]
-#     cp = dic["OI_T3"]["T3PHI"]
+    hdr = fits.getheader(savefile)
+    v2 = dic["OI_VIS2"]["VIS2DATA"]
+    cp = dic["OI_T3"]["T3PHI"]
 
-#     assert isinstance(v2, np.ndarray)
-#     assert isinstance(cp, np.ndarray)
-#     assert len(v2) == 21
-#     assert len(cp) == 15
-#     assert hdr["ORIGIN"] == "Sydney University"
+    assert isinstance(v2, np.ndarray)
+    assert isinstance(cp, np.ndarray)
+    assert len(v2) == 21
+    assert len(cp) == 15
+    assert hdr["ORIGIN"] == "Sydney University"
 
 
 # def test_save_raw(global_datadir, tmpdir):
