@@ -1,4 +1,4 @@
-# import numpy as np
+import numpy as np
 import pytest
 from matplotlib import pyplot as plt
 
@@ -73,20 +73,20 @@ def test_plot_model(example_oifits):
     assert len(ret) == 3
 
 
-# def test_model_disk(example_oifits):
-#     param = {
-#         "model": "disk",
-#         "diam": 10,
-#         "x0": 0,
-#         "y0": 0,
-#     }
-#     f_model = amical.analysis.fitting.select_model(param["model"])
+def test_model_disk(example_oifits):
+    param = {
+        "model": "disk",
+        "diam": 10,
+        "x0": 0,
+        "y0": 0,
+    }
+    f_model = amical.analysis.fitting.select_model(param["model"])
 
-#     d = amical.loadc(example_oifits)
+    d = amical.loadc(example_oifits)
 
-#     model = f_model(d.u, d.v, d.wl, param)
-#     assert len(d.u) == len(model)
-#     assert type(model[0]) == np.complex128
+    model = f_model(d.u, d.v, d.wl, param)
+    assert len(d.u) == len(model)
+    assert type(model[0]) == np.complex128
 
 
 # def test_model_edisk(example_oifits):
