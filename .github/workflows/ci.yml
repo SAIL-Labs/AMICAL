@@ -33,8 +33,10 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     - name: Setup package
+      # restricting to pip<22.0 because of pyvo
+      # see https://github.com/astropy/pyvo/issues/296
       run: |
-        python -m pip install --upgrade pip
+        python -m pip install --upgrade pip\<22.0
         python -m pip install .[dev]
     - name: Generate coverage report
       run: |
