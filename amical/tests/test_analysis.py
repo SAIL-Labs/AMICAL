@@ -259,38 +259,38 @@ def test_pymask_oifits_no_date_obs(example_oifits_no_date_obs):
     assert isinstance(o, pymask.oifits.oifits)
 
 
-# @pytest.mark.usefixtures("close_figures")
-# @pytest.mark.parametrize("multiproc", [False, True])
-# def test_smartfit(example_oifits, multiproc):
-#     obs = fits2obs(example_oifits)
+@pytest.mark.usefixtures("close_figures")
+@pytest.mark.parametrize("multiproc", [False])
+def test_smartfit(example_oifits, multiproc):
+    obs = fits2obs(example_oifits)
 
-#     param = {
-#         "model": "binary",
-#         "sep": 1,
-#         "dm": 6,
-#         "theta": 45,
-#     }
+    param = {
+        "model": "binary",
+        "sep": 1,
+        "dm": 6,
+        "theta": 45,
+    }
 
-#     fit = smartfit(obs, param, normalizeErrors=True, multiproc=multiproc)
+    fit = smartfit(obs, param, normalizeErrors=True, multiproc=multiproc)
 
-#     # Human checked values
-#     true_sep, true_pa, true_dm = 147.7, 46.6, 6.0
+    # Human checked values
+    true_sep, true_pa, true_dm = 147.7, 46.6, 6.0
 
-#     sep, e_sep = fit["best"]["sep"], fit["uncer"]["sep"]
-#     pa, e_pa = fit["best"]["theta"], fit["uncer"]["theta"]
-#     dm, e_dm = fit["best"]["dm"], fit["uncer"]["dm"]
+    sep, e_sep = fit["best"]["sep"], fit["uncer"]["sep"]
+    pa, e_pa = fit["best"]["theta"], fit["uncer"]["theta"]
+    dm, e_dm = fit["best"]["dm"], fit["uncer"]["dm"]
 
-#     assert type(obs) == np.ndarray
-#     assert isinstance(fit, dict)
+    assert type(obs) == np.ndarray
+    assert isinstance(fit, dict)
 
-#     # Check close true value
-#     assert sep == pytest.approx(true_sep, 0.01)
-#     assert pa == pytest.approx(true_pa, 0.01)
-#     assert dm == pytest.approx(true_dm, 0.01)
-#     # Check small errors
-#     assert e_sep <= 0.01 * true_sep
-#     assert e_pa <= 0.01 * true_pa
-#     assert e_dm <= 0.01 * true_dm
+    # Check close true value
+    assert sep == pytest.approx(true_sep, 0.01)
+    assert pa == pytest.approx(true_pa, 0.01)
+    assert dm == pytest.approx(true_dm, 0.01)
+    # Check small errors
+    assert e_sep <= 0.01 * true_sep
+    assert e_pa <= 0.01 * true_pa
+    assert e_dm <= 0.01 * true_dm
 
 
 @pytest.mark.usefixtures("close_figures")
