@@ -214,45 +214,45 @@ def test_pymask_cr(example_oifits):
     assert isinstance(res, dict)
 
 
-# @pytest.mark.usefixtures("close_figures")
-# def test_pymask_mcmc(example_oifits):
-#     param_pymask = {
-#         "sep_prior": [100, 180],
-#         "pa_prior": [20, 80],
-#         "cr_prior": [230, 270],
-#         "ncore": None,
-#         "extra_error_cp": 0,
-#         "err_scale": 1,
-#     }
+@pytest.mark.usefixtures("close_figures")
+def test_pymask_mcmc(example_oifits):
+    param_pymask = {
+        "sep_prior": [100, 180],
+        "pa_prior": [20, 80],
+        "cr_prior": [230, 270],
+        "ncore": None,
+        "extra_error_cp": 0,
+        "err_scale": 1,
+    }
 
-#     param_mcmc = {
-#         "niters": 800,
-#         "walkers": 100,
-#         "initial_guess": [146, 47, 244],
-#         "burn_in": 100,
-#     }
+    param_mcmc = {
+        "niters": 800,
+        "walkers": 100,
+        "initial_guess": [146, 47, 244],
+        "burn_in": 100,
+    }
 
-#     fit = amical.pymask_mcmc(str(example_oifits), **param_pymask, **param_mcmc)
+    fit = amical.pymask_mcmc(str(example_oifits), **param_pymask, **param_mcmc)
 
-#     # Human checked values
-#     true_sep, true_pa, true_dm = 147.7, 46.6, 6.0
+    # Human checked values
+    true_sep, true_pa, true_dm = 147.7, 46.6, 6.0
 
-#     sep, e_sep = fit["best"]["sep"], max(fit["uncer"]["sep_p"], fit["uncer"]["sep_m"])
-#     pa, e_pa = (
-#         fit["best"]["theta"],
-#         max(fit["uncer"]["theta_p"], fit["uncer"]["theta_m"]),
-#     )
-#     dm, e_dm = fit["best"]["dm"], max(fit["uncer"]["dm_p"], fit["uncer"]["dm_m"])
+    sep, e_sep = fit["best"]["sep"], max(fit["uncer"]["sep_p"], fit["uncer"]["sep_m"])
+    pa, e_pa = (
+        fit["best"]["theta"],
+        max(fit["uncer"]["theta_p"], fit["uncer"]["theta_m"]),
+    )
+    dm, e_dm = fit["best"]["dm"], max(fit["uncer"]["dm_p"], fit["uncer"]["dm_m"])
 
-#     assert isinstance(fit, dict)
-#     # Check close true value
-#     assert sep == pytest.approx(true_sep, 0.01)
-#     assert pa == pytest.approx(true_pa, 0.01)
-#     assert dm == pytest.approx(true_dm, 0.01)
-#     # Check small errors
-#     assert e_sep <= 0.01 * true_sep
-#     assert e_pa <= 0.01 * true_pa
-#     assert e_dm <= 0.01 * true_dm
+    assert isinstance(fit, dict)
+    # Check close true value
+    assert sep == pytest.approx(true_sep, 0.01)
+    assert pa == pytest.approx(true_pa, 0.01)
+    assert dm == pytest.approx(true_dm, 0.01)
+    # Check small errors
+    assert e_sep <= 0.01 * true_sep
+    assert e_pa <= 0.01 * true_pa
+    assert e_dm <= 0.01 * true_dm
 
 
 # def test_pymask_oifits_no_date_obs(example_oifits_no_date_obs):
