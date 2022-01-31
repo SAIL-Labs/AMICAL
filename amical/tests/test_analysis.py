@@ -135,51 +135,51 @@ def test_model_Clumpydisk(example_oifits):
     assert type(model[0]) == np.complex128
 
 
-# def test_model_binary(example_oifits):
-#     param = {
-#         "model": "binary",
-#         "sep": 1,
-#         "dm": 1,
-#         "theta": 45,
-#     }
-#     f_model = amical.analysis.fitting.select_model(param["model"])
+def test_model_binary(example_oifits):
+    param = {
+        "model": "binary",
+        "sep": 1,
+        "dm": 1,
+        "theta": 45,
+    }
+    f_model = amical.analysis.fitting.select_model(param["model"])
 
-#     d = amical.loadc(example_oifits)
+    d = amical.loadc(example_oifits)
 
-#     model = f_model(d.u, d.v, d.wl, param)
-#     assert len(d.u) == len(model)
-#     assert type(model[0]) == np.complex128
-
-
-# def test_model_binaryres(example_oifits):
-#     param = {"model": "binary_res", "sep": 1, "dm": 1, "theta": 45, "diam": 0.1}
-#     f_model = amical.analysis.fitting.select_model(param["model"])
-
-#     d = amical.loadc(example_oifits)
-
-#     model = f_model(d.u, d.v, d.wl, param)
-#     assert len(d.u) == len(model)
-#     assert type(model[0]) == np.complex128
+    model = f_model(d.u, d.v, d.wl, param)
+    assert len(d.u) == len(model)
+    assert type(model[0]) == np.complex128
 
 
-# def test_model_binary_error(example_oifits):
-#     param = {"model": "binary", "sep": 1, "dm": -1, "theta": 45}
-#     f_model = amical.analysis.fitting.select_model(param["model"])
+def test_model_binaryres(example_oifits):
+    param = {"model": "binary_res", "sep": 1, "dm": 1, "theta": 45, "diam": 0.1}
+    f_model = amical.analysis.fitting.select_model(param["model"])
 
-#     d = amical.loadc(example_oifits)
+    d = amical.loadc(example_oifits)
 
-#     model = f_model(d.u, d.v, d.wl, param)
-#     assert np.isnan(model[0])
+    model = f_model(d.u, d.v, d.wl, param)
+    assert len(d.u) == len(model)
+    assert type(model[0]) == np.complex128
 
 
-# def test_model_binaryres_error(example_oifits):
-#     param = {"model": "binary_res", "sep": 1, "dm": -1, "theta": 45, "diam": 0.1}
-#     f_model = amical.analysis.fitting.select_model(param["model"])
+def test_model_binary_error(example_oifits):
+    param = {"model": "binary", "sep": 1, "dm": -1, "theta": 45}
+    f_model = amical.analysis.fitting.select_model(param["model"])
 
-#     d = amical.loadc(example_oifits)
+    d = amical.loadc(example_oifits)
 
-#     model = f_model(d.u, d.v, d.wl, param)
-#     assert np.isnan(model[0])
+    model = f_model(d.u, d.v, d.wl, param)
+    assert np.isnan(model[0])
+
+
+def test_model_binaryres_error(example_oifits):
+    param = {"model": "binary_res", "sep": 1, "dm": -1, "theta": 45, "diam": 0.1}
+    f_model = amical.analysis.fitting.select_model(param["model"])
+
+    d = amical.loadc(example_oifits)
+
+    model = f_model(d.u, d.v, d.wl, param)
+    assert np.isnan(model[0])
 
 
 # @pytest.mark.usefixtures("close_figures")
