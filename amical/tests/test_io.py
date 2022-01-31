@@ -54,28 +54,28 @@ def test_extract(peakmethod, global_datadir):
     assert len(bs_keys) == 13
 
 
-# @pytest.mark.usefixtures("close_figures")
-# def test_extract_multitri(global_datadir, tmp_path):
-#     fits_file = global_datadir / "test.fits"
-#     with fits.open(fits_file) as fh:
-#         cube = fh[0].data
-#     bs = amical.extract_bs(
-#         cube,
-#         fits_file,
-#         targetname="test",
-#         bs_multi_tri=True,
-#         maskname="g7",
-#         fw_splodge=0.7,
-#         display=True,
-#         expert_plot=True,
-#         naive_err=True,
-#         verbose=True,
-#         save_to=str(tmp_path),
-#         peakmethod="fft",
-#     )
-#     bs_keys = list(bs.keys())
-#     assert isinstance(bs, munch.Munch)
-#     assert len(bs_keys) == 13
+@pytest.mark.usefixtures("close_figures")
+def test_extract_multitri(global_datadir, tmp_path):
+    fits_file = global_datadir / "test.fits"
+    with fits.open(fits_file) as fh:
+        cube = fh[0].data
+    bs = amical.extract_bs(
+        cube,
+        fits_file,
+        targetname="test",
+        bs_multi_tri=True,
+        maskname="g7",
+        fw_splodge=0.7,
+        display=True,
+        expert_plot=True,
+        naive_err=True,
+        verbose=True,
+        save_to=str(tmp_path),
+        peakmethod="fft",
+    )
+    bs_keys = list(bs.keys())
+    assert isinstance(bs, munch.Munch)
+    assert len(bs_keys) == 13
 
 
 @pytest.fixture(name="cal", scope="session")
