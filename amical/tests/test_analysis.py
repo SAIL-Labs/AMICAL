@@ -64,13 +64,13 @@ def test_candid_grid(example_oifits, ncore):
     assert e_dm <= 0.01 * true_dm
 
 
-# @pytest.mark.usefixtures("close_figures")
-# def test_plot_model(example_oifits):
-#     param_candid = {"rmin": 50, "rmax": 180, "step": 50, "ncore": 1}
-#     fit = amical.candid_grid(example_oifits, **param_candid)
-#     ret = amical.plot_model(example_oifits, fit["best"])
-#     assert isinstance(fit, dict)
-#     assert len(ret) == 3
+@pytest.mark.usefixtures("close_figures")
+def test_plot_model(example_oifits):
+    param_candid = {"rmin": 50, "rmax": 180, "step": 50, "ncore": 1}
+    fit = amical.candid_grid(example_oifits, **param_candid)
+    ret = amical.plot_model(example_oifits, fit["best"])
+    assert isinstance(fit, dict)
+    assert len(ret) == 3
 
 
 # def test_model_disk(example_oifits):
