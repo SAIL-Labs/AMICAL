@@ -3,8 +3,8 @@ import pytest
 from matplotlib import pyplot as plt
 
 import amical
+from amical import candid_cr_limit
 
-# from amical import candid_cr_limit
 # from amical.analysis.fitting import compute_chi2_curve
 # from amical.analysis.fitting import fits2obs
 # from amical.analysis.fitting import smartfit
@@ -182,16 +182,16 @@ def test_model_binaryres_error(example_oifits):
     assert np.isnan(model[0])
 
 
-# @pytest.mark.usefixtures("close_figures")
-# @pytest.mark.parametrize("step", [40, 60])
-# def test_candid_cr(example_oifits, step):
-#     param_candid = {"rmin": 50, "rmax": 180, "step": step, "ncore": 1}
-#     fit = amical.candid_grid(example_oifits, **param_candid)
-#     cr_candid = candid_cr_limit(example_oifits, **param_candid, fitComp=fit["comp"])
-#     tested_r = cr_candid["r"]
-#     assert isinstance(cr_candid, dict)
-#     assert isinstance(tested_r, np.ndarray)
-#     assert len(tested_r) > 1
+@pytest.mark.usefixtures("close_figures")
+@pytest.mark.parametrize("step", [40, 60])
+def test_candid_cr(example_oifits, step):
+    param_candid = {"rmin": 50, "rmax": 180, "step": step, "ncore": 1}
+    fit = amical.candid_grid(example_oifits, **param_candid)
+    cr_candid = candid_cr_limit(example_oifits, **param_candid, fitComp=fit["comp"])
+    tested_r = cr_candid["r"]
+    assert isinstance(cr_candid, dict)
+    assert isinstance(tested_r, np.ndarray)
+    assert len(tested_r) > 1
 
 
 # @pytest.mark.usefixtures("close_figures")
