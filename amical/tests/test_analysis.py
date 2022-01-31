@@ -89,50 +89,50 @@ def test_model_disk(example_oifits):
     assert type(model[0]) == np.complex128
 
 
-# def test_model_edisk(example_oifits):
-#     param = {
-#         "model": "edisk",
-#         "majorAxis": 10,
-#         "incl": 0,
-#         "posang": 45,
-#         "thickness": 1,
-#         "cr": 0.1,
-#         "x0": 0,
-#         "y0": 0,
-#     }
+def test_model_edisk(example_oifits):
+    param = {
+        "model": "edisk",
+        "majorAxis": 10,
+        "incl": 0,
+        "posang": 45,
+        "thickness": 1,
+        "cr": 0.1,
+        "x0": 0,
+        "y0": 0,
+    }
 
-#     f_model = amical.analysis.fitting.select_model(param["model"])
+    f_model = amical.analysis.fitting.select_model(param["model"])
 
-#     d = amical.loadc(example_oifits)
+    d = amical.loadc(example_oifits)
 
-#     V2 = amical.analysis.fitting.comput_V2([d.u, d.v, d.wl], param, f_model)
+    V2 = amical.analysis.fitting.comput_V2([d.u, d.v, d.wl], param, f_model)
 
-#     model = f_model(d.u, d.v, d.wl, param)
-#     assert len(d.u) == len(model)
-#     assert len(d.u) == len(V2)
-#     assert type(model[0]) == np.complex128
+    model = f_model(d.u, d.v, d.wl, param)
+    assert len(d.u) == len(model)
+    assert len(d.u) == len(V2)
+    assert type(model[0]) == np.complex128
 
 
-# def test_model_Clumpydisk(example_oifits):
-#     param = {
-#         "model": "clumpyDebrisDisk",
-#         "majorAxis": 10,
-#         "incl": 0,
-#         "posang": 45,
-#         "thickness": 1,
-#         "cr": 0.1,
-#         "x0": 0,
-#         "y0": 0,
-#         "d_clump": 0.5,
-#         "cr_clump": 10,
-#     }
-#     f_model = amical.analysis.fitting.select_model(param["model"])
+def test_model_Clumpydisk(example_oifits):
+    param = {
+        "model": "clumpyDebrisDisk",
+        "majorAxis": 10,
+        "incl": 0,
+        "posang": 45,
+        "thickness": 1,
+        "cr": 0.1,
+        "x0": 0,
+        "y0": 0,
+        "d_clump": 0.5,
+        "cr_clump": 10,
+    }
+    f_model = amical.analysis.fitting.select_model(param["model"])
 
-#     d = amical.loadc(example_oifits)
+    d = amical.loadc(example_oifits)
 
-#     model = f_model(d.u, d.v, d.wl, param)
-#     assert len(d.u) == len(model)
-#     assert type(model[0]) == np.complex128
+    model = f_model(d.u, d.v, d.wl, param)
+    assert len(d.u) == len(model)
+    assert type(model[0]) == np.complex128
 
 
 # def test_model_binary(example_oifits):
