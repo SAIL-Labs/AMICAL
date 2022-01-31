@@ -194,24 +194,24 @@ def test_candid_cr(example_oifits, step):
     assert len(tested_r) > 1
 
 
-# @pytest.mark.usefixtures("close_figures")
-# def test_pymask_grid(example_oifits):
-#     pa_prior = [30, 50]
-#     sep_prior = [100, 200]
-#     cr_prior = [100, 300]
-#     param_pymask = {
-#         "pa_prior": pa_prior,
-#         "sep_prior": sep_prior,
-#         "cr_prior": cr_prior,
-#     }
-#     fit = amical.pymask_grid(str(example_oifits), **param_pymask)
-#     assert isinstance(fit, dict)
+@pytest.mark.usefixtures("close_figures")
+def test_pymask_grid(example_oifits):
+    pa_prior = [30, 50]
+    sep_prior = [100, 200]
+    cr_prior = [100, 300]
+    param_pymask = {
+        "pa_prior": pa_prior,
+        "sep_prior": sep_prior,
+        "cr_prior": cr_prior,
+    }
+    fit = amical.pymask_grid(str(example_oifits), **param_pymask)
+    assert isinstance(fit, dict)
 
 
-# @pytest.mark.usefixtures("close_figures")
-# def test_pymask_cr(example_oifits):
-#     res = amical.pymask_cr_limit(str(example_oifits), nsim=10, ncore=4)
-#     assert isinstance(res, dict)
+@pytest.mark.usefixtures("close_figures")
+def test_pymask_cr(example_oifits):
+    res = amical.pymask_cr_limit(str(example_oifits), nsim=10, ncore=4)
+    assert isinstance(res, dict)
 
 
 # @pytest.mark.usefixtures("close_figures")
