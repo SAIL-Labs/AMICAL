@@ -184,37 +184,37 @@ def test_save_cal_1hole(cal, tmpdir):
     assert hdr["ORIGIN"] == "Sydney University"
 
 
-# def test_save_raw(global_datadir, tmpdir):
-#     fits_file = global_datadir / "test.fits"
-#     with fits.open(fits_file) as fh:
-#         cube = fh[0].data
-#     bs = amical.extract_bs(
-#         cube,
-#         fits_file,
-#         targetname="WR104",
-#         bs_multi_tri=False,
-#         maskname="g7",
-#         fw_splodge=0.7,
-#         display=False,
-#         peakmethod="fft",
-#     )
+def test_save_raw(global_datadir, tmpdir):
+    fits_file = global_datadir / "test.fits"
+    with fits.open(fits_file) as fh:
+        cube = fh[0].data
+    bs = amical.extract_bs(
+        cube,
+        fits_file,
+        targetname="WR104",
+        bs_multi_tri=False,
+        maskname="g7",
+        fw_splodge=0.7,
+        display=False,
+        peakmethod="fft",
+    )
 
-#     dic, savefile = amical.save(
-#         bs, oifits_file="test_raw.oifits", datadir=tmpdir, fake_obj=False
-#     )
+    dic, savefile = amical.save(
+        bs, oifits_file="test_raw.oifits", datadir=tmpdir, fake_obj=False
+    )
 
-#     assert isinstance(dic, dict)
-#     assert isinstance(savefile, str)
+    assert isinstance(dic, dict)
+    assert isinstance(savefile, str)
 
-#     hdr = fits.getheader(savefile)
-#     v2 = dic["OI_VIS2"]["VIS2DATA"]
-#     cp = dic["OI_T3"]["T3PHI"]
+    hdr = fits.getheader(savefile)
+    v2 = dic["OI_VIS2"]["VIS2DATA"]
+    cp = dic["OI_T3"]["T3PHI"]
 
-#     assert isinstance(v2, np.ndarray)
-#     assert isinstance(cp, np.ndarray)
-#     assert len(v2) == 21
-#     assert len(cp) == 35
-#     assert hdr["OBJECT"] == hdr["CALIB"]
+    assert isinstance(v2, np.ndarray)
+    assert isinstance(cp, np.ndarray)
+    assert len(v2) == 21
+    assert len(cp) == 35
+    assert hdr["OBJECT"] == hdr["CALIB"]
 
 
 def test_origin_type(cal, tmpdir):
