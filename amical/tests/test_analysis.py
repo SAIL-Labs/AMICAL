@@ -260,7 +260,7 @@ def test_pymask_oifits_no_date_obs(example_oifits_no_date_obs):
 
 
 @pytest.mark.usefixtures("close_figures")
-@pytest.mark.parametrize("multiproc", [False])
+@pytest.mark.parametrize("multiproc", [False, True])
 def test_smartfit(example_oifits, multiproc):
     obs = fits2obs(example_oifits)
 
