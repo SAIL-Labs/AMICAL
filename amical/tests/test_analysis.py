@@ -1,3 +1,5 @@
+import sys
+
 import numpy as np
 import pytest
 from matplotlib import pyplot as plt
@@ -259,6 +261,7 @@ def test_pymask_oifits_no_date_obs(example_oifits_no_date_obs):
     assert isinstance(o, pymask.oifits.oifits)
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
 @pytest.mark.usefixtures("close_figures")
 @pytest.mark.parametrize("multiproc", [False, True])
 def test_smartfit(example_oifits, multiproc):
