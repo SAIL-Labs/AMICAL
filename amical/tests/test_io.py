@@ -96,23 +96,23 @@ def example_cal_fft(global_datadir):
     return amical.calibrate(bs, bs)
 
 
-# def test_cal_atmcorr(global_datadir):
-#     fits_file = global_datadir / "test.fits"
-#     with fits.open(fits_file) as fh:
-#         cube = fh[0].data
-#     bs = amical.extract_bs(
-#         cube,
-#         fits_file,
-#         targetname="test",
-#         bs_multi_tri=False,
-#         maskname="g7",
-#         fw_splodge=0.7,
-#         display=False,
-#         peakmethod="fft",
-#     )
+def test_cal_atmcorr(global_datadir):
+    fits_file = global_datadir / "test.fits"
+    with fits.open(fits_file) as fh:
+        cube = fh[0].data
+    bs = amical.extract_bs(
+        cube,
+        fits_file,
+        targetname="test",
+        bs_multi_tri=False,
+        maskname="g7",
+        fw_splodge=0.7,
+        display=False,
+        peakmethod="fft",
+    )
 
-#     cal = amical.calibrate(bs, bs, apply_atmcorr=True)
-#     assert isinstance(cal, munch.Munch)
+    cal = amical.calibrate(bs, bs, apply_atmcorr=True)
+    assert isinstance(cal, munch.Munch)
 
 
 # def test_cal_phscorr(global_datadir):
