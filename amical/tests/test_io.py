@@ -161,27 +161,27 @@ def test_save_cal(cal, tmpdir):
     assert hdr["ORIGIN"] == "Sydney University"
 
 
-# def test_save_cal_1hole(cal, tmpdir):
-#     dic, savefile = amical.save(
-#         cal,
-#         oifits_file="test_cal.oifits",
-#         datadir=tmpdir,
-#         fake_obj=True,
-#         ind_hole=0,
-#     )
+def test_save_cal_1hole(cal, tmpdir):
+    dic, savefile = amical.save(
+        cal,
+        oifits_file="test_cal.oifits",
+        datadir=tmpdir,
+        fake_obj=True,
+        ind_hole=0,
+    )
 
-#     assert isinstance(dic, dict)
-#     assert isinstance(savefile, str)
+    assert isinstance(dic, dict)
+    assert isinstance(savefile, str)
 
-#     hdr = fits.getheader(savefile)
-#     v2 = dic["OI_VIS2"]["VIS2DATA"]
-#     cp = dic["OI_T3"]["T3PHI"]
+    hdr = fits.getheader(savefile)
+    v2 = dic["OI_VIS2"]["VIS2DATA"]
+    cp = dic["OI_T3"]["T3PHI"]
 
-#     assert isinstance(v2, np.ndarray)
-#     assert isinstance(cp, np.ndarray)
-#     assert len(v2) == 21
-#     assert len(cp) == 15
-#     assert hdr["ORIGIN"] == "Sydney University"
+    assert isinstance(v2, np.ndarray)
+    assert isinstance(cp, np.ndarray)
+    assert len(v2) == 21
+    assert len(cp) == 15
+    assert hdr["ORIGIN"] == "Sydney University"
 
 
 # def test_save_raw(global_datadir, tmpdir):
