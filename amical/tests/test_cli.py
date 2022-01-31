@@ -72,6 +72,15 @@ def test_flag_clean(flag, cli_datadir, tmp_path, monkeypatch):
 
 
 @pytest.mark.usefixtures("close_figures")
+def test_clean_check(cli_datadir, tmp_path, monkeypatch):
+    monkeypatch.setattr("builtins.input", lambda _: "0")
+    ret = main(
+        ["clean", "--datadir", str(cli_datadir), "--outdir", str(tmp_path), "--check"]
+    )
+    assert ret == 0
+
+
+@pytest.mark.usefixtures("close_figures")
 def test_extract(cli_datadir, tmp_path, monkeypatch):
     monkeypatch.setattr("builtins.input", lambda _: "0")
 
