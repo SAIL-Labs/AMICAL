@@ -1,8 +1,17 @@
 import numpy as np
 import pytest
+from matplotlib import pyplot as plt
 
+import amical
 from amical.data_processing import clean_data
 from amical.data_processing import sky_correction
+
+
+@pytest.fixture()
+def close_figures():
+    plt.close("all")
+    yield
+    plt.close("all")
 
 
 def test_sky_out_image():
@@ -22,6 +31,7 @@ def test_sky_out_image():
     assert np.all(bg == 0)
 
 
+@pytest.mark.usefixtures("close_figures")
 def test_sky_inner_only():
     img_dim = 80
     img = np.ones((img_dim, img_dim))
@@ -37,6 +47,7 @@ def test_sky_inner_only():
         sky_correction(img, r1=r1, dr=dr)
 
 
+@pytest.mark.usefixtures("close_figures")
 def test_clean_data_none_kwargs():
     # Test clean_data when the "main" kwargs are set to None
     n_im = 5
@@ -63,3 +74,34 @@ def test_clean_data_none_kwargs():
     assert np.logical_and(
         cube_clean == cube_clean_apod, cube_clean == cube_clean_sky
     ).all()
+
+
+@pytest.mark.usefixtures("close_figures")
+def test_clean(global_datadir):
+    fits_file = global_datadir / "test.fits"
+
+    clean_param = {
+        "isz": 79,
+        "r1": 35,
+        "dr": 2,
+        "apod": True,
+        "window": 65,
+        "f_kernel": 3,
+        "add_bad": [[39, 39]],
+    }
+
+    cube_clean = amical.select_clean_data(fits_file, clip=True, **clean_param)
+
+    amical.show_clean_params(fits_file, **clean_param)
+    amical.show_clean_params(fits_file, **clean_param, remove_bad=False)
+
+    im1 = amical.data_processing._apply_patch_ghost(
+        cube_clean, 40, 40, radius=20, dx=3, dy=3, method="zero"
+    )
+    im2 = amical.data_processing._apply_patch_ghost(
+        cube_clean, 40, 40, radius=20, dx=3, dy=3, method="bg"
+    )
+
+    assert type(cube_clean) == np.ndarray
+    assert im1.shape == cube_clean.shape
+    assert im2.shape == cube_clean.shape
