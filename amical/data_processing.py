@@ -10,6 +10,7 @@ centering, etc.) and data selection (sigma-clipping, centered flux,).
 
 --------------------------------------------------------------------
 """
+import sys
 import warnings
 
 import numpy as np
@@ -306,6 +307,14 @@ def show_clean_params(
         data = fd[ihdu].data
     img0 = data[nframe]
     dims = img0.shape
+
+    if isz is None:
+        print(
+            "Warning: isz not found (None by default). isz is set to the original image size (%i)"
+            % (dims[0]),
+            file=sys.stderr,
+        )
+        isz = dims[0]
 
     # Add check to create default add_bad list (not use mutable data)
     if add_bad is None:
