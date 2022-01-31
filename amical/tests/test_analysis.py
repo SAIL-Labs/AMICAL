@@ -4,11 +4,10 @@ from matplotlib import pyplot as plt
 
 import amical
 from amical import candid_cr_limit
-
-# from amical.analysis.fitting import compute_chi2_curve
-# from amical.analysis.fitting import fits2obs
-# from amical.analysis.fitting import smartfit
-# from amical.externals import pymask
+from amical.analysis.fitting import compute_chi2_curve
+from amical.analysis.fitting import fits2obs
+from amical.analysis.fitting import smartfit
+from amical.externals import pymask
 
 
 @pytest.fixture()
@@ -255,9 +254,9 @@ def test_pymask_mcmc(example_oifits):
     assert e_dm <= 0.01 * true_dm
 
 
-# def test_pymask_oifits_no_date_obs(example_oifits_no_date_obs):
-#     o = pymask.oifits.open(str(example_oifits_no_date_obs))
-#     assert isinstance(o, pymask.oifits.oifits)
+def test_pymask_oifits_no_date_obs(example_oifits_no_date_obs):
+    o = pymask.oifits.open(str(example_oifits_no_date_obs))
+    assert isinstance(o, pymask.oifits.oifits)
 
 
 # @pytest.mark.usefixtures("close_figures")
@@ -294,31 +293,31 @@ def test_pymask_mcmc(example_oifits):
 #     assert e_dm <= 0.01 * true_dm
 
 
-# @pytest.mark.usefixtures("close_figures")
-# def test_chi2_curve(example_oifits):
-#     obs = fits2obs(example_oifits)
+@pytest.mark.usefixtures("close_figures")
+def test_chi2_curve(example_oifits):
+    obs = fits2obs(example_oifits)
 
-#     param = {
-#         "model": "binary",
-#         "sep": 1,
-#         "dm": 6,
-#         "theta": 45,
-#     }
+    param = {
+        "model": "binary",
+        "sep": 1,
+        "dm": 6,
+        "theta": 45,
+    }
 
-#     fit = smartfit(obs, param, normalizeErrors=True)
+    fit = smartfit(obs, param, normalizeErrors=True)
 
-#     l_sep = np.linspace(130, 160, 10)
+    l_sep = np.linspace(130, 160, 10)
 
-#     pname = "sep"
+    pname = "sep"
 
-#     fitOnly = ["sep", "dm", "theta"]
-#     fit, error = compute_chi2_curve(obs, pname, fit["best"], l_sep, fitOnly=fitOnly)
+    fitOnly = ["sep", "dm", "theta"]
+    fit, error = compute_chi2_curve(obs, pname, fit["best"], l_sep, fitOnly=fitOnly)
 
-#     true_sep = 147.7
-#     sep = fit["best"][pname]
+    true_sep = 147.7
+    sep = fit["best"][pname]
 
-#     rel_err = error / sep
+    rel_err = error / sep
 
-#     assert isinstance(fit, dict)
-#     assert sep == pytest.approx(true_sep, abs=error)
-#     assert rel_err <= 0.05
+    assert isinstance(fit, dict)
+    assert sep == pytest.approx(true_sep, abs=error)
+    assert rel_err <= 0.05
