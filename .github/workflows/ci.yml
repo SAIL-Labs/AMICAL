@@ -35,7 +35,6 @@ jobs:
       # restricting to pip<22.0 because of pyvo
       # see https://github.com/astropy/pyvo/issues/296
       run: |
-        python -m pip install --upgrade pip\<22.0
         python -m pip install .[dev]
     - name: Generate coverage report
       run: |
@@ -48,3 +47,5 @@ jobs:
         name: codecov-umbrella
         fail_ci_if_error: false
         patch: off
+
+# python -m pip install --upgrade pip
