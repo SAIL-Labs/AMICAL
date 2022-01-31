@@ -58,7 +58,7 @@ def _apply_patch_ghost(cube, xc, yc, radius=20, dx=0, dy=-200, method="bg"):
         cond_patch = distance <= radius
         cond_bg = distance_off <= radius
         if method == "bg":
-            imA[cond_patch] = imA[cond_bg]
+            imA[cond_patch] = np.mean(imA[cond_bg])
         elif method == "zero":
             imA[cond_patch] = 0
         cube_corrected.append(imA)
@@ -382,9 +382,9 @@ def show_clean_params(
         plt.scatter(
             bad_pix_y,
             bad_pix_x,
-            color="",
             marker="s",
             edgecolors="r",
+            facecolors="None",
             s=20,
             label=label,
         )

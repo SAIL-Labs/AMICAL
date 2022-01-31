@@ -189,6 +189,7 @@ def pymask_cr_limit(
     smin=20,
     smax=250,
     cmin=1.0001,
+    display=False,
 ):
     cpo = pymask.cpo(input_data)
     lims_data = pymask.detec_limits(
@@ -204,6 +205,7 @@ def pymask_cr_limit(
         smin=smin,
         err_scale=err_scale,
         extra_error=extra_error_cp,
+        no_plot=True,
     )
 
     limits = lims_data["limits"]
@@ -221,12 +223,13 @@ def pymask_cr_limit(
             crat_limits[sep_ix] = 1.0
     con_limits = 2.5 * np.log10(crat_limits)
 
-    plt.figure()
-    plt.plot(seps, con_limits)
-    plt.xlabel("Separation [mas]")
-    plt.ylabel(r"$\Delta \mathrm{Mag}_{3\sigma}$")
-    plt.title(r"PYMASK: flux ratio for 3$\sigma$ detection")
-    plt.ylim(plt.ylim()[1], plt.ylim()[0])  # -- rreverse plot
-    plt.tight_layout()
+    if display:
+        plt.figure()
+        plt.plot(seps, con_limits)
+        plt.xlabel("Separation [mas]")
+        plt.ylabel(r"$\Delta \mathrm{Mag}_{3\sigma}$")
+        plt.title(r"PYMASK: flux ratio for 3$\sigma$ detection")
+        plt.ylim(plt.ylim()[1], plt.ylim()[0])  # -- rreverse plot
+        plt.tight_layout()
     res = {"r": seps, "cr_limit": con_limits, "lims_data": lims_data}
     return res

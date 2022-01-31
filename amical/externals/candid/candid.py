@@ -3797,6 +3797,7 @@ class Open:
                     cmap="gist_earth",
                     vmin=vmin,
                     vmax=vmax,
+                    shading="auto",
                 )
                 plt.colorbar()
                 plt.xlabel(r"E $\leftarrow\, \Delta \alpha$ (mas)")
