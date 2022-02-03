@@ -115,6 +115,7 @@ Pymask:
 
 - [Benjamin Pope](https://github.com/benjaminpope)
 - [Anthony Cheetham](https://github.com/AnthonyCheetham)
+- - Based on pysco, now [xara](https://github.com/fmartinache/xara), by [Frantz Martinache](https://github.com/fmartinache)
 
 CANDID:
 
