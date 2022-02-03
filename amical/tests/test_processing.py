@@ -83,7 +83,6 @@ def test_sky_dr_none():
     sky_correction(img, r1=r1, dr=dr)
 
 
-@pytest.mark.usefixtures("close_figures")
 def test_sky_correction_mask_all():
     # Check that full correction mask gives expected result
     img_dim = 80
