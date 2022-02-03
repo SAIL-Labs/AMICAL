@@ -137,27 +137,6 @@ def test_fix_one_bad_pixel():
 
 
 @pytest.mark.usefixtures("close_figures")
-def test_clean_data_bmap_2d():
-    # Test regular 2d bad pixel map
-    n_im = 5
-    img_dim = 80
-    data = np.random.random((n_im, img_dim, img_dim))
-
-    bad_map = np.zeros((img_dim, img_dim), dtype=bool)
-    bad_map[tuple(np.random.randint(0, high=img_dim, size=2))] = 1
-
-    # Set values out of random range to test that they did change later
-    data[:, bad_map] = 1e5
-
-    cleaned = clean_data(data, sky=False, apod=False, bad_map=bad_map)
-    nobpix_list = [fix_bad_pixels(img, bad_map=bad_map) for img in data]
-
-    assert np.all([cleaned[i] == nobpix_list[i] for i in range(data.shape[0])])
-    assert np.all(cleaned[:, bad_map] != data[:, bad_map])
-    assert np.all(cleaned[:, ~bad_map] == data[:, ~bad_map])
-
-
-@pytest.mark.usefixtures("close_figures")
 def test_clean_data_no_bmap_add_bad():
     # Test add_data kwarg when no bad_map
     n_im = 5
