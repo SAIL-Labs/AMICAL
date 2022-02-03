@@ -546,6 +546,7 @@ def select_clean_data(
     ihdu=0,
     display=False,
     *,
+    check_clean_params=False,
     remove_bad=True,
     nframe=0,
 ):
@@ -571,8 +572,9 @@ def select_clean_data(
     multiple integrations) is substracted from the raw image,\n
     image,\n
     `f_kernel` {float}: kernel size used in the applied median filter (to find the center).
-    `show_bad_removed` {bool}: If True, the bad pixels are removed in the cleaning parameter
-    plots using a gaussian interpolation, (default: {True})\n
+    `check_clean_params` {bool}: Call `show_clean_params` before cleaning the data. (default: False),\n
+    `remove_bad` {bool}: If True, the bad pixels are removed in the cleaning parameter
+    plots using a gaussian interpolation (default: {True}),\n
     `nframe` {int}: Frame number used to show cleaning parameters (default: {0}),\n
 
     Returns:
@@ -619,7 +621,7 @@ def select_clean_data(
         verbose=verbose,
     )
 
-    if display:
+    if check_clean_params and display:
         show_clean_params(
             filename,
             isz,

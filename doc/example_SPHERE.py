@@ -17,7 +17,9 @@ file_c = os.path.join(datadir, "HD142695_IRD_SCIENCE_DBI_LEFT_CUBE.fits")
 
 clean_param = {"isz": 149, "r1": 70, "dr": 2, "apod": True, "window": 65, "f_kernel": 3}
 
-cube_t = amical.select_clean_data(file_t, clip=True, **clean_param, display=True)
+cube_t = amical.select_clean_data(
+    file_t, clip=True, **clean_param, display=True, check_clean_params=True
+)
 
 cube_c = amical.select_clean_data(file_c, clip=True, **clean_param, display=True)
 
