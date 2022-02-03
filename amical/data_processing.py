@@ -546,7 +546,6 @@ def select_clean_data(
     ihdu=0,
     display=False,
     *,
-    check_clean_params=False,
     remove_bad=True,
     nframe=0,
 ):
@@ -572,7 +571,6 @@ def select_clean_data(
     multiple integrations) is substracted from the raw image,\n
     image,\n
     `f_kernel` {float}: kernel size used in the applied median filter (to find the center).
-    `check_clean_params` {bool}: Call `show_clean_params` before cleaning the data. (default: False),\n
     `remove_bad` {bool}: If True, the bad pixels are removed in the cleaning parameter
     plots using a gaussian interpolation (default: {True}),\n
     `nframe` {int}: Frame number used to show cleaning parameters (default: {0}),\n
@@ -603,25 +601,7 @@ def select_clean_data(
     if add_bad is None:
         add_bad = []
 
-    cube_cleaned = clean_data(
-        cube,
-        isz=isz,
-        r1=r1,
-        edge=edge,
-        bad_map=bad_map,
-        add_bad=add_bad,
-        dr=dr,
-        sky=sky,
-        apod=apod,
-        window=window,
-        f_kernel=f_kernel,
-        offx=offx,
-        offy=offy,
-        darkfile=darkfile,
-        verbose=verbose,
-    )
-
-    if check_clean_params and display:
+    if display:
         show_clean_params(
             filename,
             isz,
@@ -639,6 +619,24 @@ def select_clean_data(
             apod=apod,
             window=window,
         )
+
+    cube_cleaned = clean_data(
+        cube,
+        isz=isz,
+        r1=r1,
+        edge=edge,
+        bad_map=bad_map,
+        add_bad=add_bad,
+        dr=dr,
+        sky=sky,
+        apod=apod,
+        window=window,
+        f_kernel=f_kernel,
+        offx=offx,
+        offy=offy,
+        darkfile=darkfile,
+        verbose=verbose,
+    )
 
     if cube_cleaned is None:
         return None
