@@ -1,0 +1,35 @@
+markdown_extensions:
+  - pymdownx.arithmatex:
+      generic: true
+
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+
+site_name: AMICAL - Aperture Masking Interferometry Calibration and Analysis Library
+nav:
+    - Home: index.md
+    - Tutorials:
+        - General Tutorial: tutorial.md
+        - extract-and-calibrate: notebooks/example_NIRISS.ipynb
+        - candid-and-pymask: notebooks/example_analysis.ipynb
+
+theme:
+  name: "material"
+repo_url: https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL
+plugins:
+  - search
+  - mkdocs-jupyter
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          selection:
+            docstring_style: "numpy"
+          setup_commands:
+            - import sys
+            - sys.path.append("src")
+          rendering:
+            show_source: false
+      custom_templates: templates
