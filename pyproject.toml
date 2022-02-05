@@ -20,8 +20,8 @@ filterwarnings = [
     "ignore:The distutils.sysconfig module is deprecated, use sysconfig instead:DeprecationWarning",
     # we run tests against a non-GUI backend on purpose
     "ignore:Matplotlib is currently using agg, which is a non-GUI backend, so cannot show the figure.:UserWarning",
-    # we ignore astropy warning (PyObject)
-    "ignore:numpy.ndarray size changed, may indicate binary incompatibility. Expected 80 from C header, got 96 from PyObject:RuntimeWarning"
+    # astropy regularly ships wheels that violate numpy ABI incompatibilities, this is out of our control
+    "ignore:numpy.ndarray size changed, may indicate binary incompatibility. Expected \\d\\d from C header, got \\d\\d from PyObject:RuntimeWarning"
 ]
 
 [tool.coverage.run]
