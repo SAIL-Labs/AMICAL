@@ -67,7 +67,7 @@ def test_flag_clean(flag, cli_datadir, tmp_path, monkeypatch):
             flag,
         ]
     )
-    assert plt.gcf().number == 2
+    assert plt.gcf().number == 3
     assert ret == 0
 
 
@@ -131,10 +131,12 @@ def test_calibrate(cli_datadir, tmp_path, monkeypatch):
                 str(isz),
             ]
         )
+        plt.close("all")
 
     for i in range(2):
         monkeypatch.setattr("builtins.input", lambda _: str(i))
         main(["extract", "--datadir", str(tmp_path), "--outdir", str(tmp_path)])
+        plt.close("all")
 
     responses = iter(["1", "0"])
     monkeypatch.setattr("builtins.input", lambda msg: next(responses))
@@ -175,6 +177,7 @@ def test_calibrate_method(method, cli_datadir, tmp_path, monkeypatch):
             ]
         )
         assert ret == 0
+        plt.close("all")
 
     for i in range(2):
         monkeypatch.setattr("builtins.input", lambda _: str(i))
@@ -190,6 +193,7 @@ def test_calibrate_method(method, cli_datadir, tmp_path, monkeypatch):
             ]
         )
         assert ret == 0
+        plt.close("all")
 
     responses = iter(["1", "0"])
     monkeypatch.setattr("builtins.input", lambda msg: next(responses))

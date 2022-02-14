@@ -545,6 +545,9 @@ def select_clean_data(
     verbose=False,
     ihdu=0,
     display=False,
+    *,
+    remove_bad=True,
+    nframe=0,
 ):
     """Clean and select good datacube (sigma-clipping using fluxes variations).
 
@@ -568,6 +571,9 @@ def select_clean_data(
     multiple integrations) is substracted from the raw image,\n
     image,\n
     `f_kernel` {float}: kernel size used in the applied median filter (to find the center).
+    `remove_bad` {bool}: If True, the bad pixels are removed in the cleaning parameter
+    plots using a gaussian interpolation (default: {True}),\n
+    `nframe` {int}: Frame number used to show cleaning parameters (default: {0}),\n
 
     Returns:
     --------
@@ -594,6 +600,25 @@ def select_clean_data(
     # Add check to create default add_bad list (not use mutable data)
     if add_bad is None:
         add_bad = []
+
+    if display:
+        show_clean_params(
+            filename,
+            isz,
+            r1,
+            dr,
+            bad_map=bad_map,
+            add_bad=add_bad,
+            edge=edge,
+            remove_bad=remove_bad,
+            nframe=nframe,
+            ihdu=ihdu,
+            f_kernel=f_kernel,
+            offx=offx,
+            offy=offy,
+            apod=apod,
+            window=window,
+        )
 
     cube_cleaned = clean_data(
         cube,
