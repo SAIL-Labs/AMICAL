@@ -253,6 +253,29 @@ def test_getPixel(ins):
     assert isinstance(p, float)
 
 
+def test_quiet_mode(global_datadir, capsys):
+    fits_file = global_datadir / "test.fits"
+    with fits.open(fits_file) as fh:
+        cube = fh[0].data
+    bs = amical.extract_bs(
+        cube,
+        fits_file,
+        targetname="test",
+        bs_multi_tri=False,
+        maskname="g7",
+        fw_splodge=0.7,
+        display=False,
+        peakmethod="fft",
+        verbose=False,
+    )
+    captured = capsys.readouterr()
+    bs_keys = list(bs.keys())
+    assert isinstance(bs, munch.Munch)
+    assert len(bs_keys) == 13
+    assert captured.out == ""
+    assert captured.err == ""
+
+
 # @pytest.mark.usefixtures("close_figures")
 # def test_bad_holes(global_datadir):
 #     fits_file = global_datadir / "test.fits"
