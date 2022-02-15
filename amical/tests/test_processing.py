@@ -4,9 +4,11 @@ from matplotlib import pyplot as plt
 
 import amical
 from amical.data_processing import _get_3d_bad_pixels
+from amical.data_processing import _get_ring_mask
 from amical.data_processing import clean_data
 from amical.data_processing import fix_bad_pixels
 from amical.data_processing import sky_correction
+from amical.tools import crop_max
 
 
 @pytest.fixture()
@@ -38,7 +40,7 @@ def test_sky_inner_only():
     img_dim = 80
     img = np.ones((img_dim, img_dim))
 
-    # Inner radius beyond image corners
+    # Outer radius beyond image corners
     r1 = np.sqrt(2 * (img_dim / 2) ** 2) - 10
     dr = 100
 
@@ -47,6 +49,119 @@ def test_sky_inner_only():
         match="The outer radius is out of the image, using everything beyond r1 as background",
     ):
         sky_correction(img, r1=r1, dr=dr)
+
+
+@pytest.mark.usefixtures("close_figures")
+def test_clean_sky_out_crop():
+
+    n_im = 5
+    img_dim = 80
+    data = np.ones((n_im, img_dim, img_dim))
+    xmax, ymax = (40, 41)
+    data[:, ymax, xmax] = data.max() * 3 + 1  # Add max pixel at pre-determined location
+
+    isz = 67
+
+    r1 = int(np.sqrt(2 * (isz / 2) ** 2) + 2)
+
+    clean_cube = clean_data(data, isz=isz, r1=r1, dr=2, f_kernel=None, apod=False)
+
+    # Make sure did not just remove everything
+    assert len(clean_cube) != 0
+
+
+@pytest.mark.usefixtures("close_figures")
+def test_sky_dr_none():
+    # Make sure dr=None does not crash
+    img_dim = 80
+    img = np.ones((img_dim, img_dim))
+
+    # Outer radius beyond image corners
+    r1 = np.sqrt(2 * (img_dim / 2) ** 2) - 10
+    dr = None
+
+    sky_correction(img, r1=r1, dr=dr)
+
+
+def test_sky_correction_mask_all():
+    # Check that full correction mask gives expected result
+    img_dim = 80
+    img = np.random.random((img_dim, img_dim))
+    mask = img.astype(bool)
+
+    img_sky = sky_correction(img, mask=mask)[0]
+
+    img_corr = img + 1.01 * np.abs(img.min())
+    img_corr = img_corr - np.mean(img_corr[mask])
+
+    assert np.all(img_sky == img_corr)
+
+
+def test_sky_correction_mask_zeros():
+    # Check that empty correction mask gives warning and does nothing
+    img_dim = 80
+    img = np.random.random((img_dim, img_dim))
+    mask = np.zeros_like(img, dtype=bool)
+
+    with pytest.warns(
+        RuntimeWarning,
+        match="Background not computed because mask has no True values",
+    ):
+        img_corr = sky_correction(img, mask=mask)[0]
+
+    assert np.all(img_corr == img)
+
+
+def test_sky_ring_mask():
+    img_dim = 80
+    img = np.random.random((img_dim, img_dim))
+
+    r1 = 20
+    dr = 2
+    mask = _get_ring_mask(r1, dr, img.shape[0])
+
+    img_mask = sky_correction(img, mask=mask)[0]
+    img_ring = sky_correction(img, r1=r1, dr=dr)[0]
+
+    assert np.all(img_mask == img_ring)
+
+
+def test_sky_correction_deprecation():
+    # Check deprecation warning is raised for r1 and dr
+    img_dim = 400  # Big image because default r1=100
+    img = np.random.random((img_dim, img_dim))
+
+    # FUTURE: Future AMICAL release should raise error, see sky_correction()
+    msg = (
+        "The default value of r1 and dr is now None. Either mask or r1 must be set"
+        " explicitely. In the future, this will result in an error."
+        " Setting r1=100 and dr=20"
+    )
+    with pytest.warns(
+        PendingDeprecationWarning,
+        match=msg,
+    ):
+        img_default = sky_correction(img)[0]
+
+    img_corr = sky_correction(img, r1=100, dr=20)[0]
+
+    assert np.all(img_corr == img_default)
+
+
+def test_sky_correction_errors():
+
+    img_dim = 80
+    img = np.random.random((img_dim, img_dim))
+
+    # Test both r1 and mask given
+    with pytest.raises(TypeError, match="Only one of mask and r1 can be specified"):
+        sky_correction(img, r1=20, mask=np.ones_like(img, dtype=bool))
+    # Test dr but no r1
+    with pytest.raises(TypeError, match="dr cannot be set when r1 is None"):
+        sky_correction(img, dr=5, mask=np.ones_like(img, dtype=bool))
+    # Test bad mask shape
+    with pytest.raises(ValueError, match="mask should have the same shape as image"):
+        sky_correction(img, mask=np.ones(5))
 
 
 @pytest.mark.usefixtures("close_figures")
@@ -59,7 +174,7 @@ def test_clean_data_none_kwargs():
     # sky=True raises a warning by default because required kwargs are None
     with pytest.warns(
         RuntimeWarning,
-        match="sky is set to True, but .* set to None. Skipping sky correction",
+        match="sky is set to True, but r1 and mask are set to None. Skipping sky correction",
     ):
         cube_clean_sky = clean_data(data)
 
@@ -116,6 +231,17 @@ def test_fix_bad_pixel_no_bad():
     no_bpix = fix_bad_pixels(data, np.zeros_like(data, dtype=bool))
 
     assert np.all(data == no_bpix)
+
+
+def test_clean_data_dr_none():
+    # Test clean_data with dr=None (i.e. single sky delimiter)
+    n_im = 5
+    img_dim = 80
+    data = np.random.random((n_im, img_dim, img_dim))
+
+    r1 = int(np.sqrt(2 * (img_dim / 2) ** 2) - 2)  # working r1
+
+    clean_data(data, r1=r1, apod=False)
 
 
 def test_fix_one_bad_pixel():
@@ -374,3 +500,61 @@ def test_3d_bad_pix_bmap_3d_shape():
         ValueError, match="3D bad_map should have the same shape as data cube"
     ):
         _get_3d_bad_pixels(bad_map, None, data)
+
+
+def test_sky_crop_order():
+    # Test that order of cropping and subtraction doesn't affect result if inside cropped image
+
+    img_dim = 80
+    img = np.random.random((img_dim, img_dim))
+    xmax, ymax = np.random.randint(20, high=img_dim - 20, size=2)
+    img[ymax, xmax] = img.max() * 3 + 1  # Add max pixel at pre-determined location
+
+    isz = 2 * np.min([xmax, img.shape[1] - xmax - 1, ymax, img.shape[0] - ymax - 1]) + 1
+
+    dr = 2
+    r1 = isz // 2 - dr
+
+    # Correct then crop
+    correct = sky_correction(img, r1=r1, dr=dr, center=(xmax, ymax))[0]
+    correct_crop = crop_max(correct, isz, filtmed=False)[0]
+
+    # Crop then correct
+    cropped, center = crop_max(img, isz, filtmed=False)
+    crop_correct = sky_correction(cropped, r1=r1, dr=dr)[0]
+
+    # Make sure find expected center
+    assert center == (xmax, ymax)
+
+    # Use 10 * machine precision to make sure passes
+    assert np.all(np.abs(correct_crop - crop_correct) < 10 * np.finfo(float).eps)
+
+
+def test_clean_crop_order():
+    # Test that clean_data performs both subtraction and cropping as expected
+
+    img_dim = 80
+    n_im = 5
+    data = np.random.random((n_im, img_dim, img_dim))
+    xmax, ymax = np.random.randint(20, high=img_dim - 20, size=2)
+    data[:, ymax, xmax] = data.max() * 3 + 1  # Add max pixel at pre-determined location
+
+    isz = (
+        2 * np.min([xmax, data.shape[2] - xmax - 1, ymax, data.shape[1] - ymax - 1]) + 1
+    )
+
+    dr = 2
+    r1 = isz // 2 - dr
+
+    # Clean cube all at once
+    cube = data.copy()
+    cube_clean = clean_data(cube, isz=isz, r1=r1, dr=dr, apod=False, f_kernel=None)
+    img_cube_clean = cube_clean[0]
+
+    # Correct then crop
+    img = data.copy()[0]
+    correct = sky_correction(img, r1=r1, dr=dr, center=(xmax, ymax))[0]
+    correct[correct < 0] = 0
+    img_correct_crop = crop_max(correct, isz, filtmed=False)[0]
+
+    assert np.all(np.abs(img_correct_crop - img_cube_clean) < 10 * np.finfo(float).eps)

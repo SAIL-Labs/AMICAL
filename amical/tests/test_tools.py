@@ -5,6 +5,17 @@ from astropy.io import fits
 from amical import tools
 
 
+def test_find_max():
+    img_size = 80  # Same size as NIRISS images
+    img = np.random.random((img_size, img_size))
+    xmax, ymax = np.random.randint(0, high=img_size, size=2)
+    img[ymax, xmax] = img.max() * 3 + 1  # Add max pixel at pre-determined location
+
+    center_pos = tools.find_max(img, filtmed=False)
+
+    assert center_pos == (xmax, ymax)
+
+
 def test_crop_max():
 
     img_size = 80  # Same size as NIRISS images
