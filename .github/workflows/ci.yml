@@ -35,6 +35,17 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         python -m pip install .[dev]
-    - name: Run tests
+    # - name: Run tests
+    #   run: |
+    #     pytest
+    - name: Generate coverage report
       run: |
-        pytest
+        python -m pip install pytest-cov
+        python -m pytest --cov=./ --cov-report=xml
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v1
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
