@@ -42,6 +42,45 @@ def rad2mas(rad):
     return mas
 
 
+def find_max(img, filtmed=True, f=3):
+    """
+    Summary
+    -------------
+    Find brightest pixel of an image
+
+    Parameters
+    ----------
+    `img` : {numpy.array}
+        input image,\n
+    `filtmed` : {boolean}, (optionnal)
+        True if perform a median filter on the image (to blur bad pixels),\n
+    `f` : {float}, (optionnal),
+        If filtmed == True, kernel size of the median filter.
+
+
+    Returns
+    -------
+    `Max coordinates`: {tuple}
+        X and Y positions of max pixel
+    """
+
+    if filtmed:
+        try:
+            im_med = medfilt2d(img, f)
+        except ValueError:
+            img = img.astype(float)
+            im_med = medfilt2d(img, f)
+    else:
+        im_med = img.copy()
+
+    pos_max = np.where(im_med == im_med.max())
+
+    X = pos_max[1][0]
+    Y = pos_max[0][0]
+
+    return X, Y
+
+
 def crop_max(img, dim, offx=0, offy=0, filtmed=True, f=3):
     """
     Summary
@@ -65,18 +104,10 @@ def crop_max(img, dim, offx=0, offy=0, filtmed=True, f=3):
     `cutout`: {numpy.array}
         Resized image.
     """
-    if filtmed:
-        try:
-            im_med = medfilt2d(img, f)
-        except ValueError:
-            img = img.astype(float)
-            im_med = medfilt2d(img, f)
-    else:
-        im_med = img.copy()
+    xmax, ymax = find_max(img, filtmed=filtmed, f=f)
 
-    pos_max = np.where(im_med == im_med.max())
-    X = pos_max[1][0] + offx
-    Y = pos_max[0][0] + offy
+    X = xmax + offx
+    Y = ymax + offy
     isz_max = 2 * np.min([X, img.shape[1] - X - 1, Y, img.shape[0] - Y - 1]) + 1
     if isz_max < dim:
         size_msg = (

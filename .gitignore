@@ -147,3 +147,7 @@ Simulated_NRMdata/.DS_Store
 # Install files
 *.txt
 PKG*
+
+# Example data and products
+TestSPHEREData
+Saveoifits

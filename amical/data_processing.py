@@ -24,6 +24,7 @@ from tqdm import tqdm
 
 from amical.tools import apply_windowing
 from amical.tools import crop_max
+from amical.tools import find_max
 
 
 def _apply_patch_ghost(cube, xc, yc, radius=20, dx=0, dy=-200, method="bg"):
@@ -200,30 +201,67 @@ def select_data(cube, clip_fact=0.5, clip=False, verbose=True, display=True):
     return cube_cleaned_checked
 
 
-def sky_correction(imA, r1=100, dr=20, verbose=False):
-    """
-    Perform background sky correction to be as close to zero as possible.
-    """
-    isz = imA.shape[0]
-    xc, yc = isz // 2, isz // 2
+def _get_ring_mask(r1, dr, isz, center=None):
+    if center is None:
+        xc, yc = isz // 2, isz // 2
+    else:
+        xc, yc = center
     xx, yy = np.arange(isz), np.arange(isz)
     xx2 = xx - xc
     yy2 = yc - yy
-    r2 = r1 + dr
-
     distance = np.sqrt(xx2 ** 2 + yy2[:, np.newaxis] ** 2)
     inner_cond = r1 <= distance
-    outer_cond = distance <= r2
+    if dr is not None:
+        r2 = r1 + dr
+        outer_cond = distance <= r2
+    else:
+        outer_cond = True
     cond_bg = inner_cond & outer_cond
 
-    do_bg = True
-    if not cond_bg.any():
-        do_bg = False
-    elif outer_cond.all():
+    if dr is not None and np.all(outer_cond):
         warnings.warn(
             "The outer radius is out of the image, using everything beyond r1 as background",
             RuntimeWarning,
         )
+
+    return cond_bg
+
+
+def sky_correction(imA, r1=None, dr=None, verbose=False, *, center=None, mask=None):
+    """
+    Perform background sky correction to be as close to zero as possible.
+    This requires either a radius (r1) to define the background boundary, optionally with a
+    ring width dr, or a boolean mask with the same shape as the image.
+    """
+    # FUTURE: Future AMICAL release should raise error
+    if r1 is None and mask is None:
+        warnings.warn(
+            "The default value of r1 and dr is now None. Either mask or r1 must be set"
+            " explicitely. In the future, this will result in an error."
+            " Setting r1=100 and dr=20",
+            PendingDeprecationWarning,
+        )
+        r1 = 100
+        dr = 20
+
+    if r1 is not None and mask is not None:
+        raise TypeError("Only one of mask and r1 can be specified")
+    elif r1 is None and dr is not None:
+        raise TypeError("dr cannot be set when r1 is None")
+    elif r1 is not None:
+        isz = imA.shape[0]
+        cond_bg = _get_ring_mask(r1, dr, isz, center=center)
+    elif mask is not None:
+        if mask.shape != imA.shape:
+            raise ValueError("mask should have the same shape as image")
+        elif not mask.any():
+            warnings.warn(
+                "Background not computed because mask has no True values",
+                RuntimeWarning,
+            )
+        cond_bg = mask
+
+    do_bg = cond_bg.any()
 
     if do_bg:
         try:
@@ -260,6 +298,7 @@ def fix_bad_pixels(image, bad_map, add_bad=None, x_stddev=1):
         add_bad = []
 
     if len(add_bad) != 0:
+        bad_map = bad_map.copy()  # Don't modify input bad pixel map, use a copy
         for j in range(len(add_bad)):
             bad_map[add_bad[j][1], add_bad[j][0]] = 1
 
@@ -270,11 +309,63 @@ def fix_bad_pixels(image, bad_map, add_bad=None, x_stddev=1):
     return fixed_image
 
 
+def _get_3d_bad_pixels(bad_map, add_bad, data):
+    """
+    Format 3d bad pixel cube from arbitrary bad pixel input
+
+    Parameters
+    ----------
+    `bad_map` {np.ndarray}: Bad pixel map in 2d or 3d (can also be None)\n
+    `add_bad` {list}: list of bad pixel coordinates\n
+    `data` {np.ndarray}: Array with the data corresponding to the bad pixel map\n
+
+    Returns:
+    --------
+    `bad_map` {np.array}: 3d bad map with same shape as data cube
+    `add_bad` {list}: add_bad list compatible with 3d dataset
+    """
+    n_im = data.shape[0]
+
+    # Add check to create default add_bad list (not use mutable data)
+    if add_bad is None or len(add_bad) == 0:
+        # Reshape add_bad to simplify indexing in loop
+        add_bad = [
+            [],
+        ] * n_im
+    else:
+        add_bad = np.array(add_bad)
+        if add_bad.ndim == 2 and len(add_bad[0]) != 0:
+            add_bad = np.repeat(add_bad[np.newaxis, :], n_im, axis=0)
+        elif add_bad.ndim == 3:
+            if add_bad.shape[0] != n_im:
+                raise ValueError("3D add_bad should have one list per frame")
+
+    if (bad_map is None) and (len(add_bad) != 0):
+        # If we have extra bad pixels, define bad_map with same shape as image
+        bad_map = np.zeros_like(data, dtype=bool)
+    elif bad_map is not None:
+        # Shape should match data
+        if bad_map.ndim == 2 and bad_map.shape != data[0].shape:
+            raise ValueError(
+                f"2D bad_map should have the same shape as a frame ({data[0].shape}),"
+                f" but has shape {bad_map.shape}"
+            )
+        elif bad_map.ndim == 3 and bad_map.shape != data.shape:
+            raise ValueError(
+                f"3D bad_map should have the same shape as data cube ({data.shape}),"
+                f" but has shape {bad_map.shape}"
+            )
+        elif bad_map.ndim == 2:
+            bad_map = np.repeat(bad_map[np.newaxis, :], n_im, axis=0)
+
+    return bad_map, add_bad
+
+
 def show_clean_params(
     filename,
     isz,
-    r1,
-    dr,
+    r1=None,
+    dr=None,
     bad_map=None,
     add_bad=None,
     edge=0,
@@ -286,6 +377,8 @@ def show_clean_params(
     offy=0,
     apod=False,
     window=None,
+    *,
+    mask=None,
 ):
     """Display the input parameters for the cleaning.
 
@@ -316,12 +409,9 @@ def show_clean_params(
         )
         isz = dims[0]
 
-    # Add check to create default add_bad list (not use mutable data)
-    if add_bad is None:
-        add_bad = []
-
-    if (bad_map is None) and (len(add_bad) != 0):
-        bad_map = np.zeros(img0.shape)
+    bad_map, add_bad = _get_3d_bad_pixels(bad_map, add_bad, data)
+    bmap0 = bad_map[nframe]
+    ab0 = add_bad[nframe]
 
     if edge != 0:
         img0[:, 0:edge] = 0
@@ -329,7 +419,7 @@ def show_clean_params(
         img0[0:edge, :] = 0
         img0[-edge:-1, :] = 0
     if (bad_map is not None) & (remove_bad):
-        img1 = fix_bad_pixels(img0, bad_map, add_bad=add_bad)
+        img1 = fix_bad_pixels(img0, bmap0, add_bad=ab0)
     else:
         img1 = img0.copy()
     cropped_infos = crop_max(img1, isz, offx=offx, offy=offy, f=f_kernel)
@@ -337,24 +427,32 @@ def show_clean_params(
 
     noBadPixel = False
     bad_pix_x, bad_pix_y = [], []
-    if (bad_map is not None) & (len(add_bad) != 0):
-        for j in range(len(add_bad)):
-            bad_map[add_bad[j][1], add_bad[j][0]] = 1
-        bad_pix = np.where(bad_map == 1)
+    if np.any(bmap0):
+        if len(ab0) != 0:
+            for j in range(len(ab0)):
+                bmap0[ab0[j][1], ab0[j][0]] = 1
+        bad_pix = np.where(bmap0 == 1)
         bad_pix_x = bad_pix[0]
         bad_pix_y = bad_pix[1]
     else:
         noBadPixel = True
 
-    r2 = r1 + dr
     theta = np.linspace(0, 2 * np.pi, 100)
     x0 = pos[0]
     y0 = pos[1]
-
-    x1 = r1 * np.cos(theta) + x0
-    y1 = r1 * np.sin(theta) + y0
-    x2 = r2 * np.cos(theta) + x0
-    y2 = r2 * np.sin(theta) + y0
+    if r1 is not None:
+        x1 = r1 * np.cos(theta) + x0
+        y1 = r1 * np.sin(theta) + y0
+        if dr is not None:
+            r2 = r1 + dr
+            x2 = r2 * np.cos(theta) + x0
+            y2 = r2 * np.sin(theta) + y0
+        sky_method = "ring"
+    elif mask is not None:
+        bg_coords = np.where(mask == 1)
+        bg_x = bg_coords[0]
+        bg_y = bg_coords[1]
+        sky_method = "mask"
     if window is not None:
         r3 = window
         x3 = r3 * np.cos(theta) + x0
@@ -369,8 +467,22 @@ def show_clean_params(
     fig = plt.figure(figsize=(5, 5))
     plt.title("--- CLEANING PARAMETERS ---")
     plt.imshow(img1, norm=PowerNorm(0.5, vmin=0, vmax=max_val), cmap="afmhot")
-    plt.plot(x1, y1, label="Inner radius for sky subtraction")
-    plt.plot(x2, y2, label="Outer radius for sky subtraction")
+    if sky_method == "ring":
+        if dr is not None:
+            plt.plot(x1, y1, label="Inner radius for sky subtraction")
+            plt.plot(x2, y2, label="Outer radius for sky subtraction")
+        else:
+            plt.plot(x1, y1, label="Boundary for sky subtraction")
+    elif sky_method == "mask":
+        plt.scatter(
+            bg_y,
+            bg_x,
+            color="None",
+            marker="s",
+            edgecolors="C0",
+            s=20,
+            label="Pixels used for sky subtraction",
+        )
     if apod:
         if window is not None:
             plt.plot(x3, y3, "--", label="Super-gaussian windowing")
@@ -391,6 +503,7 @@ def show_clean_params(
         plt.scatter(
             bad_pix_y,
             bad_pix_x,
+            color="None",
             marker="s",
             edgecolors="r",
             facecolors="None",
@@ -443,6 +556,8 @@ def clean_data(
     darkfile=None,
     f_kernel=3,
     verbose=False,
+    *,
+    mask=None,
 ):
     """Clean data.
 
@@ -464,60 +579,65 @@ def clean_data(
     cube_cleaned = []  # np.zeros([n_im, isz, isz])
     l_bad_frame = []
 
-    # Add check to create default add_bad list (not use mutable data)
-    if add_bad is None:
-        add_bad = []
+    bad_map, add_bad = _get_3d_bad_pixels(bad_map, add_bad, data)
 
     for i in tqdm(range(n_im), ncols=100, desc="Cleaning", leave=False):
         img0 = data[i]
         img0 = _apply_edge_correction(img0, edge=edge)
         if bad_map is not None:
-            img1 = fix_bad_pixels(img0, bad_map, add_bad=add_bad)
+            img1 = fix_bad_pixels(img0, bad_map[i], add_bad=add_bad[i])
         else:
             img1 = img0.copy()
 
         img1 = _remove_dark(img1, darkfile=darkfile, verbose=verbose)
 
         if isz is not None:
-            im_rec_max = crop_max(img1, isz, offx=offx, offy=offy, f=f_kernel)[0]
+            # Get expected center for sky correction
+            filtmed = f_kernel is not None
+            center = find_max(img1, filtmed=filtmed, f=f_kernel)
         else:
-            im_rec_max = img1.copy()
+            center = None
 
-        if sky and dr is not None and r1 is not None:
-            img_biased = sky_correction(im_rec_max, r1=r1, dr=dr, verbose=verbose)[0]
+        if sky and (r1 is not None or mask is not None):
+            img_biased = sky_correction(
+                img1, r1=r1, dr=dr, verbose=verbose, center=center, mask=mask
+            )[0]
         elif sky:
-            if r1 is None and dr is None:
-                none_kwarg = "r1 and dr are"
-            elif r1 is None:
-                none_kwarg = "r1 is"
-            elif dr is None:
-                none_kwarg = "dr is"
             warnings.warn(
-                f"sky is set to True, but {none_kwarg} set to None. Skipping sky correction",
+                "sky is set to True, but r1 and mask are set to None. Skipping sky correction",
                 RuntimeWarning,
             )
-            img_biased = im_rec_max.copy()
+            img_biased = img1.copy()
         else:
-            img_biased = im_rec_max.copy()
+            img_biased = img1.copy()
         img_biased[img_biased < 0] = 0  # Remove negative pixels
 
+        if isz is not None:
+            # Get expected center for sky correction
+            filtmed = f_kernel is not None
+            im_rec_max = crop_max(
+                img_biased, isz, offx=offx, offy=offy, filtmed=filtmed, f=f_kernel
+            )[0]
+        else:
+            im_rec_max = img_biased.copy()
+
         if (
-            (img_biased.shape[0] != img_biased.shape[1])
-            or (isz is not None and img_biased.shape[0] != isz)
-            or (isz is None and img_biased.shape[0] != img0.shape[0])
+            (im_rec_max.shape[0] != im_rec_max.shape[1])
+            or (isz is not None and im_rec_max.shape[0] != isz)
+            or (isz is None and im_rec_max.shape[0] != img0.shape[0])
         ):
             l_bad_frame.append(i)
         else:
             if apod and window is not None:
-                img = apply_windowing(img_biased, window=window)
+                img = apply_windowing(im_rec_max, window=window)
             elif apod:
                 warnings.warn(
                     "apod is set to True, but window is None. Skipping apodisation",
                     RuntimeWarning,
                 )
-                img = img_biased.copy()
+                img = im_rec_max.copy()
             else:
-                img = img_biased.copy()
+                img = im_rec_max.copy()
             cube_cleaned.append(img)
     if verbose:
         print("Bad centering frame number:", l_bad_frame)
@@ -528,8 +648,8 @@ def clean_data(
 def select_clean_data(
     filename,
     isz=256,
-    r1=100,
-    dr=10,
+    r1=None,
+    dr=None,
     edge=0,
     clip=True,
     bad_map=None,
@@ -545,6 +665,10 @@ def select_clean_data(
     verbose=False,
     ihdu=0,
     display=False,
+    *,
+    remove_bad=True,
+    nframe=0,
+    mask=None,
 ):
     """Clean and select good datacube (sigma-clipping using fluxes variations).
 
@@ -568,6 +692,9 @@ def select_clean_data(
     multiple integrations) is substracted from the raw image,\n
     image,\n
     `f_kernel` {float}: kernel size used in the applied median filter (to find the center).
+    `remove_bad` {bool}: If True, the bad pixels are removed in the cleaning parameter
+    plots using a gaussian interpolation (default: {True}),\n
+    `nframe` {int}: Frame number used to show cleaning parameters (default: {0}),\n
 
     Returns:
     --------
@@ -595,6 +722,40 @@ def select_clean_data(
     if add_bad is None:
         add_bad = []
 
+    if r1 is None and mask is None and sky:
+        warnings.warn(
+            "The default value of r1 is now None. Either r1 or mask should be set explicitely. This will raise an error in the future.",
+            PendingDeprecationWarning,
+        )
+        r1 = 100
+        if dr is None:
+            dr = 10
+    elif r1 is not None and dr is None and mask is None and sky:
+        warnings.warn(
+            "The default value of dr is now None. dr must be set explicitely to be used.",
+            PendingDeprecationWarning,
+        )
+        dr = 10
+
+    if display:
+        show_clean_params(
+            filename,
+            isz,
+            r1,
+            dr,
+            bad_map=bad_map,
+            add_bad=add_bad,
+            edge=edge,
+            remove_bad=remove_bad,
+            nframe=nframe,
+            ihdu=ihdu,
+            f_kernel=f_kernel,
+            offx=offx,
+            offy=offy,
+            apod=apod,
+            window=window,
+        )
+
     cube_cleaned = clean_data(
         cube,
         isz=isz,
@@ -611,6 +772,7 @@ def select_clean_data(
         offy=offy,
         darkfile=darkfile,
         verbose=verbose,
+        mask=mask,
     )
 
     if cube_cleaned is None:
