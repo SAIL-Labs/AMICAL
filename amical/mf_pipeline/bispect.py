@@ -378,15 +378,16 @@ def _check_input_infos(hdr, targetname=None, filtname=None, instrum=None, verbos
             cprint("Warning: target name not found (header or as input).", "green")
 
     # Check the filter used
-    if filt is None:
-        if filtname is not None:
-            filt = filtname
-            if verbose:
-                cprint(
-                    "Warning: FILTER is not in the header, filtname is used (%s)."
-                    % filtname,
-                    "green",
-                )
+    if filtname is not None:
+        filt = filtname
+        if verbose:
+            cprint(
+                "Warning: FILTER is not in the header, filtname is used (%s)."
+                % filtname,
+                "green",
+            )
+    else:
+        filt = hdr.get("FILTER")
 
     # Check the instrument used
     if instrument is None:

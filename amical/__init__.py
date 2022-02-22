@@ -19,4 +19,4 @@ from .oifits import show
 from .tools import load_bs_hdf5
 from .tools import save_bs_hdf5
 
-__version__ = "1.4.0"
+__version__ = "1.4.1"

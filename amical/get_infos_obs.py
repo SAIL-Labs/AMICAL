@@ -13,11 +13,13 @@ import pkg_resources
 from astropy.io import fits
 from termcolor import cprint
 
+import astropy.units as u
+
 from amical.tools import mas2rad
 
 
 def get_mask(ins, mask, first=0):
-    """Return dictionnary containning saved informations about masks."""
+    """Return dictionary containning saved informations about masks."""
 
     pupil_visir = 8.0
     pupil_visir_mm = 17.67
@@ -170,7 +172,15 @@ def get_mask(ins, mask, first=0):
 
 
 def get_wavelength(ins, filtname):
-    """Return dictionnary containning saved informations about filters."""
+    """Return dictionary containing saved information about filters."""
+
+    if isinstance(filtname,u.Quantity):
+        return np.array([(u.to(u.m).value),(u.to(u.m).value)*0.001]) # hack to make pseudo-monochromatic sources
+    if type(filtname) is float:
+        if filtname > 1: # if it is given in m
+            return np.array([filtname*1e-6,filtname*1e-6*0.001])
+        else:
+            return np.array([filtname,filtname*0.001])
 
     YJfile = pkg_resources.resource_stream("amical", "internal_data/ifs_wave_YJ.fits")
     YJHfile = pkg_resources.resource_stream("amical", "internal_data/ifs_wave_YJH.fits")
