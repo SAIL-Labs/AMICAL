@@ -9,3 +9,4 @@ Simulated_NRMdata/.DS_Store
 # Install files 
 *.txt
 PKG*
+*.xml

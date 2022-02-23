@@ -40,7 +40,7 @@ def _plot_mask_coord(xy_coords, maskname, instrument):
 
     for i in range(xy_coords.shape[0]):
         plt.scatter(xy_coords[i][0], xy_coords[i][1],
-                    s=1e2, c='', edgecolors='navy', marker=marker)
+                    s=1e2, edgecolors='navy', marker=marker)
         plt.text(xy_coords[i][0]+0.1, xy_coords[i][1]+0.1, i)
 
     plt.xlabel('Aperture x-coordinate [m]', fontsize=12)

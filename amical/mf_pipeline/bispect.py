@@ -224,7 +224,7 @@ def _show_complex_ps(ft_arr, i_frame=0):
 
 def _show_ft_arr_peak(ft_arr, n_baselines, mf, maskname, peakmethod,
                       i_fram=0, aver=False, centred=False, size=20,
-                      norm=None, alpha=1, vmin=0):
+                      norm=None, alpha=1, vmin=None, vmax=None, log_stretch=False):
     """ Show the expected position of the peaks in the Fourier space using the
     mask coordinates and the chosen method. """
 
@@ -249,8 +249,12 @@ def _show_ft_arr_peak(ft_arr, n_baselines, mf, maskname, peakmethod,
     fig, ax = plt.subplots(figsize=(9, 7))
     ax.set_title("Expected splodge position with mask %s (method = %s)" %
                  (maskname, peakmethod))
-    im = ax.imshow(ps, cmap="gist_stern", origin="lower", norm=norm,
-                   vmin=vmin)
+    if log_stretch:
+        im = ax.imshow(np.log10(ps), cmap="magma", origin="lower", norm=norm,
+                       vmin=vmin, vmax=vmax)
+    else:
+        im = ax.imshow(ps, cmap="gist_stern", origin="lower", norm=norm,
+                       vmin=vmin,vmax=vmax)
     sc = ax.scatter(lX, lY, c=lC, s=size, cmap="viridis", alpha=alpha)
     divider = make_axes_locatable(ax)
     cax = divider.new_horizontal(size="3%", pad=0.5)
@@ -1158,7 +1162,7 @@ def show_peaks_position(cube, filename, maskname, filtname=None,
                         fw_splodge=0.7, n_wl=3, cutoff=1e-4, hole_diam=0.8,
                         scaling_uv=1, theta_detector=0, i_wl=None, size=20,
                         fliplr=False, aver=True, centred=True, alpha=1,
-                        norm=None, vmin=0):
+                        norm=None, vmin=None, vmax=None, log_stretch=False):
 
     ft_arr, n_ps, npix = _construct_ft_arr(cube)
 
@@ -1184,5 +1188,5 @@ def show_peaks_position(cube, filename, maskname, filtname=None,
 
     _show_ft_arr_peak(ft_arr, n_baselines, mf, maskname, peakmethod,
                       aver=aver, centred=centred, size=size, norm=norm,
-                      alpha=alpha, vmin=vmin)
+                      alpha=alpha, vmin=vmin, vmax=vmax, log_stretch=log_stretch)
     return mf
