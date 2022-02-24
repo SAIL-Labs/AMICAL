@@ -232,7 +232,7 @@ def _show_ft_arr_peak(ft_arr, n_baselines, mf, maskname, peakmethod,
     ps = abs(ft_frame)
 
     if aver:
-        ps = abs(np.mean(ft_arr, axis=0))
+        ps = np.mean(np.abs(ft_arr), axis=0)
         if centred:
             ps = np.fft.fftshift(ps)
     ps /= ps.max()
