@@ -329,6 +329,9 @@ def _remove_dark(img1, darkfile=None, ihdu=0,
         if verbose:
             print('Dark cube shape is:', dark.shape)
         master_dark = np.mean(dark, axis=0)
+
+        img1 = img1.astype(np.float64)
+
         img1 -= master_dark
     return img1
 
