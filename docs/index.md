@@ -44,8 +44,7 @@ In addition (4), we include two external packages called
 outputs obtained from a binary-like sources (star-star or star-planet). We
 interfaced these stand-alone packages with AMICAL to quickly estimate our
 scientific results (e.g., separation, position angle, contrast ratio, contrast
-limits, etc.) using different approaches (chi2 grid, MCMC, see
-[example_analysis.py](https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL/blob/master/doc/example_analysis.py) for details).
+limits, etc.) using different approaches (chi2 grid and local optimization, or MCMC; see our [general example page](notebooks/example_analysis.py) for details).
 
 ## Getting started
 
@@ -53,7 +52,7 @@ Looking for a quickstart into AMICAL? You can go through our **[tutorial](tutori
 how to use its different features.
 
 You can also have a look to the example scripts
-made for [NIRISS](notebooks/example_NIRISS.ipynb) and [SPHERE](https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL/blob/master/doc/example_NIRISS.py) or get details about the CANDID/Pymask uses with [example_analysis.py](notebooks/example_analysis.py).
+made for [NIRISS](notebooks/example_NIRISS.ipynb) and [SPHERE](notebooks/example_SPHERE.ipynb) or get details about the CANDID/Pymask uses with [example_analysis.py](notebooks/example_analysis.py).
 
 ## Use policy and reference publication
 

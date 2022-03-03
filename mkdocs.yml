@@ -12,8 +12,9 @@ nav:
     - Home: index.md
     - Tutorials:
         - General Tutorial: tutorial.md
-        - extract-and-calibrate: notebooks/example_NIRISS.ipynb
-        - candid-and-pymask: notebooks/example_analysis.ipynb
+        - NIRISS Tutorial: notebooks/example_NIRISS.ipynb
+        - SPHERE Tutorial: notebooks/example_SPHERE.ipynb
+        - Candid and Pymask: notebooks/example_analysis.ipynb
 
 theme:
   name: "material"
