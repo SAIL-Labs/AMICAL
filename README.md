@@ -20,7 +20,7 @@ It is recommended (though not mandatory) to create a separate environment with
 
 ```bash
 # Firstly, clone AMICAL repository on your computer
-git clone https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL.git
+git clone -b vampires_dev https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL.git
 
 cd AMICAL/
 
