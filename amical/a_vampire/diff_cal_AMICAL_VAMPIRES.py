@@ -20,17 +20,6 @@ from matplotlib import pyplot as plt
 
 
 
-
-# put tools in to keep it simple
-# reading papers
-# notes stored -
-# notability or one note
-# draw diagrams - move and resize
-# magic keyboard
-# like having a laptop - little laptop
-# zoom is good
-
-
 class diff_cal_AMICAL_VAMPIRES:
 
     def __init__(self, starcode, paths, datadir, codedir, resultsdir,
@@ -81,6 +70,8 @@ class diff_cal_AMICAL_VAMPIRES:
             rawviscptemp = os.listdir(self.resultsdir + '/')
             self.rawviscp = [a for a in rawviscptemp if a.endswith('.h5') and not (a.startswith(
                 '._'))]  # and a.startswith('0_') or a.startswith('1_') or a.startswith('2_') or a.startswith('3_')]
+            print(self.resultsdir)
+            print(self.rawviscp[0])
             examplefile_AMICAL = amical.load_bs_hdf5(self.resultsdir + '/' + self.rawviscp[0])
 
             self.bl_cp = examplefile_AMICAL.bl_cp
@@ -407,7 +398,7 @@ class diff_cal_AMICAL_VAMPIRES:
 
         return
 
-    def plot_bootstrap_diff_pol_cal(self, condition = ' ', imagedir = ' ', extranotes = ' '):
+    def plot_bootstrap_diff_pol_cal(self, imagedir = ' '):
 
         fig, ax = plt.subplots(2, 1)
         fig.set_size_inches(15, 10)
@@ -425,7 +416,7 @@ class diff_cal_AMICAL_VAMPIRES:
                             label='Range = ' + str(round((np.max(averageq) - np.min(averageq)), 5)))
         fig.colorbar(im1, ax=ax[0])
         ax[0].set_title(
-            'Differential Visibilities (Stokes Q polarization) vs Azimuth - ' + self.starcode + '_' + self.type_extract + condition)
+            'Differential Visibilities (Stokes Q polarization) vs Azimuth - ' + self.starcode + '_' + self.type_extract)
         ax[0].set_xlabel('Azimuth Angle')
         ax[0].set_ylabel('Differential Visibilities')
         ax[0].plot(self.azimuth, np.mean(averageq) * np.ones((len(self.azimuth))), linestyle='dashed', color='black',
@@ -441,7 +432,7 @@ class diff_cal_AMICAL_VAMPIRES:
                             label='Range = ' + str(np.round((np.max(averageu) - np.min(averageu)), 5)))
         fig.colorbar(im2, ax=ax[1])
         ax[1].set_title(
-            'Differential Visibilities (Stokes U polarization) vs Azimuth - ' + self.starcode + '_' + self.type_extract + condition)
+            'Differential Visibilities (Stokes U polarization) vs Azimuth - ' + self.starcode + '_' + self.type_extract)
         ax[1].set_xlabel('Azimuth Angle')
         ax[1].set_ylabel('Differential Visibilities')
         ax[1].plot(self.azimuth, np.mean(averageu) * np.ones((len(self.azimuth))), linestyle='dashed', color='black',
@@ -452,7 +443,7 @@ class diff_cal_AMICAL_VAMPIRES:
         ax[1].errorbar(self.azimuth, averageu, yerr=erroru, linestyle="None", ecolor='lightgrey')
 
         plt.show()
-        plt.savefig(imagedir + self.starcode + '_' + condition + extranotes + '_diff_vis_bootstrap.pdf')
+        plt.savefig(imagedir + self.starcode + '_' + '_diff_vis_bootstrap.pdf')
         print("saved image")
 
 
