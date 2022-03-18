@@ -9,12 +9,9 @@ from astropy.io import fits
 from diff_cal_AMICAL_VAMPIRES import diff_cal_AMICAL_VAMPIRES
 from astropy.io import fits
 plt.ion()
+from os import path
 
-
-makedarks = False                                                                      # ONLY TRUE ONCE -set whether to create and format dark frames or not - only needs to be done once before the newly formatted dark frames can be used
-amicalextract = False                                                                    # set whether to use AMICAL to extract polarised visibilities from raw data - only needs to be done once before you can then use these files with the diff_cal_AMICAL_VAMPIRES library
 useheaders = False                                                                      # MUST BE FALSE RIGHT NOW set whether to use file strings or headers to extract parameters for calibration. Use headers if the headers contain all information
-initialise = False                                                                      # ONLY TRUE ONCE- the first time you run this code - it will establish the paths required.
 
 ########################   SET THESE PARAMETERS
 
@@ -26,9 +23,13 @@ darkframefiles = '/import/morgana2/snert/lucinda/AMICAL_VAMPIRES/Results/results
 
 #########################
 
-if initialise:
+if path.exists(project_folder + '/') == False:
     os.mkdir(project_folder + '/')
+
+if path.exists(project_folder + '/results/') == False:
     os.mkdir(project_folder + '/results/')
+
+if path.exists(project_folder + '/results/image_results/') == False:
     os.mkdir(project_folder + '/results/image_results/')
 
 codedir = os.getcwd()                                                                   # location of this script - a copy will be saved with your extracted quantities in resultsdir
@@ -44,7 +45,8 @@ paths_AMICAL = os.listdir(datadir_AMICAL + '/')
 paths_AMICAL = [a for a in paths_AMICAL if a.endswith('.fits') and a.startswith('muCep_01_20201207_750-50_18holeNudged_')] # specify which .fits files meet criteria relevant for this star - you will need to adapt this depending on the nature of your data and what you want to process
 
 
-if makedarks:
+if path.exists(resultsdir) == False:
+    print('Creating Dark Frames....................')
     os.mkdir(resultsdir)
     os.mkdir(darkframedir)
     npzfile = np.load(darkframefiles)
@@ -59,7 +61,8 @@ if makedarks:
     hdu2_l.writeto(camera2dark_path)
 
 
-if amicalextract:
+if len(os.listdir(resultsdir)) == 1:
+    print('Extracting Visibilities using AMICAL...................')
 
     for i in range(0, len(paths_AMICAL)):
 
@@ -134,4 +137,4 @@ AMICAL_obj.diff_pol_global(bootstrap)
 AMICAL_obj.plot_bootstrap_diff_pol_cal(imagedir=imagedir)
 
 # save copy of file used to run script
-shutil.copyfile(codedir + '/Vampires_test.py', resultsdir)
+shutil.copyfile(codedir + '/Vampires_test.py', resultsdir + '/Vampires_test.py')

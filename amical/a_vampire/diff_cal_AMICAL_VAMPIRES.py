@@ -70,8 +70,8 @@ class diff_cal_AMICAL_VAMPIRES:
             rawviscptemp = os.listdir(self.resultsdir + '/')
             self.rawviscp = [a for a in rawviscptemp if a.endswith('.h5') and not (a.startswith(
                 '._'))]  # and a.startswith('0_') or a.startswith('1_') or a.startswith('2_') or a.startswith('3_')]
-            print(self.resultsdir)
-            print(self.rawviscp[0])
+            #print(self.resultsdir)
+            #print(self.rawviscp[0])
             examplefile_AMICAL = amical.load_bs_hdf5(self.resultsdir + '/' + self.rawviscp[0])
 
             self.bl_cp = examplefile_AMICAL.bl_cp
@@ -153,9 +153,9 @@ class diff_cal_AMICAL_VAMPIRES:
         #print('Running the diff_pol_global function')
 
         if self.type_extract == 'AMICAL':
-
+            print('Computing Interferometric Visibilities.......')
             for i in range(len(self.rawviscp)):
-                print('Extracting file ' + str(i) + ' of ' + str(len(self.rawviscp)))
+                #print('Extracting file ' + str(i) + ' of ' + str(len(self.rawviscp)))
                 filename = self.rawviscp[i]
                 index = filename[-15:-12]
                 indexint = int(index)
@@ -443,7 +443,7 @@ class diff_cal_AMICAL_VAMPIRES:
         ax[1].errorbar(self.azimuth, averageu, yerr=erroru, linestyle="None", ecolor='lightgrey')
 
         plt.show()
-        plt.savefig(imagedir + self.starcode + '_' + '_diff_vis_bootstrap.pdf')
+        plt.savefig(imagedir + '/' + self.starcode + '_' + '_diff_vis_bootstrap.pdf')
         print("saved image")
 
 
