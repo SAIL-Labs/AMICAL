@@ -1154,6 +1154,8 @@ def extract_bs(cube, filename, maskname, filtname=None, targetname=None, instrum
     if verbose:
         cprint("\nDone (exec time: %d min %2.1f s)." %
                (m, t - m * 60), color="magenta")
+
+
     return dict2class(obs_result)
 
 

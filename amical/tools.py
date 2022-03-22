@@ -760,11 +760,11 @@ def load_bs_hdf5(filename):
     """ Load hdf5 file and format as class like object (same
     format as `amical.extract_bs()`
     """
+
     hf2 = h5py.File(filename, 'r')
-
     dict_bs = {'matrix': {}, 'infos': {'hdr': {}}, 'mask': {}}
-
     obs = hf2['obs']
+
     for o in obs:
         dict_bs[o] = obs[o].value
 
