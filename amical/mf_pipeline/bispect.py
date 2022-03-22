@@ -916,6 +916,24 @@ def _add_infos_header(infos, hdr, mf, pa, filename, maskname, npix):
             infos[keys.lower()] = hdr.get(keys)
     return infos
 
+def _read_fits_header(filename):
+    """Should be an alternative to the _add_infos_header. Used to process Ali's RAqr data, which is in the new format."""
+
+    header = fits.getheader(filename)
+    
+    header_list = repr(header).split('\n')
+    header_dict = {}
+    for entry in header_list:
+        if '=' in entry:
+            key, values = entry.split('=')
+            if '/' in values:
+                value1, value2 = values.split('/', maxsplit = 1)
+                header_dict[key.strip()] = [value1.strip().strip("''").strip(), value2.strip().strip("''").strip()]
+            else:
+                header_dict[key.strip()] = [values.strip().strip("''").strip()]
+                
+    return header_dict 
+
 
 def extract_bs(cube, filename, maskname, filtname=None, targetname=None, instrum=None,
                bs_multi_tri=False, peakmethod='gauss', hole_diam=0.8, cutoff=1e-4,
@@ -1155,8 +1173,13 @@ def extract_bs(cube, filename, maskname, filtname=None, targetname=None, instrum
         cprint("\nDone (exec time: %d min %2.1f s)." %
                (m, t - m * 60), color="magenta")
 
+    if type(obs_result['infos']['hdr']) != dict():
+        # For the new VAMP header format
+        obs_result['infos']['hdr'] = _read_fits_header(filename)
 
     return dict2class(obs_result)
+
+
 
 
 def show_peaks_position(cube, filename, maskname, filtname=None,
