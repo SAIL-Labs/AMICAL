@@ -1173,9 +1173,11 @@ def extract_bs(cube, filename, maskname, filtname=None, targetname=None, instrum
         cprint("\nDone (exec time: %d min %2.1f s)." %
                (m, t - m * 60), color="magenta")
 
-    if type(obs_result['infos']['hdr']) != dict():
-        # For the new VAMP header format
-        obs_result['infos']['hdr'] = _read_fits_header(filename)
+    # if type(obs_result['infos']['hdr']) != dict():
+    #     # For the new VAMP header format
+    #     obs_result['infos']['hdr'] = _read_fits_header(filename)
+    #
+
 
     return dict2class(obs_result)
 
