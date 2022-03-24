@@ -7,6 +7,8 @@ from scipy import io
 from matplotlib.colors import PowerNorm
 from astropy.io import fits
 from diff_cal_AMICAL_VAMPIRES import diff_cal_AMICAL_VAMPIRES
+from diff_cal_tools import makeVampDarks
+
 from astropy.io import fits
 plt.ion()
 from os import path
@@ -17,10 +19,12 @@ useheaders = False                                                              
 
 project_folder = '/import/morgana2/snert/lucinda/amical_vampires_project'               # user pathname on morgana2 - location of desired project folder
 datadir = '/import/morgana2/snert/VAMPIRESData/202012/20201207/preproc'                 # location of raw input data
-starcode = 'muCep_20201207'                                                             # star code
+starcode = 'muCep_20201207_TEST'                                                             # star code
 bootstrap = 100                                                                         # number of times you would like to bootstrap
-darkframefiles = '/import/morgana2/snert/lucinda/AMICAL_VAMPIRES/Results/results_2/muCep_20201207_darkframe_skysub/dark_frames_muCep_20201209/darks_256_10ms_em300_20201209_Open_Mirror_0.npz' # location of dark frame file
-
+darkdataPath = '/import/pendragon1/snert/VAMPIRES/VAMPIRESData_201705/20170502/' ##### THIS IS WRONG!
+darkfilePref = 'darks_256_10ms_em300_20170502_750-50_Mirror_0'                          # start of the dark files
+nSubFiles = 16 * 2                                                                      # number of sub files used for dark files
+rawfilePref = 'muCep_01_20201207_750-50_18holeNudged_'                                  # raw file prefix
 #########################
 
 if path.exists(project_folder + '/') == False:
@@ -32,42 +36,34 @@ if path.exists(project_folder + '/results/') == False:
 if path.exists(project_folder + '/results/image_results/') == False:
     os.mkdir(project_folder + '/results/image_results/')
 
-codedir = os.getcwd()                                                                   # location of this script - a copy will be saved with your extracted quantities in resultsdir
-imagedir = project_folder + '/results/image_results'                    # location where we will store images of the results
-resultsdir = project_folder + '/results/' + starcode                     # location of results - ie, extracted quantities that will come out of AMICAL, and go into library diff_cal_AMICAL_VAMPIRES
+codedir = os.getcwd()                                                                                                        # location of this script - a copy will be saved with your extracted quantities in resultsdir
+imagedir = project_folder + '/results/image_results'                                                                        # location where we will store images of the results
+resultsdir = project_folder + '/results/' + starcode                                                                        # location of results - ie, extracted quantities that will come out of AMICAL, and go into library diff_cal_AMICAL_VAMPIRES
 
-darkframedir = resultsdir + '/dark_frames'                                             # location of where you would like to put PROCESSED dark frame files - that will be inputted into AMICAL.
-camera1dark_path = darkframedir + '/camera1dark.fits'                                   # location for each camera's dark frame file - the above path with different endings
-camera2dark_path = darkframedir + '/camera2dark.fits'                                   # location for each camera's dark frame file - the above path with different endings
+darkframedir = resultsdir + '/dark_frames'                                                                                  # location of where you would like to put PROCESSED dark frame files - that will be inputted into AMICAL.
+camera1dark_path = darkframedir + '/camera1dark.fits'                                                                       # location for each camera's dark frame file - the above path with different endings
+camera2dark_path = darkframedir + '/camera2dark.fits'                                                                       # location for each camera's dark frame file - the above path with different endings
 
-datadir_AMICAL = datadir                                                                # list of all files in our datadirectory
+datadir_AMICAL = datadir                                                                                                    # list of all files in our datadirectory
 paths_AMICAL = os.listdir(datadir_AMICAL + '/')
-paths_AMICAL = [a for a in paths_AMICAL if a.endswith('.fits') and a.startswith('muCep_01_20201207_750-50_18holeNudged_')] # specify which .fits files meet criteria relevant for this star - you will need to adapt this depending on the nature of your data and what you want to process
+paths_AMICAL = [a for a in paths_AMICAL if a.endswith('.fits') and a.startswith(rawfilePref)]                               # specify which .fits files meet criteria relevant for this star - you will need to adapt this depending on the nature of your data and what you want to process
+
 
 
 if path.exists(resultsdir) == False:
-    print('Creating Dark Frames....................')
+
     os.mkdir(resultsdir)
     os.mkdir(darkframedir)
-    npzfile = np.load(darkframefiles)
-    camera1dark = npzfile.f.finalDarks[:, :, 0]
-    hdu1 = fits.PrimaryHDU(camera1dark)
-    hdu1_l = fits.HDUList([hdu1])
-    hdu1_l.writeto(camera1dark_path)
 
-    camera2dark = npzfile.f.finalDarks[:, :, 1]
-    hdu2 = fits.PrimaryHDU(camera2dark)
-    hdu2_l = fits.HDUList([hdu2])
-    hdu2_l.writeto(camera2dark_path)
-
-
-if len(os.listdir(resultsdir)) == 1:
-    print('Extracting Visibilities using AMICAL...................')
+    print('Creating Dark Frames for {}........................................'.format(starcode))
+    makeVampDarks(darkdataPath, darkfilePref, nSubFiles, darkframedir, camera1dark_path, camera2dark_path)
+    print('Extracting Visibilities using AMICAL for {}........................................'.format(starcode))
 
     for i in range(0, len(paths_AMICAL)):
 
         temp = paths_AMICAL[i]
         file_t = os.path.join(datadir_AMICAL, temp)
+        print(temp)
 
         clean_param = {'isz': 220,  # Size of the final image (cropped)
                        'r1': 95,  # Radius to compute the background (r1 to r1+dr)
@@ -120,14 +116,17 @@ if len(os.listdir(resultsdir)) == 1:
 
         # construct path for the extracted file
         path = resultsdir + '/' + str(tempi) + elsetemp + '_bs_t'
+        #
+        # print(path)
+        # print(bs_t)
 
         # save extracted file
-        amical.save_bs_hdf5(bs_t, path)
+        amical.save_bs_hdf5(bs_t, path) # cannot change this?
 
 
 ### Now we use the diff_cal_AMICAL_VAMPIRES library
 
-# create an object for the star
+print('Making a diff_cal object for {}........................................'.format(starcode))
 AMICAL_obj = diff_cal_AMICAL_VAMPIRES(starcode, paths_AMICAL, datadir_AMICAL, codedir, resultsdir, 'AMICAL', bootstrap)
 
 # compute differential polarisation, bootstrap argument will perform bootstrapping to produce the error terms which we need
