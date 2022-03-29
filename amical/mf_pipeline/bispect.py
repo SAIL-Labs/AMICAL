@@ -219,12 +219,14 @@ def _show_complex_ps(ft_arr, i_frame=0):
     plt.imshow(np.fft.fftshift(
         abs(ft_arr[i_frame])), cmap="gist_stern", origin="lower")
     plt.tight_layout()
+
+
     return fig
 
 
 def _show_ft_arr_peak(ft_arr, n_baselines, mf, maskname, peakmethod,
                       i_fram=0, aver=False, centred=False, size=20,
-                      norm=None, alpha=1, vmin=None, vmax=None, log_stretch=False):
+                      norm=None, alpha=1, vmin=None, vmax=None, log_stretch=False, savepath = True):
     """ Show the expected position of the peaks in the Fourier space using the
     mask coordinates and the chosen method. """
 
@@ -246,7 +248,7 @@ def _show_ft_arr_peak(ft_arr, n_baselines, mf, maskname, peakmethod,
         lY.extend(mf.l_conj_c[j][0])
         lC.extend(mf.v_conj_c[j])
 
-    fig, ax = plt.subplots(figsize=(9, 7))
+    fig, ax = plt.subplots(figsize=(18, 14))
     ax.set_title("Expected splodge position with mask %s (method = %s)" %
                  (maskname, peakmethod))
     if log_stretch:
@@ -269,6 +271,15 @@ def _show_ft_arr_peak(ft_arr, n_baselines, mf, maskname, peakmethod,
     cb2.set_label("Relative weight [%]", fontsize=20)
     plt.subplots_adjust(top=0.965, bottom=0.035, left=0.05, right=0.965,
                         hspace=0.2, wspace=0.2)
+
+
+    plt.savefig(savepath + 'mask_splodge.pdf')
+    print("Saving splodge image....... ")
+
+    ax.set_xlim(60, 160)
+    ax.set_ylim(60, 160)
+    plt.savefig(savepath + 'mask_splodge_zoomed.pdf')
+    print("Saving zoomed splodge image....... ")
 
 
 def _show_norm_matrices(obs_norm, expert_plot=False):
@@ -939,7 +950,8 @@ def extract_bs(cube, filename, maskname, filtname=None, targetname=None, instrum
                bs_multi_tri=False, peakmethod='gauss', hole_diam=0.8, cutoff=1e-4,
                fw_splodge=0.7, naive_err=False, n_wl=3, n_blocks=0, theta_detector=0,
                scaling_uv=1, i_wl=None, unbias_v2=True, compute_cp_cov=True,
-               fliplr=False, expert_plot=False, verbose=False, display=True,):
+               fliplr=False, expert_plot=False, verbose=False, display=True, savepath = False):
+
     """Compute the bispectrum (bs, v2, cp, etc.) from a data cube.
 
     Parameters:
@@ -1039,7 +1051,7 @@ def extract_bs(cube, filename, maskname, filtname=None, targetname=None, instrum
     mf = make_mf(maskname, infos.instrument, infos.filtname, npix, peakmethod=peakmethod,
                  fw_splodge=fw_splodge, n_wl=n_wl, cutoff=cutoff, hole_diam=hole_diam,
                  scaling=scaling_uv, theta_detector=theta_detector, i_wl=i_wl,
-                 fliplr=fliplr, display=display,)
+                 fliplr=fliplr, display=display)
     if mf is None:
         return None
 
@@ -1068,7 +1080,7 @@ def extract_bs(cube, filename, maskname, filtname=None, targetname=None, instrum
     if display:
         _show_complex_ps(ft_arr)
         _show_ft_arr_peak(ft_arr, n_baselines, mf, maskname, peakmethod,
-                          aver=True, centred=True)
+                          aver=True, centred=True, savepath = savepath)
 
     if verbose:
         print("\nFilename: %s" % filename.split("/")[-1])
@@ -1195,6 +1207,8 @@ def show_peaks_position(cube, filename, maskname, filtname=None,
 
     hdu = fits.open(filename)
     hdr = hdu[0].header
+
+
 
     infos = _check_input_infos(hdr, targetname=targetname, filtname=filtname,
                                instrum=instrum, verbose=False)

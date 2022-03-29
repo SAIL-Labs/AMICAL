@@ -420,7 +420,7 @@ def jd2lst(lng, jd):
     return lst
 
 
-def compute_pa(hdr, n_ps, verbose=False, display=False):
+def compute_pa(hdr, n_ps,  verbose=False, display=False):
 
     list_fct_pa = {'SPHERE': sphere_parang,
                    }
@@ -452,6 +452,7 @@ def compute_pa(hdr, n_ps, verbose=False, display=False):
         plt.xlabel("# frames")
         plt.ylabel("Position angle [deg]")
         plt.tight_layout()
+        # plt.close()
 
     return pa
 

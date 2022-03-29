@@ -795,6 +795,8 @@ def tri_pix(array_size, sampledisk_r, verbose=True, display=True):
 
         plt.tight_layout()
         plt.show(block=False)
+
+
     return closing_tri_pix
 
 

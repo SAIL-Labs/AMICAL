@@ -159,6 +159,8 @@ def select_data(cube, clip_fact=0.5, clip=False, verbose=True, display=True):
         plt.imshow(np.fft.fftshift(fft_fram[worst_fr]), cmap='gist_stern')
         plt.tight_layout()
         plt.show(block=False)
+
+
     if verbose:
         n_good = len(cube_cleaned_checked)
         n_bad = len(cube) - n_good
@@ -452,6 +454,6 @@ def select_clean_data(filename, isz=256, r1=100, dr=10, edge=0,
     if cube_cleaned is None:
         return None
 
-    cube_final = select_data(cube_cleaned, clip=clip, clip_fact=clip_fact,
+    cube_final= select_data(cube_cleaned, clip=clip, clip_fact=clip_fact,
                              verbose=verbose, display=display)
     return cube_final
