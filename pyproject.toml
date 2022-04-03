@@ -21,7 +21,10 @@ filterwarnings = [
     # we run tests against a non-GUI backend on purpose
     "ignore:Matplotlib is currently using agg, which is a non-GUI backend, so cannot show the figure.:UserWarning",
     # astropy regularly ships wheels that violate numpy ABI compatibility, this is out of our control
-    "ignore:numpy.ndarray size changed, may indicate binary incompatibility. Expected \\d\\d from C header, got \\d\\d from PyObject:RuntimeWarning"
+    "ignore:numpy.ndarray size changed, may indicate binary incompatibility. Expected \\d\\d from C header, got \\d\\d from PyObject:RuntimeWarning",
+    #Deprecation warnings emmited from pillow via matplotlib
+    "ignore:NONE is deprecated and will be removed in Pillow 10 \\(2023-07-01\\). Use Resampling.NEAREST or Dither.NONE instead.:DeprecationWarning",
+    "ignore:ADAPTIVE is deprecated and will be removed in Pillow 10 \\(2023-07-01\\). Use Palette.ADAPTIVE instead.:DeprecationWarning",
 ]
 
 [tool.coverage.run]
