@@ -102,7 +102,7 @@ def plot_fullvis(oifitsobj):
     for vis in oifitsobj.vis:
         baseline = np.append(
             baseline,
-            (vis.ucoord ** 2 + vis.vcoord ** 2)
+            (vis.ucoord**2 + vis.vcoord**2)
             / vis.wavelength.eff_wave[np.where(vis.flag == False)],
         )
         visamp = np.append(visamp, vis.visamp[np.where(vis.flag == False)])
@@ -133,7 +133,7 @@ def plot_full_visamp_vs_spatfreq(source, pmin=None, pmax=None, showerror=False):
 
     for vis in source.vis:
         spatfreq = (
-            np.sqrt(vis.ucoord ** 2 + vis.vcoord ** 2)
+            np.sqrt(vis.ucoord**2 + vis.vcoord**2)
             / vis.wavelength.eff_wave
             / np.pi
             / 180.0
@@ -224,7 +224,7 @@ def plot_visamp_vs_spatfreq(
 
     for vis in source.vis:
         spatfreq = (
-            np.sqrt(vis.ucoord ** 2 + vis.vcoord ** 2)
+            np.sqrt(vis.ucoord**2 + vis.vcoord**2)
             / vis.wavelength.eff_wave[waveidx]
             / np.pi
             / 180.0
@@ -280,7 +280,7 @@ def plot_gaussian_widths(source, waveidx=100, legend=False):
 
     for vis in source.vis:
         label = vis.station[0].sta_name + vis.station[1].sta_name
-        baseline = np.sqrt(vis.ucoord ** 2 + vis.vcoord ** 2)
+        baseline = np.sqrt(vis.ucoord**2 + vis.vcoord**2)
         fwhm = get_gaussian_width_from_visibility(
             baseline / vis.wavelength.eff_wave[waveidx], vis.visamp[waveidx]
         )
@@ -328,7 +328,7 @@ def plot_visamp_map(oifitsobj, width=0.1, height=0.1, colorcoding=None):
     fig = plt.figure(figsize=(10, 8), facecolor="white")
 
     for vis in oifitsobj.vis:
-        B = sqrt(vis.ucoord ** 2 + vis.vcoord ** 2)
+        B = sqrt(vis.ucoord**2 + vis.vcoord**2)
         pa = (arctan(vis.ucoord / vis.vcoord) * 180.0 / pi) % 180.0
         print(B, pa)
         ax = fig.add_axes(
@@ -436,10 +436,10 @@ def plot_phases(oidata, uvplot=False, legend=False):
         if uvplot:
             ax2.plot([-u, u], [-v, v], ".", label=label, color=color)
         names.append(vis.target.target)
-        baselinemax = np.amax([np.sqrt(u ** 2 + v ** 2), baselinemax])
+        baselinemax = np.amax([np.sqrt(u**2 + v**2), baselinemax])
         print(
             "%10s: %s, %5.2f m, %s"
-            % (line[0].get_color(), label, np.sqrt(u ** 2 + v ** 2), vis.timeobs)
+            % (line[0].get_color(), label, np.sqrt(u**2 + v**2), vis.timeobs)
         )
 
     ax1.set_xlim(xmin, xmax)
@@ -558,11 +558,11 @@ def plot_visibilities(oidata, uvplot=False, legend=False, ploterror=False):
         if uvplot:
             ax2.plot([-u, u], [-v, v], ".", label=label, color=color)
         names.append(vis.target.target)
-        baselinemax = np.amax([np.sqrt(u ** 2 + v ** 2), baselinemax])
+        baselinemax = np.amax([np.sqrt(u**2 + v**2), baselinemax])
         output += "{:>10}: {}, {:5.2f} m, {}\n".format(
             line[0].get_color(),
             label,
-            np.sqrt(u ** 2 + v ** 2),
+            np.sqrt(u**2 + v**2),
             vis.timeobs,
         )
 
@@ -647,7 +647,7 @@ def plot_gaussian_widths_vs_wavelength(
         color = colors[colorid]
         colorid = np.mod(colorid + 1, len(colors))
         widths = 1e3 * get_gaussian_width_from_visibility(
-            sqrt(vis.ucoord ** 2 + vis.vcoord ** 2) / vis.wavelength.eff_wave,
+            sqrt(vis.ucoord**2 + vis.vcoord**2) / vis.wavelength.eff_wave,
             vis.visamp,
         )
         line = ax1.plot(1e6 * vis.wavelength.eff_wave, widths, label=label, color=color)
@@ -661,11 +661,11 @@ def plot_gaussian_widths_vs_wavelength(
         if uvplot:
             ax2.plot([-u, u], [-v, v], ".", label=label, color=color)
         names.append(vis.target.target)
-        baselinemax = np.amax([np.sqrt(u ** 2 + v ** 2), baselinemax])
+        baselinemax = np.amax([np.sqrt(u**2 + v**2), baselinemax])
         output += "{:>10}: {}, {:5.2f} m, {}\n".format(
             line[0].get_color(),
             label,
-            np.sqrt(u ** 2 + v ** 2),
+            np.sqrt(u**2 + v**2),
             vis.timeobs,
         )
 
@@ -769,11 +769,11 @@ def plot_cflux(oidata, uvplot=False, legend=False, ploterror=False):
         if uvplot:
             ax2.plot([-u, u], [-v, v], ".", label=label, color=color)
         names.append(vis.target.target)
-        baselinemax = np.amax([np.sqrt(u ** 2 + v ** 2), baselinemax])
+        baselinemax = np.amax([np.sqrt(u**2 + v**2), baselinemax])
         output += "{:>10}: {}, {:5.2f} m, {}\n".format(
             line[0].get_color(),
             label,
-            np.sqrt(u ** 2 + v ** 2),
+            np.sqrt(u**2 + v**2),
             vis.timeobs,
         )
 
@@ -877,10 +877,10 @@ def plot_vis2(oidata, uvplot=False, legend=False, ploterror=False):
         if uvplot:
             ax2.plot([-u, u], [-v, v], ".", label=label, color=color)
         names.append(vis.target.target)
-        baselinemax = np.amax([np.sqrt(u ** 2 + v ** 2), baselinemax])
+        baselinemax = np.amax([np.sqrt(u**2 + v**2), baselinemax])
         print(
             "%10s: %s, %5.2f m, %s"
-            % (line[0].get_color(), label, np.sqrt(u ** 2 + v ** 2), vis.timeobs)
+            % (line[0].get_color(), label, np.sqrt(u**2 + v**2), vis.timeobs)
         )
 
     ax1.set_xlim(0.9 * xmin, 1.1 * xmax)
@@ -1054,7 +1054,7 @@ def plot_uv_size(oidata, maxvis=0.3, waveidx=80):
 
     for radius in [10, 20, 30, 40, 50, 60]:
         x = np.linspace(-radius, radius, 100.0)
-        y = np.sqrt(radius ** 2 - x ** 2)
+        y = np.sqrt(radius**2 - x**2)
         ax.plot(x, y, "k:")
         ax.plot(x, -y, "k:")
 

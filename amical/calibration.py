@@ -36,9 +36,9 @@ def _v2varfunc(X, parms):
     Y = (
         a
         + b * b_lengths
-        + c * b_lengths ** 2
+        + c * b_lengths**2
         + d * b_lengths * abs(np.sin(b_angles))
-        + e * b_lengths ** 2 * np.sin(b_angles) ** 2
+        + e * b_lengths**2 * np.sin(b_angles) ** 2
     )
 
     return Y
@@ -137,8 +137,8 @@ def _calc_correction_atm_vis2(
         print("Cannot continue - divide by zero imminent...")
         correction = None
 
-    normvar = avar / vis ** 2
-    w0 = np.where(u ** 2 + v ** 2 >= 0)
+    normvar = avar / vis**2
+    w0 = np.where(u**2 + v**2 >= 0)
 
     param = {"a": 0, "b": 0, "c": 0, "d": 0, "e": 0}
 
@@ -146,7 +146,7 @@ def _calc_correction_atm_vis2(
         err_avar = normvar * 2.0 / np.sqrt(nf)
     if len(err_vis) != 0:
         err_avar = abs(normvar) * np.sqrt(
-            err_avar ** 2 / avar ** 2 + 2.0 * err_vis ** 2 / vis ** 2
+            err_avar**2 / avar**2 + 2.0 * err_vis**2 / vis**2
         )
 
     X = [u[w0], v[w0]]
@@ -355,12 +355,12 @@ def calibrate(
     weightened_error = True
     if weightened_error:
         e_vis2_calib = np.sqrt(
-            e_v2_t ** 2 / cmn_v2_c ** 2 + std_v2_c ** 2 * v2_t ** 2 / cmn_v2_c ** 4
+            e_v2_t**2 / cmn_v2_c**2 + std_v2_c**2 * v2_t**2 / cmn_v2_c**4
         )
     else:
-        e_vis2_calib = np.sqrt(e_v2_t ** 2 + std_v2_c ** 2)
+        e_vis2_calib = np.sqrt(e_v2_t**2 + std_v2_c**2)
 
-    e_cp_calib = np.sqrt(e_cp_t ** 2 + std_cp_c ** 2) * err_scale
+    e_cp_calib = np.sqrt(e_cp_t**2 + std_cp_c**2) * err_scale
 
     u1 = res_t.u[res_t.mask.bs2bl_ix[0, :]]
     v1 = res_t.v[res_t.mask.bs2bl_ix[0, :]]

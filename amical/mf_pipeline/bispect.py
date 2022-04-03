@@ -147,7 +147,7 @@ def _compute_complex_bs(
             pix = fringe_peak[j][:, 0].astype(int), fringe_peak[j][:, 1].astype(int)
             gain = fringe_peak[j][:, 2]
 
-            calib_v2["dark"][j] = np.sum(gain ** 2 * dps[pix])
+            calib_v2["dark"][j] = np.sum(gain**2 * dps[pix])
             cvis[j] = np.sum(gain * ft_frame[pix])
 
             ftf1 = np.roll(ft_frame, 1, axis=0)
@@ -507,7 +507,7 @@ def _unbias_v2_arr(
 
         autocor_mf = np.fft.ifft2(np.abs(np.fft.ifft2(im_peak)) ** 2).real
         bias_arr[j] = (
-            np.sum(autocor_mf * autocor_noise) * bias / autocor_noise[0, 0] * npix ** 2
+            np.sum(autocor_mf * autocor_noise) * bias / autocor_noise[0, 0] * npix**2
         )
 
         if unbias:
@@ -554,10 +554,10 @@ def _compute_v2_quantities(v2_arr, bias_arr, n_blocks):
     # v2_cov = v2_cov_pyt
 
     x = np.arange(n_baselines)
-    avar = v2_cov[x, x] * n_ps - bias_arr ** 2 * (1 + (2.0 * v2) / bias_arr)
+    avar = v2_cov[x, x] * n_ps - bias_arr**2 * (1 + (2.0 * v2) / bias_arr)
     err_avar = np.sqrt(
-        2.0 / n_ps * (v2_cov[x, x]) ** 2 * n_ps ** 2
-        + 4.0 * v2_cov[x, x] * bias_arr ** 2
+        2.0 / n_ps * (v2_cov[x, x]) ** 2 * n_ps**2
+        + 4.0 * v2_cov[x, x] * bias_arr**2
     )
 
     v2_quantities = {
@@ -716,26 +716,26 @@ def _normalize_all_obs(
 
     n_holes = index_mask.n_holes
 
-    bs_arr_norm = bs_arr / np.mean(fluxes ** 3) * n_holes ** 3
-    v2_arr_norm = v2_arr / np.mean(fluxes ** 2) * n_holes ** 2
+    bs_arr_norm = bs_arr / np.mean(fluxes**3) * n_holes**3
+    v2_arr_norm = v2_arr / np.mean(fluxes**2) * n_holes**2
     cvis_arr_norm = cvis_arr / np.mean(fluxes) * n_holes
 
-    v2_norm = (v2 / np.mean(fluxes ** 2)) * n_holes ** 2
-    v2_cov_norm = (v2_cov / np.mean(fluxes ** 4)) * n_holes ** 4
+    v2_norm = (v2 / np.mean(fluxes**2)) * n_holes**2
+    v2_cov_norm = (v2_cov / np.mean(fluxes**4)) * n_holes**4
 
-    bs_norm = bs / np.mean(fluxes ** 3) * n_holes ** 3
+    bs_norm = bs / np.mean(fluxes**3) * n_holes**3
 
-    avar_norm = avar / np.mean(fluxes ** 4) * n_holes ** 4
-    err_avar_norm = err_avar / np.mean(fluxes ** 4) * n_holes ** 4
+    avar_norm = avar / np.mean(fluxes**4) * n_holes**4
+    err_avar_norm = err_avar / np.mean(fluxes**4) * n_holes**4
 
     try:
-        cp_cov_norm = cp_cov / np.mean(fluxes ** 6) * n_holes ** 6
+        cp_cov_norm = cp_cov / np.mean(fluxes**6) * n_holes**6
     except TypeError:
         cp_cov_norm = None
 
-    bs_cov_norm = bs_cov / np.mean(fluxes ** 6) * n_holes ** 6
-    bs_v2_cov_norm = np.real(bs_v2_cov / np.mean(fluxes ** 5) * n_holes ** 5)
-    bs_var_norm = bs_var / np.mean(fluxes ** 6) * n_holes ** 6
+    bs_cov_norm = bs_cov / np.mean(fluxes**6) * n_holes**6
+    bs_v2_cov_norm = np.real(bs_v2_cov / np.mean(fluxes**5) * n_holes**5)
+    bs_var_norm = bs_var / np.mean(fluxes**6) * n_holes**6
 
     if expert_plot:
         plt.figure(figsize=(12, 6))
@@ -969,7 +969,7 @@ def _compute_phs_error(complex_bs, fitmat, index_mask, npix, imsize=3):
 
         tmp1 = hole_phs[0, j, bl2h_ix[0, :]] - hole_phs[0, j, bl2h_ix[1, :]]
         tmp2 = hole_phs[1, j, bl2h_ix[0, :]] - hole_phs[1, j, bl2h_ix[1, :]]
-        err[j, :] = tmp1 ** 2 + tmp2 ** 2
+        err[j, :] = tmp1**2 + tmp2**2
         err_bias[j, :] = (
             hole_err_phs[0, j, bl2h_ix[0, :]] - hole_err_phs[0, j, bl2h_ix[1, :]]
         ) ** 2 + (
@@ -985,7 +985,7 @@ def _compute_phs_error(complex_bs, fitmat, index_mask, npix, imsize=3):
     # on real data (NB there is no window size adjustment here).
     phs_v2corr = np.zeros(n_baselines)
     for j in range(n_baselines):
-        phs_v2corr[j] = np.mean(np.exp(-2.5 * predictor[:, j] / imsize ** 2))
+        phs_v2corr[j] = np.mean(np.exp(-2.5 * predictor[:, j] / imsize**2))
 
     return phs_v2corr
 
@@ -1216,7 +1216,7 @@ def extract_bs(
 
     # 4. Compute indices for the multiple triangle technique (tri_pix function)
     # -------------------------------------------------------------------------
-    l_B = np.sqrt(mf.u ** 2 + mf.v ** 2)  # Length of different bl [m]
+    l_B = np.sqrt(mf.u**2 + mf.v**2)  # Length of different bl [m]
     minbl = np.min(l_B)
 
     if n_holes >= 15:
@@ -1334,7 +1334,7 @@ def extract_bs(
         ifig += 1
 
     t3_coord, bl_cp = _compute_t3_coord(mf, index_mask)
-    bl_v2 = np.sqrt(mf.u ** 2 + mf.v ** 2)
+    bl_v2 = np.sqrt(mf.u**2 + mf.v**2)
     obs_result["bl"] = bl_v2
     obs_result["bl_cp"] = bl_cp
 

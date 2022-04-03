@@ -127,7 +127,7 @@ def _peak_fft_method(
         ap2[x2 + 1, y2] = (1.0 - delta[0]) * delta[1]
         ap2[x2 + 1, y2 + 1] = delta[0] * delta[1]
 
-        n_elts = npix ** 2
+        n_elts = npix**2
 
         tmf = np.fft.fft2(ap1) / n_elts * np.conj(np.fft.fft2(ap2) / n_elts)
         tmf = np.fft.fft2(tmf)
@@ -193,7 +193,7 @@ def _peak_gauss_method(
     mf = np.zeros([npix, npix])
     n_holes = index_mask.n_holes
 
-    l_B = np.sqrt(u ** 2 + v ** 2)
+    l_B = np.sqrt(u**2 + v**2)
     minbl = np.min(l_B) * filt[0]
     if n_holes >= 15:
         sampledisk_r = minbl / 2 / filt[0] * pixelsize * npix * 0.9
@@ -984,7 +984,7 @@ def find_bad_holes(bs, bmax=6, verbose=False, display=False):
     """
     u = bs.u / bs.wl
     v = bs.v / bs.wl
-    X = np.sqrt(u ** 2 + v ** 2)
+    X = np.sqrt(u**2 + v**2)
     Y = np.log(bs.vis2)
 
     n_holes = bs.mask.n_holes

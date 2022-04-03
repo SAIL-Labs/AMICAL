@@ -141,7 +141,7 @@ def leastsqFit(
     except Exception:
         chi2 = 0.0
         for x in tmp:
-            chi2 += np.sum(x ** 2)
+            chi2 += np.sum(x**2)
     reducedChi2 = chi2 / float(
         np.sum([1 if np.isscalar(i) else len(i) for i in tmp]) - len(pfit) + 1
     )
@@ -376,7 +376,7 @@ def _fitFunc(
         verboseTime = time.time()
         print(time.asctime(), end=" ")
         try:
-            chi2 = (res ** 2).sum / (len(res) - len(pfit) + 1.0)
+            chi2 = (res**2).sum / (len(res) - len(pfit) + 1.0)
             print("CHI2: %6.4e" % chi2, end=" ")
         except Exception:
             # list of elements
@@ -385,7 +385,7 @@ def _fitFunc(
             res2 = []
             for r in res:
                 if np.isscalar(r):
-                    chi2 += r ** 2
+                    chi2 += r**2
                     N += 1
                     res2.append(r)
                 else:

@@ -228,17 +228,17 @@ def fits2obs(
     ncp = data.cp.shape[0]
 
     vis2_data = data.vis2.flatten()  # * 0.97
-    e_vis2_data = (data.e_vis2.flatten() ** 2 + extra_error_v2 ** 2) ** 0.5
+    e_vis2_data = (data.e_vis2.flatten() ** 2 + extra_error_v2**2) ** 0.5
     flag_V2 = data.flag_vis.flatten()
 
     if input_rad:
         cp_data = np.rad2deg(data.cp.flatten())
         e_cp_data = np.rad2deg(
-            np.sqrt(data.e_cp.flatten() ** 2 + extra_error_cp ** 2) * err_scale
+            np.sqrt(data.e_cp.flatten() ** 2 + extra_error_cp**2) * err_scale
         )
     else:
         cp_data = data.cp.flatten()
-        e_cp_data = np.sqrt(data.e_cp.flatten() ** 2 + extra_error_cp ** 2) * err_scale
+        e_cp_data = np.sqrt(data.e_cp.flatten() ** 2 + extra_error_cp**2) * err_scale
 
     flag_CP = data.flag_cp.flatten()
 
@@ -375,7 +375,7 @@ def fits2obs(
                 % (wl_min, chr(955), wl_max)
             )
         if cond_uncer:
-            print(fr"-> Restriction on uncertainties: {chr(949)} < {rel_max:2.1f} %")
+            print(rf"-> Restriction on uncertainties: {chr(949)} < {rel_max:2.1f} %")
 
     return Obs
 
@@ -539,7 +539,7 @@ def compute_chi2_curve(
         ymin=ymin,
         ymax=ymax,
         color="#dbe4e8",
-        label=fr"$\sigma_{{m1}}=$-{dr1_r}/+{dr2_r}",
+        label=rf"$\sigma_{{m1}}=$-{dr1_r}/+{dr2_r}",
     )
     plt.axvspan(
         fitted_param - fit_e_theta,
@@ -605,8 +605,8 @@ def plot_model(
 
     d = amical.loadc(inputdata)
 
-    e_vis2 = np.sqrt(d.e_vis2 ** 2 + extra_error_v2 ** 2)
-    e_cp = np.sqrt(d.e_cp ** 2 + extra_error_cp ** 2) * err_scale
+    e_vis2 = np.sqrt(d.e_vis2**2 + extra_error_v2**2)
+    e_cp = np.sqrt(d.e_cp**2 + extra_error_cp**2) * err_scale
 
     model_target = select_model(param["model"])
 

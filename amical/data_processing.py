@@ -55,8 +55,8 @@ def _apply_patch_ghost(cube, xc, yc, radius=20, dx=0, dy=-200, method="bg"):
         yy_c = yc - yy
         xx_off = xx - xc_off
         yy_off = yc_off - yy
-        distance = np.sqrt(xx_c ** 2 + yy_c[:, np.newaxis] ** 2)
-        distance_off = np.sqrt(xx_off ** 2 + yy_off[:, np.newaxis] ** 2)
+        distance = np.sqrt(xx_c**2 + yy_c[:, np.newaxis] ** 2)
+        distance_off = np.sqrt(xx_off**2 + yy_off[:, np.newaxis] ** 2)
         cond_patch = distance <= radius
         cond_bg = distance_off <= radius
         if method == "bg":
@@ -209,7 +209,7 @@ def _get_ring_mask(r1, dr, isz, center=None):
     xx, yy = np.arange(isz), np.arange(isz)
     xx2 = xx - xc
     yy2 = yc - yy
-    distance = np.sqrt(xx2 ** 2 + yy2[:, np.newaxis] ** 2)
+    distance = np.sqrt(xx2**2 + yy2[:, np.newaxis] ** 2)
     inner_cond = r1 <= distance
     if dr is not None:
         r2 = r1 + dr

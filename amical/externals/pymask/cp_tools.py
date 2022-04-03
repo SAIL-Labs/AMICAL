@@ -224,7 +224,7 @@ def cp_model(params, u, v, wavels, model="constant"):
         cons = np.repeat(0.0, nwav)
         xax = (wavels - np.min(wavels)) / (np.max(wavels) - np.min(wavels))
         for order in range(ndof):
-            cons += coefficients[order] * xax ** order
+            cons += coefficients[order] * xax**order
     else:
         raise NameError("Unknown model input to cp_model")
     model_params[2:] = cons
@@ -303,7 +303,7 @@ def hammer(
     #    p0 = [ivar + 0.75*ivar*np.random.rand(ndim) for i in range(nwalcps)] # initialise walcps in a ball
     # print('\n -- Running emcee --')
 
-    t3err = np.sqrt(cpo.t3err ** 2 + extra_error ** 2)
+    t3err = np.sqrt(cpo.t3err**2 + extra_error**2)
     t3err *= err_scale
 
     t0 = time.time()
@@ -324,7 +324,7 @@ def hammer(
             threads=threads,
         )
     else:
-        proj_t3err = np.sqrt(cpo.proj_t3err ** 2 + extra_error ** 2)
+        proj_t3err = np.sqrt(cpo.proj_t3err**2 + extra_error**2)
         proj_t3err *= err_scale
         sampler = emcee.EnsembleSampler(
             nwalcps,
@@ -522,7 +522,7 @@ def detec_sim_loopfit(everything):
             #  i.e. using rnd_cp for the single star and rnd_cp-bin_cp for the binary
             #  but this simplifies to the following equation
             chi2_diff = np.sum(
-                (resids ** 2 - rnd_cp ** 2) / everything["error"][..., np.newaxis] ** 2,
+                (resids**2 - rnd_cp**2) / everything["error"][..., np.newaxis] ** 2,
                 axis=tuple(range(ndim)),
             )
 
@@ -603,7 +603,7 @@ def detec_sim_loopfit_proj(everything):
             #  i.e. using rnd_cp for the single star and rnd_cp-bin_cp for the binary
             #  but this simplifies to the following equation
             chi2_diff = np.sum(
-                (proj_resids ** 2 - proj_rnd_cp ** 2)
+                (proj_resids**2 - proj_rnd_cp**2)
                 / everything["error"][..., np.newaxis] ** 2,
                 axis=tuple(range(ndim)),
             )
@@ -677,18 +677,18 @@ def detec_limits(
     # ------------------------
     if projected is True:
         proj = cpo.proj
-        error = np.sqrt(cpo.proj_t3err ** 2 + extra_error ** 2) * err_scale
+        error = np.sqrt(cpo.proj_t3err**2 + extra_error**2) * err_scale
         n_clps = cpo.proj.shape[-1]
         n_runs = cpo.n_runs
     elif icpo is True:
         proj = []
-        cpo.t3err = np.sqrt(cpo.t3err ** 2 + extra_error ** 2)
+        cpo.t3err = np.sqrt(cpo.t3err**2 + extra_error**2)
         error = cpo.t3err * err_scale
         n_clps = cpo.n_clps
         n_runs = cpo.n_runs
     else:
         proj = []
-        cpo.t3err = np.sqrt(cpo.t3err ** 2 + extra_error ** 2)
+        cpo.t3err = np.sqrt(cpo.t3err**2 + extra_error**2)
         error = cpo.t3err * err_scale
         n_clps = cpo.ndata
         n_runs = 1
@@ -707,7 +707,7 @@ def detec_limits(
     u = cpo.u
     v = cpo.v
 
-    w = np.array(np.sqrt(u ** 2 + v ** 2)) / np.median(wavel)
+    w = np.array(np.sqrt(u**2 + v**2)) / np.median(wavel)
 
     if smin == "Default":
         smin = rad2mas(1.0 / 4 / np.max(w))
@@ -1047,12 +1047,12 @@ def coarse_grid(
 
     u, v = cpo.u, cpo.v
 
-    cpo.t3err = np.sqrt(cpo.t3err ** 2 + extra_error ** 2)
+    cpo.t3err = np.sqrt(cpo.t3err**2 + extra_error**2)
     cpo.t3err *= err_scale
 
     wavel = cpo.wavel
 
-    w = np.array(np.sqrt(u ** 2 + v ** 2))
+    w = np.array(np.sqrt(u**2 + v**2))
 
     if smin == "Default":
         smin = rad2mas(1.0 / 4 / np.max(w / np.min(wavel)))
@@ -1261,7 +1261,7 @@ def multiple_companions_hammer(
         ncomp = 1
         nparam = ndim
 
-    cpo.t3err = np.sqrt(cpo.t3err ** 2 + extra_error ** 2)
+    cpo.t3err = np.sqrt(cpo.t3err**2 + extra_error**2)
     cpo.t3err *= err_scale
 
     print("Fitting for:", ncomp, "companions")
@@ -1449,7 +1449,7 @@ def hammer_spectrum(
 
     p0 = np.array(p0)
     params = np.array(params)
-    cpo.t3err = np.sqrt(cpo.t3err ** 2 + extra_error ** 2)
+    cpo.t3err = np.sqrt(cpo.t3err**2 + extra_error**2)
     cpo.t3err *= err_scale
 
     print("Running emcee now!")
@@ -1564,11 +1564,11 @@ def find_extra_error(
     for ix, err in enumerate(extra_errors):
 
         # Calculate the closure phase uncertainties for this amount of extra_error
-        t3err = np.sqrt(cp_err ** 2 + err ** 2)
+        t3err = np.sqrt(cp_err**2 + err**2)
         t3err *= err_scale
 
-        chis_bin[ix] = np.sum(cp_resids ** 2 / t3err ** 2)
-        chis_null[ix] = np.sum(data_cps ** 2 / t3err ** 2)
+        chis_bin[ix] = np.sum(cp_resids**2 / t3err**2)
+        chis_null[ix] = np.sum(data_cps**2 / t3err**2)
 
     # scale to red.chi2
     if dof == "Default":
@@ -1605,7 +1605,7 @@ def find_extra_error(
     print("Null  :", err_null)
 
     # Diagnostic plots
-    cp_err_plot = np.sqrt(cp_err ** 2 + err_bin ** 2)
+    cp_err_plot = np.sqrt(cp_err**2 + err_bin**2)
 
     plt.clf()
     plt.subplot(211)
