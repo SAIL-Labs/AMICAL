@@ -394,7 +394,7 @@ class OI_VIS:
                 len(self.visamp),
                 _plurals(len(self.visamp)),
                 np.sum(self.flag),
-                np.sqrt(self.ucoord ** 2 + self.vcoord ** 2),
+                np.sqrt(self.ucoord**2 + self.vcoord**2),
                 np.arctan(self.ucoord / self.vcoord) * 180.0 / np.pi % 180.0,
                 meanvis,
             )
@@ -482,16 +482,19 @@ class OI_VIS2:
             )
         else:
             baselinename = ""
-        return "%s %s%s: %d point%s (%d masked), B = %5.1f m, PA = %5.1f deg, <V^2> = %4.2g" % (
-            self.target.target,
-            self.timeobs.strftime("%F %T"),
-            baselinename,
-            len(self.vis2data),
-            _plurals(len(self.vis2data)),
-            np.sum(self.flag),
-            np.sqrt(self.ucoord ** 2 + self.vcoord ** 2),
-            np.arctan(self.ucoord / self.vcoord) * 180.0 / np.pi % 180.0,
-            meanvis,
+        return (
+            "%s %s%s: %d point%s (%d masked), B = %5.1f m, PA = %5.1f deg, <V^2> = %4.2g"
+            % (
+                self.target.target,
+                self.timeobs.strftime("%F %T"),
+                baselinename,
+                len(self.vis2data),
+                _plurals(len(self.vis2data)),
+                np.sum(self.flag),
+                np.sqrt(self.ucoord**2 + self.vcoord**2),
+                np.arctan(self.ucoord / self.vcoord) * 180.0 / np.pi % 180.0,
+                meanvis,
+            )
         )
 
     def info(self):
@@ -599,8 +602,8 @@ class OI_T3:
             len(self.t3amp),
             _plurals(len(self.t3amp)),
             np.sum(self.flag),
-            np.sqrt(self.u1coord ** 2 + self.v1coord ** 2),
-            np.sqrt(self.u2coord ** 2 + self.v2coord ** 2),
+            np.sqrt(self.u1coord**2 + self.v1coord**2),
+            np.sqrt(self.u2coord**2 + self.v2coord**2),
             meant3,
         )
 
@@ -689,7 +692,7 @@ class OI_ARRAY:
 
     def __getattr__(self, attrname):
         if attrname == "latitude":
-            radius = np.sqrt((self.arrxyz ** 2).sum())
+            radius = np.sqrt((self.arrxyz**2).sum())
             if radius == 0.0:
                 warnings.warn(
                     "Warning: ARRAYX, ARRAYY, ARRAYZ are all zero", UserWarning
@@ -697,7 +700,7 @@ class OI_ARRAY:
                 return _angpoint(np.nan)
             return _angpoint(np.arcsin(self.arrxyz[2] / radius) * 180.0 / np.pi)
         elif attrname == "longitude":
-            radius = np.sqrt((self.arrxyz ** 2).sum())
+            radius = np.sqrt((self.arrxyz**2).sum())
             if radius == 0.0:
                 warnings.warn(
                     "Warning: ARRAYX, ARRAYY, ARRAYZ are all zero", UserWarning
@@ -706,7 +709,7 @@ class OI_ARRAY:
             xylen = np.sqrt(self.arrxyz[0] ** 2 + self.arrxyz[1] ** 2)
             return _angpoint(np.arcsin(self.arrxyz[1] / xylen) * 180.0 / np.pi)
         elif attrname == "altitude":
-            radius = np.sqrt((self.arrxyz ** 2).sum())
+            radius = np.sqrt((self.arrxyz**2).sum())
             if radius == 0.0:
                 warnings.warn(
                     "Warning: ARRAYX, ARRAYY, ARRAYZ are all zero", UserWarning

@@ -96,7 +96,7 @@ def cp_model_flux(params, u, v, wavels, model="constant"):
         cons = np.repeat(0.0, nwav)
         xax = (wavels - np.min(wavels)) / (np.max(wavels) - np.min(wavels))
         for order in range(ndof):
-            cons += coefficients[order] * xax ** order
+            cons += coefficients[order] * xax**order
     else:
         raise NameError("Unknown model input to cp_model")
 
@@ -150,7 +150,7 @@ def chi2_grid(everything):
     chi2 = np.zeros((len(everything["ys"]), len(everything["cons"])))
     x = everything["x"]
     ys = everything["ys"]
-    seps = np.sqrt(x ** 2 + ys ** 2)
+    seps = np.sqrt(x**2 + ys**2)
     pas = np.angle(np.complex(0, 1) * ys + np.complex(1, 0) * x, True) % 360
 
     projected = everything["projected"]
@@ -210,12 +210,12 @@ def xy_grid(
 
     u, v = cpo.u, cpo.v
 
-    cpo.t3err = np.sqrt(cpo.t3err ** 2 + extra_error ** 2)
+    cpo.t3err = np.sqrt(cpo.t3err**2 + extra_error**2)
     cpo.t3err *= err_scale
 
     wavel = cpo.wavel
 
-    w = np.array(np.sqrt(u ** 2 + v ** 2)) / np.median(wavel)
+    w = np.array(np.sqrt(u**2 + v**2)) / np.median(wavel)
 
     if xymax == "Default":
         #        xymax = cpt.rad2mas(1./np.min(w/np.max(wavel)))
@@ -281,7 +281,7 @@ def xy_grid(
     # hack: if the best chi2 is at more than one location, take the first.
     bestx = xys[best_ix[0][0]]
     besty = xys[best_ix[1][0]]
-    sep = np.sqrt(bestx ** 2 + besty ** 2)
+    sep = np.sqrt(bestx**2 + besty**2)
     pa = np.angle(np.complex(bestx, besty), True) % 360
     best_params = [sep, pa, cons[best_ix[2][0]]]
     best_params = np.array(np.array(best_params).ravel())

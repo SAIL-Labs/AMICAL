@@ -153,7 +153,7 @@ def _Vld(base, diam, wavel, alpha=0.36):
             scipy.special.gamma(nu + 1.0)
             / scipy.special.gamma(nu + 1.0 + k_)
             / scipy.special.gamma(k_ + 1.0)
-            * x ** k_
+            * x**k_
         )
     return V_
 
@@ -186,7 +186,7 @@ def _VbinSlow(uv, param):
             dwl = float(f_.split("_")[2])
             f += (
                 param[f_]
-                * np.exp(-4 * np.log(2) * (param["wavel"] - wl) ** 2 / dwl ** 2)
+                * np.exp(-4 * np.log(2) * (param["wavel"] - wl) ** 2 / dwl**2)
                 / 100.0
             )
 
@@ -201,7 +201,7 @@ def _VbinSlow(uv, param):
             dwl = float(f_.split("_")[2])
             fres += (
                 param[f_]
-                * np.exp(-4 * np.log(2) * (param["wavel"] - wl) ** 2 / dwl ** 2)
+                * np.exp(-4 * np.log(2) * (param["wavel"] - wl) ** 2 / dwl**2)
                 / 100.0
             )
 
@@ -215,7 +215,7 @@ def _VbinSlow(uv, param):
             dwl = float(f_.split("_")[2])
             fg += (
                 param[f_]
-                * np.exp(-4 * np.log(2) * (param["wavel"] - wl) ** 2 / dwl ** 2)
+                * np.exp(-4 * np.log(2) * (param["wavel"] - wl) ** 2 / dwl**2)
                 / 100.0
             )
 
@@ -443,7 +443,7 @@ def _V2binFast(uv, param):
     - fres: fully resolved flux, in fraction of primary flux
     """
     u, v = uv
-    B = np.sqrt(u ** 2 + v ** 2)
+    B = np.sqrt(u**2 + v**2)
     s = u.shape
     u, v = u.flatten(), v.flatten()
     NU = len(u)
@@ -1118,7 +1118,7 @@ def _chi2Func(param, chi2Data, observables, instruments):
     )
     res = np.nan_to_num(res)  # FLAG == TRUE are nans in the data
     res[np.iscomplex(res)] = np.abs(res[np.iscomplex(res)])
-    res = np.abs(res) ** 2 / _errs ** 2
+    res = np.abs(res) ** 2 / _errs**2
     res = np.nanmean(res)
 
     if "_i" in param.keys() and "_j" in param.keys():
@@ -1592,7 +1592,7 @@ class Open:
                     data = np.array([np.array([d]) for d in data])
 
                 err = hdu.data["T3PHIERR"] * np.pi / 180
-                err = np.sqrt(err ** 2 + np.deg2rad(extra_error) ** 2)
+                err = np.sqrt(err**2 + np.deg2rad(extra_error) ** 2)
                 err *= err_scale
 
                 if len(err.shape) == 1:
@@ -1785,7 +1785,7 @@ class Open:
                 if len(data.shape) == 1:
                     data = np.array([np.array([d]) for d in data])
                 err = hdu.data["VIS2ERR"]
-                err = np.sqrt(err ** 2 + extra_error_v2 ** 2)
+                err = np.sqrt(err**2 + extra_error_v2**2)
 
                 if len(err.shape) == 1:
                     err = np.array([np.array([e]) for e in err])
@@ -2268,7 +2268,7 @@ class Open:
         params = []
         t0 = time.time()
         for x, y in XY:
-            if x ** 2 + y ** 2 >= self.rmin ** 2 and x ** 2 + y ** 2 <= self.rmax ** 2:
+            if x**2 + y**2 >= self.rmin**2 and x**2 + y**2 <= self.rmax**2:
                 tmp = {
                     "diam*": 0.0,
                     "f": fratio,
@@ -2322,8 +2322,8 @@ class Open:
         # -- keep only fits within range
         self.allFits = list(
             filter(
-                lambda x: (x["best"]["x"] ** 2 + x["best"]["y"] ** 2) >= self.rmin ** 2
-                and (x["best"]["x"] ** 2 + x["best"]["y"] ** 2) <= self.rmax ** 2,
+                lambda x: (x["best"]["x"] ** 2 + x["best"]["y"] ** 2) >= self.rmin**2
+                and (x["best"]["x"] ** 2 + x["best"]["y"] ** 2) <= self.rmax**2,
                 self.allFits,
             )
         )
@@ -2369,8 +2369,8 @@ class Open:
                 chi2.append(tmp)
             if (
                 not any([c <= 1 for c in chi2])
-                and f["best"]["x"] ** 2 + f["best"]["y"] ** 2 >= self.rmin ** 2
-                and f["best"]["x"] ** 2 + f["best"]["y"] ** 2 <= self.rmax ** 2
+                and f["best"]["x"] ** 2 + f["best"]["y"] ** 2 >= self.rmin**2
+                and f["best"]["x"] ** 2 + f["best"]["y"] ** 2 <= self.rmax**2
             ):
                 allMin.append(f)
                 allMin[-1]["nsigma"] = _nSigmas(
@@ -2397,7 +2397,7 @@ class Open:
                     + (tmp["best"]["y"] - x["best"]["y"]) ** 2
                     for x in allMin
                 )
-                if d > 0.1 ** 2:
+                if d > 0.1**2:
                     _allMin.append(tmp)
             allMin = allMin + _allMin
         result["internal"]["all minima"] = allMin
@@ -2502,13 +2502,13 @@ class Open:
 
         # -- http://www.aanda.org/articles/aa/pdf/2011/11/aa17719-11.pdf section 3.2
         if chi2Scale == "log":
-            _Z[_X ** 2 + _Y ** 2 < self.rmin ** 2] = np.log10(self.chi2_UD)
-            _Z[_X ** 2 + _Y ** 2 > self.rmax ** 2] = np.log10(self.chi2_UD)
-            n_sigma = _nSigmas(self.chi2_UD, 10 ** _Z, self.ndata() - 1)
-            result["internal"]["chi2 map"] = {"X": _X, "Y": _Y, "chi2": 10 ** _Z}
+            _Z[_X**2 + _Y**2 < self.rmin**2] = np.log10(self.chi2_UD)
+            _Z[_X**2 + _Y**2 > self.rmax**2] = np.log10(self.chi2_UD)
+            n_sigma = _nSigmas(self.chi2_UD, 10**_Z, self.ndata() - 1)
+            result["internal"]["chi2 map"] = {"X": _X, "Y": _Y, "chi2": 10**_Z}
         else:
-            _Z[_X ** 2 + _Y ** 2 < self.rmin ** 2] = self.chi2_UD
-            _Z[_X ** 2 + _Y ** 2 > self.rmax ** 2] = self.chi2_UD
+            _Z[_X**2 + _Y**2 < self.rmin**2] = self.chi2_UD
+            _Z[_X**2 + _Y**2 > self.rmax**2] = self.chi2_UD
             n_sigma = _nSigmas(self.chi2_UD, _Z, self.ndata() - 1)
             result["internal"]["nsigma map"] = {"X": _X, "Y": _Y, "chi2": n_sigma}
 
@@ -2797,13 +2797,13 @@ class Open:
             [
                 x["chi2"]
                 for x in self.allFits
-                if x["best"]["x"] ** 2 + x["best"]["y"] ** 2 >= self.rmin ** 2
+                if x["best"]["x"] ** 2 + x["best"]["y"] ** 2 >= self.rmin**2
             ]
         )
         self.bestFit = [
             x
             for x in self.allFits
-            if x["best"]["x"] ** 2 + x["best"]["y"] ** 2 >= self.rmin ** 2
+            if x["best"]["x"] ** 2 + x["best"]["y"] ** 2 >= self.rmin**2
         ][j]
         if "_k" in self.bestFit["best"]:
             self.bestFit["best"].pop("_k")
@@ -3042,7 +3042,7 @@ class Open:
                     # - each data point's contribution goes as mask**2
                     # - hence we want sum(mask**2) = N
 
-                    mask *= np.sqrt(mask.size / np.sum(mask ** 2))
+                    mask *= np.sqrt(mask.size / np.sum(mask**2))
                     # mask[mask==0] = np.nan
 
                     if len(d[-1].shape) == 2:
@@ -3220,10 +3220,10 @@ class Open:
 
                     a = np.arctan2(2 * sAB, (sB2 - sA2)) / 2
                     sMa = np.sqrt(
-                        1 / 2.0 * (sA2 + sB2 - np.sqrt((sA2 - sB2) ** 2 + 4 * sAB ** 2))
+                        1 / 2.0 * (sA2 + sB2 - np.sqrt((sA2 - sB2) ** 2 + 4 * sAB**2))
                     )
                     sma = np.sqrt(
-                        1 / 2.0 * (sA2 + sB2 + np.sqrt((sA2 - sB2) ** 2 + 4 * sAB ** 2))
+                        1 / 2.0 * (sA2 + sB2 + np.sqrt((sA2 - sB2) ** 2 + 4 * sAB**2))
                     )
                     th = np.linspace(0, 2 * np.pi, 100)
                     _x, _y = sMa * np.cos(th), sma * np.sin(th)
@@ -3282,12 +3282,12 @@ class Open:
                         sMa = np.sqrt(
                             1
                             / 2.0
-                            * (sA2 + sB2 - np.sqrt((sA2 - sB2) ** 2 + 4 * sAB ** 2))
+                            * (sA2 + sB2 - np.sqrt((sA2 - sB2) ** 2 + 4 * sAB**2))
                         )
                         sma = np.sqrt(
                             1
                             / 2.0
-                            * (sA2 + sB2 + np.sqrt((sA2 - sB2) ** 2 + 4 * sAB ** 2))
+                            * (sA2 + sB2 + np.sqrt((sA2 - sB2) ** 2 + 4 * sAB**2))
                         )
                         th = np.linspace(0, 2 * np.pi, 100)
                         _x, _y = sMa * np.cos(th), sma * np.sin(th)
@@ -3667,7 +3667,7 @@ class Open:
                 )
             # -- Absil is twice as fast as injection
             est = 1.5 * self._estimateRunTime(_detectLimit, params, ncore=ncore)
-            est *= N ** 2
+            est *= N**2
             print("... it should take about %d seconds" % (int(est)))
             if (
                 not CONFIG["long exec warning"] is None
@@ -3699,8 +3699,8 @@ class Open:
         for method in methods:
             print(" | Method:", method)
             self.f3s = np.zeros((N, N))
-            self.f3s[allX[None, :] ** 2 + allY[:, None] ** 2 > self.rmax ** 2] = -1
-            self.f3s[allX[None, :] ** 2 + allY[:, None] ** 2 < self.rmin ** 2] = -1
+            self.f3s[allX[None, :] ** 2 + allY[:, None] ** 2 > self.rmax**2] = -1
+            self.f3s[allX[None, :] ** 2 + allY[:, None] ** 2 < self.rmin**2] = -1
             self._prog = 0.0
             self._progTime = [time.time(), time.time()]
             # -- parallel treatment:
@@ -3814,7 +3814,7 @@ class Open:
             plt.figure(fig, figsize=(7, 5))
 
         # -- radial profile:
-        r = np.sqrt(X ** 2 + Y ** 2).flatten()
+        r = np.sqrt(X**2 + Y**2).flatten()
         r_f3s = {}
         for k in self.allf3s.keys():
             r_f3s[k] = self.allf3s[k].flatten()[np.argsort(r)]
@@ -3984,7 +3984,7 @@ def _dpfit_leastsqFit(
     except:
         chi2 = 0.0
         for x in tmp:
-            chi2 += np.sum(x ** 2)
+            chi2 += np.sum(x**2)
     reducedChi2 = chi2 / float(
         np.sum([1 if np.isscalar(i) else len(i) for i in tmp]) - len(pfit) + 1
     )
@@ -4159,7 +4159,7 @@ def _dpfit_fitFunc(
         verboseTime = time.time()
         print(time.asctime(), end=" ")
         try:
-            chi2 = (res ** 2).sum / (len(res) - len(pfit) + 1.0)
+            chi2 = (res**2).sum / (len(res) - len(pfit) + 1.0)
             print("CHI2: %6.4e" % chi2, end=" ")
         except:
             # list of elements
@@ -4168,7 +4168,7 @@ def _dpfit_fitFunc(
             res2 = []
             for r in res:
                 if np.isscalar(r):
-                    chi2 += r ** 2
+                    chi2 += r**2
                     N += 1
                     res2.append(r)
                 else:
@@ -4302,9 +4302,9 @@ def _decomposeObs(wl, data, err, order=1, plot=False):
     # -- estimate statistical errors, as scatter around model:
     stat = np.nanstd(data - fit["model"])
     # -- estimate median systematic error:
-    sys = np.nanmedian(np.sqrt(np.maximum(err ** 2 - stat ** 2, 0.0)))
-    tmp = np.sqrt(fit["uncer"]["A0"] ** 2 + sys ** 2) / fit["uncer"]["A0"]
-    fit["uncer"]["A0"] = np.sqrt(fit["uncer"]["A0"] ** 2 + sys ** 2)
+    sys = np.nanmedian(np.sqrt(np.maximum(err**2 - stat**2, 0.0)))
+    tmp = np.sqrt(fit["uncer"]["A0"] ** 2 + sys**2) / fit["uncer"]["A0"]
+    fit["uncer"]["A0"] = np.sqrt(fit["uncer"]["A0"] ** 2 + sys**2)
 
     if plot:
         plt.clf()
@@ -4337,7 +4337,7 @@ def _estimateCorrelation(data, errors, model):
     """
     sys = np.min(errors) / 2.0
     fact = 0.5
-    chi2 = np.mean((data - model) ** 2 / (errors ** 2 - sys ** 2))
+    chi2 = np.mean((data - model) ** 2 / (errors**2 - sys**2))
     tol = 1.0e-3
     # if chi2 <= 1:
     #      return 0.0
@@ -4349,7 +4349,7 @@ def _estimateCorrelation(data, errors, model):
             sys *= fact
         else:
             sys /= fact
-        _chi2 = np.mean((data - model) ** 2 / (errors ** 2 - sys ** 2))
+        _chi2 = np.mean((data - model) ** 2 / (errors**2 - sys**2))
         if (chi2 - 1) * (_chi2 - 1) < 0:
             fact = np.sqrt(fact)
         chi2 = _chi2

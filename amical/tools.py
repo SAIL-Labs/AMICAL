@@ -38,7 +38,7 @@ def mas2rad(mas):
 
 def rad2mas(rad):
     """Convert input angle in radians to milli-arcsec"""
-    mas = rad * (3600.0 * 180 / np.pi) * 10.0 ** 3
+    mas = rad * (3600.0 * 180 / np.pi) * 10.0**3
     return mas
 
 
@@ -191,14 +191,14 @@ def gauss_2d_asym(X, param):
     im = np.zeros([size_y, size_x])
     x0 = float(x0)
     y0 = float(y0)
-    a = (np.cos(theta) ** 2) / (2 * sigma_x ** 2) + (np.sin(theta) ** 2) / (
-        2 * sigma_y ** 2
+    a = (np.cos(theta) ** 2) / (2 * sigma_x**2) + (np.sin(theta) ** 2) / (
+        2 * sigma_y**2
     )
-    b = -(np.sin(2 * theta)) / (4 * sigma_x ** 2) + (np.sin(2 * theta)) / (
-        4 * sigma_y ** 2
+    b = -(np.sin(2 * theta)) / (4 * sigma_x**2) + (np.sin(2 * theta)) / (
+        4 * sigma_y**2
     )
-    c = (np.sin(theta) ** 2) / (2 * sigma_x ** 2) + (np.cos(theta) ** 2) / (
-        2 * sigma_y ** 2
+    c = (np.sin(theta) ** 2) / (2 * sigma_x**2) + (np.cos(theta) ** 2) / (
+        2 * sigma_y**2
     )
     im = amplitude * np.exp(
         -(a * ((x - x0) ** 2) + 2 * b * (x - x0) * (y - y0) + c * ((y - y0) ** 2))
@@ -297,7 +297,7 @@ def apply_windowing(img, window=80, m=3):
     xx2 = xx - isz // 2
     yy2 = isz // 2 - yy
     # Distance map
-    distance = np.sqrt(xx2 ** 2 + yy2[:, np.newaxis] ** 2)
+    distance = np.sqrt(xx2**2 + yy2[:, np.newaxis] ** 2)
 
     # Super-gaussian windowing
     window = super_gaussian(distance, sigma=window * 2, m=m)
@@ -356,7 +356,7 @@ def jd2lst(lng, jd):
     t = t0 / 36525.0
 
     # Compute GST in seconds.
-    theta = c[0] + (c[1] * t0) + t ** 2 * (c[2] - t / c[3])
+    theta = c[0] + (c[1] * t0) + t**2 * (c[2] - t / c[3])
 
     # Compute LST in hours.
     lst = (theta + lng) / 15.0
@@ -397,7 +397,7 @@ def compute_pa(hdr, n_ps, verbose=False, display=False):
 
     if display and pa_exist:
         plt.figure(figsize=(4, 3))
-        plt.plot(l_pa, ".-", label=fr"pa={pa:2.1f}, $\sigma_{{pa}}$={std_pa:2.1f} deg")
+        plt.plot(l_pa, ".-", label=rf"pa={pa:2.1f}, $\sigma_{{pa}}$={std_pa:2.1f} deg")
         plt.legend(fontsize=7)
         plt.grid(alpha=0.2)
         plt.xlabel("# frames")

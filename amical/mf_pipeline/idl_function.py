@@ -62,7 +62,7 @@ def dist(naxis):
     xx2 = xx - naxis // 2
     yy2 = naxis // 2 - yy
 
-    distance = np.sqrt(xx2 ** 2 + yy2[:, np.newaxis] ** 2)
+    distance = np.sqrt(xx2**2 + yy2[:, np.newaxis] ** 2)
     output = np.roll(distance, -1 * (naxis // 2), axis=(0, 1))
     return output
 

@@ -95,7 +95,7 @@ def _apply_flag(dict_calibrated, unit="arcsec"):
     cp = dict_calibrated["OI_T3"]["T3PHI"][flag_cp]
     e_cp = dict_calibrated["OI_T3"]["T3PHIERR"][flag_cp]
     sp_freq_cp = dict_calibrated["OI_T3"]["BL"][flag_cp] * uv_scale[unit]
-    bmax = 1.2 * np.max(np.sqrt(U ** 2 + V ** 2))
+    bmax = 1.2 * np.max(np.sqrt(U**2 + V**2))
 
     cal_flagged = dict2class(
         {
@@ -263,7 +263,7 @@ def cal2dict(
             "TIME": 0,
             "TARGET_ID": 1,
             "FLAG": flagV2,
-            "BL": (u1 ** 2 + v1 ** 2) ** 0.5,
+            "BL": (u1**2 + v1**2) ** 0.5,
         },
         "OI_T3": {
             "MJD": t.mjd,
@@ -917,11 +917,11 @@ def _plot_UV(ax1, l_dic, dic_color, diffWl=False):
         V = tmp.V
         band = tmp.band
         wl = tmp.wl
-        label = fr"{wl * 1e6:2.2f} $\mu m$ ({band})"
+        label = rf"{wl * 1e6:2.2f} $\mu m$ ({band})"
         if diffWl:
             c1, c2 = dic_color[band], dic_color[band]
             if band not in l_band_al:
-                label = fr"{wl * 1e6:2.2f} $\mu m$ ({band})"
+                label = rf"{wl * 1e6:2.2f} $\mu m$ ({band})"
                 l_band_al.append(band)
             else:
                 label = ""
