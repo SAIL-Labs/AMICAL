@@ -67,9 +67,9 @@ def test_commentary_infos_keep(commentary_infos):
     assert "HISTORY" in commentary_infos.hdr
 
 
-@pytest.mark.xfail(
-    ASTROPY_VERSION > Version("5.0rc"),
-    reason="Astropy > 5.0 should not raise a warning for commentary cards",
+@pytest.mark.skipif(
+    ASTROPY_VERSION < Version("5.0"),
+    reason="Astropy < 5.0 raised a warning for commentary cards",
 )
 def test_no_commentary_warning_astropy_version():
 
@@ -83,8 +83,4 @@ def test_no_commentary_warning_astropy_version():
     hdr = fits.Header()
     hdr["HISTORY"] = "History is a commentary card"
 
-    with pytest.warns(
-        RuntimeWarning,
-        match="Commentary cards are removed from the header with astropy",
-    ):
-        infos = _add_infos_header(infos, hdr, mf, 1.0, "afilename", "amaskname", 1)
+    infos = _add_infos_header(infos, hdr, mf, 1.0, "afilename", "amaskname", 1)
