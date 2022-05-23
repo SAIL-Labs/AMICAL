@@ -10,24 +10,15 @@ markers = [
 ]
 filterwarnings = [
     "error",
-    # imp is indirectly used by uncertainties, see https://github.com/lebigot/uncertainties/issues/145
-    "ignore:the imp module is deprecated in favour of importlib; see the module's documentation for alternative uses:DeprecationWarning",
-    # the deprecation warning message for imp changed in Python 3.10, so we ignore both versions
-    "ignore:the imp module is deprecated in favour of importlib and slated for removal in Python 3.12; see the module's documentation for alternative uses:DeprecationWarning",
-    # this warning is emmited from astropy 5.0, it needs to be fixed upstream
-    "ignore:The distutils package is deprecated and slated for removal in Python 3.12. Use setuptools or check PEP 632 for potential alternatives:DeprecationWarning",
-    # this is emmited from scipy
-    "ignore:The distutils.sysconfig module is deprecated, use sysconfig instead:DeprecationWarning",
+    # imp is indirectly used by uncertainties,
+    # see https://github.com/lebigot/uncertainties/issues/145
+    # the deprecation warning message for imp changed in Python 3.10
+    # we ignore both using a wild card
+    "ignore:the imp module is deprecated in favour of importlib.*:DeprecationWarning",
     # we run tests against a non-GUI backend on purpose
     "ignore:Matplotlib is currently using agg, which is a non-GUI backend, so cannot show the figure.:UserWarning",
     # astropy regularly ships wheels that violate numpy ABI compatibility, this is out of our control
     "ignore:numpy.ndarray size changed, may indicate binary incompatibility. Expected \\d\\d from C header, got \\d\\d from PyObject:RuntimeWarning",
-    #Deprecation warnings emmited from pillow via matplotlib
-    "ignore:NONE is deprecated and will be removed in Pillow 10 \\(2023-07-01\\). Use Resampling.NEAREST or Dither.NONE instead.:DeprecationWarning",
-    "ignore:ADAPTIVE is deprecated and will be removed in Pillow 10 \\(2023-07-01\\). Use Palette.ADAPTIVE instead.:DeprecationWarning",
-    # self triggered in PyPDF2 1.28, see https://github.com/py-pdf/PyPDF2/issues/890
-    "ignore:isString is deprecated and will be removed in PyPDF2 2\\.0\\.0\\.:UserWarning",
-    "ignore:namedDestinations will be removed in PyPDF2 2\\.0\\.0\\. Use `named_destinations` instead\\.:UserWarning"
 ]
 
 [tool.coverage.run]
