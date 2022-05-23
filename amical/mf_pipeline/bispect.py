@@ -20,13 +20,12 @@ from pathlib import Path
 
 import astropy
 import numpy as np
+import PyPDF2
 from astropy.io import fits
 from matplotlib import pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from munch import munchify as dict2class
 from packaging.version import Version
-from PyPDF2 import PdfFileMerger
-from PyPDF2 import PdfFileReader
 from scipy.optimize import minimize
 from termcolor import cprint
 from tqdm import tqdm
@@ -44,6 +43,14 @@ from amical.mf_pipeline.ami_function import tri_pix
 from amical.tools import compute_pa
 from amical.tools import cov2cor
 
+PYPDF2_VERSION = Version(PyPDF2.__version__)
+
+if PYPDF2_VERSION >= Version("1.28"):
+    from PyPDF2 import PdfMerger
+    from PyPDF2 import PdfReader
+else:
+    from PyPDF2 import PdfFileMerger as PdfMerger
+    from PyPDF2 import PdfFileReader as PdfReader
 
 ASTROPY_VERSION = Version(astropy.__version__)
 
@@ -1042,12 +1049,12 @@ def _add_infos_header(infos, hdr, mf, pa, filename, maskname, npix):
 
 
 def produce_result_pdf(figdir, filename):
-    # Call the PdfFileMerger
-    mergedObject = PdfFileMerger()
+    # Call the PdfMerger
+    mergedObject = PdfMerger()
 
     for fileNumber in range(7):
         ifile = os.path.join(figdir, f"{filename}_{fileNumber + 1}.pdf")
-        mergedObject.append(PdfFileReader(ifile, "rb"))
+        mergedObject.append(PdfReader(ifile, "rb"))
         os.remove(ifile)
 
     # Write all the files into a file which is named as shown below
