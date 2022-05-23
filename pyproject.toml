@@ -25,6 +25,9 @@ filterwarnings = [
     #Deprecation warnings emmited from pillow via matplotlib
     "ignore:NONE is deprecated and will be removed in Pillow 10 \\(2023-07-01\\). Use Resampling.NEAREST or Dither.NONE instead.:DeprecationWarning",
     "ignore:ADAPTIVE is deprecated and will be removed in Pillow 10 \\(2023-07-01\\). Use Palette.ADAPTIVE instead.:DeprecationWarning",
+    # self triggered in PyPDF2 1.28, see https://github.com/py-pdf/PyPDF2/issues/890
+    "ignore:isString is deprecated and will be removed in PyPDF2 2\\.0\\.0\\.:UserWarning",
+    "ignore:namedDestinations will be removed in PyPDF2 2\\.0\\.0\\. Use `named_destinations` instead\\.:UserWarning"
 ]
 
 [tool.coverage.run]
