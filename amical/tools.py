@@ -371,7 +371,7 @@ def jd2lst(lng, jd):
 def compute_pa(hdr, n_ps, verbose=False, display=False):
 
     list_fct_pa = {
-        "SPHERE": sphere_parang,
+        "SPHERE": (sphere_parang, {"hdr": hdr, "n_dit_ifs": n_ps}),
     }
 
     instrument = hdr["INSTRUME"]
@@ -389,7 +389,8 @@ def compute_pa(hdr, n_ps, verbose=False, display=False):
         pa_exist = False
         l_pa = np.zeros(nframe)
     else:
-        l_pa = list_fct_pa[instrument](hdr, n_ps)
+        fct_pa, kwargs_pa = list_fct_pa[instrument]
+        l_pa = fct_pa(**kwargs_pa)
         pa_exist = True
 
     pa = np.mean(l_pa)
