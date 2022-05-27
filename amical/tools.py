@@ -410,8 +410,10 @@ def compute_pa(hdr, n_ps, sci_hdr, verbose=False, display=False):
 
 
 def niriss_parang(hdr):
+    v3i_yang = hdr['V3I_YANG']  # Angle from V3 axis to ideal y axis (deg)
+    roll_ref_pa = hdr["ROLL_REF"]  # Offset between V3 and N in local aperture coord
 
-    return hdr["ROLL_REF"]
+    return roll_ref_pa - v3i_yang
 
 
 def sphere_parang(hdr, n_dit_ifs=None):
