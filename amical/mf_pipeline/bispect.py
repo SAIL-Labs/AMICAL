@@ -1160,6 +1160,7 @@ def extract_bs(
 
     with fits.open(filename) as hdu:
         hdr = hdu[0].header
+        sci_hdr = hdu["SCI"].header
 
     infos = _check_input_infos(
         hdr, targetname=targetname, filtname=filtname, instrum=instrum, verbose=False
@@ -1356,7 +1357,7 @@ def extract_bs(
 
     # 13. Compute the absolute oriention (North-up, East-left)
     # ------------------------------------------------------------------------
-    pa = compute_pa(hdr, n_ps, display=display, verbose=verbose)
+    pa = compute_pa(hdr, n_ps, sci_hdr, display=display, verbose=verbose)
 
     # Compile informations in the storage infos class
     infos = _add_infos_header(infos, hdr, mf, pa, filename, maskname, npix)

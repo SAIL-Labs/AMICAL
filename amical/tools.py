@@ -368,10 +368,11 @@ def jd2lst(lng, jd):
     return lst
 
 
-def compute_pa(hdr, n_ps, verbose=False, display=False):
+def compute_pa(hdr, n_ps, sci_hdr, verbose=False, display=False):
 
     list_fct_pa = {
         "SPHERE": (sphere_parang, {"hdr": hdr, "n_dit_ifs": n_ps}),
+        "NIRISS": (niriss_parang, {"hdr": sci_hdr}),
     }
 
     instrument = hdr["INSTRUME"]
@@ -406,6 +407,11 @@ def compute_pa(hdr, n_ps, verbose=False, display=False):
         plt.tight_layout()
 
     return pa
+
+
+def niriss_parang(hdr):
+
+    return hdr["ROLL_REF"]
 
 
 def sphere_parang(hdr, n_dit_ifs=None):
