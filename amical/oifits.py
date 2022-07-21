@@ -13,13 +13,6 @@ import datetime
 import os
 
 import numpy as np
-from astropy import units as u
-from astropy.coordinates import SkyCoord
-from astropy.io import fits
-from astropy.time import Time
-from astroquery.simbad import Simbad
-from matplotlib import pyplot as plt
-from munch import munchify as dict2class
 from termcolor import cprint
 
 from amical.tools import rad2mas
@@ -76,6 +69,8 @@ def _format_staindex_t3(tab):
 def _apply_flag(dict_calibrated, unit="arcsec"):
     """Apply flag and convert to appropriete units."""
 
+    from munch import munchify as dict2class
+
     wl = dict_calibrated["OI_WAVELENGTH"]["EFF_WAVE"]
     uv_scale = {
         "m": 1,
@@ -129,6 +124,7 @@ def wrap_raw(bs):
         Object that stores the raw observables in a format compatible with the
         output from amical.calibrate() and the input for `amical.save()`,\n
     """
+    from munch import munchify as dict2class
 
     u1 = bs.u[bs.mask.bs2bl_ix[0, :]]
     v1 = bs.v[bs.mask.bs2bl_ix[0, :]]
@@ -196,6 +192,8 @@ def cal2dict(
     `dic`: {dict}
         Dictionnary format of the data to be save as oifits.
     """
+    from astropy.time import Time
+
     res_t = cal.raw_t
     res_c = cal.raw_c
     n_baselines = res_t.mask.n_baselines
@@ -318,6 +316,8 @@ def load(filename, filtname=None):
     dic {dict}:
         Dictionnary containing the oifits file data.
     """
+    from astropy.io import fits
+
     fitsHandler = fits.open(filename)
     hdr = fitsHandler[0].header
 
@@ -421,6 +421,8 @@ def load(filename, filtname=None):
 
 def loadc(filename):
     """Same as load but provide an easy usable output as a class format (output.v2, or output.cp)."""
+    from munch import munchify as dict2class
+
     dic = load(filename)
     res = {}
     # Extract infos
@@ -519,6 +521,8 @@ def save(
         Name of the saved oifits file.
 
     """
+    from astroquery.simbad import Simbad
+    from astropy.io import fits
 
     if observables is None:
         cprint("\nError save : Wrong data format!", on_color="on_red")
@@ -646,6 +650,9 @@ def save(
         spectyp = ["fake"]
     else:
         if (name_star is not None) & (name_star != "Unknown"):
+            from astropy import units as u
+            from astropy.coordinates import SkyCoord
+
             try:
                 query = customSimbad.query_object(name_star)
                 coord = SkyCoord(
@@ -1050,6 +1057,7 @@ def show(
     `snr` {float}:
         If inputs are classes from amical.calibrate, use snr param to compute flag,
     """
+    import matplotlib.pyplot as plt
 
     if type(inputList) is not list:
         inputList = [inputList]

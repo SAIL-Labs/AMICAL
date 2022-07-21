@@ -14,11 +14,6 @@ import sys
 import warnings
 
 import numpy as np
-from astropy.convolution import Gaussian2DKernel
-from astropy.convolution import interpolate_replace_nans
-from astropy.io import fits
-from matplotlib import pyplot as plt
-from matplotlib.colors import PowerNorm
 from termcolor import cprint
 from tqdm import tqdm
 
@@ -132,6 +127,9 @@ def select_data(cube, clip_fact=0.5, clip=False, verbose=True, display=True):
 
     diffmm = 100 * abs(np.max(fluxes) - np.min(fluxes)) / med_flux
     if display:
+        import matplotlib.pyplot as plt
+        from matplotlib.colors import PowerNorm
+
         plt.figure(figsize=(10, 5))
         plt.plot(
             fluxes,
@@ -293,6 +291,7 @@ def sky_correction(imA, r1=None, dr=None, verbose=False, *, center=None, mask=No
 def fix_bad_pixels(image, bad_map, add_bad=None, x_stddev=1):
     """Replace bad pixels with values interpolated from their neighbors (interpolation
     is made with a gaussian kernel convolution)."""
+    from astropy.convolution import Gaussian2DKernel, interpolate_replace_nans
 
     if add_bad is None:
         add_bad = []
@@ -396,6 +395,10 @@ def show_clean_params(
     `nframe` {int}: Frame number to be shown (default: 0),\n
     `ihdu` {int}: Hdu number of the fits file. Normally 1 for NIRISS and 0 for SPHERE (default: 0).
     """
+    import matplotlib.pyplot as plt
+    from matplotlib.colors import PowerNorm
+    from astropy.io import fits
+
     with fits.open(filename) as fd:
         data = fd[ihdu].data
     img0 = data[nframe]
@@ -531,6 +534,8 @@ def _apply_edge_correction(img0, edge=0):
 
 def _remove_dark(img1, darkfile=None, ihdu=0, verbose=False):
     if darkfile is not None:
+        from astropy.io import fits
+
         with fits.open(darkfile) as hdu:
             dark = hdu[ihdu].data
         if verbose:
@@ -700,6 +705,8 @@ def select_clean_data(
     --------
     `cube_final` {np.array}: Cleaned and selected datacube.
     """
+    from astropy.io import fits
+
     with fits.open(filename) as hdu:
         cube = hdu[ihdu].data
         hdr = hdu[0].header

@@ -1,5 +1,4 @@
 import numpy as np
-from matplotlib import pyplot as plt
 
 from amical.externals import pymask
 
@@ -135,6 +134,8 @@ def pymask_mcmc(
     chain_cr = chain[:, :, 2].T
 
     if display:
+        import matplotlib.pyplot as plt
+
         sep = res_corner["sep"]
         pa = res_corner["pa"]
         cr = res_corner["cr"]
@@ -224,6 +225,8 @@ def pymask_cr_limit(
     con_limits = 2.5 * np.log10(crat_limits)
 
     if display:
+        import matplotlib.pyplot as plt
+
         plt.figure()
         plt.plot(seps, con_limits)
         plt.xlabel("Separation [mas]")

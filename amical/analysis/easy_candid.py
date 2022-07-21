@@ -4,10 +4,7 @@ from typing import Optional
 from typing import Union
 
 import numpy as np
-from matplotlib import pyplot as plt
 from termcolor import cprint
-from uncertainties import ufloat
-from uncertainties import umath
 
 from amical.externals import candid
 
@@ -55,6 +52,9 @@ def candid_grid(
         Dictionnary of the results ('best'), uncertainties ('uncer'),
         reduced chi2 ('chi2') and sigma detection ('nsigma').
     """
+    from uncertainties import ufloat
+    from uncertainties import umath
+
     if obs is None:
         obs = ["cp", "v2"]
     if doNotFit is None:
@@ -83,6 +83,8 @@ def candid_grid(
     )
 
     if save:
+        import matplotlib.pyplot as plt
+
         if isinstance(input_data, list):
             first_input = input_data[0]
         else:
@@ -188,6 +190,8 @@ def candid_cr_limit(
     )
 
     if save:
+        import matplotlib.pyplot as plt
+
         if isinstance(input_data, list):
             first_input = input_data[0]
         else:

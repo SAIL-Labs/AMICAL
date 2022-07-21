@@ -3,11 +3,7 @@ import pickle
 import sys
 import time
 
-import corner
-import matplotlib.pyplot as plt
 import numpy as np
-import scipy.interpolate as interp
-from scipy.optimize import leastsq
 
 if sys.platform == "darwin":
     multiprocessing.set_start_method(
@@ -201,6 +197,8 @@ def cp_model(params, u, v, wavels, model="constant"):
             ndof (the wavelength channels are evenly spaced cubic interpolations in params[2:])
             polynomial (of the form Sum[n] params[n+2]*(wavelength*1e6)**n )
     NOTE: This doesn't allow for nonzero size of each component!"""
+    import scipy.interpolate as interp
+
     nwav = wavels.size
     model_params = np.zeros(nwav + 2)
     model_params[0:2] = params[0:2]
@@ -442,6 +440,8 @@ def hammer(
         # plt.ylabel('CR')
         # plt.tight_layout()
         # plt.show(block=False)
+        import matplotlib.pyplot as plt
+        import corner
 
         fig = corner.corner(
             chain,
@@ -826,6 +826,8 @@ def detec_limits(
     levels = [0.5, 0.9, 0.99, 0.999]
     mycols = ("k", "k", "k", "k")
     if not no_plot:
+        import matplotlib.pyplot as plt
+
         plt.figure(0)
         plt.clf()
         contours = plt.contour(
@@ -877,6 +879,7 @@ def binary_fit(cpo, p0):
     - soluce[0] : best-fit parameters
     - soluce[1] : covariance matrix
     -------------------------------------------------------------"""
+    from scipy.optimize import leastsq
 
     if np.all(cpo.t3err == 0.0):
         print("Closure phase object instance is not calibrated.\n")
@@ -1147,6 +1150,8 @@ def coarse_grid(
     #                        contour plot!
     # ---------------------------------------------------------------
     if plot:
+        import matplotlib.pyplot as plt
+
         vmax = np.max([sep_pa.max(), sep_crat.max(), pa_crat.max()])
         plt.figure(figsize=(6, 5))
         plt.subplot(2, 2, 1)
@@ -1330,6 +1335,8 @@ def multiple_companions_hammer(
         chain[:, ix * nparam + 2 : (ix + 1) * nparam] = cs[:, ix, :]
 
     if plot is True:
+        import matplotlib.pyplot as plt
+
         plt.clf()
 
     # Loop over number of companions to calculate best params and do plots
@@ -1373,6 +1380,8 @@ def multiple_companions_hammer(
             extra_dims = "None"
 
         if plot is True:
+            import matplotlib.pyplot as plt
+
             paramnames = ["Separation", "Position Angle", "Contrast"]
             paramdims = ["(mas)", "(deg)", "Ratio"]
             for ix, par in enumerate(extra_pars):
@@ -1492,6 +1501,7 @@ def hammer_spectrum(
         print("Channel", ix, ":", meanc[ix], "pm", dc[ix])
 
     if plot is True:
+        import matplotlib.pyplot as plt
 
         plt.clf()
 
@@ -1541,6 +1551,8 @@ def find_extra_error(
     """Finds the extra error needed for reduced chi squared to be 1. This is
     done by trying for many values of extra error and then interpolating.
     If dof is not set, then the degrees of freedom are taken as cpo.t3data.size."""
+    import scipy.interpolate as interp
+    import matplotlib.pyplot as plt
 
     model_cps = cp_model(params, cpo.u, cpo.v, cpo.wavel, model=model)
     if projected:

@@ -10,10 +10,6 @@ Set of functions to calibrate NRM data using a calibrator star data.
 -------------------------------------------------------------------------
 """
 import numpy as np
-from astropy.io import fits
-from astropy.stats import sigma_clip
-from matplotlib import pyplot as plt
-from munch import munchify as dict2class
 
 from amical.dpfit import leastsqFit
 from amical.tools import wtmn
@@ -48,6 +44,9 @@ def _apply_sig_clip(
     data, e_data, sig_thres=2, ymin=0, ymax=1.2, var="V2", display=False
 ):
     """Apply the sigma-clipping on the dataset and plot some diagnostic plots."""
+    import matplotlib.pyplot as plt
+    from astropy.stats import sigma_clip
+
     filtered_data = sigma_clip(data, sigma=sig_thres, axis=0)
 
     n_files = data.shape[0]
@@ -122,6 +121,7 @@ def _calc_correction_atm_vis2(
         Correction factor to apply.
 
     """
+    import matplotlib.pyplot as plt
 
     vis = data.vis2
     avar = data.matrix.avar
@@ -191,6 +191,9 @@ def average_calib_files(list_nrm, sig_thres=2, display=False):
     `sig_thres` : {float}
         Threshold of the sigma clipping (default: 2-sigma around the median is used),\n
     """
+    from munch import munchify as dict2class
+    from astropy.io import fits
+
     nfiles = len(list_nrm)
     l_pa = np.zeros(nfiles)
     cp_vs_file, e_cp_vs_file = [], []
@@ -302,6 +305,8 @@ def calibrate(
         (u-v coordinates), `wl` (wavelength), `raw_t` and `raw_c` (dictionnary of extracted raw
         NRM data, inputs of this function).
     """
+
+    from munch import munchify as dict2class
 
     if type(res_c) is not list:
         res_c = [res_c]

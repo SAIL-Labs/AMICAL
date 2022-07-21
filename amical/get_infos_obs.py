@@ -9,8 +9,6 @@ Instruments and mask informations.
 --------------------------------------------------------------------
 """
 import numpy as np
-import pkg_resources
-from astropy.io import fits
 from termcolor import cprint
 
 from amical.tools import mas2rad
@@ -171,6 +169,8 @@ def get_mask(ins, mask, first=0):
 
 def get_wavelength(ins, filtname):
     """Return dictionnary containning saved informations about filters."""
+    import pkg_resources
+    from astropy.io import fits
 
     YJfile = pkg_resources.resource_stream("amical", "internal_data/ifs_wave_YJ.fits")
     YJHfile = pkg_resources.resource_stream("amical", "internal_data/ifs_wave_YJH.fits")
