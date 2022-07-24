@@ -44,12 +44,3 @@ from .pol_tools import *
 
 # import x_y_plot
 from .x_y_plot import *
-
-
-# TODO(clm): move this somewhere controlable
-# (plt.rcParams)["image.origin"] = "lower"
-# (plt.rcParams)["image.interpolation"] = "nearest"
-# -------------------------------------------------
-# set some defaults to display images that will
-# look more like the DS9 display....
-# -------------------------------------------------
