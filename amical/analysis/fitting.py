@@ -3,8 +3,6 @@ import os
 import sys
 
 import numpy as np
-from matplotlib import pyplot as plt
-from scipy.interpolate import interp1d
 from tqdm import tqdm
 
 import amical
@@ -446,6 +444,8 @@ def compute_chi2_curve(
     `errors_chi2` {float}:
         Computed errors using the chi2 curve at the position of the chi2_r.min() + 1.
     """
+    import matplotlib.pyplot as plt
+    from scipy.interpolate import interp1d
 
     fit = smartfit(
         obs,
@@ -602,6 +602,7 @@ def plot_model(
         Limits of the y-axis,\n
 
     """
+    import matplotlib.pyplot as plt
 
     d = amical.loadc(inputdata)
 
@@ -712,6 +713,8 @@ def plot_model(
     axd["res_cp"].set_xlabel("Sp. Freq. [%s]" % label_unit[unit])
 
     if save:
+        import matplotlib.pyplot as plt
+
         filename = os.path.basename(inputdata) + "_fit_candid.pdf"
         if outputfile is not None:
             filename = outputfile

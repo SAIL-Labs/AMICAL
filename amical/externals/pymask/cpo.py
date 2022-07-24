@@ -1,10 +1,7 @@
 import glob
 import logging
 
-import matplotlib.pyplot as plt
 import numpy as np
-import scipy
-from scipy.io import readsav
 from termcolor import cprint
 
 from . import oifits
@@ -221,6 +218,8 @@ class icpo:
         """Import the closure phase data from the IDL pipeline directly
         from the bispectrum (bs) files"""
         # Get all of the bispectrum files
+        from scipy.io import readsav
+
         bs_files = glob.glob(analysis_dir + "bs*.idlvar")
         bs_files.sort()
 
@@ -426,6 +425,8 @@ class icpo:
             tol: the minimum value used to detect significant eigenvalues. This is
                     ignored if n_significant is set
         """
+        import scipy
+
         proj = []
 
         for wav_ix, wav in enumerate(self.wavel):
@@ -454,6 +455,8 @@ class icpo:
                     )
 
             if plot:
+                import matplotlib.pyplot as plt
+
                 plt.clf()
                 plt.plot(evals)
                 plt.xlabel("Mode number")
@@ -530,6 +533,8 @@ class PolDiffObs:
         the files output by the IDL masking pipeline."""
 
         # Use scipy's idl reading function to get a dictionary of all the saved variables
+        from scipy.io import readsav
+
         data = readsav(filename)
 
         # The differential visibility quantities

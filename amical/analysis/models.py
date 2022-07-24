@@ -1,5 +1,4 @@
 import numpy as np
-from scipy import special
 
 from amical.tools import mas2rad
 
@@ -23,6 +22,8 @@ def visUniformDisk(Utable, Vtable, Lambda, param):
     x0, y0: {float}
         Shift along x and y position [rad].
     """
+    from scipy import special
+
     u = Utable / Lambda
     v = Vtable / Lambda
 
@@ -148,6 +149,7 @@ def visEllipticalDisk(Utable, Vtable, Lambda, param):
     x0, y0: {float}
         Position of the star (relative to the center) [mas].
     """
+    from scipy import special
 
     majorAxis = mas2rad(param["majorAxis"]) * 2
     inclination = np.deg2rad(param["incl"])
@@ -203,6 +205,7 @@ def visClumpDebrisDisk(Utable, Vtable, Lambda, param):
     x0, y0: {float}
         Shift along x and y position [rad].
     """
+    from scipy import special
 
     majorAxis = mas2rad(param["majorAxis"]) * 2
     inclination = np.deg2rad(param["incl"])

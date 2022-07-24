@@ -17,8 +17,6 @@ import os
 from pathlib import Path
 
 import numpy as np
-from matplotlib import pyplot as plt
-from munch import munchify as dict2class
 from termcolor import cprint
 
 from amical.dpfit import leastsqFit
@@ -34,6 +32,8 @@ from amical.tools import plot_circle
 
 
 def _plot_mask_coord(xy_coords, maskname, instrument):
+    import matplotlib.pyplot as plt
+
     if instrument == "NIRISS":
         marker = "H"
         D = 6.5
@@ -190,6 +190,8 @@ def _peak_gauss_method(
     fw_splodge=0.7,
     hole_diam=0.8,
 ):
+    from munch import munchify as dict2class
+
     mf = np.zeros([npix, npix])
     n_holes = index_mask.n_holes
 
@@ -303,6 +305,8 @@ def _make_overlap_mat(mf, n_baselines, display=False):
     mf_imat[mf_imat <= -2] = -2
 
     if display:
+        import matplotlib.pyplot as plt
+
         plt.figure(figsize=(6, 6))
         plt.title("Overlap matrix", fontsize=14)
         plt.imshow(mf_imat, cmap="gray", origin="upper")
@@ -369,6 +373,7 @@ def make_mf(
         Relative size of the splodge used to compute multiple triangle indices and the fwhm
         of the 'gauss' technique,\n
     """
+    from munch import munchify as dict2class
 
     # Get detector, filter and mask informations
     # ------------------------------------------
@@ -403,6 +408,8 @@ def make_mf(
     xy_coords = np.array(xy_coords_rot)
 
     if display:
+        import matplotlib.pyplot as plt
+
         _plot_mask_coord(xy_coords, maskname, instrument)
         if save_to is not None:
             figname = os.path.join(save_to, Path(filename).stem)
@@ -561,6 +568,8 @@ def make_mf(
     im_uv = np.roll(np.fft.fftshift(mf_tot), 1, axis=1)
 
     if display:
+        import matplotlib.pyplot as plt
+
         plt.figure(figsize=(9, 7))
         plt.title("(u-v) plan - mask %s" % (maskname), fontsize=14)
         plt.imshow(im_uv, origin="lower")
@@ -624,6 +633,7 @@ def compute_index_mask(n_holes, verbose=False):
         Bispectrum covariance to bispectrum index.
 
     """
+    from munch import munchify as dict2class
 
     n_baselines = int(n_holes * (n_holes - 1) / 2)
     n_bispect = int(n_holes * (n_holes - 1) * (n_holes - 2) / 6)
@@ -840,6 +850,8 @@ def tri_pix(array_size, sampledisk_r, verbose=True, display=True):
     fw = 2 * sampledisk_r
 
     if display:
+        import matplotlib.pyplot as plt
+
         plt.figure(figsize=(5, 5))
         plt.title(
             "Splodge + unique triangle (tri = %i/%i, d = %i, r = %2.1f pix)"
@@ -1000,6 +1012,8 @@ def find_bad_holes(bs, bmax=6, verbose=False, display=False):
     pfit = list(fit["best"].values())
 
     if display:
+        import matplotlib.pyplot as plt
+
         plt.figure()
         plt.plot(X / 1e6, Y, ".", label="data")
         plt.plot(xm / 1e6, ym, "--", label=f"fit (a={pfit[0]:2.1e}, b={pfit[1]:2.2f})")

@@ -12,7 +12,7 @@ Fitting tools (developped by A. Merand).
 import time
 
 import numpy as np
-import scipy.optimize
+
 
 """
 IDEA: fit Y = F(X,A) where A is a dictionnary describing the
@@ -85,6 +85,7 @@ def leastsqFit(
     'cov': covariance matrix (normalized if normalizedUncer)
     'fitOnly': names of the columns of 'cov'
     """
+    import scipy.optimize
 
     if doNotFit is None:
         doNotFit = []

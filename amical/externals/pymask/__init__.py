@@ -21,13 +21,9 @@ See readme.txt for more details.
 """
 import copy
 import os
-import pdb
 import pickle
 import sys
 
-import astropy.io.fits as pf
-import matplotlib.cm as cm
-import matplotlib.pyplot as plt
 import numpy as np
 
 shift = np.fft.fftshift
@@ -48,14 +44,3 @@ from .pol_tools import *
 
 # import x_y_plot
 from .x_y_plot import *
-
-# -------------------------------------------------
-# set some defaults to display images that will
-# look more like the DS9 display....
-# -------------------------------------------------
-# plt.set_cmap(cm.gray)
-(plt.rcParams)["image.origin"] = "lower"
-(plt.rcParams)["image.interpolation"] = "nearest"
-# -------------------------------------------------
-
-# plt.clf()

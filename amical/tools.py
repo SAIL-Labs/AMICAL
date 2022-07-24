@@ -11,14 +11,7 @@ General tools.
 """
 import math as m
 
-import h5py
-import matplotlib.pyplot as plt
 import numpy as np
-from astropy.io import fits
-from astropy.nddata import Cutout2D
-from astropy.time import Time
-from munch import munchify as dict2class
-from scipy.signal import medfilt2d
 from termcolor import cprint
 
 
@@ -63,6 +56,7 @@ def find_max(img, filtmed=True, f=3):
     `Max coordinates`: {tuple}
         X and Y positions of max pixel
     """
+    from scipy.signal import medfilt2d
 
     if filtmed:
         try:
@@ -104,6 +98,8 @@ def crop_max(img, dim, offx=0, offy=0, filtmed=True, f=3):
     `cutout`: {numpy.array}
         Resized image.
     """
+    from astropy.nddata import Cutout2D
+
     xmax, ymax = find_max(img, filtmed=filtmed, f=f)
 
     X = xmax + offx
@@ -237,6 +233,8 @@ def plot_circle(d, x, y, hole_radius, sz=1, display=True):
                     im[i, j] = sz
 
     if display:
+        import matplotlib.pyplot as plt
+
         plt.figure()
         plt.imshow(im)
 
@@ -396,6 +394,8 @@ def compute_pa(hdr, n_ps, verbose=False, display=False):
     std_pa = np.std(l_pa)
 
     if display and pa_exist:
+        import matplotlib.pyplot as plt
+
         plt.figure(figsize=(4, 3))
         plt.plot(l_pa, ".-", label=rf"pa={pa:2.1f}, $\sigma_{{pa}}$={std_pa:2.1f} deg")
         plt.legend(fontsize=7)
@@ -414,6 +414,7 @@ def sphere_parang(hdr, n_dit_ifs=None):
     The columns of the output array contains:
     frame_number, frame_time, paralactic_angle
     """
+    from astropy.time import Time
 
     r2d = 180 / np.pi
     d2r = np.pi / 180
@@ -580,6 +581,9 @@ def check_seeing_cond(list_nrm):  # pragma: no cover
     `res.infos.seeing` for the seeing across multiple nrm data (files).
 
     """
+    from astropy.io import fits
+    from munch import munchify as dict2class
+
     l_seeing, l_vis2, l_cp, l_pa, l_mjd = [], [], [], [], []
 
     with fits.open(list_nrm[0].infos.filename) as fd:
@@ -610,6 +614,8 @@ def check_seeing_cond(list_nrm):  # pragma: no cover
 
 def plot_seeing_cond(cond, lim_seeing=None):  # pragma: no cover
     """Plot seeing condition between calibrator and target files."""
+    import matplotlib.pyplot as plt
+
     fig = plt.figure()
     ax1 = plt.gca()
     ax1.set_xlabel("mjd [days]")
@@ -651,6 +657,8 @@ def roundSciDigit(number):
 
 def save_bs_hdf5(bs, filename):
     """Save results from `amical.extract_bs()` into hdf5 file."""
+    import h5py
+
     if ".h5" not in filename:
         filename += ".h5"
 
@@ -711,6 +719,9 @@ def load_bs_hdf5(filename):
     """Load hdf5 file and format as class like object (same
     format as `amical.extract_bs()`
     """
+    from munch import munchify as dict2class
+    import h5py
+
     dict_bs = {"matrix": {}, "infos": {"hdr": {}}, "mask": {}}
     with h5py.File(filename, "r") as hf2:
         obs = hf2["obs"]

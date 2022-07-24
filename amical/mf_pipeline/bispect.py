@@ -18,15 +18,7 @@ import time
 import warnings
 from pathlib import Path
 
-import astropy
 import numpy as np
-import PyPDF2
-from astropy.io import fits
-from matplotlib import pyplot as plt
-from mpl_toolkits.axes_grid1 import make_axes_locatable
-from munch import munchify as dict2class
-from packaging.version import Version
-from scipy.optimize import minimize
 from termcolor import cprint
 from tqdm import tqdm
 
@@ -43,16 +35,19 @@ from amical.mf_pipeline.ami_function import tri_pix
 from amical.tools import compute_pa
 from amical.tools import cov2cor
 
-PYPDF2_VERSION = Version(PyPDF2.__version__)
 
-if PYPDF2_VERSION >= Version("1.28"):
-    from PyPDF2 import PdfMerger
-    from PyPDF2 import PdfReader
-else:
-    from PyPDF2 import PdfFileMerger as PdfMerger
-    from PyPDF2 import PdfFileReader as PdfReader
+def _PYPDF2_VERSION():
+    from importlib.metadata import version
+    from packaging.version import Version
 
-ASTROPY_VERSION = Version(astropy.__version__)
+    return Version(version("PyPDF2"))
+
+
+def _ASTROPY_VERSION():
+    from importlib.metadata import version
+    from packaging.version import Version
+
+    return Version(version("astropy"))
 
 
 def _compute_complex_bs(
@@ -253,6 +248,8 @@ def _show_complex_ps(ft_arr, i_frame=0):
     Show the complex fft image (real and imaginary) and power spectrum (abs(fft)) of the first frame
     to check the applied correction on the cube.
     """
+    import matplotlib.pyplot as plt
+
     fig = plt.figure(figsize=(16, 6))
     ax1 = plt.subplot(1, 3, 1)
     plt.title("Real part")
@@ -272,6 +269,9 @@ def _show_peak_position(
 ):
     """Show the expected position of the peak in the Fourier space using the
     mask coordinates and the chosen method."""
+    import matplotlib.pyplot as plt
+    from mpl_toolkits.axes_grid1 import make_axes_locatable
+
     dim1, dim2 = ft_arr.shape[1], ft_arr.shape[2]
     x, y = np.arange(dim1), np.arange(dim2)
     X, Y = np.meshgrid(x, y)
@@ -326,6 +326,7 @@ def _show_peak_position(
 def _show_norm_matrices(obs_norm, expert_plot=False):
     """Show covariances matrices of the V2, CP, and a combination
     bispectrum vs. V2."""
+    import matplotlib.pyplot as plt
 
     v2_cov = obs_norm["v2_cov"]
     cp_cov = obs_norm["cp_cov"]
@@ -363,6 +364,8 @@ def _check_input_infos(hdr, targetname=None, filtname=None, instrum=None, verbos
     input arguments. Return the infos class containing important informations of
     the input header (keys: target, seeing, instrument, ...)
     """
+    from munch import munchify as dict2class
+
     target = hdr.get("OBJECT")
     filt = hdr.get("FILTER")
     instrument = hdr.get("INSTRUME", instrum)
@@ -745,6 +748,8 @@ def _normalize_all_obs(
     bs_var_norm = bs_var / np.mean(fluxes**6) * n_holes**6
 
     if expert_plot:
+        import matplotlib.pyplot as plt
+
         plt.figure(figsize=(12, 6))
         plt.title("DIAGNOSTIC PLOTS - V2 - %s" % infos.target)
         plt.plot(v2_arr_norm[0], color="grey", alpha=0.2, label="V$^2$ dispersion")
@@ -790,6 +795,8 @@ def _compute_cp(obs_result, obs_norm, infos, expert_plot=False):
     obs_norm["cp_arr"] = cp_arr
 
     if expert_plot:
+        import matplotlib.pyplot as plt
+
         plt.figure(figsize=(12, 6))
         plt.title("DIAGNOSTIC PLOTS - CP - %s" % infos.target)
         plt.plot(cp_arr[0], color="grey", alpha=0.2, label="CP dispersion")
@@ -856,6 +863,8 @@ def _compute_phs_piston(
 ):
     """Compute the phase piston to determine the additional phase error due to
     the wavefront differences between holes."""
+    from scipy.optimize import minimize
+
     n_holes = index_mask.n_holes
     n_baselines = index_mask.n_baselines
 
@@ -907,6 +916,8 @@ def _compute_phs_piston(
             pass
 
     if display:
+        import matplotlib.pyplot as plt
+
         plt.figure()
         plt.errorbar(
             np.arange(len(ph_mn)),
@@ -999,6 +1010,9 @@ def _compute_phs_error(complex_bs, fitmat, index_mask, npix, imsize=3):
 
 def _add_infos_header(infos, hdr, mf, pa, filename, maskname, npix):
     """Save important informations and some parts of the original header."""
+    from astropy.io import fits
+    from packaging.version import Version
+
     infos["pixscale"] = mf.pixelSize
     infos["pa"] = pa
     infos["filename"] = filename
@@ -1009,12 +1023,12 @@ def _add_infos_header(infos, hdr, mf, pa, filename, maskname, npix):
     # there are any in the original header
     hdr_commentary_keys = fits.Card._commentary_keywords
     if any(hck in hdr for hck in hdr_commentary_keys) and (
-        ASTROPY_VERSION < Version("5.0rc")
+        _ASTROPY_VERSION() < Version("5.0rc")
     ):
         warnings.warn(
             "Commentary cards are removed from the header with astropy"
             f" version < 5.0. Your astropy version is"
-            f" {ASTROPY_VERSION}",
+            f" {_ASTROPY_VERSION()}",
             RuntimeWarning,
         )
         # HACK: astropy _HeaderCommentaryCards are registered as mappings,
@@ -1049,6 +1063,14 @@ def _add_infos_header(infos, hdr, mf, pa, filename, maskname, npix):
 
 
 def produce_result_pdf(figdir, filename):
+    from packaging.version import Version
+
+    if _PYPDF2_VERSION() >= Version("1.28"):
+        from PyPDF2 import PdfMerger
+        from PyPDF2 import PdfReader
+    else:
+        from PyPDF2 import PdfFileMerger as PdfMerger
+        from PyPDF2 import PdfFileReader as PdfReader
     # Call the PdfMerger
     mergedObject = PdfMerger()
 
@@ -1150,6 +1172,9 @@ def extract_bs(
         and the important information (.infos). The .mask, .infos and .matrix are also class with
         various quantities (see .mask.__dict__.keys()).
     """
+    from munch import munchify as dict2class
+    from astropy.io import fits
+
     if verbose:
         cprint("\n-- Starting extraction of observables --", "cyan")
     start_time = time.time()
@@ -1210,6 +1235,8 @@ def extract_bs(
 
     ifig = 2
     if save_to is not None:
+        import matplotlib.pyplot as plt
+
         figname = os.path.join(save_to, Path(filename).stem)
         plt.savefig(f"{figname}_{ifig}.pdf")
 

@@ -6,9 +6,7 @@ Created on Mon Aug 25 13:17:03 2014
 import time
 from multiprocessing import Pool
 
-import matplotlib.pyplot as plt
 import numpy as np
-import scipy.interpolate as interp
 
 from .cp_tools import cp_loglikelihood
 from .cp_tools import cp_loglikelihood_proj
@@ -83,6 +81,8 @@ def cp_model_flux(params, u, v, wavels, model="constant"):
             wavels[-1] - wavels[0]
         )
     elif model == "ndof":
+        import scipy.interpolate as interp
+
         ndof = params[2:].size
         wavs = np.linspace(np.min(wavels), np.max(wavels), ndof)
         f = interp.interp1d(wavs, params[2:], kind="cubic")
@@ -201,6 +201,7 @@ def xy_grid(
     of separation and position angle.
 
     Written by A Cheetham, with some parts stolen from other pysco/pymask routines."""
+    import matplotlib.pyplot as plt
 
     # ------------------------
     # first, load your data!

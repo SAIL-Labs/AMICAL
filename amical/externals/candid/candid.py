@@ -2,36 +2,14 @@ import multiprocessing
 import os
 import sys
 import time
+from functools import lru_cache
 
 import numpy as np
-import scipy.interpolate
-import scipy.optimize
-import scipy.special
-import scipy.stats
-from matplotlib import pyplot as plt
-from scipy.special import factorial
 
 if sys.platform == "darwin":
     multiprocessing.set_start_method(
         "fork", force=True
     )  # this fixes loop in python 3.8 on MacOS
-
-
-_fitsLoaded = False
-try:
-    from astropy.io import fits
-
-    _fitsLoaded = True
-except Exception:
-    try:
-        import pyfits as fits
-
-        _fitsLoaded = True
-    except Exception:
-        pass
-
-if not _fitsLoaded:
-    print("ERROR: astropy.io.fits or pyfits required!")
 
 # -- defunct ;(
 # from scipy import weave
@@ -138,12 +116,16 @@ def _Vud(base, diam, wavel):
     - diam in mas
     - wavel in um
     """
+    import scipy.special
+
     x = 0.01523087098933543 * diam * base / wavel
     x += 1e-6 * (x == 0)
     return 2 * scipy.special.j1(x) / (x)
 
 
 def _Vld(base, diam, wavel, alpha=0.36):
+    import scipy.special
+
     nu = alpha / 2.0 + 1.0
     diam *= np.pi / (180 * 3600.0 * 1000)
     x = -1.0 * (np.pi * diam * base / wavel / 1.0e-6) ** 2 / 4.0
@@ -404,6 +386,8 @@ def _approxVUD(x="x", maxM=8):
     """
     bases on polynomial approx of Bessel's J1
     """
+    from scipy.special import factorial
+
     n = 1
 
     def cm(m):
@@ -421,10 +405,11 @@ def _approxVUD(x="x", maxM=8):
 
 
 # -- set the approximation for UD visibility
-_VUDX = "".join(_approxVUD("X", maxM=7)).strip()
-_VUDX = _VUDX[3:]
-# print(_VUDX)
-_VUDXeval = eval("lambda X:" + _VUDX)
+@lru_cache
+def _get_VUDX():
+    VUDX = "".join(_approxVUD("X", maxM=7)).strip()
+    VUDX = VUDX[3:]
+    return VUDX
 
 
 def _V2binFast(uv, param):
@@ -547,7 +532,7 @@ def _V2binFast(uv, param):
             }
         }
     }""".replace(
-        "VUDX", _VUDX
+        "VUDX", _get_VUDX
     )
     err = weave.inline(
         code,
@@ -776,7 +761,7 @@ def _T3binFast(uv, param):
         }
 
     }""".replace(
-        "VUDX", _VUDX
+        "VUDX", _get_VUDX
     )
     err = weave.inline(
         code,
@@ -948,6 +933,8 @@ def _nSigmas(chi2r_TEST, chi2r_TRUE, NDOF):
 
     returns the nSigma detection
     """
+    import scipy.stats
+
     p = scipy.stats.chi2.cdf(NDOF, NDOF * chi2r_TEST / chi2r_TRUE)
     log10p = np.log10(np.maximum(p, 1e-161))  # Alex: 50 sigmas max
     # p = np.maximum(p, -100)
@@ -1518,6 +1505,8 @@ class Open:
 
         largeCP: set to true if CP goes substantially off 0.0
         """
+        from astropy.io import fits
+
         self._fitsHandler = fits.open(filename)
         self._dataheader = {}
         for k in ["X", "Y", "F"]:
@@ -2117,6 +2106,8 @@ class Open:
         - fig=0: the figure number (default 0)
         - fratio: initial flux ratio for each fit (default=2 for 2%)
         """
+        import matplotlib.pyplot as plt
+
         result = {"call": {"method": "fitMap"}, "internal": {}, "result": {}}
 
         if step is None:
@@ -2483,6 +2474,8 @@ class Open:
                 chi2Scale = "log"
             else:
                 chi2Scale = "lin"
+
+        import scipy.interpolate
 
         if chi2Scale == "log":
             rbf = scipy.interpolate.Rbf(
@@ -3071,6 +3064,8 @@ class Open:
         print(" | grid of fit took %.1f seconds" % (time.time() - t0))
 
         if not fig is None:
+            import matplotlib.pyplot as plt
+
             plt.close(fig)
             if CONFIG["suptitle"]:
                 plt.figure(fig, figsize=(7, 7))
@@ -3399,6 +3394,8 @@ class Open:
         """
         param: what companion model to plot. If None, will attempt to use self.bestFit
         """
+        import matplotlib.pyplot as plt
+
         if param is None:
             try:
                 param = self.bestFit["best"]
@@ -3575,6 +3572,8 @@ class Open:
         Apart from the plots, the radial detection limits are stored in the dictionnary
         'self.f3s'.
         """
+        import matplotlib.pyplot as plt
+
         if isinstance(methods, str):
             methods = [methods]
         for method in methods:
@@ -3931,6 +3930,8 @@ def _dpfit_leastsqFit(
     'cov': covariance matrix (normalized if normalizedUncer)
     'fitOnly': names of the columns of 'cov'
     """
+    import scipy.optimize
+
     global verboseTime, _pfitKeys, _func, _pfix, _x, _w
 
     # -- fit all parameters by default
@@ -4307,6 +4308,8 @@ def _decomposeObs(wl, data, err, order=1, plot=False):
     fit["uncer"]["A0"] = np.sqrt(fit["uncer"]["A0"] ** 2 + sys**2)
 
     if plot:
+        import matplotlib.pyplot as plt
+
         plt.clf()
         plt.errorbar(X, data, yerr=err, fmt="o", color="k", alpha=0.2)
         plt.plot(X, fit["model"], "-r", linewidth=2, alpha=0.5)

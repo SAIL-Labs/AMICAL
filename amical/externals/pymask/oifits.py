@@ -77,10 +77,6 @@ import numpy as np
 from numpy import double
 from numpy import ma
 
-try:
-    import pyfits
-except ImportError:
-    from astropy.io import fits as pyfits
 
 __author__ = "Paul Boley"
 __email__ = "pboley@gmail.com"
@@ -1212,6 +1208,7 @@ class oifits:
     def save(self, filename):
         """Write the contents of the oifits object to a file in OIFITS
         format."""
+        from astropy.io import fits as pyfits
 
         if not self.isconsistent():
             raise ValueError("oifits object is not consistent; refusing to go further")
@@ -1918,6 +1915,7 @@ def get_timeobs(header, row):
 
 def open(filename, quiet=True):
     """Open an OIFITS file."""
+    from astropy.io import fits
 
     newobj = oifits()
     targetmap = {}
@@ -1925,7 +1923,7 @@ def open(filename, quiet=True):
 
     if not quiet:
         print("Opening %s" % filename)
-    hdulist = pyfits.open(filename)
+    hdulist = fits.open(filename)
     # Save the primary header
     newobj.header = hdulist[0].header.copy()
 
@@ -1936,7 +1934,7 @@ def open(filename, quiet=True):
         # PyFITS 2.4 had a bug where strings in binary tables were padded with
         # spaces instead of nulls.  This was fixed in PyFITS 3.0.0, but many files
         # suffer from this problem, and the strings are ugly as a result.  Fix it.
-        if type(hdu) == pyfits.hdu.table.BinTableHDU:
+        if type(hdu) == fits.hdu.table.BinTableHDU:
             for name in data.names:
                 if data.dtype[name].type == np.string_:
                     data[name] = list(map(str.rstrip, data[name]))
