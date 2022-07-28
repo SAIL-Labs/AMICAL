@@ -57,11 +57,9 @@ def test_SPHERE_parang(global_datadir):
 
 
 def test_NIRISS_parang(global_datadir):
-    # TODO: Add this file
     with fits.open(global_datadir / "hdr_niriss_mirage.fits") as hdu:
         hdr = hdu["SCI"].header
     pa = tools.niriss_parang(hdr)
-    # TODO: Add real value
     true_pa = 157.9079  # Human value
     assert pa == pytest.approx(true_pa, 0.01)
 
