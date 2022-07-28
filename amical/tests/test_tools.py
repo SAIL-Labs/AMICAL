@@ -92,7 +92,10 @@ def test_NIRISS_parang_amisim():
     with pytest.warns(RuntimeWarning) as record:
         pa = tools.niriss_parang(hdr)
     assert len(record) == 1
-    assert record[0].message.args[0] == "No SCI header for NIRISS. No PA correction will be applied."
+    assert (
+        record[0].message.args[0]
+        == "No SCI header for NIRISS. No PA correction will be applied."
+    )
     assert pa == 0.0
 
 

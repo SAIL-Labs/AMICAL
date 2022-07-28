@@ -412,9 +412,12 @@ def compute_pa(hdr, n_ps, sci_hdr, verbose=False, display=False):
 
 def niriss_parang(hdr):
     if hdr is None:
-        warnings.warn("No SCI header for NIRISS. No PA correction will be applied.", RuntimeWarning)
+        warnings.warn(
+            "No SCI header for NIRISS. No PA correction will be applied.",
+            RuntimeWarning,
+        )
         return 0.0
-    v3i_yang = hdr['V3I_YANG']  # Angle from V3 axis to ideal y axis (deg)
+    v3i_yang = hdr["V3I_YANG"]  # Angle from V3 axis to ideal y axis (deg)
     roll_ref_pa = hdr["ROLL_REF"]  # Offset between V3 and N in local aperture coord
 
     return roll_ref_pa - v3i_yang

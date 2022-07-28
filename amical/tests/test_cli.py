@@ -12,7 +12,9 @@ from amical._cli.main import main
 
 valid_commands = ["clean", "extract", "calibrate"]
 
-pytestmark = pytest.mark.filterwarnings("ignore: No SCI header for NIRISS. No PA correction will be applied.")
+pytestmark = pytest.mark.filterwarnings(
+    "ignore: No SCI header for NIRISS. No PA correction will be applied."
+)
 
 
 @pytest.fixture()
