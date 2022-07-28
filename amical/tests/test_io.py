@@ -15,6 +15,9 @@ from amical.get_infos_obs import get_pixel_size
 # from amical.mf_pipeline.ami_function import find_bad_holes
 
 
+pytestmark = pytest.mark.filterwarnings("ignore: No SCI header for NIRISS. No PA correction will be applied.")
+
+
 @pytest.fixture()
 def close_figures():
     plt.close("all")
