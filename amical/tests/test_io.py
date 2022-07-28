@@ -14,7 +14,7 @@ from amical.get_infos_obs import get_pixel_size
 # from amical.mf_pipeline.ami_function import find_bad_BL_BS
 # from amical.mf_pipeline.ami_function import find_bad_holes
 
-
+# The test data has no SCI header and does not need one: ignore warning
 pytestmark = pytest.mark.filterwarnings(
     "ignore: No SCI header for NIRISS. No PA correction will be applied."
 )
