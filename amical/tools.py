@@ -369,7 +369,7 @@ def jd2lst(lng, jd):
     return lst
 
 
-def compute_pa(hdr, n_ps, sci_hdr, verbose=False, display=False):
+def compute_pa(hdr, n_ps, verbose=False, display=False, *, sci_hdr=None):
 
     list_fct_pa = {
         "SPHERE": (sphere_parang, {"hdr": hdr, "n_dit_ifs": n_ps}),

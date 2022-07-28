@@ -71,7 +71,7 @@ def test_compute_pa_sphere(global_datadir):
         hdr = hdul[0].header
     sci_hdr = None
     n_ps = 1
-    pa = tools.compute_pa(hdr, n_ps, sci_hdr)
+    pa = tools.compute_pa(hdr, n_ps, sci_hdr=sci_hdr)
     true_pa = 109  # Human value
     assert pa == pytest.approx(true_pa, 0.01)
 
@@ -81,7 +81,7 @@ def test_compute_pa_niriss(global_datadir):
         hdr = hdul[0].header
         sci_hdr = hdul["SCI"].header
         n_ps = hdul["SCI"].data.shape[-1]
-    pa = tools.compute_pa(hdr, n_ps, sci_hdr)
+    pa = tools.compute_pa(hdr, n_ps, sci_hdr=sci_hdr)
     true_pa = 157.9079  # Human value
     assert pa == pytest.approx(true_pa, 0.01)
 
@@ -105,6 +105,6 @@ def test_compute_pa_niriss_amisim(global_datadir):
         sci_hdr = None
         n_ps = hdul[0].data.shape[-1]
     with pytest.warns(RuntimeWarning) as record:
-        pa = tools.compute_pa(hdr, n_ps, sci_hdr)
+        pa = tools.compute_pa(hdr, n_ps, sci_hdr=sci_hdr)
     assert len(record) == 1
     assert pa == 0.0
