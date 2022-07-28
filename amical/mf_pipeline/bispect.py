@@ -1160,7 +1160,10 @@ def extract_bs(
 
     with fits.open(filename) as hdu:
         hdr = hdu[0].header
-        sci_hdr = hdu["SCI"].header
+        try:
+            sci_hdr = hdu["SCI"].header
+        except KeyError:
+            sci_hdr = None
 
     infos = _check_input_infos(
         hdr, targetname=targetname, filtname=filtname, instrum=instrum, verbose=False
