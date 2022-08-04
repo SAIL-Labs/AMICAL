@@ -159,6 +159,7 @@ def test_save_cal(cal, tmpdir):
     assert len(v2) == 21
     assert len(cp) == 35
     assert hdr["ORIGIN"] == "Sydney University"
+    assert hdr["TELESCOP"] == cal.raw_t.infos.telescop
 
 
 def test_save_cal_1hole(cal, tmpdir):

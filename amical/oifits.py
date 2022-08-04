@@ -584,8 +584,8 @@ def save(
     hdu.header["ORIGIN"] = origin or hdr.get("ORIGIN", "Sydney University")
     hdu.header["CONTENT"] = "OIFITS2"
     hdu.header["DATE-OBS"] = hdr.get("date-obs", "")
-    hdu.header["TELESCOP"] = hdr.get("TELESCOP", "")
-    hdu.header["INSTRUME"] = hdr.get("INSTRUME", "")
+    hdu.header["TELESCOP"] = hdr.get("telescop", "")
+    hdu.header["INSTRUME"] = hdr.get("INSTRUME", dic["info"]["INSTRUME"])
     hdu.header["OBSERVER"] = hdr.get("OBSERVER", "")
     hdu.header["OBJECT"] = hdr.get("OBJECT", dic["info"]["TARGET"])
     hdu.header["INSMODE"] = "NRM"
