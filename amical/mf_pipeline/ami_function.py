@@ -385,6 +385,12 @@ def make_mf(
     filt = get_wavelength(instrument, filtname)
 
     if instrument == "SPHERE-IFS":
+        if i_wl is None:
+            raise ValueError(
+                "Your file seems to be obtained with IFU instrument: spectral "
+                + f"channel index `i_wl` must be specified (nlambda = {len(filt)}) and "
+                + "should be strictly identical to the one used for the cleaning step."
+            )
         if isinstance(i_wl, (int, np.integer)):
             filt = [filt[i_wl], 0.001 * filt[i_wl]]
         else:
