@@ -252,10 +252,14 @@ def get_ifu_table(i_wl, filtname="YH", instrument="SPHERE-IFS"):
     )
 
     one_wl = True
-    if isinstance(i_wl, list):
+    multiple_wl = False
+    if isinstance(i_wl, list) & (len(i_wl) == 2):
         one_wl = False
         wl_range = wl[i_wl[0] : i_wl[1]]
         sp_range = np.arange(i_wl[0], i_wl[1], 1)
+    elif isinstance(i_wl, list) & (len(i_wl) > 2):
+        multiple_wl = True
+        one_wl = False
     elif i_wl is None:
         one_wl = False
         sp_range = np.arange(len(wl))
@@ -270,6 +274,13 @@ def get_ifu_table(i_wl, filtname="YH", instrument="SPHERE-IFS"):
             wl[i_wl],
             "ro",
             label="Selected (%2.2f µm)" % wl[i_wl],
+        )
+    elif multiple_wl:
+        plt.plot(
+            i_wl,
+            wl[i_wl],
+            "ro",
+            label="Selected",
         )
     else:
         plt.plot(
@@ -286,6 +297,8 @@ def get_ifu_table(i_wl, filtname="YH", instrument="SPHERE-IFS"):
 
     if one_wl:
         output = np.round(wl[i_wl], 2)
+    elif multiple_wl:
+        output = i_wl
     else:
         output = np.round(wl_range)
     return output
