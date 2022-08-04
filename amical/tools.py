@@ -10,6 +10,7 @@ General tools.
 --------------------------------------------------------------------
 """
 import math as m
+import warnings
 
 import numpy as np
 from termcolor import cprint
@@ -366,10 +367,11 @@ def jd2lst(lng, jd):
     return lst
 
 
-def compute_pa(hdr, n_ps, verbose=False, display=False):
+def compute_pa(hdr, n_ps, verbose=False, display=False, *, sci_hdr=None):
 
     list_fct_pa = {
-        "SPHERE": sphere_parang,
+        "SPHERE": (sphere_parang, {"hdr": hdr, "n_dit_ifs": n_ps}),
+        "NIRISS": (niriss_parang, {"hdr": sci_hdr}),
     }
 
     instrument = hdr["INSTRUME"]
@@ -387,7 +389,8 @@ def compute_pa(hdr, n_ps, verbose=False, display=False):
         pa_exist = False
         l_pa = np.zeros(nframe)
     else:
-        l_pa = list_fct_pa[instrument](hdr, n_ps)
+        fct_pa, kwargs_pa = list_fct_pa[instrument]
+        l_pa = fct_pa(**kwargs_pa)
         pa_exist = True
 
     pa = np.mean(l_pa)
@@ -405,6 +408,19 @@ def compute_pa(hdr, n_ps, verbose=False, display=False):
         plt.tight_layout()
 
     return pa
+
+
+def niriss_parang(hdr):
+    if hdr is None:
+        warnings.warn(
+            "No SCI header for NIRISS. No PA correction will be applied.",
+            RuntimeWarning,
+        )
+        return 0.0
+    v3i_yang = hdr["V3I_YANG"]  # Angle from V3 axis to ideal y axis (deg)
+    roll_ref_pa = hdr["ROLL_REF"]  # Offset between V3 and N in local aperture coord
+
+    return roll_ref_pa - v3i_yang
 
 
 def sphere_parang(hdr, n_dit_ifs=None):
