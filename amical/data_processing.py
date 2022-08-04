@@ -279,11 +279,11 @@ def sky_correction(imA, r1=None, dr=None, verbose=False, *, center=None, mask=No
             "Background not computed, likely because specified radius is out of bounds",
             RuntimeWarning,
         )
-    elif verbose:
-        print(
-            f"Sky correction of {backgroundB} was subtracted,"
-            f" remaining background is {backgroundC}."
-        )
+    # elif verbose:
+    #     print(
+    #         f"Sky correction of {backgroundB} was subtracted,"
+    #         f" remaining background is {backgroundC}."
+    #     )
 
     return imC, backgroundC
 
@@ -328,9 +328,7 @@ def _get_3d_bad_pixels(bad_map, add_bad, data):
     # Add check to create default add_bad list (not use mutable data)
     if add_bad is None or len(add_bad) == 0:
         # Reshape add_bad to simplify indexing in loop
-        add_bad = [
-            [],
-        ] * n_im
+        add_bad = [[]] * n_im
     else:
         add_bad = np.array(add_bad)
         if add_bad.ndim == 2 and len(add_bad[0]) != 0:
@@ -376,6 +374,7 @@ def show_clean_params(
     offy=0,
     apod=False,
     window=None,
+    ifu=False,
     *,
     mask=None,
 ):
@@ -401,6 +400,10 @@ def show_clean_params(
 
     with fits.open(filename) as fd:
         data = fd[ihdu].data
+
+    if ifu:
+        data = data[0, :, :, :]
+
     img0 = data[nframe]
     dims = img0.shape
 
@@ -674,6 +677,7 @@ def select_clean_data(
     remove_bad=True,
     nframe=0,
     mask=None,
+    i_wl=None,
 ):
     """Clean and select good datacube (sigma-clipping using fluxes variations).
 
@@ -725,6 +729,21 @@ def select_clean_data(
                 % (seeing_start, seeing_end, seeing)
             )
 
+        n_axis = len(cube.shape)
+        ifu = False
+        if n_axis == 4:
+            ifu = True
+            naxis4 = hdr["NAXIS4"]
+            if i_wl is None:
+                raise ValueError(
+                    "Your file seems to be obtained with IFU data: spectral "
+                    + f"channel index `i_wl` must be specified (nlambda = {naxis4})."
+                    + ""
+                )
+            if i_wl > naxis4:
+                iwl_msg = f"The choosen spectral channel {i_wl} do not exist (i_wl <= {naxis4 - 1})."
+                raise ValueError(iwl_msg)
+
     # Add check to create default add_bad list (not use mutable data)
     if add_bad is None:
         add_bad = []
@@ -761,7 +780,11 @@ def select_clean_data(
             offy=offy,
             apod=apod,
             window=window,
+            ifu=ifu,
         )
+
+    if ifu:
+        cube = cube[i_wl]
 
     cube_cleaned = clean_data(
         cube,
@@ -786,6 +809,11 @@ def select_clean_data(
         return None
 
     cube_final = select_data(
-        cube_cleaned, clip=clip, clip_fact=clip_fact, verbose=verbose, display=display
+        cube_cleaned,
+        clip=clip,
+        clip_fact=clip_fact,
+        verbose=verbose,
+        display=display,
     )
+
     return cube_final
