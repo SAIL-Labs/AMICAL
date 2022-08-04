@@ -717,6 +717,7 @@ def select_clean_data(
 
     ins = hdr.get("INSTRUME", None)
 
+    ifu = False
     if ins == "SPHERE":
         seeing_start = float(hdr["HIERARCH ESO TEL AMBI FWHM START"])
         seeing = float(hdr["HIERARCH ESO TEL IA FWHM"])
@@ -730,7 +731,6 @@ def select_clean_data(
             )
 
         n_axis = len(cube.shape)
-        ifu = False
         if n_axis == 4:
             ifu = True
             naxis4 = hdr["NAXIS4"]
