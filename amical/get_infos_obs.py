@@ -252,7 +252,7 @@ def get_ifu_table(i_wl, filtname="YH", instrument="SPHERE-IFS"):
     )
 
     one_wl = True
-    if type(i_wl) is list:
+    if isinstance(i_wl, list):
         one_wl = False
         wl_range = wl[i_wl[0] : i_wl[1]]
         sp_range = np.arange(i_wl[0], i_wl[1], 1)
