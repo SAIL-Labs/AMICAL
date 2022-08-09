@@ -233,10 +233,13 @@ def get_pixel_size(ins):
     return p
 
 
-def get_ifu_table(i_wl, filtname="YH", instrument="SPHERE-IFS"):
+def get_ifu_table(
+    i_wl, filtname="YH", instrument="SPHERE-IFS", verbose=False, display=False
+):
     """Get spectral information for the given instrumental IFU setup.
-    i_wl can be an integer or a list of 2 integers used to display the
-    requested spectral channel."""
+    `i_wl` can be an integer, a list of 2 integers (to get a range between those
+    two) or a list of integers (>= 3) used to display the
+    requested spectral channels."""
     from matplotlib import pyplot as plt
 
     wl = get_wavelength(instrument, filtname) * 1e6
@@ -244,12 +247,13 @@ def get_ifu_table(i_wl, filtname="YH", instrument="SPHERE-IFS"):
     if np.isnan(wl.any()):
         return None
 
-    print(f"\nInstrument: {instrument}, spectral range: {filtname}")
-    print("-----------------------------")
-    print(
-        "spectral coverage: %2.2f - %2.2f µm (step = %2.2f)"
-        % (wl[0], wl[-1], np.diff(wl)[0])
-    )
+    if verbose:
+        print(f"\nInstrument: {instrument}, spectral range: {filtname}")
+        print("-----------------------------")
+        print(
+            "spectral coverage: %2.2f - %2.2f µm (step = %2.2f)"
+            % (wl[0], wl[-1], np.diff(wl)[0])
+        )
 
     one_wl = True
     multiple_wl = False
@@ -265,40 +269,41 @@ def get_ifu_table(i_wl, filtname="YH", instrument="SPHERE-IFS"):
         sp_range = np.arange(len(wl))
         wl_range = wl
 
-    plt.figure(figsize=(4, 3))
-    plt.title("--- SPECTRAL INFORMATION (IFU)---")
-    plt.plot(wl, label="All spectral channels")
-    if one_wl:
-        plt.plot(
-            np.arange(len(wl))[i_wl],
-            wl[i_wl],
-            "ro",
-            label="Selected (%2.2f µm)" % wl[i_wl],
-        )
-    elif multiple_wl:
-        plt.plot(
-            i_wl,
-            wl[i_wl],
-            "ro",
-            label="Selected",
-        )
-    else:
-        plt.plot(
-            sp_range,
-            wl_range,
-            lw=5,
-            alpha=0.5,
-            label=f"Selected ({wl_range[0]:2.2f}-{wl_range[-1]:2.2f} µm)",
-        )
-    plt.legend()
-    plt.xlabel("Spectral channel")
-    plt.ylabel("Wavelength [µm]")
-    plt.tight_layout()
+    if display:
+        plt.figure(figsize=(4, 3))
+        plt.title("--- SPECTRAL INFORMATION (IFU)---")
+        plt.plot(wl, label="All spectral channels")
+        if one_wl:
+            plt.plot(
+                np.arange(len(wl))[i_wl],
+                wl[i_wl],
+                "ro",
+                label="Selected (%2.2f µm)" % wl[i_wl],
+            )
+        elif multiple_wl:
+            plt.plot(
+                i_wl,
+                wl[i_wl],
+                "ro",
+                label="Selected",
+            )
+        else:
+            plt.plot(
+                sp_range,
+                wl_range,
+                lw=5,
+                alpha=0.5,
+                label=f"Selected ({wl_range[0]:2.2f}-{wl_range[-1]:2.2f} µm)",
+            )
+        plt.legend()
+        plt.xlabel("Spectral channel")
+        plt.ylabel("Wavelength [µm]")
+        plt.tight_layout()
 
     if one_wl:
-        output = np.round(wl[i_wl], 2)
+        output = wl[i_wl]
     elif multiple_wl:
-        output = i_wl
+        output = np.array(wl[i_wl])
     else:
-        output = np.round(wl_range)
+        output = wl_range
     return output
