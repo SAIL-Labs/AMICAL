@@ -741,7 +741,7 @@ def select_clean_data(
                     + ""
                 )
             if i_wl > naxis4:
-                iwl_msg = f"The choosen spectral channel {i_wl} do not exist (i_wl <= {naxis4 - 1})."
+                iwl_msg = f"The choosen spectral channel {i_wl} do not exist (i_wl <= {naxis4 - 1})"
                 raise ValueError(iwl_msg)
 
     # Add check to create default add_bad list (not use mutable data)
