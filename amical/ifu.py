@@ -9,6 +9,8 @@ Set of functions to work with spectraly dispersed (IFU) NRM data.
 
 -------------------------------------------------------------------------
 """
+import warnings
+
 import numpy as np
 from astropy.io import fits
 from matplotlib import pyplot as plt
@@ -16,6 +18,14 @@ from tqdm import tqdm
 
 from .data_processing import select_clean_data
 from .get_infos_obs import get_wavelength
+
+warnings.warn(
+    "The amical.ifu module is deprecated "
+    "and will be removed in a future version. "
+    "Please do not rely on it.",
+    category=UserWarning,
+    stacklevel=2,
+)
 
 
 def get_lambda(i_wl=None, filtname="YH", instrument="SPHERE-IFS"):
