@@ -389,6 +389,7 @@ def test_extract_ifs_missing_iwl(global_datadir):
     assert exc_info.value.args[0] == msg_error
 
 
+@pytest.mark.usefixtures("close_figures")
 def test_full_process_ifs(tmpdir, global_datadir, ifs_clean_param, ifs_ami_param):
     fits_file = global_datadir / "test_ifs.fits"
     list_index_ifu = [0, 10, 20]
