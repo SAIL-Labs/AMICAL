@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 from astropy.io import fits
+from matplotlib import pyplot as plt
 
 from amical import tools
 from amical.get_infos_obs import get_ifu_table
@@ -111,8 +112,6 @@ def test_compute_pa_niriss_amisim(global_datadir):
 @pytest.mark.parametrize("list_index_ifu", [[0], [0, 10], [0, 1, 2]])
 @pytest.mark.parametrize("filtname", ["YJ", "YH"])
 def test_get_table_ifu(list_index_ifu, filtname):
-    from matplotlib import pyplot as plt
-
     wave = get_ifu_table(list_index_ifu, filtname=filtname, display=True)
     if len(list_index_ifu) == 1:
         assert len(wave) == len(list_index_ifu)
