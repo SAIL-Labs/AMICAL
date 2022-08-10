@@ -1039,7 +1039,7 @@ def _plot_UV_ifu(ax1, fig, l_dic):
         edgecolors="#364f6b",
         alpha=1,
         linewidth=0.1,
-        cmap="jet",
+        cmap="turbo",
     )
     sc = ax1.scatter(
         -all_U,
@@ -1050,7 +1050,7 @@ def _plot_UV_ifu(ax1, fig, l_dic):
         edgecolors="#364f6b",
         alpha=1,
         linewidth=0.1,
-        cmap="jet",
+        cmap="turbo",
     )
 
     position = fig.add_axes([0.22, 0.95, 0.1, 0.015])
@@ -1104,7 +1104,7 @@ def _plot_V2_ifu(ax2, l_dic):
         marker="o",
         edgecolors="#364f6b",
         alpha=1,
-        cmap="jet",
+        cmap="turbo",
     )
 
     return max_f_vis
@@ -1148,7 +1148,7 @@ def _plot_CP_ifu(ax3, l_dic, conv_cp):
         marker="o",
         edgecolors="#364f6b",
         alpha=1,
-        cmap="jet",
+        cmap="turbo",
     )
     return max_f_cp
 
