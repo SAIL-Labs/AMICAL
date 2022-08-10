@@ -358,9 +358,8 @@ def test_extract_ifs(global_datadir, ifs_clean_param):
         fw_splodge=0.7,
         display=False,
     )
-    bs_keys = list(bs.keys())
     assert isinstance(bs, munch.Munch)
-    assert len(bs_keys) == 13
+    assert len(bs) == 13
 
 
 def test_extract_ifs_missing_iwl(global_datadir):
