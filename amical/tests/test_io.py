@@ -369,12 +369,14 @@ def test_extract_ifs_missing_iwl(global_datadir):
         cube_dirty = hdu[0].data
         nlambda = cube_dirty.shape[0]
 
-    msg_error = (
-        "Your file seems to be obtained with IFU instrument: spectral channel "
-        + f"index `i_wl` must be specified (nlambda = {nlambda}) and should be strictly"
-        + " identical to the one used for the cleaning step."
-    )
-    with pytest.raises(ValueError) as exc_info:
+    with pytest.raises(
+        ValueError,
+        match= (
+            "Your file seems to be obtained with IFU instrument: spectral channel "
+            f"index `i_wl` must be specified (nlambda = {nlambda}) and should be strictly"
+            " identical to the one used for the cleaning step."
+        )
+    ):
         amical.extract_bs(
             cube_dirty,
             fits_file,
@@ -385,7 +387,6 @@ def test_extract_ifs_missing_iwl(global_datadir):
             fw_splodge=0.7,
             display=False,
         )
-    assert exc_info.value.args[0] == msg_error
 
 
 @pytest.mark.usefixtures("close_figures")
