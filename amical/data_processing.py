@@ -374,8 +374,8 @@ def show_clean_params(
     offy=0,
     apod=False,
     window=None,
-    ifu=False,
     *,
+    ifu=False,
     mask=None,
 ):
     """Display the input parameters for the cleaning.
