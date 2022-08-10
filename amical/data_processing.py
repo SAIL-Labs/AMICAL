@@ -279,11 +279,6 @@ def sky_correction(imA, r1=None, dr=None, verbose=False, *, center=None, mask=No
             "Background not computed, likely because specified radius is out of bounds",
             RuntimeWarning,
         )
-    # elif verbose:
-    #     print(
-    #         f"Sky correction of {backgroundB} was subtracted,"
-    #         f" remaining background is {backgroundC}."
-    #     )
 
     return imC, backgroundC
 

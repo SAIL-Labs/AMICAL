@@ -242,7 +242,7 @@ def get_ifu_table(
     requested spectral channels."""
     wl = get_wavelength(instrument, filtname) * 1e6
 
-    if np.isnan(wl.any()):
+    if np.any(np.isnan(a))
         return None
 
     if verbose:

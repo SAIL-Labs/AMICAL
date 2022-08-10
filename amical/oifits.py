@@ -1085,7 +1085,7 @@ def _plot_V2_ifu(ax2, l_dic):
         all_freq,
         all_V2,
         yerr=all_e_V2,
-        linestyle="None",
+        linestyle=None,
         capsize=1,
         ecolor="#364f6b",
         mec="#364f6b",
@@ -1253,7 +1253,7 @@ def show(
     # Plot plan UV
     # -------
     ins = l_dic[0]["info"]["INSTRUME"]
-    if ("IFS" in ins) & (len(l_dic) > 1):
+    if "IFS" in ins and len(l_dic) > 1:
         l_bmax = _plot_UV_ifu(ax1, fig, l_dic)
     else:
         l_bmax = _plot_UV(ax1, l_dic, dic_color, diffWl=False)
@@ -1296,7 +1296,7 @@ def show(
 
     # Plot V2
     # -------
-    if ("IFS" in ins) & (len(l_dic) > 1):
+    if "IFS" in ins and len(l_dic) > 1:
         max_f_vis = _plot_V2_ifu(ax2, l_dic)
     else:
         max_f_vis = _plot_V2(ax2, l_dic, dic_color, diffWl=diffWl)
@@ -1330,7 +1330,7 @@ def show(
 
     cmin = -cmax
 
-    if ("IFS" in ins) & (len(l_dic) > 1):
+    if "IFS" in ins and len(l_dic) > 1:
         max_f_cp = _plot_CP_ifu(ax3, l_dic, conv_cp)
     else:
         max_f_cp = _plot_CP(ax3, l_dic, dic_color, conv_cp, diffWl=diffWl)

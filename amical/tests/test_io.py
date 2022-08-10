@@ -54,14 +54,13 @@ def ifs_clean_param():
 
 @pytest.fixture()
 def ifs_ami_param():
-    params_ami = {
+    return {
         "peakmethod": "fft",
         "bs_multi_tri": False,
         "maskname": "g7",
         "fw_splodge": 0.7,
         "filtname": "YJ",
     }
-    return params_ami
 
 
 peakmethods = ["fft", "gauss", "square"]
