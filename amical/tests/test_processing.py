@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+from astropy.io import fits
 from matplotlib import pyplot as plt
 
 import amical
@@ -222,6 +223,55 @@ def test_clean(global_datadir):
     assert type(cube_clean) == np.ndarray
     assert im1.shape == cube_clean.shape
     assert im2.shape == cube_clean.shape
+
+
+@pytest.mark.usefixtures("close_figures")
+def test_clean_sphere_ifs(global_datadir):
+    fits_file = global_datadir / "test_ifs.fits"
+
+    with fits.open(fits_file) as hdu:
+        cube = hdu[0].data
+    nwl = cube.shape[0]
+    nframe = cube.shape[1]
+    assert nwl == 39  # Human check
+    assert nframe == 3  # Human check
+    clean_param = {
+        "isz": 149,
+        "r1": 70,
+        "dr": 2,
+        "apod": True,
+        "window": 65,
+        "f_kernel": 3,
+    }
+    first_spectral_channel = 0
+    cube_clean = amical.select_clean_data(
+        fits_file, **clean_param, i_wl=first_spectral_channel
+    )
+    assert isinstance(cube_clean, np.ndarray)
+
+
+@pytest.mark.usefixtures("close_figures")
+def test_clean_sphere_ifs_notexist(global_datadir):
+    fits_file = global_datadir / "test_ifs.fits"
+
+    clean_param = {
+        "isz": 149,
+        "r1": 70,
+        "dr": 2,
+        "apod": True,
+        "window": 65,
+        "f_kernel": 3,
+    }
+
+    with fits.open(fits_file) as hdu:
+        cube = hdu[0].data
+    nwl = cube.shape[0]
+
+    tobig_spectral_channel = 40
+    msg_error = f"The choosen spectral channel {tobig_spectral_channel} do not exist (i_wl <= {nwl - 1})"
+    with pytest.raises(ValueError) as exc_info:
+        amical.select_clean_data(fits_file, **clean_param, i_wl=tobig_spectral_channel)
+    assert exc_info.value.args[0] == msg_error
 
 
 def test_fix_bad_pixel_no_bad():

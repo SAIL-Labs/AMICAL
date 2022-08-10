@@ -1,3 +1,5 @@
+import re
+
 import munch
 import numpy as np
 import pytest
@@ -35,6 +37,30 @@ def example_oifits(global_datadir):
 def test_load_file(example_oifits):
     s = load(example_oifits)
     assert isinstance(s, dict)
+
+
+@pytest.fixture()
+def ifs_clean_param():
+    clean_param = {
+        "isz": 149,
+        "r1": 70,
+        "dr": 2,
+        "apod": True,
+        "window": 65,
+        "f_kernel": 3,
+    }
+    return clean_param
+
+
+@pytest.fixture()
+def ifs_ami_param():
+    return {
+        "peakmethod": "fft",
+        "bs_multi_tri": False,
+        "maskname": "g7",
+        "fw_splodge": 0.7,
+        "filtname": "YJ",
+    }
 
 
 peakmethods = ["fft", "gauss", "square"]
@@ -314,3 +340,80 @@ def test_quiet_mode(global_datadir, capsys):
 #     assert n_bl_good == len(index_nobad[2])
 #     assert n_bl_onebad == len(index_onebad[2])
 #     assert n_bl_twobad == len(index_twobad[2])
+
+
+def test_extract_ifs(global_datadir, ifs_clean_param):
+    fits_file = global_datadir / "test_ifs.fits"
+
+    spectral_channel = 0
+    cube = amical.select_clean_data(fits_file, **ifs_clean_param, i_wl=spectral_channel)
+
+    bs = amical.extract_bs(
+        cube,
+        fits_file,
+        i_wl=0,
+        targetname="test",
+        bs_multi_tri=False,
+        maskname="g7",
+        filtname="YH",
+        fw_splodge=0.7,
+        display=False,
+    )
+    assert isinstance(bs, munch.Munch)
+    assert len(bs) == 13
+
+
+def test_extract_ifs_missing_iwl(global_datadir):
+    fits_file = global_datadir / "test_ifs.fits"
+
+    with fits.open(fits_file) as hdu:
+        cube_dirty = hdu[0].data
+
+    with pytest.raises(
+        ValueError,
+        match=re.escape(
+            "Your file seems to be obtained with an IFU instrument: spectral channel "
+            "index `i_wl` must be specified."
+        ),
+    ):
+        amical.extract_bs(
+            cube_dirty,
+            fits_file,
+            targetname="test",
+            bs_multi_tri=False,
+            maskname="g7",
+            filtname="YH",
+            fw_splodge=0.7,
+            display=False,
+        )
+
+
+@pytest.mark.usefixtures("close_figures")
+def test_full_process_ifs(tmpdir, global_datadir, ifs_clean_param, ifs_ami_param):
+    fits_file = global_datadir / "test_ifs.fits"
+    list_index_ifu = [0, 10, 20]
+    l_cal = []
+    for i_wl in list_index_ifu:
+        cube = amical.select_clean_data(fits_file, **ifs_clean_param, i_wl=i_wl)
+        bs = amical.extract_bs(
+            cube,
+            fits_file,
+            targetname="fake",
+            **ifs_ami_param,
+            display=False,
+            i_wl=i_wl,
+        )
+
+        cal = amical.oifits.wrap_raw(bs)
+        l_cal.append(cal)
+    assert len(l_cal) == len(list_index_ifu)
+    amical.show(l_cal)
+    assert plt.gcf().number == 1
+
+    amical.save(
+        l_cal,
+        oifits_file="fake_ifs.oifits",
+        datadir=tmpdir,
+        fake_obj=True,
+        pa=bs.infos.pa,
+    )

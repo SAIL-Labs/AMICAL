@@ -1194,6 +1194,13 @@ def extract_bs(
         hdr, targetname=targetname, filtname=filtname, instrum=instrum, verbose=False
     )
 
+    if infos.instrument == "SPHERE-IFS":
+        if i_wl is None:
+            raise ValueError(
+                "Your file seems to be obtained with an IFU instrument: spectral "
+                "channel index `i_wl` must be specified."
+            )
+
     if "INSTRUME" not in hdr.keys():
         hdr["INSTRUME"] = infos["instrument"]
     # 1. Open the data cube and perform a series of roll (both axis) to avoid

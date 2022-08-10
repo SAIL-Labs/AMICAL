@@ -1013,6 +1013,146 @@ def _plot_CP(ax3, l_dic, dic_color, conv_cp, diffWl=False):
     return max_f_cp
 
 
+def _plot_UV_ifu(ax1, fig, l_dic):
+    l_bmax = []
+    all_U, all_V, all_wl = [], [], []
+
+    for dic in l_dic:
+        tmp = _apply_flag(dic)
+        U = tmp.U
+        V = tmp.V
+        wl = tmp.wl
+        l_bmax.append(tmp.bmax)
+        all_U.append(U)
+        all_V.append(V)
+        all_wl.append([wl] * len(U))
+    all_U = np.array(all_U)
+    all_V = np.array(all_V)
+    all_wl = np.array(all_wl) * 1e6
+
+    ax1.scatter(
+        all_U,
+        all_V,
+        s=40,
+        c=all_wl,
+        marker="o",
+        edgecolors="#364f6b",
+        alpha=1,
+        linewidth=0.1,
+        cmap="turbo",
+    )
+    sc = ax1.scatter(
+        -all_U,
+        -all_V,
+        s=40,
+        c=all_wl,
+        marker="o",
+        edgecolors="#364f6b",
+        alpha=1,
+        linewidth=0.1,
+        cmap="turbo",
+    )
+
+    position = fig.add_axes([0.22, 0.95, 0.1, 0.015])
+    fig.colorbar(sc, cax=position, orientation="horizontal", drawedges=False)
+    ax1.text(
+        0.53, 0.98, r"$\lambda$ [µm]", ha="center", va="center", transform=ax1.transAxes
+    )
+    return l_bmax
+
+
+def _plot_V2_ifu(ax2, l_dic):
+    max_f_vis = []
+    all_V2, all_e_V2, all_freq, all_wl = [], [], [], []
+    for dic in l_dic:
+        tmp = _apply_flag(dic, unit="arcsec")
+        V2 = tmp.vis2
+        e_V2 = tmp.e_vis2
+        sp_freq_vis = tmp.sp_freq_vis
+        max_f_vis.append(np.max(sp_freq_vis))
+
+        all_V2.extend(V2)
+        all_e_V2.extend(e_V2)
+        all_freq.extend(sp_freq_vis)
+        all_wl.extend([tmp.wl] * len(V2))
+
+    all_V2 = np.array(all_V2)
+    all_e_V2 = np.array(all_e_V2)
+    all_freq = np.array(all_freq)
+    all_wl = np.array(all_wl)
+
+    ax2.errorbar(
+        all_freq,
+        all_V2,
+        yerr=all_e_V2,
+        linestyle=None,
+        capsize=1,
+        ecolor="#364f6b",
+        mec="#364f6b",
+        marker="None",
+        elinewidth=0.5,
+        alpha=1,
+        ms=9,
+    )
+    ax2.scatter(
+        all_freq,
+        all_V2,
+        s=20,
+        c=all_wl,
+        zorder=20,
+        linewidth=0.5,
+        marker="o",
+        edgecolors="#364f6b",
+        alpha=1,
+        cmap="turbo",
+    )
+
+    return max_f_vis
+
+
+def _plot_CP_ifu(ax3, l_dic, conv_cp):
+    max_f_cp = []
+    all_CP, all_e_cp, all_freq, all_wl = [], [], [], []
+    for dic in l_dic:
+        tmp = _apply_flag(dic, unit="arcsec")
+        cp = tmp.cp * conv_cp
+        e_cp = tmp.e_cp * conv_cp
+        sp_freq_cp = tmp.sp_freq_cp
+        max_f_cp.append(np.max(sp_freq_cp))
+
+        all_CP.extend(cp)
+        all_e_cp.extend(e_cp)
+        all_freq.extend(sp_freq_cp)
+        all_wl.extend([tmp.wl] * len(cp))
+
+    ax3.errorbar(
+        all_freq,
+        all_CP,
+        yerr=all_e_cp,
+        linestyle="None",
+        capsize=1,
+        ecolor="#364f6b",
+        mec="#364f6b",
+        marker="None",
+        elinewidth=0.5,
+        alpha=1,
+        ms=9,
+    )
+    ax3.scatter(
+        all_freq,
+        all_CP,
+        s=20,
+        c=all_wl,
+        zorder=20,
+        linewidth=0.5,
+        marker="o",
+        edgecolors="#364f6b",
+        alpha=1,
+        cmap="turbo",
+    )
+    return max_f_cp
+
+
 def show(
     inputList,
     diffWl=False,
@@ -1112,14 +1252,11 @@ def show(
 
     # Plot plan UV
     # -------
-    # Work in progress
-    # ins = l_dic[0]["info"]["INSTRUME"]
-    # if ("IFS" in ins) & (len(l_dic) > 1):
-    #     l_bmax = _plot_UV_ifu(ax1, fig, l_dic)
-    # else:
-    # Work in progress
-
-    l_bmax = _plot_UV(ax1, l_dic, dic_color, diffWl=False)
+    ins = l_dic[0]["info"]["INSTRUME"]
+    if "IFS" in ins and len(l_dic) > 1:
+        l_bmax = _plot_UV_ifu(ax1, fig, l_dic)
+    else:
+        l_bmax = _plot_UV(ax1, l_dic, dic_color, diffWl=False)
 
     Bmax = np.max(l_bmax)
     ax1.axis([Bmax, -Bmax, -Bmax, Bmax])
@@ -1159,14 +1296,10 @@ def show(
 
     # Plot V2
     # -------
-
-    # Work in progress
-    # if ("IFS" in ins) & (len(l_dic) > 1):
-    #     max_f_vis = _plot_V2_ifu(ax2, l_dic)
-    # else:
-    # Work in progress
-
-    max_f_vis = _plot_V2(ax2, l_dic, dic_color, diffWl=diffWl)
+    if "IFS" in ins and len(l_dic) > 1:
+        max_f_vis = _plot_V2_ifu(ax2, l_dic)
+    else:
+        max_f_vis = _plot_V2(ax2, l_dic, dic_color, diffWl=diffWl)
 
     ax2.hlines(1, 0, 1.2 * np.max(max_f_vis), lw=1, color="k", alpha=0.2, ls="--")
 
@@ -1197,13 +1330,10 @@ def show(
 
     cmin = -cmax
 
-    # Work in progress
-    # if ("IFS" in ins) & (len(l_dic) > 1):
-    #     max_f_cp = _plot_CP_ifu(ax3, l_dic, conv_cp)
-    # else:
-    # Work in progress
-
-    max_f_cp = _plot_CP(ax3, l_dic, dic_color, conv_cp, diffWl=diffWl)
+    if "IFS" in ins and len(l_dic) > 1:
+        max_f_cp = _plot_CP_ifu(ax3, l_dic, conv_cp)
+    else:
+        max_f_cp = _plot_CP(ax3, l_dic, dic_color, conv_cp, diffWl=diffWl)
 
     ax3.hlines(h1, 0, 1.2 * np.max(max_f_cp), lw=1, color="k", alpha=0.2, ls="--")
     ax3.hlines(-h1, 0, 1.2 * np.max(max_f_cp), lw=1, color="k", alpha=0.2, ls="--")
