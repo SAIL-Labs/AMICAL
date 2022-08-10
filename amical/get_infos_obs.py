@@ -240,8 +240,6 @@ def get_ifu_table(
     `i_wl` can be an integer, a list of 2 integers (to get a range between those
     two) or a list of integers (>= 3) used to display the
     requested spectral channels."""
-    from matplotlib import pyplot as plt
-
     wl = get_wavelength(instrument, filtname) * 1e6
 
     if np.isnan(wl.any()):
@@ -270,6 +268,8 @@ def get_ifu_table(
         wl_range = wl
 
     if display:
+        from matplotlib import pyplot as plt
+
         plt.figure(figsize=(4, 3))
         plt.title("--- SPECTRAL INFORMATION (IFU)---")
         plt.plot(wl, label="All spectral channels")
