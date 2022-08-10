@@ -371,11 +371,11 @@ def test_extract_ifs_missing_iwl(global_datadir):
 
     with pytest.raises(
         ValueError,
-        match= (
+        match=(
             "Your file seems to be obtained with IFU instrument: spectral channel "
             f"index `i_wl` must be specified (nlambda = {nlambda}) and should be strictly"
             " identical to the one used for the cleaning step."
-        )
+        ),
     ):
         amical.extract_bs(
             cube_dirty,
