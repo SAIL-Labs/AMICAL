@@ -203,9 +203,10 @@ def get_wavelength(ins, filtname):
     }
 
     if ins not in dic_filt.keys():
-        cprint("--- Error: instrument <%s> not found ---" % ins, "red")
-        cprint("Available: %s" % list(dic_filt.keys()), "red")
-        wl = np.NaN
+        raise KeyError(
+            f"--- Error: instrument <{ins}> not found ---\n"
+            "Available: %s" % list(dic_filt.keys())
+        )
 
     try:
         wl = np.array(dic_filt[ins][filtname]) * 1e-6
@@ -241,9 +242,6 @@ def get_ifu_table(
     two) or a list of integers (>= 3) used to display the
     requested spectral channels."""
     wl = get_wavelength(instrument, filtname) * 1e6
-
-    if np.any(np.isnan(a))
-        return None
 
     if verbose:
         print(f"\nInstrument: {instrument}, spectral range: {filtname}")
