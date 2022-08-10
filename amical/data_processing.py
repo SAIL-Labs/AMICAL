@@ -737,8 +737,7 @@ def select_clean_data(
             if i_wl is None:
                 raise ValueError(
                     "Your file seems to be obtained with IFU data: spectral "
-                    + f"channel index `i_wl` must be specified (nlambda = {naxis4})."
-                    + ""
+                    f"channel index `i_wl` must be specified (nlambda = {naxis4})."
                 )
             if i_wl > naxis4:
                 iwl_msg = f"The choosen spectral channel {i_wl} do not exist (i_wl <= {naxis4 - 1})"
