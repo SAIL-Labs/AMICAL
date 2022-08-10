@@ -61,7 +61,7 @@ and
 or get details about the CANDID/Pymask uses with
 [example_analysis.py](https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL/blob/master/doc/example_analysis.py).
 
-⚡ Last updates : New example script for IFS-SPHERE data is now available [here](https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL/blob/master/doc/example_IFS.py).
+⚡ Last updates (08/2022) : New example script for IFS-SPHERE data is now available [here](https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL/blob/master/doc/example_IFS.py).
 
 ## Use policy and reference publication
 
