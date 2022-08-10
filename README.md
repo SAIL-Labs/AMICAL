@@ -54,7 +54,14 @@ Looking for a quickstart into AMICAL? You can go through our **[tutorial](https:
 how to use its different features.
 
 You can also have a look to the example scripts
-made for [NIRISS](https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL/blob/master/doc/example_NIRISS.py) and [SPHERE](https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL/blob/master/doc/example_NIRISS.py) or get details about the CANDID/Pymask uses with [example_analysis.py](https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL/blob/master/doc/example_analysis.py).
+made for
+[NIRISS](https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL/blob/master/doc/example_NIRISS.py)
+and
+[SPHERE](https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL/blob/master/doc/example_NIRISS.py)
+or get details about the CANDID/Pymask uses with
+[example_analysis.py](https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL/blob/master/doc/example_analysis.py).
+
+⚡ Last updates : New example script for IFS-SPHERE data is now available [here](https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL/blob/master/doc/example_IFS.py).
 
 ## Use policy and reference publication
 
