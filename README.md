@@ -4,8 +4,8 @@
 (**A**perture **M**asking **I**nterferometry **C**alibration and **A**nalysis
 **L**ibrary)
 
-[![PyPI](https://img.shields.io/pypi/v/amical)](https://pypi.org/project/amical/)
-[![Supported Python Versions](https://img.shields.io/pypi/pyversions/amical)](https://pypi.org/project/amical/)
+[![PyPI](https://img.shields.io/pypi/v/amical.svg?logo=pypi&logoColor=white&label=PyPI)](https://pypi.org/project/amical/)
+[![PyPI](https://img.shields.io/badge/requires-Python%20≥%203.8-blue?logo=python&logoColor=white)](https://pypi.org/project/amical/)
 ![Licence](https://img.shields.io/github/license/SydneyAstrophotonicInstrumentationLab/AMICAL)
 
 ![CI](https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL/actions/workflows/ci.yml/badge.svg)
