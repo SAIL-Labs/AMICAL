@@ -36,13 +36,6 @@ from amical.tools import compute_pa
 from amical.tools import cov2cor
 
 
-def _PYPDF2_VERSION():
-    from importlib.metadata import version
-    from packaging.version import Version
-
-    return Version(version("PyPDF2"))
-
-
 def _ASTROPY_VERSION():
     from importlib.metadata import version
     from packaging.version import Version
@@ -1063,14 +1056,8 @@ def _add_infos_header(infos, hdr, mf, pa, filename, maskname, npix):
 
 
 def produce_result_pdf(figdir, filename):
-    from packaging.version import Version
+    from pypdf import PdfMerger, PdfReader
 
-    if _PYPDF2_VERSION() >= Version("1.28"):
-        from PyPDF2 import PdfMerger
-        from PyPDF2 import PdfReader
-    else:
-        from PyPDF2 import PdfFileMerger as PdfMerger
-        from PyPDF2 import PdfFileReader as PdfReader
     # Call the PdfMerger
     mergedObject = PdfMerger()
 
