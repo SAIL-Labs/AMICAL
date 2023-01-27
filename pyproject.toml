@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "amical"
 version = "1.5.0"
 authors = [
-    { name = "Anthony Soulain", email = "anthony.soulain@sydney.edu.au.com" },
+    { name = "Anthony Soulain", email = "anthony.soulain@univ-grenoble-alpes.fr" },
 ]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
