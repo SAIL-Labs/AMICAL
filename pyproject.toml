@@ -93,15 +93,8 @@ markers = [
 ]
 filterwarnings = [
     "error",
-    # imp is indirectly used by uncertainties,
-    # see https://github.com/lebigot/uncertainties/issues/145
-    # the deprecation warning message for imp changed in Python 3.10
-    # we ignore both using a wild card
-    "ignore:the imp module is deprecated in favour of importlib.*:DeprecationWarning",
     # we run tests against a non-GUI backend on purpose
     "ignore:Matplotlib is currently using agg, which is a non-GUI backend, so cannot show the figure.:UserWarning",
-    # astropy regularly ships wheels that violate numpy ABI compatibility, this is out of our control
-    "ignore:numpy.ndarray size changed, may indicate binary incompatibility. Expected \\d\\d from C header, got \\d\\d from PyObject:RuntimeWarning",
 ]
 
 [tool.coverage.run]
