@@ -49,18 +49,6 @@ text = "MIT"
 [project.urls]
 Homepage = "https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL"
 
-[project.optional-dependencies]
-dev = [
-    "pytest",
-    "pytest-cov",
-]
-typecheck = [
-    "mypy==0.931",
-    "types-setuptools~=57.4",
-    "types-tabulate==0.8.5",
-    "types-termcolor~=1.1",
-]
-
 [project.scripts]
 amical = "amical._cli.main:main"
 
