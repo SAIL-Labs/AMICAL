@@ -771,7 +771,7 @@ def give_peak_info2d(mf, n_baselines, dim1, dim2):
 
 def clos_unique(closing_tri_pix):
     """Compute the list of unique triplets in multiple triangle list"""
-    l, l_i = [], []
+    L, L_i = [], []
     for i in range(closing_tri_pix.shape[1]):
         p1 = str(closing_tri_pix[0, i])
         p2 = str(closing_tri_pix[1, i])
@@ -785,13 +785,13 @@ def clos_unique(closing_tri_pix):
 
         val = p1 + p2 + p3
 
-        if val not in l:
-            l.append(val)
-            l_i.append(i)
+        if val not in L:
+            L.append(val)
+            L_i.append(i)
         else:
             pass
 
-    return closing_tri_pix[:, l_i]
+    return closing_tri_pix[:, L_i]
 
 
 def tri_pix(array_size, sampledisk_r, verbose=True, display=True):
