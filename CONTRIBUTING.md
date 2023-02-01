@@ -4,11 +4,12 @@ Bug reports and contributions are always welcome ! If you wish to contribute a
 patch, please fork the project repo, create a branch on your copy, and open a
 pull request (PR) here when you're done.
 
-A simple way to install all the necessary tooling for testing and validating
-your code locally is to run
+To install all the necessary tooling for testing and validating
+your code locally, run
 
 ```shell
-$ python -m pip install -e .[dev]
+$ python -m pip install -r test_requirements.txt
+$ python -m pip install -r typecheck_requirements.txt
 ```
 ### Fixing or adding code
 
