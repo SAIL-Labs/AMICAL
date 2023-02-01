@@ -191,8 +191,8 @@ def average_calib_files(list_nrm, sig_thres=2, display=False):
     `sig_thres` : {float}
         Threshold of the sigma clipping (default: 2-sigma around the median is used),\n
     """
-    from munch import munchify as dict2class
     from astropy.io import fits
+    from munch import munchify as dict2class
 
     nfiles = len(list_nrm)
     l_pa = np.zeros(nfiles)

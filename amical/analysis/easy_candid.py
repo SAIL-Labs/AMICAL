@@ -1,7 +1,5 @@
 import os
-from typing import List
-from typing import Optional
-from typing import Union
+from typing import List, Optional, Union
 
 import numpy as np
 from termcolor import cprint
@@ -52,8 +50,7 @@ def candid_grid(
         Dictionnary of the results ('best'), uncertainties ('uncer'),
         reduced chi2 ('chi2') and sigma detection ('nsigma').
     """
-    from uncertainties import ufloat
-    from uncertainties import umath
+    from uncertainties import ufloat, umath
 
     if obs is None:
         obs = ["cp", "v2"]

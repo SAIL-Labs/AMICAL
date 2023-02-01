@@ -19,7 +19,6 @@ def test_find_max():
 
 
 def test_crop_max():
-
     img_size = 80  # Same size as NIRISS images
     img = np.random.random((img_size, img_size))
     xmax, ymax = np.random.randint(0, high=img_size, size=2)

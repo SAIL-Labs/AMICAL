@@ -20,15 +20,9 @@ import numpy as np
 from termcolor import cprint
 
 from amical.dpfit import leastsqFit
-from amical.get_infos_obs import get_mask
-from amical.get_infos_obs import get_pixel_size
-from amical.get_infos_obs import get_wavelength
-from amical.mf_pipeline.idl_function import array_coords
-from amical.mf_pipeline.idl_function import dist
-from amical.tools import gauss_2d_asym
-from amical.tools import linear
-from amical.tools import norm_max
-from amical.tools import plot_circle
+from amical.get_infos_obs import get_mask, get_pixel_size, get_wavelength
+from amical.mf_pipeline.idl_function import array_coords, dist
+from amical.tools import gauss_2d_asym, linear, norm_max, plot_circle
 
 
 def _plot_mask_coord(xy_coords, maskname, instrument):
@@ -93,7 +87,6 @@ def _compute_uv_coord(
 def _peak_fft_method(
     i, npix, xy_coords, wl, index_mask, pixelsize, innerpix, innerpix_center
 ):
-
     mf = np.zeros([npix, npix])
     n_holes = index_mask.n_holes
     bl2h_ix = index_mask.bl2h_ix
@@ -244,7 +237,6 @@ def _peak_gauss_method(
 def _normalize_gain(
     mf_flat, mf_centered, pixelvector, pixelvector_c, normalize_pixelgain=True
 ):
-
     if normalize_pixelgain:
         pixelgain = mf_flat[pixelvector] / np.sum(mf_flat[pixelvector])
         pixelgain_c = mf_centered[pixelvector_c] / np.sum(mf_centered[pixelvector_c])
@@ -781,7 +773,6 @@ def clos_unique(closing_tri_pix):
     """Compute the list of unique triplets in multiple triangle list"""
     l, l_i = [], []
     for i in range(closing_tri_pix.shape[1]):
-
         p1 = str(closing_tri_pix[0, i])
         p2 = str(closing_tri_pix[1, i])
         p3 = str(closing_tri_pix[2, i])
@@ -866,7 +857,6 @@ def tri_pix(array_size, sampledisk_r, verbose=True, display=True):
         )
         plt.imshow(d)
         for i in range(cl_unique.shape[1]):
-
             trip1 = cl_unique[:, i]
             X, Y = array_coords(trip1, array_size)
             X = list(X)

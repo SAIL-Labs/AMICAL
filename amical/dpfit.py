@@ -13,7 +13,6 @@ import time
 
 import numpy as np
 
-
 """
 IDEA: fit Y = F(X,A) where A is a dictionnary describing the
 parameters of the function.

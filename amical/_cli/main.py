@@ -1,6 +1,5 @@
 from argparse import ArgumentParser
-from typing import List
-from typing import Optional
+from typing import List, Optional
 
 from amical._cli.commands.calibrate import perform_calibrate
 from amical._cli.commands.clean import perform_clean

@@ -7,8 +7,7 @@ from astropy.io import fits
 from matplotlib import pyplot as plt
 
 import amical
-from amical import load
-from amical import loadc
+from amical import load, loadc
 from amical.get_infos_obs import get_pixel_size
 
 # import numpy as np

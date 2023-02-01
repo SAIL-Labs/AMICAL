@@ -261,7 +261,6 @@ class icpo:
 
         # Loop through and load them
         for ix, f in enumerate(bs_files):
-
             data = readsav(f)
             cps = np.angle(data["bs_all"], deg=True)
             mean_cp = data["cp"]
@@ -287,7 +286,6 @@ class icpo:
                         std_cal_cps, err_cp[:, :, np.newaxis], axis=2
                     )
             elif targ_ix[ix]:
-
                 if len(targ_cps) == 0:
                     # We have lots of setup to do for the first file, and then we'll reuse it for the rest
                     # Load the matched filter file since it contains some useful info
@@ -492,7 +490,6 @@ class icpo:
         proj_t3err = np.zeros((self.n_good, self.nobs, self.nwavs))
         all_proj_cps = []
         for obs_ix in range(self.nobs):
-
             obs_cps = self.targ_cps[obs_ix]
 
             if calibrate:

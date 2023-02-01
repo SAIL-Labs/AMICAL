@@ -17,9 +17,7 @@ import numpy as np
 from termcolor import cprint
 from tqdm import tqdm
 
-from amical.tools import apply_windowing
-from amical.tools import crop_max
-from amical.tools import find_max
+from amical.tools import apply_windowing, crop_max, find_max
 
 
 def _apply_patch_ghost(cube, xc, yc, radius=20, dx=0, dy=-200, method="bg"):
@@ -390,8 +388,8 @@ def show_clean_params(
     `ihdu` {int}: Hdu number of the fits file. Normally 1 for NIRISS and 0 for SPHERE (default: 0).
     """
     import matplotlib.pyplot as plt
-    from matplotlib.colors import PowerNorm
     from astropy.io import fits
+    from matplotlib.colors import PowerNorm
 
     with fits.open(filename) as fd:
         data = fd[ihdu].data

@@ -4,11 +4,13 @@ from astropy.io import fits
 from matplotlib import pyplot as plt
 
 import amical
-from amical.data_processing import _get_3d_bad_pixels
-from amical.data_processing import _get_ring_mask
-from amical.data_processing import clean_data
-from amical.data_processing import fix_bad_pixels
-from amical.data_processing import sky_correction
+from amical.data_processing import (
+    _get_3d_bad_pixels,
+    _get_ring_mask,
+    clean_data,
+    fix_bad_pixels,
+    sky_correction,
+)
 from amical.tools import crop_max
 
 
@@ -54,7 +56,6 @@ def test_sky_inner_only():
 
 @pytest.mark.usefixtures("close_figures")
 def test_clean_sky_out_crop():
-
     n_im = 5
     img_dim = 80
     data = np.ones((n_im, img_dim, img_dim))
@@ -150,7 +151,6 @@ def test_sky_correction_deprecation():
 
 
 def test_sky_correction_errors():
-
     img_dim = 80
     img = np.random.random((img_dim, img_dim))
 
@@ -295,7 +295,6 @@ def test_clean_data_dr_none():
 
 
 def test_fix_one_bad_pixel():
-
     img_dim = 80
     data = np.random.random((img_dim, img_dim))
 

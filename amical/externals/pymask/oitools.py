@@ -15,7 +15,6 @@ from numpy import sqrt
 
 
 def match_wavelength(template, oifitsobj):
-
     oifitsobj = copy.deepcopy(oifitsobj)
     oifitsobj.wavelength = template.wavelength
 
@@ -50,7 +49,6 @@ def match_wavelength(template, oifitsobj):
 
 
 def average_vector(vector, npix):
-
     newvect = np.zeros(vector.size / npix, dtype=vector.dtype)
     endpoint = vector.size - vector.size % npix
     for i in range(npix):
@@ -60,7 +58,6 @@ def average_vector(vector, npix):
 
 
 def average_wavelength(oifitsobj, npix):
-
     source = copy.deepcopy(oifitsobj)
 
     for wavelength in source.wavelength.values():
@@ -94,7 +91,6 @@ def average_wavelength(oifitsobj, npix):
 
 
 def plot_fullvis(oifitsobj):
-
     baseline = np.empty(0)
     visamp = np.empty(0)
     visamperr = np.empty(0)
@@ -113,7 +109,6 @@ def plot_fullvis(oifitsobj):
 
 
 def plot_full_visamp_vs_spatfreq(source, pmin=None, pmax=None, showerror=False):
-
     cmap = matplotlib.cm.rainbow
 
     fig = plt.figure()
@@ -175,7 +170,6 @@ def plot_full_visamp_vs_spatfreq(source, pmin=None, pmax=None, showerror=False):
 
 
 def get_gaussian_width_from_visibility(baselines, visibilities):
-
     sigma = np.sqrt(-np.log(visibilities) / 2.0) / np.pi / baselines
     fwhm = np.sqrt(8.0 * np.log(2.0)) * sigma
     fwhm *= 180.0 / np.pi * 3600.0
@@ -186,7 +180,6 @@ def get_gaussian_width_from_visibility(baselines, visibilities):
 def plot_visamp_vs_spatfreq(
     source, waveidx=None, pmin=None, pmax=None, fig=None, marker="o"
 ):
-
     cmap = matplotlib.cm.rainbow
 
     if waveidx == None:
@@ -274,7 +267,6 @@ def plot_visamp_vs_spatfreq(
 
 
 def plot_gaussian_widths(source, waveidx=100, legend=False):
-
     fig = plt.figure()
     ax = fig.add_subplot(1, 1, 1)
 
@@ -304,7 +296,6 @@ def plot_gaussian_widths(source, waveidx=100, legend=False):
 
 
 def get_ranges(data, value):
-
     ranges = []
     inrange = False
     i = 0
@@ -324,7 +315,6 @@ def get_ranges(data, value):
 
 
 def plot_visamp_map(oifitsobj, width=0.1, height=0.1, colorcoding=None):
-
     fig = plt.figure(figsize=(10, 8), facecolor="white")
 
     for vis in oifitsobj.vis:
@@ -365,7 +355,6 @@ def plot_visamp_map(oifitsobj, width=0.1, height=0.1, colorcoding=None):
 
 
 def plot_phases(oidata, uvplot=False, legend=False):
-
     xmin = None
     xmax = None
     ymin = 0.0
@@ -466,7 +455,6 @@ def plot_phases(oidata, uvplot=False, legend=False):
 
 
 def plot_visibilities(oidata, uvplot=False, legend=False, ploterror=False):
-
     xmin = None
     xmax = None
     ymax = None
@@ -593,7 +581,6 @@ def plot_visibilities(oidata, uvplot=False, legend=False, ploterror=False):
 def plot_gaussian_widths_vs_wavelength(
     oidata, uvplot=False, legend=False, ploterror=False
 ):
-
     xmin = None
     xmax = None
     ymax = None
@@ -694,7 +681,6 @@ def plot_gaussian_widths_vs_wavelength(
 
 
 def plot_cflux(oidata, uvplot=False, legend=False, ploterror=False):
-
     xmin = None
     xmax = None
     ymax = None
@@ -802,7 +788,6 @@ def plot_cflux(oidata, uvplot=False, legend=False, ploterror=False):
 
 
 def plot_vis2(oidata, uvplot=False, legend=False, ploterror=False):
-
     xmin = None
     xmax = None
     ymax = None
@@ -907,7 +892,6 @@ def plot_vis2(oidata, uvplot=False, legend=False, ploterror=False):
 
 
 def print_vis(vis):
-
     print(
         "# %s %s %s"
         % (
@@ -932,7 +916,6 @@ def print_vis(vis):
 
 
 def plot_array(array, visibilities=None):
-
     fig = plt.figure(figsize=(8, 8))
     ax = fig.add_subplot(111)
 
@@ -1039,7 +1022,6 @@ def plot_array(array, visibilities=None):
 
 
 def plot_uv_size(oidata, maxvis=0.3, waveidx=80):
-
     fig = plt.figure(figsize=(8, 8))
     ax = fig.add_subplot(111)
 
@@ -1070,7 +1052,6 @@ def plot_uv_size(oidata, maxvis=0.3, waveidx=80):
 
 
 def station_distance(array, sta1name, sta2name):
-
     sta1 = array.get_station_by_name(sta1name)
     sta2 = array.get_station_by_name(sta2name)
 
