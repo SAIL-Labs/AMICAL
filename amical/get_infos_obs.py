@@ -225,15 +225,7 @@ def get_wavelength(ins, filtname):
             "Available: %s" % list(dic_filt.keys())
         )
 
-    try:
-        wl = np.array(dic_filt[ins][filtname]) * 1e-6
-    except KeyError:
-        wl = np.NaN
-        raise KeyError(
-            f"Missing input: filtname <{filtname}> not found for {ins} (Available: %s)"
-            % list(dic_filt[ins].keys())
-        )
-    return wl
+    return np.array(dic_filt[ins][filtname]) * 1e-6
 
 
 def get_pixel_size(ins):

@@ -78,7 +78,7 @@ def _select_association_file(args):
             "Selected index (sci=%i/cal=%i) not valid (only %i files found)."
             % (sci_index, cal_index, len(l_file))
         )
-        raise SystemExit
+        raise SystemExit  # noqa: B904
     return sci_name, cal_name
 
 
