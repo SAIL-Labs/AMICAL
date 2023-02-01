@@ -71,9 +71,21 @@ amical = [
     "py.typed",
 ]
 
+[tool.ruff]
+target-version = "py38" # https://github.com/charliermarsh/ruff/issues/2039
+exclude = ["*__init__.py", "amical/externals/*"]
+ignore = ["E501"]
+select = [
+    "E",
+    "F",
+    "W",
+    "B",
+    "I",
+    "UP",
+]
 
-[tool.black]
-line-length = 88
+[tool.ruff.isort]
+combine-as-imports = true
 
 [tool.pytest.ini_options]
 markers = [
