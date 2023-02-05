@@ -8,8 +8,8 @@ To install all the necessary tooling for testing and validating
 your code locally, run
 
 ```shell
-$ python -m pip install -r test_requirements.txt
-$ python -m pip install -r typecheck_requirements.txt
+$ python -m pip install --requirement requirements/tests.txt
+$ python -m pip install --requirement requirements/typecheck.txt
 ```
 ### Fixing or adding code
 
