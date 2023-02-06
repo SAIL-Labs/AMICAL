@@ -8,13 +8,18 @@ AMICAL: Aperture Masking Interferometry Calibration and Analysis Library
 Instruments and mask informations.
 --------------------------------------------------------------------
 """
-import importlib.resources
 import sys
 
 import numpy as np
 from termcolor import cprint
 
 from amical.tools import mas2rad
+
+
+if sys.version_info >= (3, 9):
+    import importlib.resources as importlib_resources
+else:
+    import importlib_resources
 
 
 def get_mask(ins, mask, first=0):
@@ -174,22 +179,9 @@ def get_wavelength(ins, filtname):
     """Return dictionnary containning saved informations about filters."""
     from astropy.io import fits
 
-    if sys.version_info >= (3, 9):
-        YJfile = importlib.resources.files("amical").joinpath(
-            "internal_data", "ifs_wave_YJ.fits"
-        )
-        YJHfile = importlib.resources.files("amical").joinpath(
-            "internal_data", "ifs_wave_YJH.fits"
-        )
-    else:
-        import pkg_resources
-
-        YJfile = pkg_resources.resource_stream(
-            "amical", "internal_data/ifs_wave_YJ.fits"
-        )
-        YJHfile = pkg_resources.resource_stream(
-            "amical", "internal_data/ifs_wave_YJH.fits"
-        )
+    datadir = importlib_resources.files("amical") / "internal_data"
+    YJfile = datadir / "ifs_wave_YJ.fits"
+    YJHfile = datadir / "ifs_wave_YJH.fits"
 
     with fits.open(YJfile) as fd:
         wave_YJ = fd[0].data
