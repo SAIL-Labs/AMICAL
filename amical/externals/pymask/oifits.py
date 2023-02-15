@@ -204,7 +204,6 @@ class OI_TARGET:
         self.spectyp = spectyp
 
     def __eq__(self, other):
-
         if type(self) != type(other):
             return False
 
@@ -250,7 +249,6 @@ class OI_WAVELENGTH:
         self.eff_band = np.array(eff_band, dtype=double).reshape(-1)
 
     def __eq__(self, other):
-
         if type(self) != type(other):
             return False
 
@@ -325,7 +323,6 @@ class OI_VIS:
         self.station = station
 
     def __eq__(self, other):
-
         if type(self) != type(other):
             return False
 
@@ -436,7 +433,6 @@ class OI_VIS2:
         self.station = station
 
     def __eq__(self, other):
-
         if type(self) != type(other):
             return False
 
@@ -541,7 +537,6 @@ class OI_T3:
         self.station = station
 
     def __eq__(self, other):
-
         if type(self) != type(other):
             return False
 
@@ -620,7 +615,6 @@ class OI_STATION:
         self.staxyz = staxyz
 
     def __eq__(self, other):
-
         if type(self) != type(other):
             return False
 
@@ -665,7 +659,6 @@ class OI_ARRAY:
             )
 
     def __eq__(self, other):
-
         if type(self) != type(other):
             return False
 
@@ -733,7 +726,6 @@ class OI_ARRAY:
                 print("   %s" % str(station))
 
     def get_station_by_name(self, name):
-
         for station in self.station:
             if station.sta_name == name:
                 return station
@@ -743,7 +735,6 @@ class OI_ARRAY:
 
 class oifits:
     def __init__(self):
-
         self.header = None
         self.wavelength = {}
         self.target = np.empty(0)
@@ -903,7 +894,6 @@ class oifits:
         return new
 
     def __eq__(self, other):
-
         if type(self) != type(other):
             return False
 

@@ -368,7 +368,6 @@ def jd2lst(lng, jd):
 
 
 def compute_pa(hdr, n_ps, verbose=False, display=False, *, sci_hdr=None):
-
     list_fct_pa = {
         "SPHERE": (sphere_parang, {"hdr": hdr, "n_dit_ifs": n_ps}),
         "NIRISS": (niriss_parang, {"hdr": sci_hdr}),
@@ -521,9 +520,7 @@ def sphere_parang(hdr, n_dit_ifs=None):
     time_to_lst = (24.0 * 3600.0) / (86164.1)
 
     if "ESO INS4 COMB ROT" in hdr.keys() and hdr["ESO INS4 COMB ROT"] == "PUPIL":
-
         for i in range(n_frames):
-
             ha_deg = (
                 (lst_start + i * delta_dit * time_to_lst + time_to_lst * dit / 2.0)
                 * 15.0
@@ -735,8 +732,8 @@ def load_bs_hdf5(filename):
     """Load hdf5 file and format as class like object (same
     format as `amical.extract_bs()`
     """
-    from munch import munchify as dict2class
     import h5py
+    from munch import munchify as dict2class
 
     dict_bs = {"matrix": {}, "infos": {"hdr": {}}, "mask": {}}
     with h5py.File(filename, "r") as hf2:

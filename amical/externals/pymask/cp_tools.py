@@ -509,7 +509,6 @@ def detec_sim_loopfit(everything):
 
     for j, th in enumerate(everything["ths"]):
         for k, con in enumerate(everything["cons"]):
-
             bin_cp = cp_model(
                 [everything["sep"], th, con],
                 everything["u"],
@@ -587,7 +586,6 @@ def detec_sim_loopfit_proj(everything):
 
     for j, th in enumerate(everything["ths"]):
         for k, con in enumerate(everything["cons"]):
-
             bin_cp = cp_model(
                 [everything["sep"], th, con],
                 everything["u"],
@@ -661,7 +659,8 @@ def detec_limits(
 
     Note also that the calculation of the model closure phases could be done outside
     the big loop, which would be efficient on CPU but not RAM. However, ACC
-    tried adding this and ran out of RAM (8GB) on GPI data (8880 clps), so removed it."""
+    tried adding this and ran out of RAM (8GB) on GPI data (8880 clps), so removed it.
+    """
 
     # Note that the accuracy of these sims are limited by the number of fake clps sets you take.
     # e.g. if you only have 10 sims you can't get accuracy better than 10%
@@ -1440,7 +1439,8 @@ def hammer_spectrum(
     Prior ranges introduce a flat (tophat) prior between the two values specified.
 
     Ndim is the number of d.o.f in the spectral channels you want to fit to.
-    It only works if ndim=nwav at the moment. Whoops. Otherwise need a polynomial model for cp_model"""
+    It only works if ndim=nwav at the moment. Whoops. Otherwise need a polynomial model for cp_model
+    """
 
     import emcee
 
@@ -1574,7 +1574,6 @@ def find_extra_error(
     extra_errors = np.logspace(-2, 2, num=n)
 
     for ix, err in enumerate(extra_errors):
-
         # Calculate the closure phase uncertainties for this amount of extra_error
         t3err = np.sqrt(cp_err**2 + err**2)
         t3err *= err_scale

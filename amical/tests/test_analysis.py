@@ -4,9 +4,7 @@ from matplotlib import pyplot as plt
 
 import amical
 from amical import candid_cr_limit
-from amical.analysis.fitting import compute_chi2_curve
-from amical.analysis.fitting import fits2obs
-from amical.analysis.fitting import smartfit
+from amical.analysis.fitting import compute_chi2_curve, fits2obs, smartfit
 from amical.externals import pymask
 
 

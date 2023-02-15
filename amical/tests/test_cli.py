@@ -6,8 +6,7 @@ import pytest
 from astropy.io import fits
 from matplotlib import pyplot as plt
 
-from amical import load_bs_hdf5
-from amical import loadc
+from amical import load_bs_hdf5, loadc
 from amical._cli.main import main
 
 valid_commands = ["clean", "extract", "calibrate"]

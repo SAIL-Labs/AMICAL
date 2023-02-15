@@ -6,14 +6,12 @@ from packaging.version import Version
 
 from amical.mf_pipeline.bispect import _add_infos_header
 
-
 # Astropy versions for
 ASTROPY_VERSION = Version(astropy.__version__)
 
 
 @pytest.fixture()
 def commentary_infos():
-
     # Add hdr to infos placeholders for everything but hdr
     mf = munch.Munch(pixelSize=1.0)
 
@@ -72,7 +70,6 @@ def test_commentary_infos_keep(commentary_infos):
     reason="Astropy < 5.0 raised a warning for commentary cards",
 )
 def test_no_commentary_warning_astropy_version():
-
     # Add hdr to infos placeholders for everything but hdr
     mf = munch.Munch(pixelSize=1.0)
 

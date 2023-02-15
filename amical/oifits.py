@@ -521,8 +521,8 @@ def save(
         Name of the saved oifits file.
 
     """
-    from astroquery.simbad import Simbad
     from astropy.io import fits
+    from astroquery.simbad import Simbad
 
     if observables is None:
         cprint("\nError save : Wrong data format!", on_color="on_red")

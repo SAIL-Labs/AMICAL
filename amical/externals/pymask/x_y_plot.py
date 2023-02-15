@@ -196,7 +196,6 @@ def xy_grid(
     plot_as_mags=False,
     projected=False,
 ):
-
     """An attempt to copy Sylvestre's chi2 grid plots, using x and y instead
     of separation and position angle.
 
@@ -302,7 +301,6 @@ def xy_grid(
     names = ["Chi2", "Likelihood", "Best Contrast Ratio"]
     plots = [np.min(chi2, axis=2), x_y, cons[np.argmin(chi2, axis=2)]]
     for ix, n in enumerate(names):
-
         plt.figure(n)
         plt.clf()
         # Plot it with RA on the X axis

@@ -48,7 +48,7 @@ def _select_data_file(args, process):
             "Selected index (%i) not valid (only %i files found)."
             % (choosen_index, len(l_file))
         )
-        raise SystemExit
+        raise SystemExit  # noqa: B904
     else:
         with fits.open(filename) as hdul:
             hdr = hdul[0].header

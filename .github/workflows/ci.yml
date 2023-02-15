@@ -2,23 +2,23 @@ name: CI
 on:
   pull_request:
     paths-ignore:
-      - "doc/**"
-      - README.md
+    - doc/**
+    - README.md
   push:
     branches:
-      - master
+    - master
 
 jobs:
   tests:
     strategy:
       matrix:
         os:
-          - ubuntu-latest
-          - macos-latest
-          - windows-latest
+        - ubuntu-latest
+        - macos-latest
+        - windows-latest
         python-version:
-          - '3.8'
-          - '3.11'
+        - '3.8'
+        - '3.11'
 
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
