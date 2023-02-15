@@ -28,7 +28,6 @@ dependencies = [
     "emcee",
     "h5py",
     "matplotlib",
-    "munch",
     "numpy",
     "pypdf>=3.2.0",
     "scipy",

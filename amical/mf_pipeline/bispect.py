@@ -21,6 +21,7 @@ import numpy as np
 from termcolor import cprint
 from tqdm import tqdm
 
+from amical.externals.munch import munchify as dict2class
 from amical.get_infos_obs import get_mask
 from amical.mf_pipeline.ami_function import (
     bs_multi_triangle,
@@ -349,7 +350,6 @@ def _check_input_infos(hdr, targetname=None, filtname=None, instrum=None, verbos
     input arguments. Return the infos class containing important informations of
     the input header (keys: target, seeing, instrument, ...)
     """
-    from munch import munchify as dict2class
 
     target = hdr.get("OBJECT")
     filt = hdr.get("FILTER")
@@ -1123,7 +1123,6 @@ def extract_bs(
         various quantities (see .mask.__dict__.keys()).
     """
     from astropy.io import fits
-    from munch import munchify as dict2class
 
     if verbose:
         cprint("\n-- Starting extraction of observables --", "cyan")

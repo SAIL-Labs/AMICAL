@@ -15,6 +15,8 @@ import warnings
 import numpy as np
 from termcolor import cprint
 
+from amical.externals.munch import munchify as dict2class
+
 
 def linear(x, param):
     """Linear model used in dpfit"""
@@ -595,7 +597,6 @@ def check_seeing_cond(list_nrm):  # pragma: no cover
 
     """
     from astropy.io import fits
-    from munch import munchify as dict2class
 
     l_seeing, l_vis2, l_cp, l_pa, l_mjd = [], [], [], [], []
 
@@ -733,7 +734,6 @@ def load_bs_hdf5(filename):
     format as `amical.extract_bs()`
     """
     import h5py
-    from munch import munchify as dict2class
 
     dict_bs = {"matrix": {}, "infos": {"hdr": {}}, "mask": {}}
     with h5py.File(filename, "r") as hf2:

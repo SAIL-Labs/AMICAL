@@ -12,6 +12,7 @@ Set of functions to calibrate NRM data using a calibrator star data.
 import numpy as np
 
 from amical.dpfit import leastsqFit
+from amical.externals.munch import munchify as dict2class
 from amical.tools import wtmn
 
 
@@ -192,7 +193,6 @@ def average_calib_files(list_nrm, sig_thres=2, display=False):
         Threshold of the sigma clipping (default: 2-sigma around the median is used),\n
     """
     from astropy.io import fits
-    from munch import munchify as dict2class
 
     nfiles = len(list_nrm)
     l_pa = np.zeros(nfiles)
@@ -305,8 +305,6 @@ def calibrate(
         (u-v coordinates), `wl` (wavelength), `raw_t` and `raw_c` (dictionnary of extracted raw
         NRM data, inputs of this function).
     """
-
-    from munch import munchify as dict2class
 
     if type(res_c) is not list:
         res_c = [res_c]

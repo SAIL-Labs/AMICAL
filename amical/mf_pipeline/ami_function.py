@@ -20,6 +20,7 @@ import numpy as np
 from termcolor import cprint
 
 from amical.dpfit import leastsqFit
+from amical.externals.munch import munchify as dict2class
 from amical.get_infos_obs import get_mask, get_pixel_size, get_wavelength
 from amical.mf_pipeline.idl_function import array_coords, dist
 from amical.tools import gauss_2d_asym, linear, norm_max, plot_circle
@@ -183,8 +184,6 @@ def _peak_gauss_method(
     fw_splodge=0.7,
     hole_diam=0.8,
 ):
-    from munch import munchify as dict2class
-
     mf = np.zeros([npix, npix])
     n_holes = index_mask.n_holes
 
@@ -365,7 +364,6 @@ def make_mf(
         Relative size of the splodge used to compute multiple triangle indices and the fwhm
         of the 'gauss' technique,\n
     """
-    from munch import munchify as dict2class
 
     # Get detector, filter and mask informations
     # ------------------------------------------
@@ -631,7 +629,6 @@ def compute_index_mask(n_holes, verbose=False):
         Bispectrum covariance to bispectrum index.
 
     """
-    from munch import munchify as dict2class
 
     n_baselines = int(n_holes * (n_holes - 1) / 2)
     n_bispect = int(n_holes * (n_holes - 1) * (n_holes - 2) / 6)
