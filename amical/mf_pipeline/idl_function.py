@@ -14,11 +14,11 @@ All required IDL function translated into python.
 import numpy as np
 from termcolor import cprint
 
+from amical.externals.munch import munchify as dict2class
+
 
 def regress_noc(x, y, weights):
     """Python version of IDL regress_noc."""
-
-    from munch import munchify as dict2class
 
     sx = x.shape
     sy = y.shape

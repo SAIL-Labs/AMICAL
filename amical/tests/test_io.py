@@ -1,6 +1,5 @@
 import re
 
-import munch
 import numpy as np
 import pytest
 from astropy.io import fits
@@ -8,6 +7,7 @@ from matplotlib import pyplot as plt
 
 import amical
 from amical import load, loadc
+from amical.externals.munch import Munch
 from amical.get_infos_obs import get_pixel_size
 
 # import numpy as np
@@ -81,7 +81,7 @@ def test_extract(peakmethod, global_datadir):
         peakmethod=peakmethod,
     )
     bs_keys = list(bs.keys())
-    assert isinstance(bs, munch.Munch)
+    assert isinstance(bs, Munch)
     assert len(bs_keys) == 13
 
 
@@ -105,7 +105,7 @@ def test_extract_multitri(global_datadir, tmp_path):
         peakmethod="fft",
     )
     bs_keys = list(bs.keys())
-    assert isinstance(bs, munch.Munch)
+    assert isinstance(bs, Munch)
     assert len(bs_keys) == 13
 
 
@@ -143,7 +143,7 @@ def test_cal_atmcorr(global_datadir):
     )
 
     cal = amical.calibrate(bs, bs, apply_atmcorr=True)
-    assert isinstance(cal, munch.Munch)
+    assert isinstance(cal, Munch)
 
 
 def test_cal_phscorr(global_datadir):
@@ -161,11 +161,11 @@ def test_cal_phscorr(global_datadir):
         peakmethod="fft",
     )
     cal = amical.calibrate(bs, bs, apply_atmcorr=True)
-    assert isinstance(cal, munch.Munch)
+    assert isinstance(cal, Munch)
 
 
 def test_calibration(cal):
-    assert isinstance(cal, munch.Munch)
+    assert isinstance(cal, Munch)
 
 
 def test_show(cal):
@@ -275,7 +275,7 @@ def test_save_origin(cal, tmpdir):
 
 def test_loadc_file(example_oifits):
     s = loadc(example_oifits)
-    assert isinstance(s, munch.Munch)
+    assert isinstance(s, Munch)
 
 
 @pytest.mark.parametrize("ins", ["NIRISS", "SPHERE", "VAMPIRES"])
@@ -301,7 +301,7 @@ def test_quiet_mode(global_datadir, capsys):
     )
     captured = capsys.readouterr()
     bs_keys = list(bs.keys())
-    assert isinstance(bs, munch.Munch)
+    assert isinstance(bs, Munch)
     assert len(bs_keys) == 13
     assert captured.out == ""
     assert captured.err == ""
@@ -358,7 +358,7 @@ def test_extract_ifs(global_datadir, ifs_clean_param):
         fw_splodge=0.7,
         display=False,
     )
-    assert isinstance(bs, munch.Munch)
+    assert isinstance(bs, Munch)
     assert len(bs) == 13
 
 

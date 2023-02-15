@@ -1,6 +1,5 @@
 from pathlib import Path
 
-import munch
 import numpy as np
 import pytest
 from astropy.io import fits
@@ -8,6 +7,7 @@ from matplotlib import pyplot as plt
 
 from amical import load_bs_hdf5, loadc
 from amical._cli.main import main
+from amical.externals.munch import Munch
 
 valid_commands = ["clean", "extract", "calibrate"]
 
@@ -111,7 +111,7 @@ def test_extract(cli_datadir, tmp_path, monkeypatch):
     true_value_cp = 0.01
 
     assert len(output_file) == 1
-    assert isinstance(bs, munch.Munch)
+    assert isinstance(bs, Munch)
     assert len(bs_keys) == 13
     assert bs.vis2[0] == pytest.approx(true_value_v2, 1e-1)
     assert bs.cp[0] == pytest.approx(true_value_cp, 1e-1)

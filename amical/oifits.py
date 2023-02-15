@@ -15,6 +15,7 @@ import os
 import numpy as np
 from termcolor import cprint
 
+from amical.externals.munch import munchify as dict2class
 from amical.tools import rad2mas
 
 list_color = ["#00a7b5", "#afd1de", "#055c63", "#ce0058", "#8a8d8f", "#f1b2dc"]
@@ -69,8 +70,6 @@ def _format_staindex_t3(tab):
 def _apply_flag(dict_calibrated, unit="arcsec"):
     """Apply flag and convert to appropriete units."""
 
-    from munch import munchify as dict2class
-
     wl = dict_calibrated["OI_WAVELENGTH"]["EFF_WAVE"]
     uv_scale = {
         "m": 1,
@@ -124,8 +123,6 @@ def wrap_raw(bs):
         Object that stores the raw observables in a format compatible with the
         output from amical.calibrate() and the input for `amical.save()`,\n
     """
-    from munch import munchify as dict2class
-
     u1 = bs.u[bs.mask.bs2bl_ix[0, :]]
     v1 = bs.v[bs.mask.bs2bl_ix[0, :]]
     u2 = bs.u[bs.mask.bs2bl_ix[1, :]]
@@ -421,7 +418,6 @@ def load(filename, filtname=None):
 
 def loadc(filename):
     """Same as load but provide an easy usable output as a class format (output.v2, or output.cp)."""
-    from munch import munchify as dict2class
 
     dic = load(filename)
     res = {}
