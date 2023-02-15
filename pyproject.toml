@@ -22,7 +22,7 @@ classifiers = [
 ]
 requires-python = ">=3.8"
 dependencies = [
-    "astropy",
+    "astropy>=5.0",
     "astroquery",
     "corner",
     "emcee",
@@ -30,7 +30,6 @@ dependencies = [
     "matplotlib",
     "munch",
     "numpy",
-    "packaging>=21.0",
     "pypdf>=3.2.0",
     "scipy",
     "tabulate",

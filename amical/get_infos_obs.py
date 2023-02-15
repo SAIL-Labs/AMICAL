@@ -15,7 +15,6 @@ from termcolor import cprint
 
 from amical.tools import mas2rad
 
-
 if sys.version_info >= (3, 9):
     import importlib.resources as importlib_resources
 else:

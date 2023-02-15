@@ -1,13 +1,8 @@
-import astropy
 import munch
 import pytest
 from astropy.io import fits
-from packaging.version import Version
 
 from amical.mf_pipeline.bispect import _add_infos_header
-
-# Astropy versions for
-ASTROPY_VERSION = Version(astropy.__version__)
 
 
 @pytest.fixture()
@@ -57,18 +52,10 @@ def test_add_infos_header_commentary(commentary_infos):
     munch.munchify(commentary_infos)
 
 
-@pytest.mark.xfail(
-    ASTROPY_VERSION < Version("5.0rc"),
-    reason="Munch cannot handle commentary cards for Astropy < 5.0",
-)
 def test_commentary_infos_keep(commentary_infos):
     assert "HISTORY" in commentary_infos.hdr
 
 
-@pytest.mark.skipif(
-    ASTROPY_VERSION < Version("5.0"),
-    reason="Astropy < 5.0 raised a warning for commentary cards",
-)
 def test_no_commentary_warning_astropy_version():
     # Add hdr to infos placeholders for everything but hdr
     mf = munch.Munch(pixelSize=1.0)
