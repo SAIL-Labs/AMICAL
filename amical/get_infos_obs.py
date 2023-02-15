@@ -224,7 +224,10 @@ def get_wavelength(ins, filtname):
             f"--- Error: instrument <{ins}> not found ---\n"
             "Available: %s" % list(dic_filt.keys())
         )
-
+    if filtname not in dic_filt[ins]:
+        raise KeyError(
+            f"Missing input: filtname <{filtname}> not found for {ins} (Available: {list(dic_filt[ins])})"
+        )
     return np.array(dic_filt[ins][filtname]) * 1e-6
 
 
