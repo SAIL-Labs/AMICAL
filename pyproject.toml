@@ -94,6 +94,9 @@ filterwarnings = [
     "error",
     # we run tests against a non-GUI backend on purpose
     "ignore:Matplotlib is currently using agg, which is a non-GUI backend, so cannot show the figure.:UserWarning",
+    # np.product is used in h5py up to version 3.8.0
+    # https://github.com/h5py/h5py/pull/2242
+    "ignore:`product` is deprecated as of NumPy 1.25.0, and will be removed in NumPy 2.0. Please use `prod` instead.:DeprecationWarning"
 ]
 
 [tool.coverage.run]
