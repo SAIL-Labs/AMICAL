@@ -218,6 +218,7 @@ def _get_ring_mask(r1, dr, isz, center=None):
         warnings.warn(
             "The outer radius is out of the image, using everything beyond r1 as background",
             RuntimeWarning,
+            stacklevel=2,
         )
 
     return cond_bg
@@ -236,6 +237,7 @@ def sky_correction(imA, r1=None, dr=None, verbose=False, *, center=None, mask=No
             " explicitely. In the future, this will result in an error."
             " Setting r1=100 and dr=20",
             PendingDeprecationWarning,
+            stacklevel=2,
         )
         r1 = 100
         dr = 20
@@ -254,6 +256,7 @@ def sky_correction(imA, r1=None, dr=None, verbose=False, *, center=None, mask=No
             warnings.warn(
                 "Background not computed because mask has no True values",
                 RuntimeWarning,
+                stacklevel=2,
             )
         cond_bg = mask
 
@@ -276,6 +279,7 @@ def sky_correction(imA, r1=None, dr=None, verbose=False, *, center=None, mask=No
         warnings.warn(
             "Background not computed, likely because specified radius is out of bounds",
             RuntimeWarning,
+            stacklevel=2,
         )
 
     return imC, backgroundC
@@ -607,6 +611,7 @@ def clean_data(
             warnings.warn(
                 "sky is set to True, but r1 and mask are set to None. Skipping sky correction",
                 RuntimeWarning,
+                stacklevel=2,
             )
             img_biased = img1.copy()
         else:
@@ -635,6 +640,7 @@ def clean_data(
                 warnings.warn(
                     "apod is set to True, but window is None. Skipping apodisation",
                     RuntimeWarning,
+                    stacklevel=2,
                 )
                 img = im_rec_max.copy()
             else:
@@ -744,6 +750,7 @@ def select_clean_data(
         warnings.warn(
             "The default value of r1 is now None. Either r1 or mask should be set explicitely. This will raise an error in the future.",
             PendingDeprecationWarning,
+            stacklevel=2,
         )
         r1 = 100
         if dr is None:
@@ -752,6 +759,7 @@ def select_clean_data(
         warnings.warn(
             "The default value of dr is now None. dr must be set explicitely to be used.",
             PendingDeprecationWarning,
+            stacklevel=2,
         )
         dr = 10
 

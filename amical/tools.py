@@ -416,6 +416,7 @@ def niriss_parang(hdr):
         warnings.warn(
             "No SCI header for NIRISS. No PA correction will be applied.",
             RuntimeWarning,
+            stacklevel=2,
         )
         return 0.0
     v3i_yang = hdr["V3I_YANG"]  # Angle from V3 axis to ideal y axis (deg)
