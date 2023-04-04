@@ -1198,13 +1198,7 @@ def show(
     if type(inputList) is not list:
         inputList = [inputList]
 
-    try:
-        inputList[0].v2
-        isclass = True
-    except AttributeError:
-        isclass = False
-
-    if isclass:
+    if hasattr(inputList[0], "v2"):
         l_dic = [
             cal2dict(
                 x,
