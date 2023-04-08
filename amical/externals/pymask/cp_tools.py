@@ -446,7 +446,7 @@ def hammer(
         fig = corner.corner(
             chain,
             labels=["SEP [mas]", "PA [deg]", "CONTRAST"],
-            quantiles=(0.16, 0.84),
+            quantiles=(0.16, 0.5, 0.84),
             show_titles=True,
             title_kwargs={"fontsize": 10},
             color="#096899",
