@@ -14,8 +14,8 @@ on:
     paths:
     - .github/workflows/bleeding-edge.yaml
   schedule:
-    # run this every day at 3 am UTC
-  - cron: 0 3 * * *
+    # run this every Wednesday at 3 am UTC
+  - cron: 0 3 * * 3
   workflow_dispatch:
 
 jobs:
