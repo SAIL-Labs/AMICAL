@@ -1230,7 +1230,7 @@ def show(
             dic_color[filt] = list_color[i_c]
             i_c += 1
 
-    props = dict(boxstyle="round", facecolor="wheat", alpha=0.5)
+    props = {"boxstyle": "round", "facecolor": "wheat", "alpha": 0.5}
 
     textstr = "PA = %2.1f deg" % pa
 
