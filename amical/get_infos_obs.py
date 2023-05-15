@@ -279,7 +279,7 @@ def get_ifu_table(
                 np.arange(len(wl))[i_wl],
                 wl[i_wl],
                 "ro",
-                label="Selected (%2.2f µm)" % wl[i_wl],
+                label="Selected (%2.2f µm)" % wl[i_wl[0]],
             )
         elif multiple_wl:
             plt.plot(

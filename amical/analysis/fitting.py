@@ -142,7 +142,7 @@ def model_standard(obs, param):
             else:
                 mod = np.nan
 
-            res[i] = mod
+            res[i] = np.asarray(mod).item()
         except TypeError:
             pass
 
@@ -490,7 +490,7 @@ def compute_chi2_curve(
     chi2r_m = l_chi2r.min()
     chi2_m = l_chi2.min()
 
-    fitted_param = array_params[l_chi2 == chi2_m]
+    fitted_param = array_params[l_chi2 == chi2_m].item()
 
     c_left = array_params <= fitted_param
     c_right = array_params >= fitted_param
