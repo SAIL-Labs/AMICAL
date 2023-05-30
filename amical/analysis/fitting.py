@@ -55,7 +55,12 @@ def check_params_model(param):
         elong = np.cos(np.deg2rad(param["incl"]))
         majorAxis = mas2rad(param["majorAxis"])
         posang = np.deg2rad(param["posang"])
-        if (elong < 1) or (posang < 0) or (posang > 180) or (majorAxis < 0):
+        if (
+            (elong < 1 and abs(1 - elong) > 4e-16)
+            or (posang < 0)
+            or (posang > np.pi)
+            or (majorAxis < 0)
+        ):
             log = "# elong > 1,\n# minorAxis > 0 mas,\n# 0 < angle < 180 deg.\n"
             isValid = False
 
