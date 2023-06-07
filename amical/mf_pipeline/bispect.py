@@ -1019,10 +1019,9 @@ def _add_infos_header(infos, hdr, mf, pa, filename, maskname, npix):
 
 
 def produce_result_pdf(figdir, filename):
-    from pypdf import PdfMerger, PdfReader
+    from pypdf import PdfReader, PdfWriter
 
-    # Call the PdfMerger
-    mergedObject = PdfMerger()
+    mergedObject = PdfWriter()
 
     for fileNumber in range(7):
         ifile = os.path.join(figdir, f"{filename}_{fileNumber + 1}.pdf")
