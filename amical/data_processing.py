@@ -131,8 +131,7 @@ def select_data(cube, clip_fact=0.5, clip=False, verbose=True, display=True):
         plt.figure(figsize=(10, 5))
         plt.plot(
             fluxes,
-            label=r"|$\Delta F$|/$\sigma_F$=%2.0f (%2.2f %%)"
-            % (med_flux / std_flux, diffmm),
+            label=rf"|$\Delta F$|/$\sigma_F$={med_flux / std_flux:2.0f} ({diffmm:2.2f} %)",
             lw=1,
         )
         if len(flag_fram) > 0:
@@ -725,8 +724,7 @@ def select_clean_data(
         if verbose:
             print("\n----- Seeing conditions -----")
             print(
-                "%2.2f (start), %2.2f (end), %2.2f (Corrected AirMass)"
-                % (seeing_start, seeing_end, seeing)
+                f"{seeing_start:2.2f} (start), {seeing_end:2.2f} (end), {seeing:2.2f} (Corrected AirMass)"
             )
 
         n_axis = len(cube.shape)
