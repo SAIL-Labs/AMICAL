@@ -373,8 +373,7 @@ def fits2obs(
             print("-> Flag in oifits files used.")
         if cond_wl:
             print(
-                r"-> Restriction on wavelenght: %2.2f < %s < %2.2f µm"
-                % (wl_min, chr(955), wl_max)
+                fr"-> Restriction on wavelenght: {wl_min:2.2f} < {chr(955)} < {wl_max:2.2f} µm"
             )
         if cond_uncer:
             print(rf"-> Restriction on uncertainties: {chr(949)} < {rel_max:2.1f} %")
@@ -390,7 +389,7 @@ def _normalize_err_obs(obs, verbose=False):
     n = [0, 0, 0, 0]
     for o in obs:
         for j, t in enumerate(techs):
-            if any([x in o[1] for x in t]):
+            if any(x in o[1] for x in t):
                 n[j] += 1
     if verbose:
         print("-" * 50)
@@ -401,7 +400,7 @@ def _normalize_err_obs(obs, verbose=False):
 
     for i, o in enumerate(obs):
         for j, t in enumerate(techs):
-            if any([x in o[1] for x in t]):
+            if any(x in o[1] for x in t):
                 errs[i] *= np.sqrt(float(n[j]) / len(obs) * len(n))
     return errs
 
