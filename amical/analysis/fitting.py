@@ -373,7 +373,7 @@ def fits2obs(
             print("-> Flag in oifits files used.")
         if cond_wl:
             print(
-                fr"-> Restriction on wavelenght: {wl_min:2.2f} < {chr(955)} < {wl_max:2.2f} µm"
+                rf"-> Restriction on wavelenght: {wl_min:2.2f} < {chr(955)} < {wl_max:2.2f} µm"
             )
         if cond_uncer:
             print(rf"-> Restriction on uncertainties: {chr(949)} < {rel_max:2.1f} %")

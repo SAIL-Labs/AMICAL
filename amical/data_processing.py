@@ -131,7 +131,7 @@ def select_data(cube, clip_fact=0.5, clip=False, verbose=True, display=True):
         plt.figure(figsize=(10, 5))
         plt.plot(
             fluxes,
-            label=fr"|$\Delta F$|/$\sigma_F$={med_flux / std_flux:2.0f} ({diffmm:2.2f} %)",
+            label=rf"|$\Delta F$|/$\sigma_F$={med_flux / std_flux:2.0f} ({diffmm:2.2f} %)",
             lw=1,
         )
         if len(flag_fram) > 0:

@@ -116,13 +116,19 @@ def pymask_mcmc(
         print("MCMC estimation")
         print("---------------")
         print(
-            "Separation = {:2.1f} +{:2.1f}/-{:2.1f} mas".format(res_corner["sep"], res_corner["delsepp"], res_corner["delsepm"])
+            "Separation = {:2.1f} +{:2.1f}/-{:2.1f} mas".format(
+                res_corner["sep"], res_corner["delsepp"], res_corner["delsepm"]
+            )
         )
         print(
-            "PA = {:2.1f} +{:2.1f}/-{:2.1f} deg".format(res_corner["pa"], res_corner["delpap"], res_corner["delpam"])
+            "PA = {:2.1f} +{:2.1f}/-{:2.1f} deg".format(
+                res_corner["pa"], res_corner["delpap"], res_corner["delpam"]
+            )
         )
         print(
-            "Contrast Ratio = {:2.1f} +{:2.1f}/-{:2.1f}".format(res_corner["cr"], res_corner["delcrp"], res_corner["delcrm"])
+            "Contrast Ratio = {:2.1f} +{:2.1f}/-{:2.1f}".format(
+                res_corner["cr"], res_corner["delcrp"], res_corner["delcrm"]
+            )
         )
         print(f"dm = {dm:2.2f} +{e_dmp:2.2f}/-{e_dmm:2.2f} mag")
 
