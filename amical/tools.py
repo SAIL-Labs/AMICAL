@@ -411,6 +411,7 @@ def compute_pa(hdr, n_ps, verbose=False, display=False, *, sci_hdr=None):
 
     return pa
 
+
 def niriss_parang(hdr):
     if hdr is None:
         warnings.warn(
@@ -424,32 +425,32 @@ def niriss_parang(hdr):
 
     return roll_ref_pa - v3i_yang
 
-def eris_parang(hdr,n_dit=None):
+
+def eris_parang(hdr, n_dit=None):
     """
     Reads the header and creates an array giving the paralactic angle for each frame,
-    taking into account the inital derotator position. 
-    The parallactic angles are linearly interpolated between the start and end of the template. 
-    If some frames are removed from the cube beforehand but the header is kept the same, 
+    taking into account the inital derotator position.
+    The parallactic angles are linearly interpolated between the start and end of the template.
+    If some frames are removed from the cube beforehand but the header is kept the same,
     then this approximation becomes even worse.
     TO-DO:
     Ideally, the indices of the frames that are removed from the cube should be passed as argument,
     and the true parallactic angles between START and END should be calculated instead of linearly interpolated.
     """
-    
+
     if n_dit is None:
         n_frames = hdr["NAXIS3"]
     else:
         n_frames = n_dit
-    
-    pupil_pos = hdr['HIERARCH ESO ADA PUPILPOS']
-    par_ang_start = hdr['HIERARCH ESO TEL PARANG START']
-    par_ang_end = hdr['HIERARCH ESO TEL PARANG END']
-    par_angles = np.linspace(par_ang_start,par_ang_end,n_frames)
+
+    pupil_pos = hdr["HIERARCH ESO ADA PUPILPOS"]
+    par_ang_start = hdr["HIERARCH ESO TEL PARANG START"]
+    par_ang_end = hdr["HIERARCH ESO TEL PARANG END"]
+    par_angles = np.linspace(par_ang_start, par_ang_end, n_frames)
 
     pos_angles = pupil_pos - par_angles + 2
-    
-    return pos_angles
 
+    return pos_angles
 
 
 def sphere_parang(hdr, n_dit_ifs=None):
