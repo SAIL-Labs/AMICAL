@@ -347,6 +347,7 @@ def get_wavelength(ins, filtname):
 
 def get_pixel_size(ins):
     saved_pixel_detector = {
+        "ERIS": 13,
         "NIRISS": 65.6,
         "SPHERE": 12.27,
         "VISIR": 45,
