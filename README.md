@@ -1,5 +1,5 @@
 <a href="https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL">
-<img src="https://raw.githubusercontent.com/SydneyAstrophotonicInstrumentationLab/AMICAL/master/doc/Figures/amical_logo.png" width="300"></a>
+<img src="https://raw.githubusercontent.com/SydneyAstrophotonicInstrumentationLab/AMICAL/main/doc/Figures/amical_logo.png" width="300"></a>
 
 (**A**perture **M**asking **I**nterferometry **C**alibration and **A**nalysis
 **L**ibrary)
@@ -10,7 +10,7 @@
 
 ![CI](https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL/actions/workflows/ci.yml/badge.svg)
 [![CI (bleeding edge)](https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL/actions/workflows/bleeding-edge.yaml/badge.svg)](https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL/actions/workflows/bleeding-edge.yaml)
-[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/SydneyAstrophotonicInstrumentationLab/AMICAL/master.svg)](https://results.pre-commit.ci/latest/github/SydneyAstrophotonicInstrumentationLab/AMICAL/master)
+[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/SydneyAstrophotonicInstrumentationLab/AMICAL/main.svg)](https://results.pre-commit.ci/latest/github/SydneyAstrophotonicInstrumentationLab/AMICAL/main)
 
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/charliermarsh/ruff/main/assets/badge/v2.json)](https://github.com/charliermarsh/ruff)
@@ -47,22 +47,22 @@ outputs obtained from a binary-like sources (star-star or star-planet). We
 interfaced these stand-alone packages with AMICAL to quickly estimate our
 scientific results (e.g., separation, position angle, contrast ratio, contrast
 limits, etc.) using different approaches (chi2 grid, MCMC, see
-[example_analysis.py](https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL/blob/master/doc/example_analysis.py) for details).
+[example_analysis.py](https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL/blob/main/doc/example_analysis.py) for details).
 
 ## Getting started
 
-Looking for a quickstart into AMICAL? You can go through our **[tutorial](https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL/blob/master/doc/tutorial.md)** explaining
+Looking for a quickstart into AMICAL? You can go through our **[tutorial](https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL/blob/main/doc/tutorial.md)** explaining
 how to use its different features.
 
 You can also have a look to the example scripts
 made for
-[NIRISS](https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL/blob/master/doc/example_NIRISS.py)
+[NIRISS](https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL/blob/main/doc/example_NIRISS.py)
 and
-[SPHERE](https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL/blob/master/doc/example_NIRISS.py)
+[SPHERE](https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL/blob/main/doc/example_NIRISS.py)
 or get details about the CANDID/Pymask uses with
-[example_analysis.py](https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL/blob/master/doc/example_analysis.py).
+[example_analysis.py](https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL/blob/main/doc/example_analysis.py).
 
-⚡ Last updates (08/2022) : New example script for IFS-SPHERE data is now available [here](https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL/blob/master/doc/example_IFS.py).
+⚡ Last updates (08/2022) : New example script for IFS-SPHERE data is now available [here](https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL/blob/main/doc/example_IFS.py).
 
 ## Use policy and reference publication
 

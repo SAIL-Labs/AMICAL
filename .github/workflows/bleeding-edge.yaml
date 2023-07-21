@@ -1,7 +1,4 @@
 name: CI (bleeding edge)
-# this workflow is heavily inspired from pandas, see
-# https://github.com/pandas-dev/pandas/blob/master/.github/workflows/python-dev.yml
-
 # goals: check stability against
 # - dev version of numpy, matplotlib and astropy
 # - building with future pip default options
@@ -9,7 +6,7 @@ name: CI (bleeding edge)
 on:
   push:
     branches:
-    - master
+    - main
   pull_request:
     paths:
     - .github/workflows/bleeding-edge.yaml
