@@ -1926,7 +1926,7 @@ def open(filename, quiet=True):
         # suffer from this problem, and the strings are ugly as a result.  Fix it.
         if type(hdu) == fits.hdu.table.BinTableHDU:
             for name in data.names:
-                if data.dtype[name].type == np.string_:
+                if data.dtype[name].type == np.bytes_:
                     data[name] = list(map(str.rstrip, data[name]))
         if hdu.name == "OI_WAVELENGTH":
             insname = header["INSNAME"]
