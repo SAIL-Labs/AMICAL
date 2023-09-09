@@ -32,7 +32,6 @@ dependencies = [
     "pypdf>=3.2.0",
     "rich>=13.5.2",
     "scipy",
-    "termcolor",
     "uncertainties",
     "importlib_resources>=1.3; python_version < '3.9'",
 ]

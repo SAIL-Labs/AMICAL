@@ -11,7 +11,7 @@ Instruments and mask informations.
 import sys
 
 import numpy as np
-from termcolor import cprint
+from rich import print as rprint
 
 from amical.tools import mas2rad
 
@@ -169,7 +169,9 @@ def get_mask(ins, mask, first=0):
                 nrand.append(x)
         xycoords_sel = xycoords[nrand]
     except KeyError:
-        cprint(f"\n-- Error: maskname ({mask}) unknown for {ins}.", "red")
+        rprint(
+            f"[red]\n-- Error: maskname ({mask}) unknown for {ins}.", file=sys.stderr
+        )
         xycoords_sel = None
     return xycoords_sel
 

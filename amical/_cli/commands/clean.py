@@ -5,8 +5,8 @@ from pathlib import Path
 
 from astropy.io import fits
 from matplotlib import pyplot as plt
+from rich import print as rprint
 from rich.progress import track
-from termcolor import cprint
 
 import amical
 from amical._rich_display import tabulate
@@ -57,7 +57,7 @@ def _select_data_file(args, process):
 
 def perform_clean(args):
     """Clean the data with AMICAL."""
-    cprint("---- AMICAL clean process ----", "cyan")
+    rprint("[cyan]---- AMICAL clean process ----")
 
     clean_param = {
         "isz": args.isz,

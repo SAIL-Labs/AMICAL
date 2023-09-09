@@ -5,8 +5,8 @@ from pathlib import Path
 
 from astropy.io import fits
 from matplotlib import pyplot as plt
+from rich import print as rprint
 from rich.progress import track
-from termcolor import cprint
 
 import amical
 from amical._cli.commands.clean import _select_data_file
@@ -29,7 +29,7 @@ def _extract_bs_ifile(f, args, ami_param):
 def perform_extract(args):
     """CLI interface to extract the data with AMICAL (compute bispectrum object
     with all raw observables)."""
-    cprint("---- AMICAL extract started ----", "cyan")
+    rprint("[cyan]---- AMICAL extract started ----")
     t0 = time.time()
     ami_param = {
         "peakmethod": args.peakmethod,
@@ -71,7 +71,7 @@ def perform_extract(args):
         for f in track(l_file, description="# files"):
             _extract_bs_ifile(f, args, ami_param)
     t1 = time.time() - t0
-    cprint("---- AMICAL extract done (%2.1fs) ----" % t1, "cyan")
+    rprint(f"[cyan]---- AMICAL extract done ({t1:2.1f}s) ----")
     if args.plot:
         plt.show(block=True)
     return 0
