@@ -1,4 +1,5 @@
 import os
+import sys
 from datetime import datetime
 from glob import glob
 from pathlib import Path
@@ -17,7 +18,9 @@ def _select_data_file(args, process):
     l_file = sorted(glob("%s/*.fits" % args.datadir))
 
     if len(l_file) == 0:
-        print("No fits files found in %s, check --datadir." % args.datadir)
+        print(
+            f"No fits files found in {args.datadir}, check --datadir.", file=sys.stderr
+        )
         return 1
 
     headers = ["FILENAME", "TARGET", "DATE", "INSTRUM", "INDEX"]
@@ -45,8 +48,9 @@ def _select_data_file(args, process):
         filename = l_file[choosen_index]
     except IndexError:
         print(
-            "Selected index (%i) not valid (only %i files found)."
-            % (choosen_index, len(l_file))
+            f"Selected index ({choosen_index}) not valid "
+            f"(only {len(l_file)} files found).",
+            file=sys.stderr,
         )
         raise SystemExit  # noqa: B904
     else:
@@ -70,14 +74,17 @@ def perform_clean(args):
 
     if not os.path.exists(args.datadir):
         print(
-            "%s directory not found, check --datadir. AMICAL look for data only in this specified directory."
-            % args.datadir
+            f"{args.datadir} directory not found, check --datadir. "
+            "AMICAL look for data only in this specified directory.",
+            file=sys.stderr,
         )
         return 1
 
     l_file = sorted(glob("%s/*.fits" % args.datadir))
     if len(l_file) == 0:
-        print("No fits files found in %s, check --datadir." % args.datadir)
+        print(
+            f"No fits files found in {args.datadir}, check --datadir.", file=sys.stderr
+        )
         return 1
 
     if not args.all:
