@@ -5,10 +5,10 @@ from pathlib import Path
 
 from astroquery.simbad import Simbad
 from matplotlib import pyplot as plt
-from tabulate import tabulate
 from termcolor import cprint
 
 import amical
+from amical._rich_display import tabulate
 
 
 def _query_simbad(targetname):

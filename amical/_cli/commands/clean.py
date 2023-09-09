@@ -5,11 +5,11 @@ from pathlib import Path
 
 from astropy.io import fits
 from matplotlib import pyplot as plt
-from tabulate import tabulate
 from termcolor import cprint
 from tqdm import tqdm
 
 import amical
+from amical._rich_display import tabulate
 
 
 def _select_data_file(args, process):

@@ -31,7 +31,6 @@ dependencies = [
     "numpy",
     "pypdf>=3.2.0",
     "scipy",
-    "tabulate",
     "termcolor",
     "tqdm",
     "uncertainties",
