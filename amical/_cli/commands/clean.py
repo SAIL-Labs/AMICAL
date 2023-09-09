@@ -5,8 +5,8 @@ from pathlib import Path
 
 from astropy.io import fits
 from matplotlib import pyplot as plt
+from rich.progress import track
 from termcolor import cprint
-from tqdm import tqdm
 
 import amical
 from amical._rich_display import tabulate
@@ -96,7 +96,7 @@ def perform_clean(args):
 
     if args.all:
         # Clean all files in --datadir
-        for f in tqdm(l_file, ncols=100, desc="# files"):
+        for f in track(l_file, description="# files"):
             hdr = fits.open(f)[0].header
             hdr["HIERARCH AMICAL step"] = "CLEANED"
             cube = amical.select_clean_data(f, **clean_param, display=True)

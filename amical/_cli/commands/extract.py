@@ -5,8 +5,8 @@ from pathlib import Path
 
 from astropy.io import fits
 from matplotlib import pyplot as plt
+from rich.progress import track
 from termcolor import cprint
-from tqdm import tqdm
 
 import amical
 from amical._cli.commands.clean import _select_data_file
@@ -68,7 +68,7 @@ def perform_extract(args):
         f = _select_data_file(args, process="extract")[0]
         _extract_bs_ifile(f, args, ami_param)
     else:
-        for f in tqdm(l_file, ncols=100, desc="# files"):
+        for f in track(l_file, description="# files"):
             _extract_bs_ifile(f, args, ami_param)
     t1 = time.time() - t0
     cprint("---- AMICAL extract done (%2.1fs) ----" % t1, "cyan")

@@ -14,8 +14,8 @@ import sys
 import warnings
 
 import numpy as np
+from rich.progress import track
 from termcolor import cprint
-from tqdm import tqdm
 
 from amical.tools import apply_windowing, crop_max, find_max
 
@@ -585,7 +585,7 @@ def clean_data(
 
     bad_map, add_bad = _get_3d_bad_pixels(bad_map, add_bad, data)
 
-    for i in tqdm(range(n_im), ncols=100, desc="Cleaning", leave=False):
+    for i in track(range(n_im), description="Cleaning"):
         img0 = data[i]
         img0 = _apply_edge_correction(img0, edge=edge)
         if bad_map is not None:

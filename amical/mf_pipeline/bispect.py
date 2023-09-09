@@ -13,13 +13,12 @@ and calc_bispect.pro).
 --------------------------------------------------------------------
 """
 import os
-import sys
 import time
 from pathlib import Path
 
 import numpy as np
+from rich.progress import track
 from termcolor import cprint
-from tqdm import tqdm
 
 from amical.externals.munch import munchify as dict2class
 from amical.get_infos_obs import get_mask
@@ -105,13 +104,10 @@ def _compute_complex_bs(
 
     fluxes = np.zeros(n_ps)
 
-    for i in tqdm(
+    for i in track(
         range(n_ps),
-        ncols=100,
-        desc="Extracting in the cube",
-        leave=False,
-        file=sys.stdout,
-        disable=np.invert(verbose),
+        description="Extracting in the cube",
+        disable=not verbose,
     ):
         ft_frame = ft_arr[i]
         ps = np.abs(ft_frame) ** 2
@@ -649,9 +645,7 @@ def _compute_cp_cov(bs_arr, bs, index_mask, disable=False):
     n_bispect = index_mask.n_bispect
 
     cp_cov = dblarr(n_bispect, n_bispect)
-    for i in tqdm(
-        range(n_bispect), desc="CP covariance", ncols=100, leave=False, disable=disable
-    ):
+    for i in track(range(n_bispect), description="CP covariance", disable=disable):
         for j in range(n_bispect):
             temp1 = (bs_arr[:, i] - bs[i]) * np.conj(bs[i])
             temp2 = (bs_arr[:, j] - bs[j]) * np.conj(bs[j])

@@ -14,7 +14,7 @@ import warnings
 import numpy as np
 from astropy.io import fits
 from matplotlib import pyplot as plt
-from tqdm import tqdm
+from rich.progress import track
 
 from .data_processing import select_clean_data
 from .get_infos_obs import get_wavelength
@@ -141,8 +141,9 @@ def clean_data(
 
     cube_lambda = np.zeros([nframe, nlambda, isz, isz])
 
-    for i in tqdm(
-        range(len(list_file)), desc="Format/clean IFU (%s)" % (hdr["OBJECT"]), ncols=100
+    for i in track(
+        range(len(list_file)),
+        desription="Format/clean IFU (%s)" % (hdr["OBJECT"]),
     ):
         cube_cleaned = select_clean_data(list_file[i], **clean_param)
         cube_lambda[i] = cube_cleaned
