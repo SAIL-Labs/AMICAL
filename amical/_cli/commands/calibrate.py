@@ -5,10 +5,10 @@ from pathlib import Path
 
 from astroquery.simbad import Simbad
 from matplotlib import pyplot as plt
-from tabulate import tabulate
-from termcolor import cprint
+from rich import print as rprint
 
 import amical
+from amical._rich_display import tabulate
 
 
 def _query_simbad(targetname):
@@ -31,9 +31,7 @@ def _select_association_file(args):
     l_file = sorted(glob(os.path.join(args.datadir, "*.h5")))
 
     if len(l_file) == 0:
-        print(
-            "No h5 files found in %s, check --datadir." % args.datadir, file=sys.stderr
-        )
+        print(f"No h5 files found in {args.datadir}, check --datadir.", file=sys.stderr)
         return 1
 
     index_file = []
@@ -75,8 +73,9 @@ def _select_association_file(args):
         cal_name = [l_file[x] for x in cal_index]
     except IndexError:
         print(
-            "Selected index (sci=%i/cal=%i) not valid (only %i files found)."
-            % (sci_index, cal_index, len(l_file))
+            f"Selected index (sci={sci_index}/cal={cal_index}) not valid "
+            f"(only {len(l_file)} files found).",
+            file=sys.stderr,
         )
         raise SystemExit  # noqa: B904
     return sci_name, cal_name
@@ -106,7 +105,7 @@ def perform_calibrate(args):
     # Position angle from North to East
     pa = bs_t.infos.pa
 
-    cprint("\nPosition angle computed for the data: pa = %2.3f deg" % pa, "cyan")
+    rprint(f"[cyan]\nPosition angle computed for the data: pa = {pa:2.3f} deg")
 
     # Display and save the results as oifits
     if args.plot:

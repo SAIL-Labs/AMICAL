@@ -2,7 +2,7 @@ import glob
 import logging
 
 import numpy as np
-from termcolor import cprint
+from rich import print as rprint
 
 from . import oifits
 from .cp_tools import project_cps
@@ -132,10 +132,9 @@ class cpo:
         self.t3data = np.array(t3data)
         self.t3err = np.array(t3err)
         if verbose:
-            cprint(
-                r"PYMASK - %i oifits loaded : n=%ix%i=%i closure phases."
-                % (len(lfiles), len(lfiles), nbl, len(t3data)),
-                "green",
+            rprint(
+                rf"[green]PYMASK - {len(lfiles)} oifits loaded : "
+                f"n={len(lfiles)}x{nbl}={len(t3data)} closure phases."
             )
 
 

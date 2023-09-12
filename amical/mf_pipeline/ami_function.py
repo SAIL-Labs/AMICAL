@@ -14,10 +14,11 @@ All AMI related function, the most important are:
 --------------------------------------------------------------------
 """
 import os
+import sys
 from pathlib import Path
 
 import numpy as np
-from termcolor import cprint
+from rich import print as rprint
 
 from amical.dpfit import leastsqFit
 from amical.externals.munch import munchify as dict2class
@@ -369,7 +370,7 @@ def make_mf(
     # ------------------------------------------
     pixelsize = get_pixel_size(instrument)  # Pixel size of the detector [rad]
     if pixelsize is np.nan:
-        cprint("Error: Pixel size unknown for %s." % instrument, "red")
+        rprint(f"[red]Error: Pixel size unknown for {instrument}.", file=sys.stderr)
         return None
     # Wavelength of the filter (filt[0]: central, filt[1]: width)
     filt = get_wavelength(instrument, filtname)
@@ -419,15 +420,12 @@ def make_mf(
 
     ncp_i = int((n_holes - 1) * (n_holes - 2) / 2)
     if verbose:
-        cprint("---------------------------", "cyan")
-        cprint(
-            "%s (%s): %i holes masks" % (instrument.upper(), filtname, n_holes), "cyan"
-        )
-        cprint("---------------------------", "cyan")
-        cprint(
-            "nbl = %i, nbs = %i, ncp_i = %i, ncov = %i"
-            % (n_baselines, n_bispect, ncp_i, index_mask.n_cov),
-            "cyan",
+        rprint(
+            "[cyan]---------------------------\n"
+            f"{instrument.upper()} ({filtname}): {n_holes} holes masks\n"
+            "---------------------------\n"
+            f"nbl = {n_baselines}, nbs = {n_bispect}, "
+            f"ncp_i = {ncp_i}, ncov = {index_mask.n_cov}"
         )
 
     # Consider the filter to be made up of n_wl wavelengths
@@ -480,8 +478,9 @@ def make_mf(
                 hole_diam=hole_diam,
             )
         else:
-            cprint(
-                "Error: choose the extraction method 'gauss', 'fft' or 'square'.", "red"
+            rprint(
+                "[red]Error: choose the extraction method 'gauss', 'fft' or 'square'.",
+                file=sys.stderr,
             )
             return None
 
@@ -795,8 +794,11 @@ def tri_pix(array_size, sampledisk_r, verbose=True, display=True):
     """Compute all combination of triangle for a given splodge size"""
 
     if array_size % 2 == 1:
-        cprint("\n! Warnings: image dimension must be even (%i)" % array_size, "red")
-        cprint("Possible triangle inside the splodge should be incorrect.\n", "red")
+        rprint(
+            f"[red]\n! Warnings: image dimension must be even ({array_size})\n"
+            "Possible triangle inside the splodge should be incorrect.\n",
+            file=sys.stderr,
+        )
 
     d = np.zeros([array_size, array_size])
     d = plot_circle(d, array_size // 2, array_size // 2, sampledisk_r, display=False)

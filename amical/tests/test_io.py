@@ -303,7 +303,7 @@ def test_quiet_mode(global_datadir, capsys):
     bs_keys = list(bs.keys())
     assert isinstance(bs, Munch)
     assert len(bs_keys) == 13
-    assert captured.out == ""
+    assert captured.out.strip() == ""
     assert captured.err == ""
 
 

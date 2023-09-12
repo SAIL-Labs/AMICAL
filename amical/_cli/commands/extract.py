@@ -1,12 +1,13 @@
 import os
+import sys
 import time
 from glob import glob
 from pathlib import Path
 
 from astropy.io import fits
 from matplotlib import pyplot as plt
-from termcolor import cprint
-from tqdm import tqdm
+from rich import print as rprint
+from rich.progress import track
 
 import amical
 from amical._cli.commands.clean import _select_data_file
@@ -29,7 +30,7 @@ def _extract_bs_ifile(f, args, ami_param):
 def perform_extract(args):
     """CLI interface to extract the data with AMICAL (compute bispectrum object
     with all raw observables)."""
-    cprint("---- AMICAL extract started ----", "cyan")
+    rprint("[cyan]---- AMICAL extract started ----")
     t0 = time.time()
     ami_param = {
         "peakmethod": args.peakmethod,
@@ -51,14 +52,17 @@ def perform_extract(args):
 
     if not os.path.exists(args.datadir):
         print(
-            "%s directory not found, check --datadir. AMICAL look for data only in this specified directory."
-            % args.datadir
+            f"{args.datadir} directory not found, check --datadir. "
+            "AMICAL look for data only in this specified directory.",
+            file=sys.stderr,
         )
         return 1
 
     l_file = sorted(glob("%s/*.fits" % args.datadir))
     if len(l_file) == 0:
-        print("No fits files found in %s, check --datadir." % args.datadir)
+        print(
+            f"No fits files found in {args.datadir}, check --datadir.", file=sys.stderr
+        )
         return 1
 
     if not os.path.exists(args.outdir):
@@ -68,10 +72,10 @@ def perform_extract(args):
         f = _select_data_file(args, process="extract")[0]
         _extract_bs_ifile(f, args, ami_param)
     else:
-        for f in tqdm(l_file, ncols=100, desc="# files"):
+        for f in track(l_file, description="# files"):
             _extract_bs_ifile(f, args, ami_param)
     t1 = time.time() - t0
-    cprint("---- AMICAL extract done (%2.1fs) ----" % t1, "cyan")
+    rprint(f"[cyan]---- AMICAL extract done ({t1:2.1f}s) ----")
     if args.plot:
         plt.show(block=True)
     return 0

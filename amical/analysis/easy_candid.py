@@ -2,7 +2,7 @@ import os
 from typing import List, Optional, Union
 
 import numpy as np
-from termcolor import cprint
+from rich import print as rprint
 
 from amical.externals import candid
 
@@ -57,7 +57,7 @@ def candid_grid(
     if doNotFit is None:
         doNotFit = ["diam*"]
 
-    cprint(" | --- Start CANDID fitting --- :", "green")
+    rprint("[green] | --- Start CANDID fitting --- :")
     o = candid.Open(
         input_data,
         extra_error=extra_error_cp,
@@ -116,8 +116,10 @@ def candid_grid(
         posang = 360 + posang
 
     cr = 1 / f_u
-    cprint(f"\nResults binary fit (χ2 = {chi2:2.1f}, nσ = {nsigma:2.1f}):", "cyan")
-    cprint("-------------------", "cyan")
+    rprint(
+        f"[cyan]\nResults binary fit (χ2 = {chi2:2.1f}, nσ = {nsigma:2.1f}):\n"
+        "-------------------"
+    )
 
     print(f"Sep = {s.nominal_value:2.1f} +/- {s.std_dev:2.1f} mas")
     print(f"Theta = {posang.nominal_value:2.1f} +/- {posang.std_dev:2.1f} deg")
@@ -164,7 +166,7 @@ def candid_cr_limit(
     if methods is None:
         methods = ["injection"]
 
-    cprint(" | --- Start CANDID contrast limit --- :", "green")
+    rprint("[green] | --- Start CANDID contrast limit --- :")
     o = candid.Open(
         input_data,
         extra_error=extra_error_cp,
