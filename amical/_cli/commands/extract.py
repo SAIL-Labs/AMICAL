@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 from glob import glob
 from pathlib import Path
@@ -51,14 +52,17 @@ def perform_extract(args):
 
     if not os.path.exists(args.datadir):
         print(
-            "%s directory not found, check --datadir. AMICAL look for data only in this specified directory."
-            % args.datadir
+            f"{args.datadir} directory not found, check --datadir. "
+            "AMICAL look for data only in this specified directory.",
+            file=sys.stderr,
         )
         return 1
 
     l_file = sorted(glob("%s/*.fits" % args.datadir))
     if len(l_file) == 0:
-        print("No fits files found in %s, check --datadir." % args.datadir)
+        print(
+            f"No fits files found in {args.datadir}, check --datadir.", file=sys.stderr
+        )
         return 1
 
     if not os.path.exists(args.outdir):
