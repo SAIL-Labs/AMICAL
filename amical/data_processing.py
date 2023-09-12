@@ -61,9 +61,7 @@ def _apply_patch_ghost(cube, xc, yc, radius=20, dx=0, dy=-200, method="bg"):
     return cube_corrected
 
 
-def select_data(
-    cube, clip_fact=0.5, clip=False, verbose=True, display=True, *, user_bad=None
-):
+def select_data(cube, clip_fact=0.5, clip=False, verbose=True, display=True):
     """Check the cleaned data cube using the position of the maximum in the
     fft image (supposed to be zero). If not in zero position, the fram is
     rejected. It can apply a sigma-clipping to select only the frames with the
@@ -113,16 +111,12 @@ def select_data(
 
     if clip:
         cond_clip = fluxes > limit_flux
-        cube_cleaned_checked_tmp = cube[cond_clip]
+        cube_cleaned_checked = cube[cond_clip]
         ind_clip = np.where(fluxes <= limit_flux)[0]
     else:
         ind_clip = []
-        cube_cleaned_checked_tmp = np.array(good_fram)
+        cube_cleaned_checked = np.array(good_fram)
 
-    cube_cleaned_checked = []
-    for i in range(len(cube_cleaned_checked_tmp)):
-        if i not in user_bad:
-            cube_cleaned_checked.append(cube_cleaned_checked_tmp[i])
     cube_cleaned_checked = np.array(cube_cleaned_checked)
 
     ind_clip2 = np.where(fluxes <= limit_flux)[0]
@@ -731,7 +725,6 @@ def select_clean_data(
     display=False,
     *,
     remove_bad=True,
-    user_bad=None,
     nframe=0,
     mask=None,
     i_wl=None,
@@ -865,13 +858,10 @@ def select_clean_data(
     if cube_cleaned is None:
         return None
 
-    if user_bad is None:
-        user_bad = []
     cube_final = select_data(
         cube_cleaned,
         clip=clip,
         clip_fact=clip_fact,
-        user_bad=user_bad,
         verbose=verbose,
         display=display,
     )
