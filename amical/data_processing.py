@@ -14,8 +14,8 @@ import sys
 import warnings
 
 import numpy as np
-from termcolor import cprint
-from tqdm import tqdm
+from rich import print as rprint
+from rich.progress import track
 
 from amical.tools import apply_windowing, crop_max, find_max
 
@@ -101,10 +101,10 @@ def select_data(cube, clip_fact=0.5, clip=False, verbose=True, display=True):
 
     if verbose:
         if (med_flux / std_flux) <= 5.0:
-            cprint(
-                "\nStd of the fluxes along the cube < 5 (%2.1f):\n -> sigma clipping is suggested (clip=True)."
-                % (med_flux / std_flux),
-                "cyan",
+            rprint(
+                "[cyan]\n"
+                f"Std of the fluxes along the cube < 5 ({med_flux / std_flux:2.1f}):\n"
+                " -> sigma clipping is suggested (clip=True).",
             )
 
     limit_flux = med_flux - clip_fact * std_flux
@@ -186,9 +186,9 @@ def select_data(cube, clip_fact=0.5, clip=False, verbose=True, display=True):
         n_good = len(cube_cleaned_checked)
         n_bad = len(cube) - n_good
         if clip:
-            cprint("\n---- σ-clip + centered fluxes selection ---", "cyan")
+            rprint("[cyan]\n---- σ-clip + centered fluxes selection ---")
         else:
-            cprint("\n---- centered fluxes selection ---", "cyan")
+            rprint("[cyan]\n---- centered fluxes selection ---")
         print(
             "%i/%i (%2.1f%%) are flagged as bad frames"
             % (n_bad, len(cube), 100 * float(n_bad) / len(cube))
@@ -585,7 +585,7 @@ def clean_data(
 
     bad_map, add_bad = _get_3d_bad_pixels(bad_map, add_bad, data)
 
-    for i in tqdm(range(n_im), ncols=100, desc="Cleaning", leave=False):
+    for i in track(range(n_im), description="Cleaning"):
         img0 = data[i]
         img0 = _apply_edge_correction(img0, edge=edge)
         if bad_map is not None:

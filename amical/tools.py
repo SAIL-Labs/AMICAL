@@ -10,10 +10,11 @@ General tools.
 --------------------------------------------------------------------
 """
 import math as m
+import sys
 import warnings
 
 import numpy as np
-from termcolor import cprint
+from rich import print as rprint
 
 from amical.externals.munch import munchify as dict2class
 
@@ -382,10 +383,10 @@ def compute_pa(hdr, n_ps, verbose=False, display=False, *, sci_hdr=None):
         except KeyError:
             nframe = n_ps
         if verbose:
-            cprint(
-                "Warning: %s not in known pa computation -> set to zero.\n"
-                % instrument,
-                "green",
+            rprint(
+                f"[green]Warning: {instrument} not in known pa computation"
+                " -> set to zero.\n",
+                file=sys.stderr,
             )
         pa_exist = False
         l_pa = np.zeros(nframe)

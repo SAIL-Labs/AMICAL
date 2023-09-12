@@ -5,10 +5,10 @@ from pathlib import Path
 
 from astroquery.simbad import Simbad
 from matplotlib import pyplot as plt
-from tabulate import tabulate
-from termcolor import cprint
+from rich import print as rprint
 
 import amical
+from amical._rich_display import tabulate
 
 
 def _query_simbad(targetname):
@@ -105,7 +105,7 @@ def perform_calibrate(args):
     # Position angle from North to East
     pa = bs_t.infos.pa
 
-    cprint("\nPosition angle computed for the data: pa = %2.3f deg" % pa, "cyan")
+    rprint(f"[cyan]\nPosition angle computed for the data: pa = {pa:2.3f} deg")
 
     # Display and save the results as oifits
     if args.plot:

@@ -3,7 +3,7 @@ import os
 import sys
 
 import numpy as np
-from tqdm import tqdm
+from rich.progress import track
 
 import amical
 from amical.analysis import models
@@ -469,7 +469,7 @@ def compute_chi2_curve(
 
     fitOnly.remove(name_param)
     l_chi2r = []
-    for pr in tqdm(array_params, desc="Chi2 curve (%s)" % name_param, ncols=100):
+    for pr in track(array_params, description=f"Chi2 curve ({name_param}"):
         params[name_param] = pr
         lfits = smartfit(
             obs,

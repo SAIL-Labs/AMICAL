@@ -11,9 +11,10 @@ OIFITS related function.
 """
 import datetime
 import os
+import sys
 
 import numpy as np
-from termcolor import cprint
+from rich import print as rprint
 
 from amical.externals.munch import munchify as dict2class
 from amical.tools import rad2mas
@@ -205,8 +206,9 @@ def cal2dict(
         maskname = res_t.infos.maskname
         pixscale = res_t.infos.pixscale
     except KeyError:
-        cprint(
-            "Error: 'INSTRUME', 'NRMNAME' or 'PIXELSCL' are not in the header.", "red"
+        rprint(
+            "[red]Error: 'INSTRUME', 'NRMNAME' or 'PIXELSCL' are not in the header.",
+            file=sys.stderr,
         )
         return None
 
@@ -241,7 +243,7 @@ def cal2dict(
         calib_name = res_c.infos.target
 
     if ind_hole is not None:
-        cprint("Select only independant CP using common hole #%i." % ind_hole, "green")
+        rprint(f"[green]Select only independant CP using common hole #{ind_hole}.")
         sel_ind_cp = _peak1hole_cp(cal.raw_t, ind_hole)
     else:
         sel_ind_cp = np.arange(len(cal.cp))
@@ -521,7 +523,7 @@ def save(
     from astroquery.simbad import Simbad
 
     if observables is None:
-        cprint("\nError save : Wrong data format!", on_color="on_red")
+        rprint("[on red]\nError save : Wrong data format!", file=sys.stderr)
         return None
 
     if oifits_file is None:
@@ -546,7 +548,7 @@ def save(
                     " they should be saved to a pickle file. Use raw=True to turn this"
                     " warning off."
                 )
-                cprint(f"Warning: {msg}", "green")
+                rprint(f"[green]Warning: {msg}", file=sys.stderr)
             iobs = wrap_raw(iobs)
         idic = cal2dict(
             iobs,
@@ -905,7 +907,7 @@ def save(
     savedfile = os.path.join(datadir, oifits_file)
     hdulist.writeto(savedfile, overwrite=True)
     if verbose:
-        cprint("\n\n### OIFITS CREATED (%s)." % oifits_file, "cyan")
+        rprint(f"[cyan]\n\n### OIFITS CREATED ({oifits_file}).", "cyan")
 
     if len(l_dic) == 1:
         l_dic = l_dic[0]

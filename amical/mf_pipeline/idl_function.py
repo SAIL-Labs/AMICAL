@@ -11,8 +11,10 @@ All required IDL function translated into python.
 
 --------------------------------------------------------------------
 """
+import sys
+
 import numpy as np
-from termcolor import cprint
+from rich import print as rprint
 
 from amical.externals.munch import munchify as dict2class
 
@@ -26,7 +28,7 @@ def regress_noc(x, y, weights):
     npts = sy[0]  # # OF OBSERVATIONS
 
     if (len(weights) != sy[0]) or (len(sx) != 2) or (sy[0] != sx[1]):
-        cprint("Incompatible arrays to compute slope error.", "red")
+        rprint("[red]Incompatible arrays to compute slope error.", file=sys.stderr)
 
     xwy = np.dot(x, (weights * y))
     wx = np.zeros([npts, nterm])

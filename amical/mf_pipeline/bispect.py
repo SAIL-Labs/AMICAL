@@ -18,8 +18,8 @@ import time
 from pathlib import Path
 
 import numpy as np
-from termcolor import cprint
-from tqdm import tqdm
+from rich import print as rprint
+from rich.progress import track
 
 from amical.externals.munch import munchify as dict2class
 from amical.get_infos_obs import get_mask
@@ -105,13 +105,10 @@ def _compute_complex_bs(
 
     fluxes = np.zeros(n_ps)
 
-    for i in tqdm(
+    for i in track(
         range(n_ps),
-        ncols=100,
-        desc="Extracting in the cube",
-        leave=False,
-        file=sys.stdout,
-        disable=np.invert(verbose),
+        description="Extracting in the cube",
+        disable=not verbose,
     ):
         ft_frame = ft_arr[i]
         ps = np.abs(ft_frame) ** 2
@@ -364,23 +361,25 @@ def _check_input_infos(hdr, targetname=None, filtname=None, instrum=None, verbos
         if targetname is not None:
             target = targetname
             if verbose:
-                cprint(
-                    "Warning: OBJECT is not in the header, targetname is used (%s)."
-                    % targetname,
-                    "green",
+                rprint(
+                    f"[green]Warning: OBJECT is not in the header, targetname is used ({targetname}).",
+                    file=sys.stderr,
                 )
         else:
-            cprint("Warning: target name not found (header or as input).", "green")
+            rprint(
+                "[green]Warning: target name not found (header or as input).",
+                file=sys.stderr,
+            )
 
     # Check the filter used
     if filt is None:
         if filtname is not None:
             filt = filtname
             if verbose:
-                cprint(
-                    "Warning: FILTER is not in the header, filtname is used (%s)."
-                    % filtname,
-                    "green",
+                rprint(
+                    "[green]Warning: FILTER is not in the header, "
+                    f"filtname is used ({filtname}).",
+                    file=sys.stderr,
                 )
 
     # Check the instrument used
@@ -429,12 +428,18 @@ def _set_good_nblocks(n_blocks, n_ps, verbose=False):
     """
     if (n_blocks == 0) or (n_blocks == 1):
         if verbose:
-            cprint("! Warning: nblocks == 0 -> n_blocks set to n_ps", "green")
+            rprint(
+                "[green]! Warning: nblocks == 0 -> n_blocks set to n_ps",
+                file=sys.stderr,
+            )
         n_blocks = n_ps
     elif n_blocks > n_ps:
         if verbose:
-            cprint("------------------------------------", "green")
-            cprint("! Warning: nblocks > n_ps -> n_blocks set to n_ps", "green")
+            rprint(
+                "[green]------------------------------------\n"
+                "! Warning: nblocks > n_ps -> n_blocks set to n_ps",
+                file=sys.stderr,
+            )
         n_blocks = n_ps
     return n_blocks
 
@@ -649,9 +654,7 @@ def _compute_cp_cov(bs_arr, bs, index_mask, disable=False):
     n_bispect = index_mask.n_bispect
 
     cp_cov = dblarr(n_bispect, n_bispect)
-    for i in tqdm(
-        range(n_bispect), desc="CP covariance", ncols=100, leave=False, disable=disable
-    ):
+    for i in track(range(n_bispect), description="CP covariance", disable=disable):
         for j in range(n_bispect):
             temp1 = (bs_arr[:, i] - bs[i]) * np.conj(bs[i])
             temp2 = (bs_arr[:, j] - bs[j]) * np.conj(bs[j])
@@ -897,8 +900,7 @@ def _compute_phs_piston(
         find_piston = np.dot(res.x, fitmat)
     else:
         if verbose:
-            cprint("Error calculating hole pistons...", "red")
-            pass
+            rprint("[red]Error calculating hole pistons...", file=sys.stderr)
 
     if display:
         import matplotlib.pyplot as plt
@@ -1124,7 +1126,7 @@ def extract_bs(
     from astropy.io import fits
 
     if verbose:
-        cprint("\n-- Starting extraction of observables --", "cyan")
+        rprint("[cyan]\n-- Starting extraction of observables --")
     start_time = time.time()
 
     if save_to is not None:
@@ -1370,5 +1372,5 @@ def extract_bs(
         produce_result_pdf(save_to, Path(filename).stem)
 
     if verbose:
-        cprint("\nDone (exec time: %d min %2.1f s)." % (m, t - m * 60), color="magenta")
+        rprint("[magenta]\nDone (exec time: %d min %2.1f s)." % (m, t - m * 60))
     return dict2class(obs_result)
