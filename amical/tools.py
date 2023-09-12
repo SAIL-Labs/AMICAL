@@ -78,7 +78,7 @@ def find_max(img, filtmed=True, f=3):
     return X, Y
 
 
-def crop_max(img, dim, offx=0, offy=0, filtmed=True, f=3):
+def crop_max(img, dim, iframe=0, offx=0, offy=0, filtmed=True, f=3):
     """
     Summary
     -------------
@@ -111,7 +111,7 @@ def crop_max(img, dim, offx=0, offy=0, filtmed=True, f=3):
     if isz_max < dim:
         size_msg = (
             f"The specified cropped image size, {dim}, is greater than the distance to"
-            " the PSF center in at least one dimension. The max size for this image is"
+            f" the PSF center in at least one dimension (frame {iframe}). The max size for this image is"
             f" {isz_max}"
         )
         raise ValueError(size_msg)

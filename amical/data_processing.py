@@ -61,7 +61,9 @@ def _apply_patch_ghost(cube, xc, yc, radius=20, dx=0, dy=-200, method="bg"):
     return cube_corrected
 
 
-def select_data(cube, clip_fact=0.5, clip=False, verbose=True, display=True):
+def select_data(
+    cube, clip_fact=0.5, clip=False, verbose=True, display=True, *, user_bad=None
+):
     """Check the cleaned data cube using the position of the maximum in the
     fft image (supposed to be zero). If not in zero position, the fram is
     rejected. It can apply a sigma-clipping to select only the frames with the
@@ -111,11 +113,17 @@ def select_data(cube, clip_fact=0.5, clip=False, verbose=True, display=True):
 
     if clip:
         cond_clip = fluxes > limit_flux
-        cube_cleaned_checked = cube[cond_clip]
+        cube_cleaned_checked_tmp = cube[cond_clip]
         ind_clip = np.where(fluxes <= limit_flux)[0]
     else:
         ind_clip = []
-        cube_cleaned_checked = np.array(good_fram)
+        cube_cleaned_checked_tmp = np.array(good_fram)
+
+    cube_cleaned_checked = []
+    for i in range(len(cube_cleaned_checked_tmp)):
+        if i not in user_bad:
+            cube_cleaned_checked.append(cube_cleaned_checked_tmp[i])
+    cube_cleaned_checked = np.array(cube_cleaned_checked)
 
     ind_clip2 = np.where(fluxes <= limit_flux)[0]
     if ((worst_fr in ind_clip2) and clip) or (worst_fr in flag_fram):
@@ -123,7 +131,14 @@ def select_data(cube, clip_fact=0.5, clip=False, verbose=True, display=True):
     else:
         ext = ""
 
-    diffmm = 100 * abs(np.max(fluxes) - np.min(fluxes)) / med_flux
+    fluxes_check = np.array([x.sum() for x in cube_cleaned_checked])
+
+    best_fr = np.argmax(fluxes_check)
+    worst_fr = np.argmin(fluxes_check)
+
+    med_flux = np.median(fluxes_check)
+    std_flux = np.std(fluxes_check)
+    diffmm = 100 * abs(np.max(fluxes_check) - np.min(fluxes_check)) / med_flux
     if display:
         import matplotlib.pyplot as plt
         from matplotlib.colors import PowerNorm
@@ -429,7 +444,7 @@ def show_clean_params(
 
     noBadPixel = False
     bad_pix_x, bad_pix_y = [], []
-    if np.any(bmap0):
+    if np.any(bmap0) or np.any(ab0):
         if len(ab0) != 0:
             for j in range(len(ab0)):
                 bmap0[ab0[j][1], ab0[j][0]] = 1
@@ -544,6 +559,39 @@ def _remove_dark(img1, darkfile=None, ihdu=0, verbose=False):
     return img1
 
 
+def _cosmic_bad_frames_finder(data, f_kernel):
+    """
+    Summary
+    -------------
+    Review the datacube and attempt centering. If centering fails, mark the frame as
+    a "bad frame" and exclude it from further cleaning steps.
+
+    Parameters
+    ----------
+    `data` : {numpy.array}
+       datacube containing the NRM data.\n
+
+    Returns:
+    --------
+    `bad_frames` : {list}
+       List of bad frames index.\n
+    """
+    n_im = data.shape[0]
+    bad_frames = []
+    for i in range(n_im):
+        filtmed = f_kernel is not None
+        try:
+            crop_max(data[i], 64, iframe=i, filtmed=filtmed, f=f_kernel)[0]
+        except ValueError:
+            bad_frames.append(i)
+    print(
+        "[AMICAL] %i unusable frames have been identified in the data cube,"
+        % (len(bad_frames))
+        + " primarily due to cosmic rays or persistent bad pixels."
+    )
+    return bad_frames
+
+
 def clean_data(
     data,
     isz=None,
@@ -585,6 +633,8 @@ def clean_data(
 
     bad_map, add_bad = _get_3d_bad_pixels(bad_map, add_bad, data)
 
+    bad_frames = _cosmic_bad_frames_finder(data, f_kernel)
+
     for i in tqdm(range(n_im), ncols=100, desc="Cleaning", leave=False):
         img0 = data[i]
         img0 = _apply_edge_correction(img0, edge=edge)
@@ -617,34 +667,42 @@ def clean_data(
             img_biased = img1.copy()
         img_biased[img_biased < 0] = 0  # Remove negative pixels
 
-        if isz is not None:
-            # Get expected center for sky correction
-            filtmed = f_kernel is not None
-            im_rec_max = crop_max(
-                img_biased, isz, offx=offx, offy=offy, filtmed=filtmed, f=f_kernel
-            )[0]
-        else:
-            im_rec_max = img_biased.copy()
-
-        if (
-            (im_rec_max.shape[0] != im_rec_max.shape[1])
-            or (isz is not None and im_rec_max.shape[0] != isz)
-            or (isz is None and im_rec_max.shape[0] != img0.shape[0])
-        ):
-            l_bad_frame.append(i)
-        else:
-            if apod and window is not None:
-                img = apply_windowing(im_rec_max, window=window)
-            elif apod:
-                warnings.warn(
-                    "apod is set to True, but window is None. Skipping apodisation",
-                    RuntimeWarning,
-                    stacklevel=2,
-                )
-                img = im_rec_max.copy()
+        if i not in bad_frames:
+            if isz is not None:
+                # Get expected center for sky correction
+                filtmed = f_kernel is not None
+                im_rec_max = crop_max(
+                    img_biased,
+                    isz,
+                    iframe=i,
+                    offx=offx,
+                    offy=offy,
+                    filtmed=filtmed,
+                    f=f_kernel,
+                )[0]
             else:
-                img = im_rec_max.copy()
+                im_rec_max = img_biased.copy()
+
+            if (
+                (im_rec_max.shape[0] != im_rec_max.shape[1])
+                or (isz is not None and im_rec_max.shape[0] != isz)
+                or (isz is None and im_rec_max.shape[0] != img0.shape[0])
+            ):
+                l_bad_frame.append(i)
+            else:
+                if apod and window is not None:
+                    img = apply_windowing(im_rec_max, window=window)
+                elif apod:
+                    warnings.warn(
+                        "apod is set to True, but window is None. Skipping apodisation",
+                        RuntimeWarning,
+                        stacklevel=2,
+                    )
+                    img = im_rec_max.copy()
+                else:
+                    img = im_rec_max.copy()
             cube_cleaned.append(img)
+
     if verbose:
         print("Bad centering frame number:", l_bad_frame)
     cube_cleaned = np.array(cube_cleaned)
@@ -673,6 +731,7 @@ def select_clean_data(
     display=False,
     *,
     remove_bad=True,
+    user_bad=None,
     nframe=0,
     mask=None,
     i_wl=None,
@@ -806,10 +865,13 @@ def select_clean_data(
     if cube_cleaned is None:
         return None
 
+    if user_bad is None:
+        user_bad = []
     cube_final = select_data(
         cube_cleaned,
         clip=clip,
         clip_fact=clip_fact,
+        user_bad=user_bad,
         verbose=verbose,
         display=display,
     )
