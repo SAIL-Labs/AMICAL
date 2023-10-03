@@ -237,7 +237,7 @@ def cal2dict(
     u1 = u * np.cos(np.deg2rad(thepa)) + v * np.sin(np.deg2rad(thepa))
     v1 = -u * np.sin(np.deg2rad(thepa)) + v * np.cos(np.deg2rad(thepa))
 
-    if type(res_c) is list:
+    if isinstance(res_c, list):
         calib_name = res_c[0].infos.target
     else:
         calib_name = res_c.infos.target
@@ -530,7 +530,7 @@ def save(
         print("Error: oifits filename is not given, please specify oifits_file.")
         return None
 
-    if type(observables) is not list:
+    if not isinstance(observables, list):
         observables = [observables]
 
     if not isinstance(origin, (str, type(None))):
@@ -763,7 +763,7 @@ def save(
     else:
         npts = 1
 
-    if type(data["TARGET_ID"]) == int:
+    if isinstance(data["TARGET_ID"], int):
         npts = len(dic["OI_VIS2"]["VIS2DATA"])
         targetId = [data["TARGET_ID"]] * npts
         time = [data["TIME"]] * npts
@@ -1197,7 +1197,7 @@ def show(
     """
     import matplotlib.pyplot as plt
 
-    if type(inputList) is not list:
+    if not isinstance(inputList, list):
         inputList = [inputList]
 
     if hasattr(inputList[0], "v2"):
@@ -1214,10 +1214,10 @@ def show(
         ]
         print("\n -- SHOW -- Inputs are classes from amical.calibrate:")
         print("-> (Check true_flag_v2, true_flag_t3 and snr parameters)\n")
-    elif type(inputList[0]) is str:
+    elif isinstance(inputList[0], str):
         l_dic = [load(x) for x in inputList]
         print("Inputs are oifits filename.")
-    elif type(inputList[0]) is dict:
+    elif isinstance(inputList[0], dict):
         l_dic = inputList
         print("Inputs are dict from amical.load.")
     else:

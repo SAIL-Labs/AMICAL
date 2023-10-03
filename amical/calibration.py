@@ -306,7 +306,7 @@ def calibrate(
         NRM data, inputs of this function).
     """
 
-    if type(res_c) is not list:
+    if not isinstance(res_c, list):
         res_c = [res_c]
 
     calib_tab = average_calib_files(res_c, sig_thres=sig_thres, display=display)
