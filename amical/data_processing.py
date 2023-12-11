@@ -418,7 +418,7 @@ def show_clean_params(
         img1 = img0.copy()
 
     if isz is None:
-        pos = (img1.shape[0]//2, img1.shape[1]//2)
+        pos = (img1.shape[0] // 2, img1.shape[1] // 2)
 
         print(
             "Warning: isz not found (None by default). "
