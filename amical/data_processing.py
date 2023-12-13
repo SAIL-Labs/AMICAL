@@ -486,8 +486,8 @@ def show_clean_params(
         # The window parameter gives the FWHM of the super-Gaussian
         # windowing. Dividing by 2 gives the HWHM since the value
         # is used as the radius for the circle that is plotted
-        x3 = window/2.0 * np.cos(theta) + x0
-        y3 = window/2.0 * np.sin(theta) + y0
+        x3 = window / 2.0 * np.cos(theta) + x0
+        y3 = window / 2.0 * np.sin(theta) + y0
         plt.plot(x3, y3, "--", label="Super-gaussian windowing (FWHM)")
 
         if window_contours:
@@ -508,9 +508,16 @@ def show_clean_params(
             x_coord = np.arange(img1.shape[1])
             xx_grid, yy_grid = np.meshgrid(x_coord, y_coord)
             levels = [0.1, 0.25, 0.5, 0.75, 0.9]
-            contours = plt.contour(xx_grid, yy_grid, super_gauss, levels=levels,
-                                   linestyles=':', linewidths=0.8, colors='white')
-            plt.clabel(contours, contours.levels, inline=True, fontsize=7.)
+            contours = plt.contour(
+                xx_grid,
+                yy_grid,
+                super_gauss,
+                levels=levels,
+                linestyles=":",
+                linewidths=0.8,
+                colors="white",
+            )
+            plt.clabel(contours, contours.levels, inline=True, fontsize=7.0)
 
     plt.plot(x0, y0, "+", color="c", ms=10, label="Centering position")
     plt.plot(

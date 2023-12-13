@@ -13,8 +13,6 @@ import math as m
 import sys
 import warnings
 
-from typing import Tuple
-
 import numpy as np
 from rich import print as rprint
 
@@ -280,7 +278,9 @@ def cov2cor(cov):
     return cor, sigma
 
 
-def super_gaussian(x: np.ndarray, window: float, m: float = 3.0, amp: float = 1.0, x0: float = 0.0) -> np.ndarray:
+def super_gaussian(
+    x: np.ndarray, window: float, m: float = 3.0, amp: float = 1.0, x0: float = 0.0
+) -> np.ndarray:
     """
     Function for creating a super-Gaussian window.
 
@@ -306,16 +306,16 @@ def super_gaussian(x: np.ndarray, window: float, m: float = 3.0, amp: float = 1.
     return amp * (
         (
             np.exp(
-                -(2 ** (2 * m - 1))
-                * np.log(2)
-                * (((x - x0) ** 2) / (window ** 2)) ** m
+                -(2 ** (2 * m - 1)) * np.log(2) * (((x - x0) ** 2) / (window**2)) ** m
             )
         )
         ** 2
     )
 
 
-def apply_windowing(img: np.ndarray, window: float = 80.0, m: float = 3.0) -> np.ndarray:
+def apply_windowing(
+    img: np.ndarray, window: float = 80.0, m: float = 3.0
+) -> np.ndarray:
     """
     Function for applying a super-Gaussian window to an image.
 
