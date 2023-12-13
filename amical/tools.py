@@ -13,6 +13,8 @@ import math as m
 import sys
 import warnings
 
+from typing import Tuple
+
 import numpy as np
 from rich import print as rprint
 
@@ -278,22 +280,59 @@ def cov2cor(cov):
     return cor, sigma
 
 
-def super_gaussian(x, sigma, m, amp=1, x0=0):
-    sigma = float(sigma)
-    m = float(m)
+def super_gaussian(x: np.ndarray, window: float, m: float = 3.0, amp: float = 1.0, x0: float = 0.0) -> np.ndarray:
+    """
+    Function for creating a super-Gaussian window.
+
+    Parameters
+    ----------
+    x : np.ndarray
+        2D array with the distances of each pixel to the image center.
+    window : float
+        Full width at half maximum of the super-Gaussian window.
+    m : float
+        Exponent used for the super-Gaussian function (default: 3.0).
+    amp : float
+        Amplitude of the Gaussian function (default: 1.0).
+    x0 : float
+        Offset applied to the distances (default: 0.0)
+
+    Returns
+    -------
+    np.ndarray
+        2D array with the super-Gaussian window function.
+    """
+
     return amp * (
         (
             np.exp(
                 -(2 ** (2 * m - 1))
                 * np.log(2)
-                * (((x - x0) ** 2) / ((sigma) ** 2)) ** (m)
+                * (((x - x0) ** 2) / (window ** 2)) ** m
             )
         )
         ** 2
     )
 
 
-def apply_windowing(img, window=80, m=3):
+def apply_windowing(img: np.ndarray, window: float = 80.0, m: float = 3.0) -> np.ndarray:
+    """
+    Function for applying a super-Gaussian window to an image.
+
+    Parameters
+    ----------
+    img : np.ndarray
+        2D array with the input image.
+    window : float
+        Full width at half maximum of the window function (default: 80.0).
+    m : float
+        Exponent used for the super-Gaussian function (default: 3.0).
+
+    Returns
+    -------
+    np.ndarray
+        2D array with the windowed input image.
+    """
     isz = len(img)
     xx, yy = np.arange(isz), np.arange(isz)
     xx2 = xx - isz // 2
@@ -302,11 +341,10 @@ def apply_windowing(img, window=80, m=3):
     distance = np.sqrt(xx2**2 + yy2[:, np.newaxis] ** 2)
 
     # Super-gaussian windowing
-    window = super_gaussian(distance, sigma=window * 2, m=m)
+    super_gauss = super_gaussian(distance, window=window, m=m)
 
     # Apply the windowing
-    img_apod = img * window
-    return img_apod
+    return img * super_gauss
 
 
 def sanitize_array(dic):  # pragma: no cover
