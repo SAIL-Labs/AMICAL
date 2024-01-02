@@ -625,12 +625,14 @@ def test_isz_none(global_datadir):
     fig = amical.show_clean_params(fits_file, **clean_param)
 
     assert isinstance(fig, plt.Figure)
-    assert fig.axes[0]._viewLim._points[0, 0] == 0.0
-    assert fig.axes[0]._viewLim._points[0, 1] == 0.0
-    assert fig.axes[0]._viewLim._points[1, 0] == 80.0
-    assert fig.axes[0]._viewLim._points[1, 1] == 80.0
+    assert fig.axes[0].get_xlim() == (0.0, 80.0)
+    assert fig.axes[0].get_ylim() == (0.0, 80.0)
 
-    cube_clean = amical.select_clean_data(fits_file, **clean_param)
+    # Set clip=False such that the shape does not changes 
+    cube_clean = amical.select_clean_data(fits_file, clip=False, **clean_param)
+
+    # Get the shape of the array with input images
+    fits_images = fits.getdata(fits_file)
 
     assert isinstance(cube_clean, np.ndarray)
-    assert cube_clean.shape == (217, 81, 81)
+    assert cube_clean.shape == fits_images.shape
