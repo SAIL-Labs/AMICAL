@@ -628,7 +628,7 @@ def test_isz_none(global_datadir):
     assert fig.axes[0].get_xlim() == (0.0, 80.0)
     assert fig.axes[0].get_ylim() == (0.0, 80.0)
 
-    # Set clip=False such that the shape does not changes 
+    # Set clip=False such that the shape does not changes
     cube_clean = amical.select_clean_data(fits_file, clip=False, **clean_param)
 
     # Get the shape of the array with input images
