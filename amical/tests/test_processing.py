@@ -607,3 +607,30 @@ def test_clean_crop_order():
     img_correct_crop = crop_max(correct, isz, filtmed=False)[0]
 
     assert np.all(np.abs(img_correct_crop - img_cube_clean) < 10 * np.finfo(float).eps)
+
+
+@pytest.mark.usefixtures("close_figures")
+def test_isz_none(global_datadir):
+    fits_file = global_datadir / "test.fits"
+
+    clean_param = {
+        "isz": None,
+        "r1": 35,
+        "dr": 2,
+        "apod": True,
+        "window": 65,
+        "f_kernel": 3,
+    }
+
+    fig = amical.show_clean_params(fits_file, **clean_param)
+
+    assert isinstance(fig, plt.Figure)
+    assert fig.axes[0]._viewLim._points[0, 0] == 0.0
+    assert fig.axes[0]._viewLim._points[0, 1] == 0.0
+    assert fig.axes[0]._viewLim._points[1, 0] == 80.0
+    assert fig.axes[0]._viewLim._points[1, 1] == 80.0
+
+    cube_clean = amical.select_clean_data(fits_file, **clean_param)
+
+    assert isinstance(cube_clean, np.ndarray)
+    assert cube_clean.shape == (217, 81, 81)
