@@ -343,7 +343,7 @@ def apply_windowing(
     distance = np.sqrt(xx2**2 + yy2[:, np.newaxis] ** 2)
 
     # Super-gaussian windowing
-    super_gauss = super_gaussian(distance, window=window, m=m)
+    super_gauss = super_gaussian(distance, sigma=window, m=m)
 
     # Apply the windowing
     return img * super_gauss

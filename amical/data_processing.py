@@ -499,7 +499,7 @@ def show_clean_params(
             distance = np.hypot(xx_grid, yy_grid)
 
             # Create the super-Gaussian window function
-            super_gauss = super_gaussian(distance, window=window)
+            super_gauss = super_gaussian(distance, sigma=window)
 
             # Plot contours of the window function
             # Create a new meshgrid because the coordinate system
