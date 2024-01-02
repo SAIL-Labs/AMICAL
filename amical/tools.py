@@ -279,7 +279,7 @@ def cov2cor(cov):
 
 
 def super_gaussian(
-    x: np.ndarray, window: float, m: float = 3.0, amp: float = 1.0, x0: float = 0.0
+    x: np.ndarray, sigma: float, m: float = 3.0, amp: float = 1.0, x0: float = 0.0
 ) -> np.ndarray:
     """
     Function for creating a super-Gaussian window.
@@ -288,8 +288,10 @@ def super_gaussian(
     ----------
     x : np.ndarray
         2D array with the distances of each pixel to the image center.
-    window : float
-        Full width at half maximum of the super-Gaussian window.
+    sigma : float
+        Full width at half maximum of the super-Gaussian window. It
+        is therefore not the standard deviation, as the parameter
+        name would suggest.
     m : float
         Exponent used for the super-Gaussian function (default: 3.0).
     amp : float
@@ -306,7 +308,7 @@ def super_gaussian(
     return amp * (
         (
             np.exp(
-                -(2 ** (2 * m - 1)) * np.log(2) * (((x - x0) ** 2) / (window**2)) ** m
+                -(2 ** (2 * m - 1)) * np.log(2) * (((x - x0) ** 2) / (sigma**2)) ** m
             )
         )
         ** 2
