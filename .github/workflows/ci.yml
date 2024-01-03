@@ -23,6 +23,7 @@ jobs:
 
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
+    fail-fast: false
 
     steps:
     - name: Checkout Source
