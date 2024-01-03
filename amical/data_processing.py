@@ -356,7 +356,7 @@ def _get_3d_bad_pixels(bad_map, add_bad, data):
 
 def show_clean_params(
     filename,
-    isz,
+    isz=None,
     r1=None,
     dr=None,
     bad_map=None,
@@ -380,7 +380,7 @@ def show_clean_params(
     -----------
 
     `filename` {str}: filename containing the datacube,\n
-    `isz` {int}: Size of the cropped image (default: 256)\n
+    `isz` {int}: Size of the cropped image (default: None)\n
     `r1` {int}: Radius of the rings to compute background sky (default: 100)\n
     `dr` {int}: Outer radius to compute sky (default: 10)\n
     `bad_map` {array}: Bad pixel map with 0 and 1 where 1 set for a bad pixel (default: None),\n
@@ -403,14 +403,6 @@ def show_clean_params(
     img0 = data[nframe]
     dims = img0.shape
 
-    if isz is None:
-        print(
-            "Warning: isz not found (None by default). isz is set to the original image size (%i)"
-            % (dims[0]),
-            file=sys.stderr,
-        )
-        isz = dims[0]
-
     bad_map, add_bad = _get_3d_bad_pixels(bad_map, add_bad, data)
     bmap0 = bad_map[nframe]
     ab0 = add_bad[nframe]
@@ -424,8 +416,22 @@ def show_clean_params(
         img1 = fix_bad_pixels(img0, bmap0, add_bad=ab0)
     else:
         img1 = img0.copy()
-    cropped_infos = crop_max(img1, isz, offx=offx, offy=offy, f=f_kernel)
-    pos = cropped_infos[1]
+
+    if isz is None:
+        pos = (img1.shape[0] // 2, img1.shape[1] // 2)
+
+        print(
+            "Warning: isz not found (None by default). "
+            f"isz is set to the original image size ({dims[0]}).",
+            file=sys.stderr,
+        )
+
+        isz = dims[0]
+
+    else:
+        # Get expected center for sky correction
+        filtmed = f_kernel is not None
+        _, pos = crop_max(img1, isz, offx=offx, offy=offy, filtmed=filtmed, f=f_kernel)
 
     noBadPixel = False
     bad_pix_x, bad_pix_y = [], []
@@ -653,7 +659,7 @@ def clean_data(
 
 def select_clean_data(
     filename,
-    isz=256,
+    isz=None,
     r1=None,
     dr=None,
     edge=0,
@@ -683,7 +689,7 @@ def select_clean_data(
     -----------
 
     `filename` {str}: filename containing the datacube,\n
-    `isz` {int}: Size of the cropped image (default: {256})\n
+    `isz` {int}: Size of the cropped image (default: {None})\n
     `r1` {int}: Radius of the rings to compute background sky (default: {100})\n
     `dr` {int}: Outer radius to compute sky (default: {10})\n
     `edge` {int}: Patch the edges of the image (VLT/SPHERE artifact, default: {0}),\n
