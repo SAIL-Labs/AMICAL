@@ -396,6 +396,28 @@ def show_clean_params(
     from astropy.io import fits
     from matplotlib.colors import PowerNorm
 
+    if apod:
+        warnings.warn("The 'apod' parameter is deprecated and will be "
+                      "removed in a future release. Please only use "
+                      "the 'window' parameter instead. The argument of "
+                      "'window' can be set to None for not applying the "
+                      "super-Gaussian windowing.", DeprecationWarning)
+
+        if window is None:
+            warnings.warn("The argument of 'apod' will be forced to "
+                          "False because the argument of `window` was "
+                          "set to None`.")
+
+            apod = False
+
+    elif not apod and window is not None:
+        warnings.warn("The argument of 'apod' will be forced to "
+                      "True because the `window` size has been "
+                      "set. To not apply the apodization, please "
+                      "set the argument of 'window' to None.")
+
+        apod = True
+
     with fits.open(filename) as fd:
         data = fd[ihdu].data
 
@@ -489,13 +511,13 @@ def show_clean_params(
             s=20,
             label="Pixels used for sky subtraction",
         )
-    if apod and window is not None:
-        # The window parameter gives the FWHM of the super-Gaussian
-        # windowing. Dividing by 2 gives the HWHM since the value
-        # is used as the radius for the circle that is plotted
-        x3 = window / 2.0 * np.cos(theta) + x0
-        y3 = window / 2.0 * np.sin(theta) + y0
-        plt.plot(x3, y3, "--", label="Super-gaussian windowing (FWHM)")
+
+    if window is not None:
+        # The window parameter gives the HWHM of the super-Gaussian.
+        # The value is used as the radius for the circle in the plot.
+        x3 = window * np.cos(theta) + x0
+        y3 = window * np.sin(theta) + y0
+        plt.plot(x3, y3, "--", label="Super-Gaussian windowing (HWHM)")
 
         if window_contours:
             # Create distance grid for windowing,
@@ -590,7 +612,7 @@ def clean_data(
     edge=0,
     bad_map=None,
     add_bad=None,
-    apod=True,
+    apod=False,
     offx=0,
     offy=0,
     sky=True,
@@ -701,7 +723,7 @@ def select_clean_data(
     offx=0,
     offy=0,
     clip_fact=0.5,
-    apod=True,
+    apod=False,
     sky=True,
     window=None,
     darkfile=None,
@@ -727,18 +749,22 @@ def select_clean_data(
     `edge` {int}: Patch the edges of the image (VLT/SPHERE artifact, default: {0}),\n
     `clip` {bool}: If True, sigma-clipping is used to reject frames with low integrated flux,\n
     `clip_fact` {float}: Relative sigma if rejecting frames by sigma-clipping,\n
-    `apod` {bool}: If True, apodisation is performed in the image plan using a super-gaussian
-    function (known as windowing). The gaussian FWHM is set by the parameter `window`,\n
-    `window` {float}: FWHM of the super-gaussian to apodise the image (smoothly go to zero
-    on the edges),\n
+    `apod` {bool}: If True, apodisation is performed in the image plan using a super-Gaussian
+    function (known as windowing). The Gaussian HWHM is set by the parameter `window`. This
+    parameter is deprecated and will be removed in a future release. Instead, the apodization
+    is applied when providing a value to the `window` parameter. Setting the argument of
+    `window` to None will not apply the super-Gaussian windowing,\n
+    `window` {float}: Half width at half maximum (HWHM) of the super-Gaussian to apodise
+    the image (smoothly go to zero on the edges). The windowing is not applied when the
+    argument is set to None,\n
     `sky` {bool}: If True, the sky is remove using the annulus technique (computed between `r1`
-    and `r1` + `dr`),
+    and `r1` + `dr`),\n
     `darkfile` {str}: If specified (default: None), the input dark (master_dark averaged if
     multiple integrations) is substracted from the raw image,\n
     image,\n
     `f_kernel` {float}: kernel size used in the applied median filter (to find the center).
     `remove_bad` {bool}: If True, the bad pixels are removed in the cleaning parameter
-    plots using a gaussian interpolation (default: {True}),\n
+    plots using a Gaussian interpolation (default: {True}),\n
     `nframe` {int}: Frame number used to show cleaning parameters (default: {0}),\n
 
     Returns:
@@ -746,6 +772,28 @@ def select_clean_data(
     `cube_final` {np.array}: Cleaned and selected datacube.
     """
     from astropy.io import fits
+
+    if apod:
+        warnings.warn("The 'apod' parameter is deprecated and will be "
+                      "removed in a future release. Please only use "
+                      "the 'window' parameter instead. The argument of "
+                      "'window' can be set to None for not applying the "
+                      "super-Gaussian windowing.", DeprecationWarning)
+
+        if window is None:
+            warnings.warn("The argument of 'apod' will be forced to "
+                          "False because the argument of `window` was "
+                          "set to None`.")
+
+            apod = False
+
+    elif not apod and window is not None:
+        warnings.warn("The argument of 'apod' will be forced to "
+                      "True because the `window` size has been "
+                      "set. To not apply the apodization, please "
+                      "set the argument of 'window' to None.")
+
+        apod = True
 
     with fits.open(filename) as hdu:
         cube = hdu[ihdu].data

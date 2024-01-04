@@ -59,13 +59,13 @@ def main(argv: Optional[List[str]] = None) -> int:
         action="store_true",
         help="Perform apodisation using a super-gaussian function "
         + "(known as windowing)."
-        + " The gaussian FWHM is set by the parameter `window`.",
+        + " The gaussian HWHM is set by the parameter `window`.",
     )
     clean_parser.add_argument(
         "--window",
         default=65,
         type=int,
-        help="FWHM used for windowing (used with --apod)(default: %(default)s)",
+        help="HWHM used for windowing (used with --apod)(default: %(default)s)",
     )
     clean_parser.add_argument(
         "--sky",

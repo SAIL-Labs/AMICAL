@@ -289,9 +289,9 @@ def super_gaussian(
     x : np.ndarray
         2D array with the distances of each pixel to the image center.
     sigma : float
-        Full width at half maximum of the super-Gaussian window. It
-        is therefore not the standard deviation, as the parameter
-        name would suggest.
+        Half width at half maximum (HWHM) of the super-Gaussian
+        window. It is therefore not the standard deviation, as the
+        parameter name would suggest.
     m : float
         Exponent used for the super-Gaussian function (default: 3.0).
     amp : float
@@ -326,7 +326,8 @@ def apply_windowing(
     img : np.ndarray
         2D array with the input image.
     window : float
-        Full width at half maximum of the window function (default: 80.0).
+        Half width at half maximum (HWHM) of the window function
+        (default: 80.0).
     m : float
         Exponent used for the super-Gaussian function (default: 3.0).
 
