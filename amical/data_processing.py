@@ -396,35 +396,6 @@ def show_clean_params(
     from astropy.io import fits
     from matplotlib.colors import PowerNorm
 
-    # if apod:
-    #     warnings.warn(
-    #         "The 'apod' parameter is deprecated and will be "
-    #         "removed in a future release. Please only use "
-    #         "the 'window' parameter instead. The argument of "
-    #         "'window' can be set to None for not applying the "
-    #         "super-Gaussian windowing.",
-    #         DeprecationWarning,
-    #     )
-    #
-    #     if window is None:
-    #         warnings.warn(
-    #             "The argument of 'apod' will be forced to "
-    #             "False because the argument of `window` was "
-    #             "set to None`."
-    #         )
-    #
-    #         apod = False
-    #
-    # elif not apod and window is not None:
-    #     warnings.warn(
-    #         "The argument of 'apod' will be forced to "
-    #         "True because the `window` size has been "
-    #         "set. To not apply the apodization, please "
-    #         "set the argument of 'window' to None."
-    #     )
-    #
-    #     apod = True
-
     with fits.open(filename) as fd:
         data = fd[ihdu].data
 
@@ -780,35 +751,6 @@ def select_clean_data(
     `cube_final` {np.array}: Cleaned and selected datacube.
     """
     from astropy.io import fits
-
-    # if apod:
-    #     warnings.warn(
-    #         "The 'apod' parameter is deprecated and will be "
-    #         "removed in a future release. Please only use "
-    #         "the 'window' parameter instead. The argument of "
-    #         "'window' can be set to None for not applying the "
-    #         "super-Gaussian windowing.",
-    #         DeprecationWarning,
-    #     )
-    #
-    #     if window is None:
-    #         warnings.warn(
-    #             "The argument of 'apod' will be forced to "
-    #             "False because the argument of `window` was "
-    #             "set to None`."
-    #         )
-    #
-    #         apod = False
-    #
-    # elif not apod and window is not None:
-    #     warnings.warn(
-    #         "The argument of 'apod' will be forced to "
-    #         "True because the `window` size has been "
-    #         "set. To not apply the apodization, please "
-    #         "set the argument of 'window' to None."
-    #     )
-    #
-    #     apod = True
 
     with fits.open(filename) as hdu:
         cube = hdu[ihdu].data
