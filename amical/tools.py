@@ -289,7 +289,7 @@ def super_gaussian(
     x : np.ndarray
         2D array with the distances of each pixel to the image center.
     sigma : float
-        Half width at half maximum (HWHM) of the super-Gaussian
+        Full width at half maximum (FWHM) of the super-Gaussian
         window. It is therefore not the standard deviation, as the
         parameter name would suggest.
     m : float
@@ -344,7 +344,8 @@ def apply_windowing(
     distance = np.sqrt(xx2**2 + yy2[:, np.newaxis] ** 2)
 
     # Super-gaussian windowing
-    super_gauss = super_gaussian(distance, sigma=window, m=m)
+    # Mutiply the window value with 2 to change from HWHM to FWHM
+    super_gauss = super_gaussian(distance, sigma=window * 2, m=m)
 
     # Apply the windowing
     return img * super_gauss
