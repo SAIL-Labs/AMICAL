@@ -8,6 +8,7 @@ AMICAL: Aperture Masking Interferometry Calibration and Analysis Library
 Instruments and mask informations.
 --------------------------------------------------------------------
 """
+
 import sys
 
 import numpy as np

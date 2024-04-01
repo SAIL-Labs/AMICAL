@@ -9,6 +9,7 @@ Set of functions to work with spectraly dispersed (IFU) NRM data.
 
 -------------------------------------------------------------------------
 """
+
 import warnings
 
 import numpy as np
