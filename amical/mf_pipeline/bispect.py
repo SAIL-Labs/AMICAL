@@ -12,6 +12,7 @@ and calc_bispect.pro).
 
 --------------------------------------------------------------------
 """
+
 import os
 import sys
 import time
@@ -556,8 +557,7 @@ def _compute_v2_quantities(v2_arr, bias_arr, n_blocks):
     x = np.arange(n_baselines)
     avar = v2_cov[x, x] * n_ps - bias_arr**2 * (1 + (2.0 * v2) / bias_arr)
     err_avar = np.sqrt(
-        2.0 / n_ps * (v2_cov[x, x]) ** 2 * n_ps**2
-        + 4.0 * v2_cov[x, x] * bias_arr**2
+        2.0 / n_ps * (v2_cov[x, x]) ** 2 * n_ps**2 + 4.0 * v2_cov[x, x] * bias_arr**2
     )
 
     v2_quantities = {

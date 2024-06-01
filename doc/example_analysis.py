@@ -18,6 +18,7 @@ extract the quantitative values of our simulated binary.
 
 --------------------------------------------------------------------
 """
+
 from matplotlib import pyplot as plt
 
 import amical

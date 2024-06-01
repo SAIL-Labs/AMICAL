@@ -6,6 +6,7 @@ Also able to read the outputs from the IDL pipeline
 
 @author: cheetham
 """
+
 import numpy as np
 
 from .cp_tools import mas2rad
