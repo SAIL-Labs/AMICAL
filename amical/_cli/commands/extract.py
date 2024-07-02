@@ -58,7 +58,7 @@ def perform_extract(args):
         )
         return 1
 
-    l_file = sorted(glob("%s/*.fits" % args.datadir))
+    l_file = sorted(glob(f"{args.datadir}/*.fits"))
     if len(l_file) == 0:
         print(
             f"No fits files found in {args.datadir}, check --datadir.", file=sys.stderr
