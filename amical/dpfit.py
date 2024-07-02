@@ -378,7 +378,7 @@ def _fitFunc(
         print(time.asctime(), end=" ")
         try:
             chi2 = (res**2).sum / (len(res) - len(pfit) + 1.0)
-            print("CHI2: %6.4e" % chi2, end=" ")
+            print(f"CHI2: {chi2:6.4e}", end=" ")
         except Exception:
             # list of elements
             chi2 = 0
@@ -400,7 +400,7 @@ def _fitFunc(
             print("")
         else:
             try:
-                print(" ".join([k + "=" + "%5.2e" % params[k] for k in follow]))
+                print(" ".join([k + "=" + f"{params[k]:5.2e}" for k in follow]))
             except Exception:
                 print("")
     return res
