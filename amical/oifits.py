@@ -759,7 +759,7 @@ def save(
         print("-> Including OI Vis2 table...")
 
     data = dic["OI_VIS2"]
-    if type(data["TARGET_ID"]) != np.array:
+    if not isinstance(data["TARGET_ID"], np.ndarray):
         npts = len(data["VIS2DATA"])
     else:
         npts = 1
@@ -831,7 +831,7 @@ def save(
     except TypeError:
         check_oi = int
 
-    if check_oi == float:
+    if check_oi is float:
         t3phi = dic["OI_T3"]["T3PHI"]
         npts = len(t3phi)
         targetId = np.ones_like(t3phi)
