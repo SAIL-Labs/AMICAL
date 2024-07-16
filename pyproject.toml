@@ -68,8 +68,7 @@ amical = [
     "py.typed",
 ]
 
-[tool.ruff]
-target-version = "py38" # https://github.com/charliermarsh/ruff/issues/2039
+[tool.ruff.lint]
 exclude = ["*__init__.py", "amical/externals/*"]
 ignore = ["E501"]
 select = [
@@ -83,7 +82,7 @@ select = [
     "UP",  # pyupgrade
 ]
 
-[tool.ruff.isort]
+[tool.ruff.lint.isort]
 combine-as-imports = true
 
 [tool.pytest.ini_options]

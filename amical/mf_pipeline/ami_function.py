@@ -13,6 +13,7 @@ All AMI related function, the most important are:
 
 --------------------------------------------------------------------
 """
+
 import os
 import sys
 from pathlib import Path
@@ -566,7 +567,7 @@ def make_mf(
         import matplotlib.pyplot as plt
 
         plt.figure(figsize=(9, 7))
-        plt.title("(u-v) plan - mask %s" % (maskname), fontsize=14)
+        plt.title(f"(u-v) plan - mask {maskname}", fontsize=14)
         plt.imshow(im_uv, origin="lower")
         plt.plot(npix // 2 + 1, npix // 2, "r+")
         plt.ylabel("Y [pix]")  # , fontsize=12)

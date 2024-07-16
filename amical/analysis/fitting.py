@@ -664,7 +664,7 @@ def plot_model(
         color="#f6416c",
         zorder=100,
         ms=10,
-        label=r"model ($\chi^2_r=%2.1f$)" % chi2_vis2,
+        label=rf"model ($\chi^2_r={chi2_vis2:2.1f}$)",
     )
     axd["vis"].legend()
 
@@ -684,7 +684,7 @@ def plot_model(
     axd["res_cp"].set_ylim(-res_mas, res_mas)
     axd["res_vis2"].set_ylim(-5, 5)
     axd["res_vis2"].set_ylabel(r"Residual [$\sigma$]")
-    axd["res_vis2"].set_xlabel("Sp. Freq. [%s]" % label_unit[unit])
+    axd["res_vis2"].set_xlabel(f"Sp. Freq. [{label_unit[unit]}]")
 
     axd["cp"].errorbar(x_cp, d.cp, yerr=e_cp, **err_pts_style, color="#2ca02c")
     axd["cp"].plot(
@@ -694,7 +694,7 @@ def plot_model(
         color="#f6416c",
         zorder=100,
         ms=10,
-        label=r"model ($\chi^2_r=%2.1f$)" % chi2_cp,
+        label=rf"model ($\chi^2_r={chi2_cp:2.1f}$)",
     )
 
     if cp_max is not None:
@@ -713,7 +713,7 @@ def plot_model(
         res_mas = 5
     axd["res_cp"].set_ylim(-res_mas, res_mas)
     axd["res_cp"].set_ylabel(r"Residual [$\sigma$]")
-    axd["res_cp"].set_xlabel("Sp. Freq. [%s]" % label_unit[unit])
+    axd["res_cp"].set_xlabel(f"Sp. Freq. [{label_unit[unit]}]")
 
     if save:
         import matplotlib.pyplot as plt

@@ -9,6 +9,7 @@ Set of functions to calibrate NRM data using a calibrator star data.
 
 -------------------------------------------------------------------------
 """
+
 import numpy as np
 
 from amical.dpfit import leastsqFit

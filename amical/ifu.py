@@ -9,6 +9,7 @@ Set of functions to work with spectraly dispersed (IFU) NRM data.
 
 -------------------------------------------------------------------------
 """
+
 import warnings
 
 import numpy as np
@@ -61,7 +62,7 @@ def get_lambda(i_wl=None, filtname="YH", instrument="SPHERE-IFS"):
             np.arange(len(wl))[i_wl],
             wl[i_wl],
             "ro",
-            label="Selected (%2.2f µm)" % wl[i_wl],
+            label=f"Selected ({wl[i_wl]:2.2f} µm)",
         )
     else:
         plt.plot(
@@ -143,7 +144,7 @@ def clean_data(
 
     for i in track(
         range(len(list_file)),
-        desription="Format/clean IFU (%s)" % (hdr["OBJECT"]),
+        desription="Format/clean IFU ({})".format(hdr["OBJECT"]),
     ):
         cube_cleaned = select_clean_data(list_file[i], **clean_param)
         cube_lambda[i] = cube_cleaned

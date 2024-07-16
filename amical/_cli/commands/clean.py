@@ -15,7 +15,7 @@ from amical._rich_display import tabulate
 
 def _select_data_file(args, process):
     """Show report with the data found and allow to select one to be treated."""
-    l_file = sorted(glob("%s/*.fits" % args.datadir))
+    l_file = sorted(glob(f"{args.datadir}/*.fits"))
 
     if len(l_file) == 0:
         print(
@@ -42,7 +42,7 @@ def _select_data_file(args, process):
     if args.file >= 0:
         choosen_index = args.file
     else:
-        choosen_index = int(input("\nWhich file to %s?\n" % process))
+        choosen_index = int(input(f"\nWhich file to {process}?\n"))
 
     try:
         filename = l_file[choosen_index]
@@ -80,7 +80,7 @@ def perform_clean(args):
         )
         return 1
 
-    l_file = sorted(glob("%s/*.fits" % args.datadir))
+    l_file = sorted(glob(f"{args.datadir}/*.fits"))
     if len(l_file) == 0:
         print(
             f"No fits files found in {args.datadir}, check --datadir.", file=sys.stderr
@@ -116,7 +116,7 @@ def perform_clean(args):
         dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
         hdr["HIERARCH AMICAL time"] = dt_string
         for k in clean_param:
-            hdr["HIERARCH AMICAL params %s" % k] = clean_param[k]
+            hdr[f"HIERARCH AMICAL params {k}"] = clean_param[k]
         cube = amical.select_clean_data(filename, **clean_param, display=True)
         if args.plot:
             plt.show()

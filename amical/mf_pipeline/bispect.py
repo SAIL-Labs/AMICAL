@@ -12,6 +12,7 @@ and calc_bispect.pro).
 
 --------------------------------------------------------------------
 """
+
 import os
 import sys
 import time
@@ -556,8 +557,7 @@ def _compute_v2_quantities(v2_arr, bias_arr, n_blocks):
     x = np.arange(n_baselines)
     avar = v2_cov[x, x] * n_ps - bias_arr**2 * (1 + (2.0 * v2) / bias_arr)
     err_avar = np.sqrt(
-        2.0 / n_ps * (v2_cov[x, x]) ** 2 * n_ps**2
-        + 4.0 * v2_cov[x, x] * bias_arr**2
+        2.0 / n_ps * (v2_cov[x, x]) ** 2 * n_ps**2 + 4.0 * v2_cov[x, x] * bias_arr**2
     )
 
     v2_quantities = {
@@ -739,7 +739,7 @@ def _normalize_all_obs(
         import matplotlib.pyplot as plt
 
         plt.figure(figsize=(12, 6))
-        plt.title("DIAGNOSTIC PLOTS - V2 - %s" % infos.target)
+        plt.title(f"DIAGNOSTIC PLOTS - V2 - {infos.target}")
         plt.plot(v2_arr_norm[0], color="grey", alpha=0.2, label="V$^2$ dispersion")
         plt.plot(v2_arr_norm.T, color="grey", alpha=0.2)
         plt.plot(v2_norm, color="crimson", label="Raw V$^2$")
@@ -786,7 +786,7 @@ def _compute_cp(obs_result, obs_norm, infos, expert_plot=False):
         import matplotlib.pyplot as plt
 
         plt.figure(figsize=(12, 6))
-        plt.title("DIAGNOSTIC PLOTS - CP - %s" % infos.target)
+        plt.title(f"DIAGNOSTIC PLOTS - CP - {infos.target}")
         plt.plot(cp_arr[0], color="grey", alpha=0.2, label="CP dispersion")
         plt.plot(cp_arr.T, color="grey", alpha=0.2)
         plt.plot(cp, color="crimson", label="Raw CP")
@@ -890,7 +890,7 @@ def _compute_phs_piston(
 
     find_piston = None
     if verbose:
-        print("\nDetermining piston using %s minimisation..." % method)
+        print(f"\nDetermining piston using {method} minimisation...")
     if res.success:
         if verbose:
             print(
@@ -1239,7 +1239,7 @@ def extract_bs(
         ifig += 1
 
     if verbose:
-        print("\nFilename: %s" % filename)
+        print(f"\nFilename: {filename}")
         print("# of frames = %i" % n_ps)
 
     n_blocks = _set_good_nblocks(n_blocks, n_ps)

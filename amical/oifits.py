@@ -9,6 +9,7 @@ OIFITS related function.
 
 --------------------------------------------------------------------
 """
+
 import datetime
 import os
 import sys
@@ -562,14 +563,14 @@ def save(
     dic = l_dic[0]
 
     if not os.path.exists(datadir):
-        print("### Create %s directory to save all requested Oifits ###" % datadir)
+        print(f"### Create {datadir} directory to save all requested Oifits ###")
         os.mkdir(datadir)
 
     # ------------------------------
     #       Creation OIFITS
     # ------------------------------
     if verbose:
-        print("\n\n### Init creation of OI_FITS (%s) :" % (oifits_file))
+        print(f"\n\n### Init creation of OI_FITS ({oifits_file}) :")
 
     # refdate = datetime.datetime(2000, 1, 1)  # Unix time reference
     hdulist = fits.HDUList()
@@ -758,7 +759,7 @@ def save(
         print("-> Including OI Vis2 table...")
 
     data = dic["OI_VIS2"]
-    if type(data["TARGET_ID"]) != np.array:
+    if not isinstance(data["TARGET_ID"], np.ndarray):
         npts = len(data["VIS2DATA"])
     else:
         npts = 1
@@ -830,7 +831,7 @@ def save(
     except TypeError:
         check_oi = int
 
-    if check_oi == float:
+    if check_oi is float:
         t3phi = dic["OI_T3"]["T3PHI"]
         npts = len(t3phi)
         targetId = np.ones_like(t3phi)
@@ -1234,7 +1235,7 @@ def show(
 
     props = {"boxstyle": "round", "facecolor": "wheat", "alpha": 0.5}
 
-    textstr = "PA = %2.1f deg" % pa
+    textstr = f"PA = {pa:2.1f} deg"
 
     fontsize = 14
     fig = plt.figure(figsize=(16, 5.5))
@@ -1282,8 +1283,8 @@ def show(
         "lambda": r"M$\lambda$",
     }
 
-    ax1.set_xlabel(r"U [%s]" % unitlabel[unit], fontsize=fontsize)
-    ax1.set_ylabel(r"V [%s]" % unitlabel[unit], fontsize=fontsize)
+    ax1.set_xlabel(rf"U [{unitlabel[unit]}]", fontsize=fontsize)
+    ax1.set_ylabel(rf"V [{unitlabel[unit]}]", fontsize=fontsize)
     ax1.grid(alpha=0.2)
 
     # Plot V2
@@ -1338,7 +1339,7 @@ def show(
     ax3.xaxis.set_ticks_position("none")
     ax3.yaxis.set_ticks_position("none")
     ax3.set_xlabel("Spatial frequency [arcsec$^{-1}$]", fontsize=fontsize)
-    ax3.set_ylabel(r"Clos. $\phi$ [%s]" % unit_cp, fontsize=fontsize)
+    ax3.set_ylabel(rf"Clos. $\phi$ [{unit_cp}]", fontsize=fontsize)
     ax3.axis([0, 1.2 * np.max(max_f_cp), cmin * conv_cp, cmax * conv_cp])
     ax3.grid(which="both", alpha=0.2)
 
