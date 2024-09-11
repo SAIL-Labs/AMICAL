@@ -305,11 +305,7 @@ def super_gaussian(
     """
 
     return amp * (
-        (
-            np.exp(
-                -(2 ** (2 * m - 1)) * np.log(2) * (((x - x0) ** 2) / (sigma**2)) ** m
-            )
-        )
+        (np.exp(-(2 ** (2 * m - 1)) * np.log(2) * (((x - x0) ** 2) / (sigma**2)) ** m))
         ** 2
     )
 
