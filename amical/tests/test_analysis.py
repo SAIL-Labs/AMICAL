@@ -278,7 +278,7 @@ def test_smartfit(example_oifits, multiproc):
     pa, e_pa = fit["best"]["theta"], fit["uncer"]["theta"]
     dm, e_dm = fit["best"]["dm"], fit["uncer"]["dm"]
 
-    assert type(obs) == np.ndarray
+    assert type(obs) is np.ndarray
     assert isinstance(fit, dict)
 
     # Check close true value
