@@ -349,7 +349,7 @@ def _fitFunc(
 
     # -- compute residuals
 
-    if type(y) == np.ndarray and type(err) == np.ndarray:
+    if isinstance(y, np.ndarray) and isinstance(err, np.ndarray):
         if len(err.shape) == 2:
             # -- using correlations
             tmp = func(x, params)

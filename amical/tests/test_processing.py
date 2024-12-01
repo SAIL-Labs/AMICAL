@@ -234,7 +234,7 @@ def test_clean(global_datadir):
         cube_clean, 40, 40, radius=20, dx=3, dy=3, method="bg"
     )
 
-    assert type(cube_clean) == np.ndarray
+    assert type(cube_clean) is np.ndarray
     assert im1.shape == cube_clean.shape
     assert im2.shape == cube_clean.shape
 
