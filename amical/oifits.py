@@ -520,6 +520,7 @@ def save(
         Name of the saved oifits file.
 
     """
+    import astroquery
     from astropy.io import fits
     from astroquery.simbad import Simbad
 
@@ -641,7 +642,11 @@ def save(
     name_star = dic["info"]["TARGET"]
 
     customSimbad = Simbad()
-    customSimbad.add_votable_fields("propermotions", "sptype", "parallax")
+    if astroquery.version.version_info >= (0, 4, 8):
+        sp_type_name = "sp_type"
+    else:
+        sp_type_name = "sptype"
+    customSimbad.add_votable_fields("propermotions", sp_type_name, "parallax")
 
     # Add information from Simbad:
     if fake_obj:
