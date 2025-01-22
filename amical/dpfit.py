@@ -107,7 +107,7 @@ def leastsqFit(
         if k not in fitOnly:
             pfix[k] = params[k]
     if verbose:
-        print("[dpfit] %d FITTED parameters:" % (len(fitOnly)), fitOnly)
+        print(f"[dpfit] {len(fitOnly)} FITTED parameters:", fitOnly)
     # -- actual fit
     plsq, cov, info, mesg, ier = scipy.optimize.leastsq(
         _fitFunc,

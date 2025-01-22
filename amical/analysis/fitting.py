@@ -365,10 +365,7 @@ def fits2obs(
     Obs = np.array(obs, dtype=object)
 
     if verbose:
-        print(
-            "\nTotal # of data points: %i (%i V2, %i CP)"
-            % (len(Obs), N_v2_rest, N_cp_rest)
-        )
+        print(f"\nTotal # of data points: {len(Obs)} ({N_v2_rest} V2, {N_cp_rest} CP)")
         if use_flag:
             print("-> Flag in oifits files used.")
         if cond_wl:

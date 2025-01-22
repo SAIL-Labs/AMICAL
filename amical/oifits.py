@@ -710,7 +710,7 @@ def save(
 
     staxy = dic["info"]["xycoord"]
     N_ap = len(staxy)
-    telName = ["A%i" % x for x in np.arange(N_ap) + 1]
+    telName = [f"A{x}" for x in range(1, N_ap + 1)]
     staName = telName
     diameter = [0] * N_ap
 
@@ -798,8 +798,8 @@ def save(
                 fits.Column(
                     name="INT_TIME", format="1D", unit="SECONDS", array=intTime
                 ),
-                fits.Column(name="VIS2DATA", format="%iD" % iwl, array=VIS2DATA),
-                fits.Column(name="VIS2ERR", format="%iD" % iwl, array=VIS2ERR),
+                fits.Column(name="VIS2DATA", format=f"{iwl}D", array=VIS2DATA),
+                fits.Column(name="VIS2ERR", format=f"{iwl}D", array=VIS2ERR),
                 fits.Column(
                     name="UCOORD", format="1D", unit="METERS", array=data["UCOORD"]
                 ),
@@ -807,7 +807,7 @@ def save(
                     name="VCOORD", format="1D", unit="METERS", array=data["VCOORD"]
                 ),
                 fits.Column(name="STA_INDEX", format="2I", array=staIndex),
-                fits.Column(name="FLAG", format="%iL" % iwl, array=FLAG),
+                fits.Column(name="FLAG", format=f"{iwl}L", array=FLAG),
             ]
         )
     )
@@ -869,13 +869,13 @@ def save(
                 fits.Column(
                     name="INT_TIME", format="1D", unit="SECONDS", array=intTime
                 ),
-                fits.Column(name="T3AMP", format="%iD" % iwl, array=T3AMP),
-                fits.Column(name="T3AMPERR", format="%iD" % iwl, array=T3AMPERR),
+                fits.Column(name="T3AMP", format=f"{iwl}D", array=T3AMP),
+                fits.Column(name="T3AMPERR", format=f"{iwl}D", array=T3AMPERR),
                 fits.Column(
-                    name="T3PHI", format="%iD" % iwl, unit="DEGREES", array=T3PHI
+                    name="T3PHI", format=f"{iwl}D", unit="DEGREES", array=T3PHI
                 ),
                 fits.Column(
-                    name="T3PHIERR", format="%iD" % iwl, unit="DEGREES", array=T3PHIERR
+                    name="T3PHIERR", format=f"{iwl}D", unit="DEGREES", array=T3PHIERR
                 ),
                 fits.Column(
                     name="U1COORD", format="1D", unit="METERS", array=data["U1COORD"]
@@ -890,7 +890,7 @@ def save(
                     name="V2COORD", format="1D", unit="METERS", array=data["V2COORD"]
                 ),
                 fits.Column(name="STA_INDEX", format="3I", array=staIndex),
-                fits.Column(name="FLAG", format="%iL" % iwl, array=FLAG),
+                fits.Column(name="FLAG", format=f"{iwl}L", array=FLAG),
             )
         )
     )
