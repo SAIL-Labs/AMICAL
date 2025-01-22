@@ -839,7 +839,7 @@ def tri_pix(array_size, sampledisk_r, verbose=True, display=True):
     n_trip = closing_tri_pix.shape[1]
 
     if verbose:
-        print("Closing triangle in r = %2.1f: %i" % (sampledisk_r, n_trip))
+        print(f"Closing triangle in r = {sampledisk_r:2.1f}: {n_trip}")
 
     cl_unique = clos_unique(closing_tri_pix)
 
@@ -851,8 +851,10 @@ def tri_pix(array_size, sampledisk_r, verbose=True, display=True):
 
         plt.figure(figsize=(5, 5))
         plt.title(
-            "Splodge + unique triangle (tri = %i/%i, d = %i, r = %2.1f pix)"
-            % (cl_unique.shape[1], n_trip, array_size, sampledisk_r),
+            "Splodge + unique triangle ("
+            f"tri = {cl_unique.shape[1]}/{n_trip}, "
+            f"d = {array_size}, r = {sampledisk_r:2.1f} pix"
+            ")",
             fontsize=10,
         )
         plt.imshow(d)

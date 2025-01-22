@@ -92,7 +92,7 @@ def _apply_sig_clip(
                     bad,
                     "rx",
                     ms=3,
-                    label=r"Rejected points (>%i$\sigma$)" % sig_thres,
+                    label=rf"Rejected points (>{sig_thres}$\sigma$)",
                 )
             else:
                 plt.plot(x_bad, bad, "rx", ms=3)
