@@ -20,7 +20,7 @@ jobs:
         - windows-latest
         python-version:
         - '3.8'
-        - '3.12'
+        - '3.13'
 
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
