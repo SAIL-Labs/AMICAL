@@ -69,4 +69,4 @@ jobs:
         python -m pip install .
 
     - name: Run mypy
-      run: mypy amical
+      run: mypy src
