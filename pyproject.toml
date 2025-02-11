@@ -48,6 +48,15 @@ Homepage = "https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL"
 [project.scripts]
 amical = "amical._cli.main:main"
 
+[dependency-groups]
+typecheck = [
+    "mypy>=1.14.1",
+    "types-termcolor>=1.1.6.2",
+]
+test = [
+    "pytest>=7.2.1",
+]
+
 [tool.hatch.build.targets.sdist]
 only-include = [
     "src",
