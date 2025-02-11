@@ -5,11 +5,6 @@ import time
 
 import numpy as np
 
-if sys.platform == "darwin":
-    multiprocessing.set_start_method(
-        "fork", force=True
-    )  # this fixes loop in python 3.8 on MacOS
-
 
 """------------------------------------------------------------------------
 cp_tools.py - a collection of functions useful for closure phase analysis

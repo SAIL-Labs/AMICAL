@@ -9,17 +9,13 @@ Instruments and mask informations.
 --------------------------------------------------------------------
 """
 
+import importlib.resources as importlib_resources
 import sys
 
 import numpy as np
 from rich import print as rprint
 
 from amical.tools import mas2rad
-
-if sys.version_info >= (3, 9):
-    import importlib.resources as importlib_resources
-else:
-    import importlib_resources
 
 
 def get_mask(ins, mask, first=0):

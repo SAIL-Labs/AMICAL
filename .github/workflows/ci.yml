@@ -19,7 +19,7 @@ jobs:
         - macos-latest
         - windows-latest
         python-version:
-        - '3.8'
+        - '3.10'
         - '3.13'
 
     runs-on: ${{ matrix.os }}
@@ -60,7 +60,7 @@ jobs:
       with:
         # Match minimal supported Python version
         # to make sure we're not using unparseable syntax
-        python-version: '3.8'
+        python-version: '3.10'
 
     - name: Build
       run: |

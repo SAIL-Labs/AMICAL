@@ -535,7 +535,7 @@ def save(
     if not isinstance(observables, list):
         observables = [observables]
 
-    if not isinstance(origin, (str, type(None))):
+    if not isinstance(origin, str | type(None)):
         raise TypeError("origin should be a str or None")
 
     l_dic = []
@@ -1268,7 +1268,10 @@ def show(
     ax1.yaxis.set_ticks_position("none")
     if diffWl:
         handles, labels = ax1.get_legend_handles_labels()
-        labels, handles = zip(*sorted(zip(labels, handles), key=lambda t: t[0]))
+        labels, handles = zip(
+            *sorted(zip(labels, handles, strict=False), key=lambda t: t[0]),
+            strict=False,
+        )
         ax1.legend(handles, labels, loc="best", fontsize=9)
 
     plt.text(

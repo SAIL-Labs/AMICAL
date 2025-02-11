@@ -1,5 +1,4 @@
 import os
-from typing import List, Optional, Union
 
 import numpy as np
 from rich import print as rprint
@@ -8,12 +7,12 @@ from amical.externals import candid
 
 
 def candid_grid(
-    input_data: Union[str, List[str]],
+    input_data: str | list[str],
     step: int = 10,
     rmin: float = 20,
     rmax: float = 400,
     diam: float = 0,
-    obs: Optional[List[str]] = None,
+    obs: list[str] | None = None,
     extra_error_cp: float = 0,
     err_scale: float = 1,
     extra_error_v2: float = 0,
@@ -21,7 +20,7 @@ def candid_grid(
     doNotFit=None,
     ncore: int = 1,
     save: bool = False,
-    outputfile: Optional[str] = None,
+    outputfile: str | None = None,
     verbose: bool = False,
 ):
     """This function is an user friendly interface between the users of amical
@@ -145,7 +144,7 @@ def candid_grid(
 
 
 def candid_cr_limit(
-    input_data: Union[str, List[str]],
+    input_data: str | list[str],
     step: int = 10,
     rmin: float = 20,
     rmax: float = 400,
