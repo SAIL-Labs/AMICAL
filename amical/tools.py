@@ -212,7 +212,7 @@ def plot_circle(d, x, y, hole_radius, sz=1, display=True):
     im = np.zeros([chipsz, chipsz])
     info = [len(im.shape), im.shape[0], im.shape[1], 3, len(im.ravel())]
 
-    if isinstance(x, (float, int)):
+    if isinstance(x, float | int):
         n_circ = 1
         xx = [x]
         yy = [y]

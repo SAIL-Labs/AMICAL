@@ -6,11 +6,6 @@ from functools import lru_cache
 
 import numpy as np
 
-if sys.platform == "darwin":
-    multiprocessing.set_start_method(
-        "fork", force=True
-    )  # this fixes loop in python 3.8 on MacOS
-
 # -- defunct ;(
 # from scipy import weave
 # from scipy.weave import converters

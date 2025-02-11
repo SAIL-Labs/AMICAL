@@ -383,7 +383,7 @@ def make_mf(
                 f"channel index `i_wl` must be specified (nlambda = {len(filt)}) and "
                 "should be strictly identical to the one used for the cleaning step."
             )
-        if isinstance(i_wl, (int, np.integer)):
+        if isinstance(i_wl, int | np.integer):
             filt = [filt[i_wl], 0.001 * filt[i_wl]]
         else:
             filt = [np.mean(filt[i_wl[0] : i_wl[1]]), filt[i_wl[1]] - filt[i_wl[0]]]

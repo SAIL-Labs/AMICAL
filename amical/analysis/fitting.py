@@ -1,6 +1,5 @@
 import multiprocessing
 import os
-import sys
 
 import numpy as np
 from rich.progress import track
@@ -9,12 +8,6 @@ import amical
 from amical.analysis import models
 from amical.dpfit import leastsqFit
 from amical.tools import mas2rad, roundSciDigit
-
-if sys.platform == "darwin":
-    multiprocessing.set_start_method(
-        "fork", force=True
-    )  # this fixes loop in python 3.8 on MacOS
-
 
 err_pts_style = {
     "linestyle": "None",
