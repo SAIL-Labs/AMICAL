@@ -1372,5 +1372,5 @@ def extract_bs(
         produce_result_pdf(save_to, Path(filename).stem)
 
     if verbose:
-        rprint(f"[magenta]\nDone (exec time: {m} min {t - m*60:2.1f} s).")
+        rprint(f"[magenta]\nDone (exec time: {m} min {t - m * 60:2.1f} s).")
     return dict2class(obs_result)

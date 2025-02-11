@@ -191,7 +191,7 @@ def select_data(cube, clip_fact=0.5, clip=False, verbose=True, display=True):
         else:
             rprint("[cyan]\n---- centered fluxes selection ---")
         print(
-            f"{n_bad}/{len(cube)} ({100*n_bad/len(cube):2.1f}%) are flagged as bad frames"
+            f"{n_bad}/{len(cube)} ({100 * n_bad / len(cube):2.1f}%) are flagged as bad frames"
         )
     return cube_cleaned_checked
 
