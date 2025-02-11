@@ -1,2 +1,0 @@
-mypy==1.14.1
-types-termcolor==1.1.6.2
