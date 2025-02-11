@@ -24,6 +24,11 @@ repos:
   hooks:
   - id: remove-tabs
 
+- repo: https://github.com/astral-sh/uv-pre-commit
+  rev: 0.5.30
+  hooks:
+  - id: uv-lock
+
 - repo: https://github.com/asottile/blacken-docs
   rev: 1.19.1
   hooks:
