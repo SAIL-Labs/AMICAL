@@ -35,7 +35,7 @@ typecheck = [
 
 [package.metadata]
 requires-dist = [
-    { name = "astropy", specifier = ">=5.0" },
+    { name = "astropy", specifier = ">=5.0.1" },
     { name = "astroquery", specifier = ">=0.4.4" },
     { name = "corner", specifier = ">=2.2.1" },
     { name = "emcee", specifier = ">=3.1.1" },
