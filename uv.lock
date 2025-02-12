@@ -35,17 +35,17 @@ typecheck = [
 
 [package.metadata]
 requires-dist = [
-    { name = "astropy", specifier = ">=5.0" },
-    { name = "astroquery" },
-    { name = "corner" },
-    { name = "emcee" },
-    { name = "h5py" },
-    { name = "matplotlib" },
-    { name = "numpy" },
+    { name = "astropy", specifier = ">=5.0.1" },
+    { name = "astroquery", specifier = ">=0.4.4" },
+    { name = "corner", specifier = ">=2.2.1" },
+    { name = "emcee", specifier = ">=3.1.1" },
+    { name = "h5py", specifier = ">=3.6.0" },
+    { name = "matplotlib", specifier = ">=3.5.0" },
+    { name = "numpy", specifier = ">=1.21.2" },
     { name = "pypdf", specifier = ">=3.2.0" },
     { name = "rich", specifier = ">=13.5.2" },
-    { name = "scipy" },
-    { name = "uncertainties" },
+    { name = "scipy", specifier = ">=1.7.2" },
+    { name = "uncertainties", specifier = ">=3.1.6" },
 ]
 
 [package.metadata.requires-dev]
