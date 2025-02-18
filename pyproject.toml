@@ -1,10 +1,11 @@
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
 
 [project]
 name = "amical"
 version = "1.6.0"
+description = "Extraction pipeline and analysis tools for Aperture Masking Interferometry mode of latest generation instruments (ground-based and space)."
 authors = [
     { name = "Anthony Soulain", email = "anthony.soulain@univ-grenoble-alpes.fr" },
 ]
@@ -16,7 +17,6 @@ classifiers = [
     "Operating System :: POSIX :: AIX",
     "Operating System :: POSIX :: Linux",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3 :: Only",
     "Topic :: Scientific/Engineering :: Astronomy",
     "Typing :: Typed",
 ]
@@ -55,13 +55,6 @@ typecheck = [
 ]
 test = [
     "pytest>=7.2.1",
-]
-
-[tool.hatch.build.targets.sdist]
-only-include = [
-    "src",
-    "LICENSE",
-    "README.md",
 ]
 
 [tool.ruff.lint]
