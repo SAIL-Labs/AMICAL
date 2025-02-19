@@ -1,5 +1,5 @@
 [build-system]
-requires = ["flit_core >=3.2,<4"]
+requires = ["flit_core >=3.11,<4"]
 build-backend = "flit_core.buildapi"
 
 [project]
@@ -9,10 +9,16 @@ description = "Extraction pipeline and analysis tools for Aperture Masking Inter
 authors = [
     { name = "Anthony Soulain", email = "anthony.soulain@univ-grenoble-alpes.fr" },
 ]
+license = "MIT"
+license-files = [
+    "LICENSE",
+    "src/amical/externals/candid/LICENCE",
+    "src/amical/externals/munch/LICENSE",
+    "src/amical/externals/pymask/LICENSE",
+]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: MacOS :: MacOS X",
     "Operating System :: POSIX :: AIX",
     "Operating System :: POSIX :: Linux",
@@ -38,9 +44,6 @@ dependencies = [
 [project.readme]
 file = "README.md"
 content-type = "text/markdown"
-
-[project.license]
-text = "MIT"
 
 [project.urls]
 Homepage = "https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL"
