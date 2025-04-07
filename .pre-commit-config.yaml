@@ -25,7 +25,7 @@ repos:
   - id: remove-tabs
 
 - repo: https://github.com/astral-sh/uv-pre-commit
-  rev: 0.5.30
+  rev: 0.6.12
   hooks:
   - id: uv-lock
 
@@ -36,7 +36,7 @@ repos:
     additional_dependencies: [black==25.1.0]
 
 - repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: v0.9.2
+  rev: v0.11.4
   hooks:
   - id: ruff-format
   - id: ruff
