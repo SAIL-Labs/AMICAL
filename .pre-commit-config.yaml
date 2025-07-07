@@ -25,7 +25,7 @@ repos:
   - id: remove-tabs
 
 - repo: https://github.com/astral-sh/uv-pre-commit
-  rev: 0.6.12
+  rev: 0.7.19
   hooks:
   - id: uv-lock
 
@@ -36,14 +36,14 @@ repos:
     additional_dependencies: [black==25.1.0]
 
 - repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: v0.11.4
+  rev: v0.12.2
   hooks:
   - id: ruff-format
-  - id: ruff
+  - id: ruff-check
     args: [--fix, --show-fixes]
 
 - repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
-  rev: v2.14.0
+  rev: v2.15.0
   hooks:
   - id: pretty-format-yaml
     args: [--autofix, --indent, '2']
