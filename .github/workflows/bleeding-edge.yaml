@@ -37,6 +37,9 @@ jobs:
         echo "UV_INDEX=https://pypi.anaconda.org/scientific-python-nightly-wheels/simple https://pypi.anaconda.org/astropy/simple/ https://pypi.anaconda.org/liberfa/simple" >> $GITHUB_ENV
         echo "UV_INDEX_STRATEGY=unsafe-best-match" >> $GITHUB_ENV
 
+    - name: upgrade lockfile
+      run: uv lock --upgrade
+
     - name: Build amical
       run: uv sync --no-editable --group test
 
