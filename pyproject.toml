@@ -91,6 +91,9 @@ filterwarnings = [
     "ignore:`product` is deprecated as of NumPy 1.25.0, and will be removed in NumPy 2.0. Please use `prod` instead.:DeprecationWarning",
 
     'ignore:datetime\.datetime\.utcfromtimestamp\(\) is deprecated:DeprecationWarning', # https://github.com/dateutil/dateutil/pull/1285
+
+    # https://github.com/matplotlib/matplotlib/pull/30221
+    "ignore:'mode' parameter is deprecated and will be removed in Pillow 13:DeprecationWarning",
 ]
 
 [tool.coverage.run]
