@@ -767,11 +767,11 @@ def load_bs_hdf5(filename):
     obs = hf2['obs']
 
     for o in obs:
-        dict_bs[o] = obs[o].value
+        dict_bs[o] = obs[o][()]
 
     matrix = hf2['matrix']
     for key in matrix:
-        dict_bs['matrix'][key] = matrix[key].value
+        dict_bs['matrix'][key] = matrix[key][()]
 
     if len(dict_bs['matrix']['cp_cov']) == 1:
         dict_bs['matrix']['cp_cov'] = None
@@ -779,23 +779,23 @@ def load_bs_hdf5(filename):
     mask = hf2['mask']
     for key in mask:
         if key not in ['u1', 'u2', 'v1', 'v2']:
-            dict_bs['mask'][key] = mask[key].value
+            dict_bs['mask'][key] = mask[key][()]
 
-    t3_coord = {'u1': mask['u1'].value,
-                'u2': mask['u2'].value,
-                'v1': mask['v1'].value,
-                'v2': mask['v2'].value,
+    t3_coord = {'u1': mask['u1'][()],
+                'u2': mask['u2'][()],
+                'v1': mask['v1'][()],
+                'v2': mask['v2'][()],
                 }
 
     dict_bs['mask']['t3_coord'] = t3_coord
 
     infos = hf2['infos']
     for key in infos:
-        dict_bs['infos'][key] = infos[key].value
+        dict_bs['infos'][key] = infos[key][()]
 
     hdr = hf2['hdr']
     for key in hdr:
-        dict_bs['infos']['hdr'][key] = hdr[key].value
+        dict_bs['infos']['hdr'][key] = hdr[key][()]
 
     bs_save = dict2class(dict_bs)
     return bs_save

@@ -19,7 +19,7 @@ setup(
     install_requires=["matplotlib", "munch", "numpy", "emcee",
                       "astropy", "scipy", "termcolor", "tqdm",
                       "uncertainties", "astroquery",
-                      "corner", "h5py"],
+                      "corner", "h5py>=3"],
     extras_require={"dev": ["pytest"]},
     package_data={"amical": ["internal_data/*.fits"]},
 )
