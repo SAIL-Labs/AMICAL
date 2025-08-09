@@ -234,7 +234,7 @@ def test_clean(global_datadir):
         cube_clean, 40, 40, radius=20, dx=3, dy=3, method="bg"
     )
 
-    assert type(cube_clean) == np.ndarray
+    assert type(cube_clean) is np.ndarray
     assert im1.shape == cube_clean.shape
     assert im2.shape == cube_clean.shape
 
@@ -431,7 +431,8 @@ def test_clean_data_bmap_3d():
 
     cleaned = clean_data(data, sky=False, apod=False, bad_map=bad_cube)
     nobpix_list = [
-        fix_bad_pixels(img, bad_map=bmap) for img, bmap in zip(data, bad_cube)
+        fix_bad_pixels(img, bad_map=bmap)
+        for img, bmap in zip(data, bad_cube, strict=False)
     ]
 
     assert np.all([cleaned[i] == nobpix_list[i] for i in range(data.shape[0])])
@@ -476,7 +477,7 @@ def test_clean_data_bmap_3d_add_bad_2d():
     cleaned = clean_data(data, sky=False, apod=False, bad_map=bad_cube, add_bad=add_bad)
     nobpix_list = [
         fix_bad_pixels(img, bad_map=bmap, add_bad=add_bad)
-        for img, bmap in zip(data, bad_cube)
+        for img, bmap in zip(data, bad_cube, strict=False)
     ]
 
     full_bad_cube = bad_cube.copy()

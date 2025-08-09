@@ -107,7 +107,7 @@ def leastsqFit(
         if k not in fitOnly:
             pfix[k] = params[k]
     if verbose:
-        print("[dpfit] %d FITTED parameters:" % (len(fitOnly)), fitOnly)
+        print(f"[dpfit] {len(fitOnly)} FITTED parameters:", fitOnly)
     # -- actual fit
     plsq, cov, info, mesg, ier = scipy.optimize.leastsq(
         _fitFunc,
@@ -349,7 +349,7 @@ def _fitFunc(
 
     # -- compute residuals
 
-    if type(y) == np.ndarray and type(err) == np.ndarray:
+    if isinstance(y, np.ndarray) and isinstance(err, np.ndarray):
         if len(err.shape) == 2:
             # -- using correlations
             tmp = func(x, params)

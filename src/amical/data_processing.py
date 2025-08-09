@@ -172,12 +172,12 @@ def select_data(cube, clip_fact=0.5, clip=False, verbose=True, display=True):
 
         plt.figure(figsize=(7, 7))
         plt.subplot(2, 2, 1)
-        plt.title("Best fram (%i)" % best_fr)
+        plt.title(f"Best fram ({best_fr})")
         plt.imshow(cube[best_fr], norm=PowerNorm(0.5, vmin=0), cmap="afmhot")
         plt.subplot(2, 2, 2)
         plt.imshow(np.fft.fftshift(fft_fram[best_fr]), cmap="gist_stern")
         plt.subplot(2, 2, 3)
-        plt.title("Worst fram (%i) %s" % (worst_fr, ext))
+        plt.title(f"Worst fram ({worst_fr}) {ext}")
         plt.imshow(cube[worst_fr], norm=PowerNorm(0.5, vmin=0), cmap="afmhot")
         plt.subplot(2, 2, 4)
         plt.imshow(np.fft.fftshift(fft_fram[worst_fr]), cmap="gist_stern")
@@ -191,8 +191,7 @@ def select_data(cube, clip_fact=0.5, clip=False, verbose=True, display=True):
         else:
             rprint("[cyan]\n---- centered fluxes selection ---")
         print(
-            "%i/%i (%2.1f%%) are flagged as bad frames"
-            % (n_bad, len(cube), 100 * float(n_bad) / len(cube))
+            f"{n_bad}/{len(cube)} ({100 * n_bad / len(cube):2.1f}%) are flagged as bad frames"
         )
     return cube_cleaned_checked
 

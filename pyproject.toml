@@ -1,47 +1,49 @@
 [build-system]
-requires = ["setuptools>=61.2"]
-build-backend = "setuptools.build_meta"
+requires = ["flit_core >=3.11,<4"]
+build-backend = "flit_core.buildapi"
 
 [project]
 name = "amical"
 version = "1.6.0"
+description = "Extraction pipeline and analysis tools for Aperture Masking Interferometry mode of latest generation instruments (ground-based and space)."
 authors = [
     { name = "Anthony Soulain", email = "anthony.soulain@univ-grenoble-alpes.fr" },
+]
+license = "MIT"
+license-files = [
+    "LICENSE",
+    "src/amical/externals/candid/LICENCE",
+    "src/amical/externals/munch/LICENSE",
+    "src/amical/externals/pymask/LICENSE",
 ]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: MacOS :: MacOS X",
     "Operating System :: POSIX :: AIX",
     "Operating System :: POSIX :: Linux",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3 :: Only",
     "Topic :: Scientific/Engineering :: Astronomy",
     "Typing :: Typed",
 ]
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 dependencies = [
-    "astropy>=5.0",
-    "astroquery",
-    "corner",
-    "emcee",
-    "h5py",
-    "matplotlib",
-    "numpy",
+    "astropy>=5.0.1",
+    "astroquery>=0.4.4",
+    "corner>=2.2.1",
+    "emcee>=3.1.1",
+    "h5py>=3.6.0",
+    "matplotlib>=3.5.0",
+    "numpy>=1.21.2",
     "pypdf>=3.2.0",
     "rich>=13.5.2",
-    "scipy",
-    "uncertainties",
-    "importlib_resources>=1.3; python_version < '3.9'",
+    "scipy>=1.7.2",
+    "uncertainties>=3.1.6",
 ]
 
 [project.readme]
 file = "README.md"
 content-type = "text/markdown"
-
-[project.license]
-text = "MIT"
 
 [project.urls]
 Homepage = "https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL"
@@ -49,27 +51,17 @@ Homepage = "https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL"
 [project.scripts]
 amical = "amical._cli.main:main"
 
-[tool.setuptools]
-license-files = [
-    "LICENSE",
+[dependency-groups]
+typecheck = [
+    "mypy>=1.14.1",
+    "types-termcolor>=1.1.6.2",
 ]
-include-package-data = false
-
-[tool.setuptools.packages.find]
-exclude = [
-    "tests*",
-    "doc*",
-]
-namespaces = false
-
-[tool.setuptools.package-data]
-amical = [
-    "internal_data/*.fits",
-    "py.typed",
+test = [
+    "pytest>=7.2.1",
 ]
 
 [tool.ruff.lint]
-exclude = ["*__init__.py", "amical/externals/*"]
+exclude = ["*__init__.py", "src/amical/externals/*"]
 ignore = ["E501"]
 select = [
     "E",
@@ -99,6 +91,9 @@ filterwarnings = [
     "ignore:`product` is deprecated as of NumPy 1.25.0, and will be removed in NumPy 2.0. Please use `prod` instead.:DeprecationWarning",
 
     'ignore:datetime\.datetime\.utcfromtimestamp\(\) is deprecated:DeprecationWarning', # https://github.com/dateutil/dateutil/pull/1285
+
+    # https://github.com/matplotlib/matplotlib/pull/30221
+    "ignore:'mode' parameter is deprecated and will be removed in Pillow 13:DeprecationWarning",
 ]
 
 [tool.coverage.run]
@@ -113,7 +108,7 @@ omit = [
 ]
 
 [tool.mypy]
-python_version = 3.8
+python_version = "3.10"
 ignore_missing_imports = true
 warn_unused_configs = true
 warn_unused_ignores = true

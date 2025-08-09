@@ -19,27 +19,27 @@ jobs:
         - macos-latest
         - windows-latest
         python-version:
-        - '3.8'
-        - '3.12'
+        - '3.10'
+        - '3.13'
+        include:
+        - os: ubuntu-22.04
+          python-version: 3.10.0
+          sync-args: --resolution=lowest-direct
 
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
 
     steps:
     - name: Checkout Source
-      uses: actions/checkout@v4
-    - name: Setup Python
-      uses: actions/setup-python@v5
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+    - name: Setup uv
+      uses: astral-sh/setup-uv@bd01e18f51369d5a26f1651c3cb451d3417e3bba # v6.3.1
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Setup package
-      run: |
-        python -m pip install --upgrade pip
-        python -m pip install --requirement requirements/tests.txt
-        python -m pip install .
+    - name: Build
+      run: uv sync --no-editable --group test ${{ matrix.sync-args }}
     - name: Run tests
-      run: |
-        pytest --color=yes
+      run: uv run --no-sync pytest --color=yes
 
 
   type-check:
@@ -51,22 +51,16 @@ jobs:
       cancel-in-progress: true
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       with:
         fetch-depth: 0
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
+    - name: Setup uv
+      uses: astral-sh/setup-uv@bd01e18f51369d5a26f1651c3cb451d3417e3bba # v6.3.1
       with:
         # Match minimal supported Python version
         # to make sure we're not using unparseable syntax
-        python-version: '3.8'
-
-    - name: Build
-      run: |
-        python -m pip install --upgrade pip
-        python -m pip install --requirement requirements/typecheck.txt
-        python -m pip install .
+        python-version: '3.10'
 
     - name: Run mypy
-      run: mypy amical
+      run: uv run --group typecheck mypy src

@@ -1,6 +1,5 @@
 import multiprocessing
 import os
-import sys
 
 import numpy as np
 from rich.progress import track
@@ -9,12 +8,6 @@ import amical
 from amical.analysis import models
 from amical.dpfit import leastsqFit
 from amical.tools import mas2rad, roundSciDigit
-
-if sys.platform == "darwin":
-    multiprocessing.set_start_method(
-        "fork", force=True
-    )  # this fixes loop in python 3.8 on MacOS
-
 
 err_pts_style = {
     "linestyle": "None",
@@ -365,10 +358,7 @@ def fits2obs(
     Obs = np.array(obs, dtype=object)
 
     if verbose:
-        print(
-            "\nTotal # of data points: %i (%i V2, %i CP)"
-            % (len(Obs), N_v2_rest, N_cp_rest)
-        )
+        print(f"\nTotal # of data points: {len(Obs)} ({N_v2_rest} V2, {N_cp_rest} CP)")
         if use_flag:
             print("-> Flag in oifits files used.")
         if cond_wl:

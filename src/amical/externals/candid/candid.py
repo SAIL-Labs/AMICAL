@@ -6,11 +6,6 @@ from functools import lru_cache
 
 import numpy as np
 
-if sys.platform == "darwin":
-    multiprocessing.set_start_method(
-        "fork", force=True
-    )  # this fixes loop in python 3.8 on MacOS
-
 # -- defunct ;(
 # from scipy import weave
 # from scipy.weave import converters
@@ -531,9 +526,7 @@ def _V2binFast(uv, param):
             v2[i] += (t_vr*t_vr + t_vi*t_vi) / Nsmear;
             }
         }
-    }""".replace(
-        "VUDX", _get_VUDX
-    )
+    }""".replace("VUDX", _get_VUDX)
     err = weave.inline(
         code,
         [
@@ -760,9 +753,7 @@ def _T3binFast(uv, param):
             }
         }
 
-    }""".replace(
-        "VUDX", _get_VUDX
-    )
+    }""".replace("VUDX", _get_VUDX)
     err = weave.inline(
         code,
         [
@@ -1537,9 +1528,8 @@ class Open:
                 )
                 self.all_dwavel[hdu.header["INSNAME"]] = hdu.data["EFF_BAND"] * 1e6
 
-                self.all_dwavel[
-                    hdu.header["INSNAME"]
-                ] *= 2.0  # assume the limit is not the pixel
+                # assume the limit is not the pixel
+                self.all_dwavel[hdu.header["INSNAME"]] *= 2.0
                 self.dwavel[hdu.header["INSNAME"]] = np.mean(
                     self.all_dwavel[hdu.header["INSNAME"]]
                 )

@@ -1,12 +1,11 @@
 from argparse import ArgumentParser
-from typing import List, Optional
 
 from amical._cli.commands.calibrate import perform_calibrate
 from amical._cli.commands.clean import perform_clean
 from amical._cli.commands.extract import perform_extract
 
 
-def main(argv: Optional[List[str]] = None) -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = ArgumentParser()
 
     subparsers = parser.add_subparsers(dest="command")

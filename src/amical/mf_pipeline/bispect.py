@@ -1240,7 +1240,7 @@ def extract_bs(
 
     if verbose:
         print(f"\nFilename: {filename}")
-        print("# of frames = %i" % n_ps)
+        print(f"# of frames = {n_ps}")
 
     n_blocks = _set_good_nblocks(n_blocks, n_ps)
 
@@ -1372,5 +1372,5 @@ def extract_bs(
         produce_result_pdf(save_to, Path(filename).stem)
 
     if verbose:
-        rprint("[magenta]\nDone (exec time: %d min %2.1f s)." % (m, t - m * 60))
+        rprint(f"[magenta]\nDone (exec time: {m} min {t - m * 60:2.1f} s).")
     return dict2class(obs_result)

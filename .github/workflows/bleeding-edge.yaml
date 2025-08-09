@@ -22,36 +22,27 @@ jobs:
     timeout-minutes: 60
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       with:
         fetch-depth: 0
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
+    - name: Setup uv
+      uses: astral-sh/setup-uv@bd01e18f51369d5a26f1651c3cb451d3417e3bba # v6.3.1
       with:
-        python-version: 3.12-dev
+        python-version: '3.14'
+        enable-cache: false
 
-    - name: Install dependencies
+    - name: configure uv
       run: |
-        python -m pip install --upgrade pip
-        python -m pip install --upgrade setuptools wheel
-        python -m pip install --pre --only-binary ":all:" \
-          numpy matplotlib scipy h5py \
-          --extra-index-url \
-          https://pypi.anaconda.org/scientific-python-nightly-wheels/simple
+        echo "UV_PRERELEASE=allow" >> $GITHUB_ENV
+        echo "UV_INDEX=https://pypi.anaconda.org/scientific-python-nightly-wheels/simple https://pypi.anaconda.org/astropy/simple/ https://pypi.anaconda.org/liberfa/simple" >> $GITHUB_ENV
+        echo "UV_INDEX_STRATEGY=unsafe-best-match" >> $GITHUB_ENV
 
-        python -m pip install --pre --only-binary ":all:" \
-          astropy \
-          --extra-index-url https://pypi.anaconda.org/astropy/simple/ \
-          --extra-index-url https://pypi.anaconda.org/liberfa/simple
+    - name: upgrade lockfile
+      run: uv lock --upgrade
 
     - name: Build amical
-      run: |
-        python -m pip install --requirement requirements/tests.txt --pre
-        python -m pip install --no-build-isolation .
-
-    - run: python -m pip list
+      run: uv sync --no-editable --group test
 
     - name: Run tests
-      run: |
-        pytest --color=yes
+      run: uv run --no-sync pytest --color=yes
