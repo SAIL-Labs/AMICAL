@@ -7,8 +7,17 @@ updates:
 - package-ecosystem: github-actions
   directory: /.github/workflows
   schedule:
-    interval: monthly
+    interval: quarterly
+  cooldown:
+    default-days: 7
   groups:
     actions:
       patterns:
       - '*'
+
+- package-ecosystem: uv
+  directory: /
+  schedule:
+    interval: quarterly
+  cooldown:
+    default-days: 7
