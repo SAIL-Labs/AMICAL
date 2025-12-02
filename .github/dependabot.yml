@@ -1,9 +1,5 @@
-# Please see the documentation for all configuration options:
-# https://docs.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
-
 version: 2
 updates:
-
 - package-ecosystem: github-actions
   directory: /.github/workflows
   schedule:
@@ -11,9 +7,9 @@ updates:
   cooldown:
     default-days: 7
   groups:
-    actions:
-      patterns:
-      - '*'
+    gha-patches:
+      update-types:
+      - patch
 
 - package-ecosystem: uv
   directory: /
@@ -21,3 +17,7 @@ updates:
     interval: quarterly
   cooldown:
     default-days: 7
+  groups:
+    uv.lock-patches:
+      update-types:
+      - patch
