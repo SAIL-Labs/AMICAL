@@ -60,6 +60,17 @@ test = [
     "pytest>=7.2.1",
 ]
 
+[tool.uv]
+no-build-package = [
+    "matplotlib",
+    "contourpy",
+    "kiwisolver",
+    "scipy",
+    "numpy",
+    "astropy",
+    "h5py",
+]
+
 [tool.ruff.lint]
 exclude = ["*__init__.py", "src/amical/externals/*"]
 ignore = ["E501"]
