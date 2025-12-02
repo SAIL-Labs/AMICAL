@@ -63,6 +63,7 @@ test = [
 [tool.uv]
 no-build-package = [
     "matplotlib",
+    "pillow",
     "contourpy",
     "kiwisolver",
     "scipy",
