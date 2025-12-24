@@ -6,6 +6,14 @@ resolution-markers = [
     "python_full_version < '3.11'",
 ]
 
+[manifest]
+constraints = [
+    { name = "keyring", specifier = ">=20.0.0" },
+    { name = "pyerfa", specifier = ">=2.0.0.2" },
+    { name = "requests", specifier = ">=2.18.4" },
+    { name = "urllib3", specifier = ">=1.26.6" },
+]
+
 [[package]]
 name = "amical"
 version = "1.6.0"
@@ -42,17 +50,17 @@ requires-dist = [
     { name = "astroquery", specifier = ">=0.4.4" },
     { name = "corner", specifier = ">=2.2.1" },
     { name = "emcee", specifier = ">=3.1.1" },
-    { name = "h5py", specifier = ">=3.6.0" },
-    { name = "matplotlib", specifier = ">=3.5.0" },
-    { name = "numpy", specifier = ">=1.21.2" },
+    { name = "h5py", specifier = ">=3.8.0" },
+    { name = "matplotlib", specifier = ">=3.6.0" },
+    { name = "numpy", specifier = ">=1.21.3" },
     { name = "pypdf", specifier = ">=3.2.0" },
     { name = "rich", specifier = ">=13.5.2" },
-    { name = "scipy", specifier = ">=1.7.2" },
-    { name = "uncertainties", specifier = ">=3.1.6" },
+    { name = "scipy", specifier = ">=1.8.2" },
+    { name = "uncertainties", specifier = ">=3.1.7" },
 ]
 
 [package.metadata.requires-dev]
-test = [{ name = "pytest", specifier = ">=7.2.1" }]
+test = [{ name = "pytest", specifier = ">=8.2.1" }]
 typecheck = [
     { name = "mypy", specifier = ">=1.14.1" },
     { name = "types-termcolor", specifier = ">=1.1.6.2" },
