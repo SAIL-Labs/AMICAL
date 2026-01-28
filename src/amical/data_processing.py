@@ -18,7 +18,7 @@ import numpy as np
 from rich import print as rprint
 from rich.progress import track
 
-from amical.tools import apply_windowing, crop_max, find_max
+from amical.tools import apply_windowing, crop_max, find_max, super_gaussian
 
 
 def _apply_patch_ghost(cube, xc, yc, radius=20, dx=0, dy=-200, method="bg"):
@@ -368,11 +368,12 @@ def show_clean_params(
     f_kernel=3,
     offx=0,
     offy=0,
-    apod=False,
+    apod=True,
     window=None,
     *,
     ifu=False,
     mask=None,
+    window_contours=False,
 ):
     """Display the input parameters for the cleaning.
 
@@ -389,6 +390,7 @@ def show_clean_params(
     `remove_bad` {bool}: If True, the bad pixels are removed using a gaussian interpolation,\n
     `nframe` {int}: Frame number to be shown (default: 0),\n
     `ihdu` {int}: Hdu number of the fits file. Normally 1 for NIRISS and 0 for SPHERE (default: 0).
+    `window_contours` {bool}: shown contours of the super-Gaussian windowing (default: False).
     """
     import matplotlib.pyplot as plt
     from astropy.io import fits
@@ -461,10 +463,6 @@ def show_clean_params(
         bg_x = bg_coords[0]
         bg_y = bg_coords[1]
         sky_method = "mask"
-    if window is not None:
-        r3 = window
-        x3 = r3 * np.cos(theta) + x0
-        y3 = r3 * np.sin(theta) + y0
 
     xs1, ys1 = x0 + isz // 2, y0 + isz // 2
     xs2, ys2 = x0 - isz // 2, y0 + isz // 2
@@ -491,9 +489,44 @@ def show_clean_params(
             s=20,
             label="Pixels used for sky subtraction",
         )
-    if apod:
-        if window is not None:
-            plt.plot(x3, y3, "--", label="Super-gaussian windowing")
+
+    if window is not None:
+        # The window parameter gives the HWHM of the super-Gaussian.
+        # The value is used as the radius for the circle in the plot.
+        x3 = window * np.cos(theta) + x0
+        y3 = window * np.sin(theta) + y0
+        plt.plot(x3, y3, "--", label="Super-Gaussian windowing (HWHM)")
+
+        if window_contours:
+            # Create distance grid for windowing,
+            # relative to the new image center (x0, y0)
+            y_coord = np.arange(img1.shape[0]) - y0
+            x_coord = np.arange(img1.shape[1]) - x0
+            xx_grid, yy_grid = np.meshgrid(x_coord, y_coord)
+            distance = np.hypot(xx_grid, yy_grid)
+
+            # Create the super-Gaussian window function
+            # Mutiply the window value with 2 to change from HWHM to FWHM
+            super_gauss = super_gaussian(distance, sigma=window * 2)
+
+            # Plot contours of the window function
+            # Create a new meshgrid because the coordinate system
+            # in the plot is relative to the bottom left corner
+            y_coord = np.arange(img1.shape[0])
+            x_coord = np.arange(img1.shape[1])
+            xx_grid, yy_grid = np.meshgrid(x_coord, y_coord)
+            levels = [0.1, 0.25, 0.5, 0.75, 0.9]
+            contours = plt.contour(
+                xx_grid,
+                yy_grid,
+                super_gauss,
+                levels=levels,
+                linestyles=":",
+                linewidths=0.8,
+                colors="white",
+            )
+            plt.clabel(contours, contours.levels, inline=True, fontsize=7.0)
+
     plt.plot(x0, y0, "+", color="c", ms=10, label="Centering position")
     plt.plot(
         [xs1, xs2, xs3, xs4, xs1],
@@ -669,7 +702,7 @@ def select_clean_data(
     offx=0,
     offy=0,
     clip_fact=0.5,
-    apod=True,
+    apod=False,
     sky=True,
     window=None,
     darkfile=None,
@@ -695,18 +728,22 @@ def select_clean_data(
     `edge` {int}: Patch the edges of the image (VLT/SPHERE artifact, default: {0}),\n
     `clip` {bool}: If True, sigma-clipping is used to reject frames with low integrated flux,\n
     `clip_fact` {float}: Relative sigma if rejecting frames by sigma-clipping,\n
-    `apod` {bool}: If True, apodisation is performed in the image plan using a super-gaussian
-    function (known as windowing). The gaussian FWHM is set by the parameter `window`,\n
-    `window` {float}: FWHM of the super-gaussian to apodise the image (smoothly go to zero
-    on the edges),\n
+    `apod` {bool}: If True, apodisation is performed in the image plan using a super-Gaussian
+    function (known as windowing). The Gaussian HWHM is set by the parameter `window`. This
+    parameter is deprecated and will be removed in a future release. Instead, the apodization
+    is applied when providing a value to the `window` parameter. Setting the argument of
+    `window` to None will not apply the super-Gaussian windowing,\n
+    `window` {float}: Half width at half maximum (HWHM) of the super-Gaussian to apodise
+    the image (smoothly go to zero on the edges). The windowing is not applied when the
+    argument is set to None,\n
     `sky` {bool}: If True, the sky is remove using the annulus technique (computed between `r1`
-    and `r1` + `dr`),
+    and `r1` + `dr`),\n
     `darkfile` {str}: If specified (default: None), the input dark (master_dark averaged if
     multiple integrations) is substracted from the raw image,\n
     image,\n
     `f_kernel` {float}: kernel size used in the applied median filter (to find the center).
     `remove_bad` {bool}: If True, the bad pixels are removed in the cleaning parameter
-    plots using a gaussian interpolation (default: {True}),\n
+    plots using a Gaussian interpolation (default: {True}),\n
     `nframe` {int}: Frame number used to show cleaning parameters (default: {0}),\n
 
     Returns:
