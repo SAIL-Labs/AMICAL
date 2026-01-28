@@ -32,13 +32,13 @@ dependencies = [
     "astroquery>=0.4.4",
     "corner>=2.2.1",
     "emcee>=3.1.1",
-    "h5py>=3.6.0",
-    "matplotlib>=3.5.0",
-    "numpy>=1.21.2",
+    "h5py>=3.8.0",
+    "matplotlib>=3.6.0",
+    "numpy>=1.21.3",
     "pypdf>=3.2.0",
     "rich>=13.5.2",
-    "scipy>=1.7.2",
-    "uncertainties>=3.1.6",
+    "scipy>=1.8.2",
+    "uncertainties>=3.1.7",
 ]
 
 [project.readme]
@@ -57,7 +57,27 @@ typecheck = [
     "types-termcolor>=1.1.6.2",
 ]
 test = [
-    "pytest>=7.2.1",
+    "pytest>=8.2.1",
+]
+
+[tool.uv]
+no-build-package = [
+    "matplotlib",
+    "pillow",
+    "contourpy",
+    "kiwisolver",
+    "scipy",
+    "numpy",
+    "astropy",
+    "h5py",
+    "pyerfa",
+    "pyyaml",
+]
+constraint-dependencies = [
+    "pyerfa>=2.0.0.2",
+    "requests>=2.18.4",
+    "urllib3>=1.26.6",
+    "keyring>=20.0.0",
 ]
 
 [tool.ruff.lint]
