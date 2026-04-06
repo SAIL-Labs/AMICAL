@@ -1052,8 +1052,10 @@ def _fitFunc(param, chi2Data, observables, instruments, fitAlso=[], doNotFit=[])
         _modelObservables,
         list(
             filter(
-                lambda c: c[0].split(";")[0] in observables
-                and c[0].split(";")[1] in instruments,
+                lambda c: (
+                    c[0].split(";")[0] in observables
+                    and c[0].split(";")[1] in instruments
+                ),
                 chi2Data,
             )
         ),
@@ -1087,8 +1089,10 @@ def _chi2Func(param, chi2Data, observables, instruments):
     res = _meas - _modelObservables(
         list(
             filter(
-                lambda c: c[0].split(";")[0] in observables
-                and c[0].split(";")[1] in instruments,
+                lambda c: (
+                    c[0].split(";")[0] in observables
+                    and c[0].split(";")[1] in instruments
+                ),
                 chi2Data,
             )
         ),
@@ -2303,8 +2307,10 @@ class Open:
         # -- keep only fits within range
         self.allFits = list(
             filter(
-                lambda x: (x["best"]["x"] ** 2 + x["best"]["y"] ** 2) >= self.rmin**2
-                and (x["best"]["x"] ** 2 + x["best"]["y"] ** 2) <= self.rmax**2,
+                lambda x: (
+                    (x["best"]["x"] ** 2 + x["best"]["y"] ** 2) >= self.rmin**2
+                    and (x["best"]["x"] ** 2 + x["best"]["y"] ** 2) <= self.rmax**2
+                ),
                 self.allFits,
             )
         )
@@ -3415,8 +3421,10 @@ class Open:
         _mod = _modelObservables(
             list(
                 filter(
-                    lambda c: c[0].split(";")[0] in self.observables
-                    and c[0].split(";")[1] in self.instruments,
+                    lambda c: (
+                        c[0].split(";")[0] in self.observables
+                        and c[0].split(";")[1] in self.instruments
+                    ),
                     self._chi2Data,
                 )
             ),
