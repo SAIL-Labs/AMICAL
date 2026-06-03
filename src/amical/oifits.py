@@ -13,14 +13,18 @@ OIFITS related function.
 import datetime
 import os
 import sys
+from importlib.metadata import version
 
 import numpy as np
+from packaging.version import Version
 from rich import print as rprint
 
 from amical.externals.munch import munchify as dict2class
 from amical.tools import rad2mas
 
 list_color = ["#00a7b5", "#afd1de", "#055c63", "#ce0058", "#8a8d8f", "#f1b2dc"]
+
+_ASTROQUERY_VERSION = Version(version("astroquery"))
 
 
 def _compute_flag(value, sigma, limit=4.0):
@@ -520,7 +524,6 @@ def save(
         Name of the saved oifits file.
 
     """
-    import astroquery
     from astropy.io import fits
     from astroquery.simbad import Simbad
 
@@ -642,7 +645,8 @@ def save(
     name_star = dic["info"]["TARGET"]
 
     customSimbad = Simbad()
-    if astroquery.version.version_info >= (0, 4, 8):
+
+    if _ASTROQUERY_VERSION >= Version("0.4.8"):
         sp_type_name = "sp_type"
     else:
         sp_type_name = "sptype"
