@@ -54,7 +54,7 @@ amical = "amical._cli.main:main"
 
 [dependency-groups]
 typecheck = [
-    "mypy>=1.14.1",
+    "mypy>=2.1.0",
     "types-termcolor>=1.1.6.2",
 ]
 test = [
