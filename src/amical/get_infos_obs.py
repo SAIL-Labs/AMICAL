@@ -15,11 +15,13 @@ import sys
 import numpy as np
 from rich import print as rprint
 
+import astropy.units as u
+
 from amical.tools import mas2rad
 
 
 def get_mask(ins, mask, first=0):
-    """Return dictionnary containning saved informations about masks."""
+    """Return dictionary containning saved informations about masks."""
 
     pupil_visir = 8.0
     pupil_visir_mm = 17.67

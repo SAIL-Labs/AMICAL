@@ -129,7 +129,7 @@ bs = amical.extract_bs(cube_cleaned, file_t, **params_ami)
 
 > Note: Other parameters in `amical.extract_bs()` are rarely modified but you
 > can check the docstrings for details
-> ([bispect.py](amical/mf_pipeline/bispect.py)).
+> ([bispect.py](https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL/blob/master/amical/mf_pipeline/bispect.py)).
 
 The object `bs` stores the raw observables (`bs.vis2`, `bs.e_vis2`, `bs.cp`,
 `bs.e_cp`), the u-v coordinates and wavelength (`bs.u`, `bs.v`, `bs.wl`), the
