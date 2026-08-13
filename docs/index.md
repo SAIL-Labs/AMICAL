@@ -30,15 +30,15 @@ In addition (4), we include two external packages called
 outputs obtained from a binary-like sources (star-star or star-planet). We
 interfaced these stand-alone packages with AMICAL to quickly estimate our
 scientific results (e.g., separation, position angle, contrast ratio, contrast
-limits, etc.) using different approaches (chi2 grid and local optimization, or MCMC; see our [general example page](notebooks/example_analysis.py) for details).
+limits, etc.) using different approaches (chi2 grid and local optimization, or MCMC; see our [companion search tutorial](tutorials/companion-search.ipynb) for details).
 
 ## Getting started
 
 Looking for a quickstart into AMICAL? You can go through our **[tutorial](tutorial.md)** explaining
 how to use its different features.
 
-You can also have a look to the example scripts
-made for [NIRISS](notebooks/example_NIRISS.ipynb) and [SPHERE](notebooks/example_SPHERE.ipynb) or get details about the CANDID/Pymask uses with [example_analysis.py](notebooks/example_analysis.py).
+You can also have a look to the tutorials
+for [NIRISS](tutorials/niriss-extraction.ipynb) and [SPHERE](tutorials/sphere-extraction.ipynb) or get details about the CANDID/Pymask uses with [the companion search tutorial](tutorials/companion-search.ipynb).
 
 ## Use policy and reference publication
 

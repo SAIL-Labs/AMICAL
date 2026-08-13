@@ -13,10 +13,10 @@ nav:
 - Installation: installation.md
 - Getting Started: getting-started.ipynb
 - Tutorials:
-  - NIRISS AMI Extraction: notebooks/example_NIRISS.ipynb
-  - SPHERE SAM Extraction: notebooks/example_SPHERE.ipynb
-  - SPHERE IFS Extraction: notebooks/example_IFS.ipynb
-  - Companion search with Candid and Pymask: notebooks/example_analysis.ipynb
+  - NIRISS AMI Extraction: notebooks/niriss-extraction.ipynb
+  - SPHERE IRD Extraction: notebooks/sphere-extraction.ipynb
+  - SPHERE IFS Extraction: notebooks/sphere-ifs-extraction.ipynb
+  - Companion search with Candid and Pymask: notebooks/companion-search.ipynb
 - API: api/
 
 theme:
