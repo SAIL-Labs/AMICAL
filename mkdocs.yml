@@ -7,7 +7,7 @@ extra_javascript:
 - https://polyfill.io/v3/polyfill.min.js?features=es6
 - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
 
-site_name: AMICAL - Aperture Masking Interferometry Calibration and Analysis Library
+site_name: AMICAL
 nav:
 - Home: index.md
 - Installation: installation.md
