@@ -14,32 +14,34 @@ def pymask_grid(
     ncore=1,
     verbose=False,
 ):
-    """Compute chi2 map of a binary model over a regular grid.
+    """Compute a binary-model chi-square map on a regular grid.
 
-    Parameters:
-    -----------
-    `input_data` {str}:
-        Oifits file name,\n
-    `ngrid` {int}:
-        Number of points in the grid (for each parameters: pa, sep,
-        cr, i.e.: ngrid**3),\n
-    `pa_prior` {list}:
-        Bounds of the position angle (default: [0, 360]),\n
-    `sep_prior` {list}:
-        Bounds of the separation (default: [0, 100]),\n
-    `cr_prior` {list}:
-        Bounds of the contrast ratio (default: [0, 150]),\n
-    `err_scale` {float}:
-        Scaling factor apply on the errorbars (multiplicative),\n
-    `extra_error_cp` {float}:
-        Additional error [deg] (additive),\n
-    `ncore` {int}:
-        Number of threads used for multiprocessing.
+    Parameters
+    ----------
+    input_data : str
+        OIFITS file name.
+    ngrid : int, default=40
+        Number of grid points for each position angle, separation, and contrast
+        ratio dimension.
+    pa_prior : list of float or None, default=None
+        Position-angle bounds in degrees. Defaults to ``[0, 360]``.
+    sep_prior : list of float or None, default=None
+        Separation bounds in milliarcseconds. Defaults to ``[0, 100]``.
+    cr_prior : list of float or None, default=None
+        Contrast-ratio bounds. Defaults to ``[1, 150]``.
+    err_scale : float, default=1.0
+        Multiplicative error-bar scale.
+    extra_error_cp : float, default=0.0
+        Additive closure-phase uncertainty in degrees.
+    ncore : int, default=1
+        Number of multiprocessing workers.
+    verbose : bool, default=False
+        Whether to print PyMask progress information.
 
-    Return:
+    Returns
     -------
-    `like_grid` (np.array):
-        Compute likelyhood map.
+    numpy.ndarray
+        Likelihood map over the parameter grid.
     """
     if pa_prior is None:
         pa_prior = [0, 360]

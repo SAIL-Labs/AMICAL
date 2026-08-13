@@ -1,13 +1,4 @@
-"""
-@author: Anthony Soulain (University of Sydney)
-
--------------------------------------------------------------------------
-AMICAL: Aperture Masking Interferometry Calibration and Analysis Library
--------------------------------------------------------------------------
-
-Instruments and mask informations.
---------------------------------------------------------------------
-"""
+"""Retrieve instrument, mask, and spectral information."""
 
 import importlib.resources as importlib_resources
 import sys
@@ -15,13 +6,26 @@ import sys
 import numpy as np
 from rich import print as rprint
 
-import astropy.units as u
-
 from amical.tools import mas2rad
 
 
 def get_mask(ins, mask, first=0):
-    """Return dictionary containning saved informations about masks."""
+    """Return the saved coordinates for an instrument mask.
+
+    Parameters
+    ----------
+    ins : str
+        Instrument name.
+    mask : str
+        Mask name.
+    first : int, default=0
+        Index placed first in the returned coordinate sequence.
+
+    Returns
+    -------
+    numpy.ndarray or None
+        Selected mask-hole coordinates, or None for an unknown mask.
+    """
 
     pupil_visir = 8.0
     pupil_visir_mm = 17.67
@@ -176,7 +180,25 @@ def get_mask(ins, mask, first=0):
 
 
 def get_wavelength(ins, filtname):
-    """Return dictionnary containning saved informations about filters."""
+    """Return the central wavelength and width for an instrument filter.
+
+    Parameters
+    ----------
+    ins : str
+        Instrument name.
+    filtname : str
+        Filter name.
+
+    Returns
+    -------
+    numpy.ndarray
+        Filter information in metres.
+
+    Raises
+    ------
+    KeyError
+        If the instrument or filter is unknown.
+    """
     from astropy.io import fits
 
     datadir = importlib_resources.files("amical") / "internal_data"
@@ -241,10 +263,26 @@ def get_pixel_size(ins):
 def get_ifu_table(
     i_wl, filtname="YH", instrument="SPHERE-IFS", verbose=False, display=False
 ):
-    """Get spectral information for the given instrumental IFU setup.
-    `i_wl` can be an integer, a list of 2 integers (to get a range between those
-    two) or a list of integers (>= 3) used to display the
-    requested spectral channels."""
+    """Return spectral information for an instrumental IFU setup.
+
+    Parameters
+    ----------
+    i_wl : int or list of int
+        One channel, a two-index channel range, or channels to display.
+    filtname : str, default="YH"
+        IFU filter name.
+    instrument : str, default="SPHERE-IFS"
+        Instrument name.
+    verbose : bool, default=False
+        Whether to print spectral coverage.
+    display : bool, default=False
+        Whether to display the selected channels.
+
+    Returns
+    -------
+    float or numpy.ndarray
+        Selected wavelength or wavelengths in micrometres.
+    """
     wl = get_wavelength(instrument, filtname) * 1e6
 
     if verbose:

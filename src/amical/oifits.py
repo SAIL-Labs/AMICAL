@@ -1,14 +1,4 @@
-"""
-@author: Anthony Soulain (University of Sydney)
-
--------------------------------------------------------------------------
-AMICAL: Aperture Masking Interferometry Calibration and Analysis Library
--------------------------------------------------------------------------
-
-OIFITS related function.
-
---------------------------------------------------------------------
-"""
+"""Read, write, and display OIFITS interferometric observables."""
 
 import datetime
 import os
@@ -28,7 +18,20 @@ _ASTROQUERY_VERSION = Version(version("astroquery"))
 
 
 def _compute_flag(value, sigma, limit=4.0):
-    """Compute flag array using snr (snr < 4 by default)."""
+    """Flag observables whose signal-to-noise ratio is at most a limit.
+
+    Parameters
+    ----------
+    value, sigma : numpy.ndarray
+        Observable values and uncertainties.
+    limit : float, default=4.0
+        Signal-to-noise threshold.
+
+    Returns
+    -------
+    numpy.ndarray of bool
+        Flag array.
+    """
     npts = len(value)
     flag = np.array([False] * npts)
     snr = abs(value / sigma)
@@ -38,7 +41,20 @@ def _compute_flag(value, sigma, limit=4.0):
 
 
 def _peak1hole_cp(bs, ihole=0):
-    """Get the indices of each CP including the given hole."""
+    """Return closure-phase indices that include a specified hole.
+
+    Parameters
+    ----------
+    bs : object
+        Extraction result with mask-baseline mappings.
+    ihole : int, default=0
+        Hole index.
+
+    Returns
+    -------
+    numpy.ndarray
+        Selected closure-phase indices.
+    """
     bs2bl_ix = bs.mask.bs2bl_ix
     bl2h_ix = bs.mask.bl2h_ix
     sel_ind = []
@@ -51,7 +67,18 @@ def _peak1hole_cp(bs, ihole=0):
 
 
 def _format_staindex_v2(tab):
-    """Format the sta_index of v2 to save as oifits."""
+    """Convert zero-based visibility station indices to one-based indices.
+
+    Parameters
+    ----------
+    tab : array-like
+        Visibility station-index pairs.
+
+    Returns
+    -------
+    list of numpy.ndarray
+        One-based station-index pairs.
+    """
     sta_index = []
     for x in tab:
         ap1 = int(x[0])
@@ -62,7 +89,18 @@ def _format_staindex_v2(tab):
 
 
 def _format_staindex_t3(tab):
-    """Format the sta_index of cp to save as oifits."""
+    """Convert zero-based closure-phase station indices to one-based indices.
+
+    Parameters
+    ----------
+    tab : array-like
+        Closure-phase station-index triples.
+
+    Returns
+    -------
+    list of numpy.ndarray
+        One-based station-index triples.
+    """
     sta_index = []
     for x in tab:
         ap1 = int(x[0])
@@ -74,7 +112,20 @@ def _format_staindex_t3(tab):
 
 
 def _apply_flag(dict_calibrated, unit="arcsec"):
-    """Apply flag and convert to appropriete units."""
+    """Filter flagged observables and convert spatial-frequency units.
+
+    Parameters
+    ----------
+    dict_calibrated : dict
+        Calibrated OIFITS dictionary.
+    unit : str, default="arcsec"
+        Spatial-frequency unit.
+
+    Returns
+    -------
+    munch.Munch
+        Unflagged observables and spatial frequencies.
+    """
 
     wl = dict_calibrated["OI_WAVELENGTH"]["EFF_WAVE"]
     uv_scale = {
@@ -117,17 +168,17 @@ def _apply_flag(dict_calibrated, unit="arcsec"):
 
 
 def wrap_raw(bs):
-    """
-    Wrap extraction product to save it as oifits
+    """Wrap raw extraction observables in a calibration-compatible object.
 
-    `bs` : {munch.Munch}
-        Object returned by amical.extract_bs() with raw observables,\n
+    Parameters
+    ----------
+    bs : munch.Munch
+        Raw observables returned by the extraction pipeline.
 
     Returns
-    --------
-    `fake_cal` : {munch.Munch}
-        Object that stores the raw observables in a format compatible with the
-        output from amical.calibrate() and the input for `amical.save()`,\n
+    -------
+    munch.Munch
+        Object compatible with calibrated-data OIFITS saving.
     """
     u1 = bs.u[bs.mask.bs2bl_ix[0, :]]
     v1 = bs.v[bs.mask.bs2bl_ix[0, :]]
@@ -164,36 +215,30 @@ def cal2dict(
     oriented=-1,
     ind_hole=None,
 ):
-    """Format class containing calibrated data into appropriate dictionnary
-    format to be saved as oifits files.
+    """Format calibrated data as an OIFITS-compatible dictionary.
 
     Parameters
     ----------
-    `cal` : {class}
-        Class returned by amical.calibrate function (see core.py),\n
-    `target` : {str}, (optional),
-        Name of the science target, by default '',\n
-    `fake_obj` : {bool}, (optional),
-        If True, observables extracted from simulated data (celestial
-        coordinates are omitted), by default False,\n
-    `pa` : {int}, (optional)
-        Position angle, by default 0 [deg]\n
-    `del_pa` : {int}, (optional)
-        Uncertainties of parallactic angle , by default 0\n
-    `true_flag_v2` : {bool}, (optional)
-        If True, real flag are computed for v2 using snr threshold
-        (default 4), by default True,\n
-    `true_flag_t3` : {bool}, (optional)
-        If True, real flag are computed for cp using snr threshold
-        (default 4), by default True,\n
-    `oriented` {float}:
-        If oriented == -1, east assumed to the left in the image, otherwise
-        oriented == 1 (east to the right); (Default -1),\n
+    cal : object
+        Calibrated data object.
+    target : str or None, default=None
+        Science-target name; uses the target metadata when omitted.
+    pa, del_pa : float, default=0
+        Position angle and its uncertainty in degrees.
+    snr : float, default=4
+        Signal-to-noise threshold for flags.
+    true_flag_v2, true_flag_t3 : bool, default=True, False
+        Whether to compute squared-visibility and closure-phase flags.
+    oriented : float, default=-1
+        East orientation; negative values put east on the left.
+    ind_hole : int or None, default=None
+        Hole used to select independent closure phases.
 
     Returns
     -------
-    `dic`: {dict}
-        Dictionnary format of the data to be save as oifits.
+    dict or None
+        OIFITS-compatible dictionary, or None when required metadata is
+        unavailable.
     """
     from astropy.time import Time
 
@@ -305,20 +350,19 @@ def cal2dict(
 
 
 def load(filename, filtname=None):
-    """Load an oifits file format and store it as dictionnary. The different keys are
-    representative of the oifits standard structure ('OI_WAVELENGTH', 'OI_VIS2', etc.)
+    """Load an OIFITS file into a dictionary.
 
     Parameters
     ----------
-    filename {str}:
-        Name of the oifits file,\n
-    filtname {str}:
-        Name of the filter used if not included in the header (default: None)
+    filename : str or path-like
+        OIFITS filename.
+    filtname : str or None, default=None
+        Filter name used when the header does not provide one.
 
-    Output:
+    Returns
     -------
-    dic {dict}:
-        Dictionnary containing the oifits file data.
+    dict
+        OIFITS data and header information.
     """
     from astropy.io import fits
 
@@ -424,7 +468,18 @@ def load(filename, filtname=None):
 
 
 def loadc(filename):
-    """Same as load but provide an easy usable output as a class format (output.v2, or output.cp)."""
+    """Load an OIFITS file as an attribute-accessible object.
+
+    Parameters
+    ----------
+    filename : str or path-like
+        OIFITS filename.
+
+    Returns
+    -------
+    munch.Munch
+        Loaded observables and metadata.
+    """
 
     dic = load(filename)
     res = {}
@@ -477,52 +532,39 @@ def save(
     origin=None,
     raw=False,
 ):
-    """
-    Summary:
-    --------
+    """Save calibrated observables in OIFITS format.
 
-    Save the class object (from calibrate function) into oifits format. The input
-    observables can be a list of object for IFU data (e.g.: IFS-SPHERE).
+    Parameters
+    ----------
+    observables : object or list of object
+        Calibrated observables, including IFU observables when given as a list.
+    oifits_file : str or path-like, optional
+        OIFITS filename.
+    datadir : str or path-like, default="Saveoifits"
+        Output directory.
+    pa : float, default=0
+        Position angle in degrees.
+    ind_hole : int or None, default=None
+        Hole used to select independent closure phases.
+    fake_obj : bool, default=False
+        Whether observables originate from simulated data.
+    true_flag_v2, true_flag_t3 : bool, default=True, False
+        Whether to compute squared-visibility and closure-phase flags.
+    snr : float, default=4
+        Signal-to-noise threshold for flags.
+    verbose : bool, default=False
+        Whether to print status information.
+    origin : str or None, keyword-only, default=None
+        Value for the OIFITS ORIGIN key.
+    raw : bool, keyword-only, default=False
+        Whether the input is uncalibrated.
 
-    Parameters:
-    -----------
-
-    `observables` {class}:
-        Class or list of class containing all calibrated interferometric variable
-        extracted using calibrate (amical.calibration) function,\n
-    `oifits_file` {str}:
-        Name of the oifits file,\n
-    `datadir` {str}:
-        Folder name save the oifits files,\n
-    `pa` {float}:
-        Position angle of the observation (i.e.: north direction) [deg],\n
-    `ind_hole` {int}:
-        By default, ind_hole is None, all the CP are considered ncp = N(N-1)(N-2)/6. If
-        ind_hole is set, save only the independant CP including the given hole
-        ncp = (N-1)(N-2)/2.\n
-    `fake_obj` {bool}:
-        If True, observable are extracted from simulated data and so doesn't
-        contain real target informations (simbad search is ignored),\n
-    `true_flag_v2`, `true_flag_t3` {bool}:
-        if True, the true flag are used using snr,\n
-    `snr` {float}:
-        Limit snr used to compute flags (default=4),\n
-    `verbose` {bool}:
-        If True, print useful informations,
-    `origin` {str}:
-        String to use as ORIGIN key in oifits. 'Sydney University' is used if origin is
-        `None` (default=None),\n
-    `raw` {bool}:
-        Set to True if the input is not calibrated. This will only silence the warning
-        shown otherwise when an uncalibrated input is detected (default=False).\n
-
-    Returns:
-    --------
-    `dic` {dict}:
-        Oifits formated dictionnary,\n
-    `savedfile` {str}:
-        Name of the saved oifits file.
-
+    Returns
+    -------
+    dictionaries : list of dict
+        OIFITS-formatted dictionaries.
+    savedfile : str
+        Saved OIFITS filename.
     """
     from astropy.io import fits
     from astroquery.simbad import Simbad
@@ -1176,34 +1218,37 @@ def show(
     true_flag_v2=True,
     true_flag_t3=False,
 ):
-    """Show oifits data of a multiple dataset (loaded with oifits.load or oifits filename).
+    """Display one or more OIFITS data sets.
 
-    Parameters:
-    -----------
-    `diffWl` {bool}:
-        If True, differentiate the file (wavelenghts) by color,\n
-    `ind_hole` {int}:
-        By default, ind_hole is None, all the CP are considered ncp = N(N-1)(N-2)/6. If
-        ind_hole is set, show only the independant CP including the given hole
-        ncp = (N-1)(N-2)/2.\n
-    `vmin`, `vmax` {float}:
-        Minimum and maximum visibilities (default: 0, 1.05),\n
-    `cmax` {float}:
-        Maximum closure phase [deg] (default: 180),\n
-    `setlog` {bool}:
-        If True, the visibility curve is plotted in log scale,\n
-    `unit` {str}:
-        Unit of the sp. frequencies (default: 'arcsec'),\n
-    `unit_cp` {str}:
-        Unit of the closure phases (default: 'deg'),\n
-    `true_flag_v2` {bool}:
-        If inputs are classes from amical.calibrate, compute the true flag of vis2
-        using snr parameter (default: True).\n
-    `true_flag_t3` {bool}:
-        If inputs are classes from amical.calibrate, compute the true flag of cp
-        using snr parameter (default: True),\n
-    `snr` {float}:
-        If inputs are classes from amical.calibrate, use snr param to compute flag,
+    Parameters
+    ----------
+    inputList : object, str, dict, or list
+        OIFITS filenames, dictionaries, or calibrated data objects.
+    diffWl : bool, default=False
+        Whether to color data by wavelength.
+    ind_hole : int or None, default=None
+        Hole used to select independent closure phases.
+    vmin, vmax : float, default=0, 1.05
+        Visibility plot limits.
+    cmax : float, default=180
+        Closure-phase plot limit in degrees.
+    setlog : bool, default=False
+        Whether to use a logarithmic visibility axis.
+    pa : float, default=0
+        Position angle in degrees.
+    unit : str, default="arcsec"
+        Spatial-frequency unit.
+    unit_cp : str, default="deg"
+        Closure-phase unit.
+    snr : float, default=4
+        Signal-to-noise threshold for flags.
+    true_flag_v2, true_flag_t3 : bool, default=True, False
+        Whether to compute squared-visibility and closure-phase flags.
+
+    Returns
+    -------
+    matplotlib.figure.Figure or None
+        Figure containing the observables, when data are available.
     """
     import matplotlib.pyplot as plt
 

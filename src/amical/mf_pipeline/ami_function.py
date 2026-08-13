@@ -1,18 +1,7 @@
-"""
-@author: Anthony Soulain (University of Sydney)
+"""Matched-filter utilities for aperture-masking interferometry.
 
--------------------------------------------------------------------------
-AMICAL: Aperture Masking Interferometry Calibration and Analysis Library
--------------------------------------------------------------------------
-
-Matched filter pipeline method.
-
-All AMI related function, the most important are:
-- make_mf: compute splodge positions for a given mask,
-- tri_pix: compute unique closing triangle for a given splodge.
-
---------------------------------------------------------------------
-"""
+The module builds Fourier-plane matched filters, aperture-mask index mappings,
+and closure-triangle pixel combinations used by the AMICAL bispectrum pipeline."""
 
 import os
 import sys
@@ -62,8 +51,29 @@ def _plot_mask_coord(xy_coords, maskname, instrument):
 def _compute_uv_coord(
     xy_coords, index_mask, filt, pixelSize, npix, round_uv_to_pixel=False
 ):
-    """Compute the expected u-v coordinated on the detector. If `round_uv_to_pixel`
-    is True, the closest integer position is used."""
+    """Compute detector-sampled spatial-frequency coordinates.
+
+    Parameters
+    ----------
+    xy_coords : numpy.ndarray of shape (n_holes, 2)
+        Aperture coordinates in metres.
+    index_mask : object
+        Mask-index object with ``n_baselines`` and ``bl2h_ix`` attributes.
+    filt : array-like of float
+        Filter central wavelength and width in metres; only the central wavelength
+        is used.
+    pixelSize : float
+        Detector pixel scale in radians per pixel.
+    npix : int
+        Detector image size in pixels.
+    round_uv_to_pixel : bool, default=False
+        Whether to quantize aperture coordinates to the detector Fourier-pixel grid.
+
+    Returns
+    -------
+    u, v : numpy.ndarray of shape (n_baselines,)
+        Baseline spatial frequencies along the aperture x and y axes, respectively,
+        in inverse metres."""
     n_baselines = index_mask.n_baselines
     bl2h_ix = index_mask.bl2h_ix
 
@@ -329,43 +339,57 @@ def make_mf(
     save_to=None,
     filename=None,
 ):
-    """
-    Summary:
-    --------
+    """Construct the Fourier-plane matched filter for an aperture mask.
 
-    Compute the match filter mf which give the indices of the peak positions (mf.pvct)
-    and the associated gains (mf.gvct) in the image. Contains also the u-v coordinates,
-    wavelengths informations, holes mask positions (mf.xy_coords), centered mf (mf.cpvct,
-    mf.gpvct), etc.
+    Parameters
+    ----------
+    maskname : str
+        Aperture-mask identifier.
+    instrument : str
+        Instrument identifier used to obtain mask coordinates and pixel scale.
+    filtname : str
+        Filter identifier.
+    npix : int
+        Square detector image size in pixels.
+    i_wl : int or sequence of int, optional
+        Spectral-channel selector for SPHERE-IFS data.
+    peakmethod : {"fft", "square", "unique", "gauss"}, default="fft"
+        Method used to sample each Fourier splodge.
+    n_wl : int, default=3
+        Number of wavelengths used to sample the filter bandwidth.
+    theta_detector : float, default=0
+        Mask rotation relative to the detector in degrees.
+    cutoff : float, default=1e-4
+        Minimum simulated matched-filter weight retained for a peak pixel.
+    hole_diam : float, default=0.8
+        Aperture-hole diameter in metres.
+    fw_splodge : float, default=0.7
+        Relative Fourier-splodge size; also sets the Gaussian-method FWHM.
+    scaling : float, default=1
+        Multiplicative scale applied to aperture-mask coordinates.
+    diag_plot : bool, default=False
+        Whether to display the matched-filter overlap matrix.
+    verbose : bool, default=False
+        Whether to print mask-index information.
+    display : bool, default=True
+        Whether to display mask and Fourier-plane figures.
+    save_to : str or path-like, optional
+        Directory in which the mask-coordinate figure is saved.
+    filename : str or path-like, optional
+        Source filename used to name the saved figure.
 
-    Parameters:
-    -----------
-    `maskname`: str
-        Name of the mask (number of holes),\n
-    `instrument`: str
-        Instrument used (default = jwst),\n
-    `filtname`: str
-        Name of the filter,\n
-    `npix`: int
-        Size of the image,\n
-    `peakmethod` {str}:
-        3 methods are used to sample the u-v space: 'fft' uses fft between individual holes to compute
-        the expected splodge positions; 'square' compute the splodge in a square using the expected
-        fraction of pixel to determine its weight; 'gauss' considers a gaussian splodge (with a gaussian
-        weight) to get the same splodge side for each n(n-1)/2 baselines,\n
-    `n_wl`: int
-        number of wavelengths to use to simulate bandwidth,\n
-    `theta_detector`: float
-        Angle [deg] to rotate the mask compare to the detector (if the mask is not
-        perfectly aligned with the detector, e.g.: VLT/VISIR) ,\n
-    `cutoff`: float
-        cutoff limit between noise and signal pixels in simulated transforms,\n
-    `hole_diam`: float
-        Diameter of a single aperture (0.8 for JWST),\n
-    `fw_splodge` {float}:
-        Relative size of the splodge used to compute multiple triangle indices and the fwhm
-        of the 'gauss' technique,\n
-    """
+    Returns
+    -------
+    object or None
+        Matched-filter data containing Fourier-pixel vectors and gains, baseline
+        coordinates in metres, wavelength information in metres, pixel scale in
+        radians per pixel, and overlap-correction matrices. Returns ``None`` when
+        the instrument pixel scale or peak method is unavailable.
+
+    Raises
+    ------
+    ValueError
+        If an SPHERE-IFS spectral channel is not specified."""
 
     # Get detector, filter and mask informations
     # ------------------------------------------
@@ -598,37 +622,23 @@ def make_mf(
 
 
 def compute_index_mask(n_holes, verbose=False):
-    """
-    This function generates index arrays for an N-hole mask.
+    """Build aperture-mask baseline, bispectrum, and covariance indices.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
+    n_holes : int
+        Number of apertures in the mask.
+    verbose : bool, default=False
+        Whether to print the generated index arrays.
 
-    `n_holes`: int
-       number of holes in the array.
-
-    Returns:
-    --------
-
-    `n_baselines`: int
-        The number of different baselines (n_holes*(n_holes-1)/2),\n
-    `n_bispect`: int
-        The number of bispectrum elements (n_holes*(n_holes-1)*(n_holes-2)/6),\n
-    `n_cov`: int
-        The number of bispectrum covariance
-        (n_holes*(n_holes-1)*(n_holes-2)*(n_holes-3)/4),\n
-    `h2bl_ix`: numpy.array
-        Holes to baselines index,\n
-    `bl2h_ix`: numpy.array
-                Baselines to holes index,\n
-    `bs2bl_ix`: numpy.array
-        Bispectrum to baselines index,\n
-    `bl2bs_ix`    : numpy.array
-        Baselines to bispectrum index,\n
-    `bscov2bs_ix`: numpy.array,
-        Bispectrum covariance to bispectrum index.
-
-    """
+    Returns
+    -------
+    object
+        Index mappings with ``n_baselines``, ``n_bispect``, and ``n_cov`` counts;
+        ``h2bl_ix`` of shape ``(n_holes, n_holes)``; ``bl2h_ix`` of shape
+        ``(2, n_baselines)``; ``bs2bl_ix`` of shape ``(3, n_bispect)``;
+        ``bl2bs_ix`` of shape ``(n_baselines, n_holes - 2)``; and ``bscov2bs_ix``
+        of shape ``(2, n_cov)``."""
 
     n_baselines = int(n_holes * (n_holes - 1) / 2)
     n_bispect = int(n_holes * (n_holes - 1) * (n_holes - 2) / 6)
@@ -730,26 +740,22 @@ def compute_index_mask(n_holes, verbose=False):
 
 
 def give_peak_info2d(mf, n_baselines, dim1, dim2):
-    """
-    Transform mf.pvct indices from flatten 1-D array to 2-D coordinates and the
-    associated gains.
+    """Convert flattened matched-filter peak indices to image coordinates.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
+    mf : object
+        Matched-filter object returned by ``make_mf``.
+    n_baselines : int
+        Number of mask baselines.
+    dim1, dim2 : int
+        Image dimensions in pixels.
 
-    `mf` {object class}:
-        Match filter class (see make_mf function),\n
-    `n_baselines` {int}:
-        Number of baselines,\n
-    `dim1`, `dim2` {int}:
-        Size of the 2-D image.\n
-
-    Returns:
-    --------
-
-    `l_peak` {list}:
-        List of the n_baselines peak positions (2-D) and gains.
-    """
+    Returns
+    -------
+    numpy.ndarray of shape (n_baselines,)
+        Object array whose element for each baseline has rows ``(y, x, gain)`` for
+        its sampled Fourier-peak pixels."""
 
     x, y = np.arange(dim1), np.arange(dim2)
     X, Y = np.meshgrid(x, y)
@@ -767,7 +773,17 @@ def give_peak_info2d(mf, n_baselines, dim1, dim2):
 
 
 def clos_unique(closing_tri_pix):
-    """Compute the list of unique triplets in multiple triangle list"""
+    """Remove duplicate closure triangles independent of pixel ordering.
+
+    Parameters
+    ----------
+    closing_tri_pix : numpy.ndarray of shape (3, n_triangles)
+        Flattened Fourier-pixel indices for candidate triangle vertices.
+
+    Returns
+    -------
+    numpy.ndarray
+        Columns of ``closing_tri_pix`` corresponding to unique sorted triplets."""
     L, L_i = [], []
     for i in range(closing_tri_pix.shape[1]):
         p1 = str(closing_tri_pix[0, i])
@@ -792,7 +808,23 @@ def clos_unique(closing_tri_pix):
 
 
 def tri_pix(array_size, sampledisk_r, verbose=True, display=True):
-    """Compute all combination of triangle for a given splodge size"""
+    """Enumerate pixel triangles that close within a Fourier splodge.
+
+    Parameters
+    ----------
+    array_size : int
+        Size of the square Fourier image in pixels.
+    sampledisk_r : float
+        Radius of the sampled splodge in pixels.
+    verbose : bool, default=True
+        Whether to print the number of candidate triangles.
+    display : bool, default=True
+        Whether to display sampled unique triangles.
+
+    Returns
+    -------
+    numpy.ndarray of shape (3, n_triangles)
+        Flattened Fourier-pixel indices for all candidate closing triangles."""
 
     if array_size % 2 == 1:
         rprint(
@@ -874,33 +906,27 @@ def tri_pix(array_size, sampledisk_r, verbose=True, display=True):
 
 
 def bs_multi_triangle(i, bs_arr, ft_frame, bs2bl_ix, mf, closing_tri_pix):
-    """
-    Compute the bispectrum using the multiple triangle technique
+    """Accumulate a bispectrum sample using multiple closing triangles.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
+    i : int
+        Frame index in ``bs_arr``.
+    bs_arr : numpy.ndarray of complex, shape (n_frames, n_bispectra)
+        Bispectrum accumulator.
+    ft_frame : numpy.ndarray of complex, shape (ny, nx)
+        Fourier transform of the current image frame.
+    bs2bl_ix : numpy.ndarray of int, shape (3, n_bispectra)
+        Baseline indices forming each bispectrum.
+    mf : object
+        Matched-filter object returned by ``make_mf``.
+    closing_tri_pix : numpy.ndarray
+        Flattened-pixel combinations that close within a splodge.
 
-    `i` {int}:
-        Indice number of the bispectrum array (bs_arr),\n
-    `bs_arr` {array}:
-        Empty bispectrum array (bs_arr.shape[0] = n_bs),\n
-    `ft_frame` {array}:
-        fft of the frame where is extracted the bs value,\n
-    `bs2bl_ix` {list}:
-        Bispectrum to baselines indix,\n
-    `mf` {class}:
-        See make_mf function,\n
-    `closing_tri_pix` {array}:
-        Array of possible combination of indices in a splodge.\n
-
-    Returns:
-    --------
-
-    `bs_arr` {array}:
-        Filled bispectrum array.
-
-
-    """
+    Returns
+    -------
+    numpy.ndarray of complex, shape (n_frames, n_bispectra)
+        ``bs_arr`` with row ``i`` populated from the multiple-triangle products."""
     dim1 = ft_frame.shape[0]
     dim2 = ft_frame.shape[1]
 
@@ -974,24 +1000,24 @@ def bs_multi_triangle(i, bs_arr, ft_frame, bs2bl_ix, mf, closing_tri_pix):
 
 
 def find_bad_holes(bs, bmax=6, verbose=False, display=False):
-    """Find bad apertures using a linear fit of the v2 vs. spatial frequencies.
+    """Identify apertures with anomalously low calibrated visibility.
 
     Parameters
     ----------
-    `bs` : {class}
-        Class containing NRM data (bispect.py),\n
-    `bmax` : {int}, optional
-        Maximum baseline used to plot the fit, by default 6,\n
-    `verbose` : {bool}, optional
-        If True, print useful informations , by default False,\n
-    `display` : {bool}, optional
-        If True, display figures, by default False.
+    bs : object
+        Extracted AMI observables with baseline coordinates, wavelength, squared
+        visibilities, and mask indices.
+    bmax : float, default=6
+        Maximum baseline length in metres shown in the diagnostic fit.
+    verbose : bool, default=False
+        Whether to print linear-fit information.
+    display : bool, default=False
+        Whether to display the visibility-fit diagnostic.
 
     Returns
     -------
-    `bad_holes`: {array}
-        List of determined bad holes,
-    """
+    numpy.ndarray of int
+        Indices of apertures whose associated visibility ratio is at most 0.3."""
     u = bs.u / bs.wl
     v = bs.v / bs.wl
     X = np.sqrt(u**2 + v**2)
@@ -1034,29 +1060,25 @@ def find_bad_holes(bs, bmax=6, verbose=False, display=False):
 
 
 def find_bad_BL_BS(bad_holes, bs):
-    """
-    Give indices of bad BS and V2 using a given bad holes list.
+    """Find observables affected by a set of rejected apertures.
 
-    Parameters:
-    -----------
-    `bad_holes` {array}:
-        Bad holes list from find_bad_holes (using calibrator data),\n
-    `bl2h_ix`, `bs2bl_ix` {array}:
-        Corresponding indices of baselines and bispectrums from a given mask
-        positions (see index_mask function).\n
+    Parameters
+    ----------
+    bad_holes : array-like of int
+        Aperture indices identified as bad.
+    bs : object
+        Extracted AMI observables containing mask baseline and bispectrum indices.
 
-    Returns:
-    --------
-    `bad_baselines` {array}:
-        Bad baselines indices,\n
-    `bad_bispect` {array}:
-        Bad bispectrum indices,\n
-    `good_baselines` {array}:
-        Good baselines indices,\n
-    `good_bispectrum` {array}:
-        Good bispectrum indices.
-
-    """
+    Returns
+    -------
+    bad_baselines : numpy.ndarray of int
+        Baseline indices containing a bad aperture.
+    bad_bispect : numpy.ndarray of int
+        Bispectrum indices containing a bad baseline.
+    good_baselines : array-like of int
+        Baseline indices not rejected.
+    good_bispectrum : array-like of int
+        Bispectrum indices not rejected."""
 
     bl2h_ix = bs.mask.bl2h_ix
     bs2bl_ix = bs.mask.bs2bl_ix
@@ -1107,7 +1129,23 @@ def find_bad_BL_BS(bad_holes, bs):
 
 
 def phase_chi2(p, fitmat, ph_mn, ph_err):
-    """Compute chi2 of the phase used to fit piston"""
+    """Evaluate the wrapped phase chi-square for a piston model.
+
+    Parameters
+    ----------
+    p : numpy.ndarray of shape (n_holes,)
+        Fitted aperture-piston parameters in radians.
+    fitmat : numpy.ndarray of shape (n_holes, n_baselines + 1)
+        Matrix mapping aperture pistons to baseline phases plus a reference term.
+    ph_mn : numpy.ndarray of shape (n_baselines,)
+        Mean baseline phases in radians.
+    ph_err : numpy.ndarray of shape (n_baselines,)
+        Uncertainties on mean baseline phases in radians.
+
+    Returns
+    -------
+    float
+        Sum of squared wrapped phase residuals weighted by phase variance."""
     piston = np.dot(p, fitmat)
 
     tmp = list(ph_mn)

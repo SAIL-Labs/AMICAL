@@ -14,7 +14,22 @@ from amical._cli.commands.clean import _select_data_file
 
 
 def _extract_bs_ifile(f, args, ami_param):
-    """Extract the bispectrum on individial file (f) and save them as hdf5."""
+    """Extract and save the bispectrum for one FITS file.
+
+    Parameters
+    ----------
+    f : str
+        Path to the input FITS file.
+    args : argparse.Namespace
+        CLI arguments containing ``outdir`` and ``save_to`` attributes.
+    ami_param : dict
+        Keyword arguments passed to :func:`amical.extract_bs`.
+
+    Returns
+    -------
+    int
+        Zero after saving the bispectrum HDF5 file.
+    """
     hdu = fits.open(f)
     cube = hdu[0].data
     hdu.close()
@@ -28,8 +43,18 @@ def _extract_bs_ifile(f, args, ami_param):
 
 
 def perform_extract(args):
-    """CLI interface to extract the data with AMICAL (compute bispectrum object
-    with all raw observables)."""
+    """Extract AMICAL bispectra and their raw observables from FITS files.
+
+    Parameters
+    ----------
+    args : argparse.Namespace
+        CLI arguments controlling extraction, file selection, plotting, and output.
+
+    Returns
+    -------
+    int
+        Zero on success or one when the input directory contains no FITS files.
+    """
     rprint("[cyan]---- AMICAL extract started ----")
     t0 = time.time()
     ami_param = {

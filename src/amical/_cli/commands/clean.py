@@ -14,7 +14,26 @@ from amical._rich_display import tabulate
 
 
 def _select_data_file(args, process):
-    """Show report with the data found and allow to select one to be treated."""
+    """Display FITS files and select one for a processing operation.
+
+    Parameters
+    ----------
+    args : argparse.Namespace
+        CLI arguments containing ``datadir`` and ``file`` attributes.
+    process : str
+        Name of the operation displayed in the selection prompt.
+
+    Returns
+    -------
+    tuple[str, astropy.io.fits.Header] | int
+        Selected file path and primary header, or ``1`` when no FITS files are
+        found.
+
+    Raises
+    ------
+    SystemExit
+        If the selected file index is invalid.
+    """
     l_file = sorted(glob(f"{args.datadir}/*.fits"))
 
     if len(l_file) == 0:
@@ -60,7 +79,18 @@ def _select_data_file(args, process):
 
 
 def perform_clean(args):
-    """Clean the data with AMICAL."""
+    """Clean one or all FITS data cubes with AMICAL.
+
+    Parameters
+    ----------
+    args : argparse.Namespace
+        CLI arguments controlling input selection, cleaning, plots, and output.
+
+    Returns
+    -------
+    int
+        Zero on success or one when the input directory contains no FITS files.
+    """
     rprint("[cyan]---- AMICAL clean process ----")
 
     clean_param = {

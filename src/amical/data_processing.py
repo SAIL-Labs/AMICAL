@@ -1,15 +1,4 @@
-"""
-@author: Anthony Soulain (University of Sydney)
-
--------------------------------------------------------------------------
-AMICAL: Aperture Masking Interferometry Calibration and Analysis Library
--------------------------------------------------------------------------
-
-Function related to data cleaning (ghost, background correction,
-centering, etc.) and data selection (sigma-clipping, centered flux,).
-
---------------------------------------------------------------------
-"""
+"""Clean and select aperture-masking data cubes."""
 
 import sys
 import warnings
@@ -22,22 +11,25 @@ from amical.tools import apply_windowing, crop_max, find_max
 
 
 def _apply_patch_ghost(cube, xc, yc, radius=20, dx=0, dy=-200, method="bg"):
-    """Apply a patch on an eventual artifacts/ghosts on the spectral filter (i.e.
-    K1 filter of SPHERE presents an artifact/ghost at (392, 360)).
+    """Replace a circular spectral-filter ghost in each cube frame.
 
-    Arguments:
+    Parameters
     ----------
-    `cube` {array} -- Data cube,\n
-    `xc` {int} -- x-axis position of the artifact,\n
-    `yc` {int} -- y-axis position of the artifact.
+    cube : numpy.ndarray
+        Data cube.
+    xc, yc : int
+        Artifact x and y coordinates.
+    radius : int, default=20
+        Radius of the replacement circle.
+    dx, dy : int, default=0, -200
+        Offset used to sample replacement background values.
+    method : str, default="bg"
+        Use sampled background values when "bg"; otherwise use zeros.
 
-    Keyword Arguments:
-    ----------
-    `radius` {int} -- Radius to apply the patch in a circle (default: {10}),\n
-    `dy` {int} -- Offset pixel number to compute background values (default: {0}),\n
-    `dx` {int} -- Same along y-axis (default: {0}),\n
-    `method` {str} -- If 'bg', the replacement values are the background computed at
-    xc+dx, yx+dy, else zero is apply (default: {'bg'}).
+    Returns
+    -------
+    numpy.ndarray
+        Ghost-corrected cube.
     """
     cube_corrected = []
     for i in range(len(cube)):
@@ -63,21 +55,25 @@ def _apply_patch_ghost(cube, xc, yc, radius=20, dx=0, dy=-200, method="bg"):
 
 
 def select_data(cube, clip_fact=0.5, clip=False, verbose=True, display=True):
-    """Check the cleaned data cube using the position of the maximum in the
-    fft image (supposed to be zero). If not in zero position, the fram is
-    rejected. It can apply a sigma-clipping to select only the frames with the
-    highest total fluxes.
+    """Select frames centered in Fourier space and, optionally, by flux.
 
-    Parameters:
-    -----------
-    `cube` {array} -- Data cube,\n
-    `clip_fact` {float} -- Relative sigma if rejecting frames by
-    sigma-clipping (default=False),\n
-    `clip` {bool} -- If True, sigma-clipping is used,\n
-    `verbose` {bool} -- If True, print informations in the terminal,\n
-    `display` {bool} -- If True, plot figures.
+    Parameters
+    ----------
+    cube : numpy.ndarray
+        Cleaned data cube.
+    clip_fact : float, default=0.5
+        Relative sigma threshold for flux selection.
+    clip : bool, default=False
+        Whether to apply flux sigma clipping.
+    verbose : bool, default=True
+        Whether to print selection information.
+    display : bool, default=True
+        Whether to display diagnostic plots.
 
-
+    Returns
+    -------
+    numpy.ndarray
+        Selected frames.
     """
     fft_fram = abs(np.fft.fft2(cube))
     # flag_fram, cube_flagged, cube_cleaned_checked = [], [], []
@@ -224,10 +220,29 @@ def _get_ring_mask(r1, dr, isz, center=None):
 
 
 def sky_correction(imA, r1=None, dr=None, verbose=False, *, center=None, mask=None):
-    """
-    Perform background sky correction to be as close to zero as possible.
-    This requires either a radius (r1) to define the background boundary, optionally with a
-    ring width dr, or a boolean mask with the same shape as the image.
+    """Subtract a sky background estimated from a ring or mask.
+
+    Parameters
+    ----------
+    imA : numpy.ndarray
+        Image to correct.
+    r1 : float or None, default=None
+        Inner radius of the background ring.
+    dr : float or None, default=None
+        Background ring width.
+    verbose : bool, default=False
+        Whether to print correction information.
+    center : tuple of float or None, keyword-only
+        Ring center.
+    mask : numpy.ndarray of bool or None, keyword-only
+        Background mask with the same image shape.
+
+    Returns
+    -------
+    image : numpy.ndarray
+        Sky-corrected image.
+    background : float
+        Estimated background.
     """
     # FUTURE: Future AMICAL release should raise error
     if r1 is None and mask is None:
@@ -285,8 +300,24 @@ def sky_correction(imA, r1=None, dr=None, verbose=False, *, center=None, mask=No
 
 
 def fix_bad_pixels(image, bad_map, add_bad=None, x_stddev=1):
-    """Replace bad pixels with values interpolated from their neighbors (interpolation
-    is made with a gaussian kernel convolution)."""
+    """Interpolate bad pixels from neighboring values with a Gaussian kernel.
+
+    Parameters
+    ----------
+    image : numpy.ndarray
+        Image to correct.
+    bad_map : numpy.ndarray
+        Bad-pixel map.
+    add_bad : list or None, default=None
+        Additional bad-pixel coordinates.
+    x_stddev : float, default=1
+        Gaussian-kernel standard deviation.
+
+    Returns
+    -------
+    numpy.ndarray
+        Image with interpolated bad pixels.
+    """
     from astropy.convolution import Gaussian2DKernel, interpolate_replace_nans
 
     if add_bad is None:
@@ -305,19 +336,23 @@ def fix_bad_pixels(image, bad_map, add_bad=None, x_stddev=1):
 
 
 def _get_3d_bad_pixels(bad_map, add_bad, data):
-    """
-    Format 3d bad pixel cube from arbitrary bad pixel input
+    """Format bad-pixel inputs for a three-dimensional data cube.
 
     Parameters
     ----------
-    `bad_map` {np.ndarray}: Bad pixel map in 2d or 3d (can also be None)\n
-    `add_bad` {list}: list of bad pixel coordinates\n
-    `data` {np.ndarray}: Array with the data corresponding to the bad pixel map\n
+    bad_map : numpy.ndarray or None
+        Two- or three-dimensional bad-pixel map.
+    add_bad : list or None
+        Bad-pixel coordinates.
+    data : numpy.ndarray
+        Data corresponding to the bad-pixel map.
 
-    Returns:
-    --------
-    `bad_map` {np.array}: 3d bad map with same shape as data cube
-    `add_bad` {list}: add_bad list compatible with 3d dataset
+    Returns
+    -------
+    bad_map : numpy.ndarray
+        Three-dimensional bad-pixel map matching the data cube.
+    add_bad : list
+        Coordinates compatible with the three-dimensional data set.
     """
     n_im = data.shape[0]
 
@@ -374,21 +409,41 @@ def show_clean_params(
     ifu=False,
     mask=None,
 ):
-    """Display the input parameters for the cleaning.
+    """Display the parameters used to clean a FITS data cube.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
+    filename : str or path-like
+        Data-cube filename.
+    isz, r1, dr : int or None, default=None
+        Crop size and sky-ring parameters.
+    bad_map : numpy.ndarray or None, default=None
+        Bad-pixel map.
+    add_bad : list or None, default=None
+        Additional bad-pixel coordinates.
+    edge : int, default=0
+        Detector-edge width to remove.
+    remove_bad : bool, default=True
+        Whether to interpolate bad pixels.
+    nframe, ihdu : int, default=0
+        Frame and FITS HDU to display.
+    f_kernel : int or None, default=3
+        Median-filter kernel size for centering.
+    offx, offy : int, default=0
+        Crop-center offsets.
+    apod : bool, default=False
+        Whether to show apodization.
+    window : float or None, default=None
+        Apodization width.
+    ifu : bool, keyword-only, default=False
+        Whether the input is an IFU cube.
+    mask : numpy.ndarray of bool or None, keyword-only, default=None
+        Sky-background mask.
 
-    `filename` {str}: filename containing the datacube,\n
-    `isz` {int}: Size of the cropped image (default: None)\n
-    `r1` {int}: Radius of the rings to compute background sky (default: 100)\n
-    `dr` {int}: Outer radius to compute sky (default: 10)\n
-    `bad_map` {array}: Bad pixel map with 0 and 1 where 1 set for a bad pixel (default: None),\n
-    `add_bad` {list}: List of 2d coordinates of bad pixels/cosmic rays (default: []),\n
-    `edge` {int}: Number of pixel to be removed on the edge of the image (SPHERE),\n
-    `remove_bad` {bool}: If True, the bad pixels are removed using a gaussian interpolation,\n
-    `nframe` {int}: Frame number to be shown (default: 0),\n
-    `ihdu` {int}: Hdu number of the fits file. Normally 1 for NIRISS and 0 for SPHERE (default: 0).
+    Returns
+    -------
+    matplotlib.figure.Figure
+        Cleaning-parameter figure.
     """
     import matplotlib.pyplot as plt
     from astropy.io import fits
@@ -527,8 +582,20 @@ def show_clean_params(
 
 
 def _apply_edge_correction(img0, edge=0):
-    """Remove the bright edges (set to 0) observed for
-    some detectors (SPHERE)."""
+    """Set bright detector edges to zero.
+
+    Parameters
+    ----------
+    img0 : numpy.ndarray
+        Image to correct.
+    edge : int, default=0
+        Width of the edge to remove.
+
+    Returns
+    -------
+    numpy.ndarray
+        Edge-corrected image.
+    """
     if edge != 0:
         img0[:, 0:edge] = 0
         img0[:, -edge:-1] = 0
@@ -569,21 +636,41 @@ def clean_data(
     *,
     mask=None,
 ):
-    """Clean data.
+    """Clean an aperture-masking data cube.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
+    data : numpy.ndarray
+        Input data cube.
+    isz, r1, dr : int or None, default=None
+        Crop size and sky-ring parameters.
+    edge : int, default=0
+        Detector-edge width to remove.
+    bad_map : numpy.ndarray or None, default=None
+        Bad-pixel map.
+    add_bad : list or None, default=None
+        Additional bad-pixel coordinates.
+    apod : bool, default=True
+        Whether to apodize frames.
+    offx, offy : int, default=0
+        Crop-center offsets.
+    sky : bool, default=True
+        Whether to apply sky subtraction.
+    window : float or None, default=None
+        Apodization width.
+    darkfile : str or path-like or None, default=None
+        Dark-cube filename.
+    f_kernel : int or None, default=3
+        Median-filter kernel size for centering.
+    verbose : bool, default=False
+        Whether to print cleaning information.
+    mask : numpy.ndarray of bool or None, keyword-only, default=None
+        Sky-background mask.
 
-    `data` {np.array} -- datacube containing the NRM data\n
-    `isz` {int} -- Size of the cropped image (default: {None})\n
-    `r1` {int} -- Radius of the rings to compute background sky (default: {None})\n
-    `dr` {int} -- Outer radius to compute sky (default: {None})\n
-    `edge` {int} -- Patch the edges of the image (VLT/SPHERE artifact, default: {200}),\n
-    `checkrad` {bool} -- If True, check the resizing and sky substraction parameters (default: {False})\n
-
-    Returns:
-    --------
-    `cube` {np.array} -- Cleaned datacube.
+    Returns
+    -------
+    numpy.ndarray
+        Cleaned data cube.
     """
     n_im = data.shape[0]
     cube_cleaned = []  # np.zeros([n_im, isz, isz])
@@ -683,35 +770,54 @@ def select_clean_data(
     mask=None,
     i_wl=None,
 ):
-    """Clean and select good datacube (sigma-clipping using fluxes variations).
+    """Clean and select frames from a FITS data cube.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
+    filename : str or path-like
+        Data-cube filename.
+    isz, r1, dr : int or None, default=None
+        Crop size and sky-ring parameters.
+    edge : int, default=0
+        Detector-edge width to remove.
+    clip : bool, default=True
+        Whether to reject low-flux frames.
+    bad_map : numpy.ndarray or None, default=None
+        Bad-pixel map.
+    add_bad : list or None, default=None
+        Additional bad-pixel coordinates.
+    offx, offy : int, default=0
+        Crop-center offsets.
+    clip_fact : float, default=0.5
+        Relative sigma threshold for flux selection.
+    apod, sky : bool, default=True
+        Whether to apodize frames and subtract the sky.
+    window : float or None, default=None
+        Apodization width.
+    darkfile : str or path-like or None, default=None
+        Dark-cube filename.
+    f_kernel : int or None, default=3
+        Median-filter kernel size for centering.
+    verbose : bool, default=False
+        Whether to print cleaning information.
+    ihdu : int, default=0
+        FITS HDU containing the data.
+    display : bool, default=False
+        Whether to show cleaning parameters.
+    remove_bad : bool, keyword-only, default=True
+        Whether to interpolate bad pixels.
+    nframe : int, keyword-only, default=0
+        Frame to use for parameter display.
+    mask : numpy.ndarray of bool or None, keyword-only, default=None
+        Sky-background mask.
+    i_wl : int or None, keyword-only, default=None
+        IFU spectral-channel index.
 
-    `filename` {str}: filename containing the datacube,\n
-    `isz` {int}: Size of the cropped image (default: {None})\n
-    `r1` {int}: Radius of the rings to compute background sky (default: {100})\n
-    `dr` {int}: Outer radius to compute sky (default: {10})\n
-    `edge` {int}: Patch the edges of the image (VLT/SPHERE artifact, default: {0}),\n
-    `clip` {bool}: If True, sigma-clipping is used to reject frames with low integrated flux,\n
-    `clip_fact` {float}: Relative sigma if rejecting frames by sigma-clipping,\n
-    `apod` {bool}: If True, apodisation is performed in the image plan using a super-gaussian
-    function (known as windowing). The gaussian FWHM is set by the parameter `window`,\n
-    `window` {float}: FWHM of the super-gaussian to apodise the image (smoothly go to zero
-    on the edges),\n
-    `sky` {bool}: If True, the sky is remove using the annulus technique (computed between `r1`
-    and `r1` + `dr`),
-    `darkfile` {str}: If specified (default: None), the input dark (master_dark averaged if
-    multiple integrations) is substracted from the raw image,\n
-    image,\n
-    `f_kernel` {float}: kernel size used in the applied median filter (to find the center).
-    `remove_bad` {bool}: If True, the bad pixels are removed in the cleaning parameter
-    plots using a gaussian interpolation (default: {True}),\n
-    `nframe` {int}: Frame number used to show cleaning parameters (default: {0}),\n
-
-    Returns:
-    --------
-    `cube_final` {np.array}: Cleaned and selected datacube.
+    Returns
+    -------
+    numpy.ndarray or None
+        Cleaned and selected data cube, or None when processing cannot
+        continue.
     """
     from astropy.io import fits
 

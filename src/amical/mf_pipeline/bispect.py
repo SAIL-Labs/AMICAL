@@ -1,17 +1,7 @@
-"""
-@author: Anthony Soulain (University of Sydney)
+"""Bispectrum extraction routines for aperture-masking interferometry.
 
--------------------------------------------------------------------------
-AMICAL: Aperture Masking Interferometry Calibration and Analysis Library
--------------------------------------------------------------------------
-
-Matched filter sub-pipeline method.
-
-Compute bispectrum for a given fits file (adapted from bispect.pro
-and calc_bispect.pro).
-
---------------------------------------------------------------------
-"""
+The module samples matched Fourier peaks, estimates calibrated visibility and
+bispectrum statistics, and assembles AMICAL interferometric observables."""
 
 import os
 import sys
@@ -47,38 +37,33 @@ def _compute_complex_bs(
     bs_multi_tri=False,
     verbose=True,
 ):
-    """Compute the complex visibilities and the bispectrum of an input ft_arr (_construct_ft_arr()).
-    In addition, compute the phase phs of each frames, and some calibration array (relative to the
-    dark frames).
+    """Extract frame-wise complex visibilities and bispectra from Fourier data.
 
-    Parameters:
-    -----------
-    `ft_arr` {numpy.array}: Fourier transform of the input cube (from _construct_ft_arr()),\n
-    `index_mask` {class/dict}: Object of indices computed with compute_index_mask(),\n
-    `fringe_peak` {list}: List of fringe peak position and gain (see give_peak_info2d()),\n
-    `mf` {class/dict}:  Object containing the matched filter informations (expected peak
-    positions, make_mf()),\n
-    `dark_ps` {array}: Calibration cube of the dark associated with the observations (default:
-    None),\n
-    `closing_tri_pix` {list}: List of all subset of closing triangle used to compute the bispectrum
-    using the multiple triangle technique (default: None),\n
-    `bs_multi_tri` {bool}: If True, the multiple triangle computation is applied (default=False).
+    Parameters
+    ----------
+    ft_arr : numpy.ndarray of complex, shape (n_frames, npix, npix)
+        Fourier transforms of the input image cube.
+    index_mask : object
+        Aperture-mask index mappings from ``compute_index_mask``.
+    fringe_peak : numpy.ndarray of shape (n_baselines,)
+        Per-baseline object arrays of Fourier ``(y, x, gain)`` peak samples.
+    mf : object
+        Matched filter with real and imaginary overlap-correction matrices.
+    dark_ps : numpy.ndarray, optional
+        Dark power-spectrum image of shape ``(npix, npix)`` or cube of shape
+        ``(n_frames, npix, npix)``.
+    closing_tri_pix : numpy.ndarray, optional
+        Pixel closing-triangle combinations for multiple-triangle extraction.
+    bs_multi_tri : bool, default=False
+        Whether to use multiple-triangle bispectrum extraction.
+    verbose : bool, default=True
+        Whether to display extraction progress.
 
-    Returns:
-    --------
-    `complex_bs` {dict}: Dictionnary of observables ('vis_arr', 'bs_arr'), calibrations ('phs', 'calib_v2',
-    'fluxes') and saved fft frames ('ps', 'dps').\n
-
-    Observables arrays ('vis_arr', 'bs_arr') contain observables for each frames.\n
-
-    >>> complex_bs['vis_arr'].shape()=[n_ps, n_baselines]
-
-    complex_bs['vis_arr'] is a structured numpy array containing the complex visibilities ('complex'),
-    the phase ('phase'), the amplitude ('amplitude') and the squared visibilities ('squared'). complex_bs['calib_v2']
-    contains the 'dark' and the 'bias' arrays, and complex_bs['phs'] contains the phase values ('value').
-    and the associated errors ('err').
-
-    """
+    Returns
+    -------
+    dict
+        Frame-wise visibility and bispectrum arrays, phase-slope estimates, dark
+        calibration, frame fluxes, and mean science and dark power spectra."""
     n_baselines = index_mask.n_baselines
     n_bispect = index_mask.n_bispect
     bs2bl_ix = index_mask.bs2bl_ix
@@ -199,20 +184,21 @@ def _compute_complex_bs(
 
 
 def _construct_ft_arr(cube):
-    """Open the data cube and perform a series of roll (both axis) to avoid grid artefact
-    (negative fft values). Remove the last row/column in case of odd array.
+    """Center an image cube and compute its two-dimensional Fourier transforms.
 
-    Parameters:
-    -----------
-    `cube` {array}: cleaned data cube from amical.select_data().
+    Parameters
+    ----------
+    cube : numpy.ndarray, shape (n_frames, ny, nx)
+        Cleaned input image cube. Odd spatial dimensions are cropped by one pixel.
 
-    Returns:
-    --------
-    `ft_arr` {array}: complex array of the Fourier transform of the cube,\n
-    `n_ps` {int}: Number of frames,\n
-    `n_pix` {int}: Dimensions of one frames,\n
-
-    """
+    Returns
+    -------
+    ft_arr : numpy.ndarray of complex, shape (n_frames, npix, npix)
+        Centered two-dimensional Fourier transforms.
+    n_ps : int
+        Number of frames.
+    n_pix : int
+        Even spatial size in pixels."""
     if cube.shape[1] % 2 == 1:
         cube = np.array([im[:-1, :-1] for im in cube])
 
@@ -228,10 +214,19 @@ def _construct_ft_arr(cube):
 
 
 def _show_complex_ps(ft_arr, i_frame=0):
-    """
-    Show the complex fft image (real and imaginary) and power spectrum (abs(fft)) of the first frame
-    to check the applied correction on the cube.
-    """
+    """Plot real, imaginary, and centered power-spectrum views of one Fourier frame.
+
+    Parameters
+    ----------
+    ft_arr : numpy.ndarray of complex, shape (n_frames, ny, nx)
+        Fourier-transform cube.
+    i_frame : int, default=0
+        Frame index to display.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+        Figure containing the three diagnostic panels."""
     import matplotlib.pyplot as plt
 
     fig = plt.figure(figsize=(16, 6))
@@ -251,8 +246,29 @@ def _show_complex_ps(ft_arr, i_frame=0):
 def _show_peak_position(
     ft_arr, n_baselines, mf, maskname, peakmethod, i_fram=0, aver=False
 ):
-    """Show the expected position of the peak in the Fourier space using the
-    mask coordinates and the chosen method."""
+    """Plot matched-filter Fourier peak positions over a power spectrum.
+
+    Parameters
+    ----------
+    ft_arr : numpy.ndarray of complex, shape (n_frames, ny, nx)
+        Fourier-transform cube.
+    n_baselines : int
+        Number of aperture-mask baselines.
+    mf : object
+        Matched-filter object returned by ``make_mf``.
+    maskname : str
+        Aperture-mask identifier used in the plot title.
+    peakmethod : str
+        Matched-filter sampling method used in the plot title.
+    i_fram : int, default=0
+        Fourier-frame index to display.
+    aver : bool, default=False
+        Whether to display the mean real Fourier image across frames.
+
+    Returns
+    -------
+    None
+        Displays a diagnostic figure."""
     import matplotlib.pyplot as plt
     from mpl_toolkits.axes_grid1 import make_axes_locatable
 
@@ -308,8 +324,22 @@ def _show_peak_position(
 
 
 def _show_norm_matrices(obs_norm, expert_plot=False):
-    """Show covariances matrices of the V2, CP, and a combination
-    bispectrum vs. V2."""
+    """Plot covariance matrices of normalized AMI observables.
+
+    Parameters
+    ----------
+    obs_norm : dict
+        Normalized observable quantities including ``v2_cov``, ``cp_cov``, and
+        ``bs_v2_cov``.
+    expert_plot : bool, default=False
+        Whether to include the bispectrum-amplitude versus squared-visibility
+        covariance plot.
+
+    Returns
+    -------
+    matplotlib.figure.Figure or tuple of matplotlib.figure.Figure
+        Visibility and closure-phase covariance figure, plus the cross-covariance
+        figure when ``expert_plot`` is true."""
     import matplotlib.pyplot as plt
 
     v2_cov = obs_norm["v2_cov"]
@@ -344,10 +374,31 @@ def _show_norm_matrices(obs_norm, expert_plot=False):
 
 
 def _check_input_infos(hdr, targetname=None, filtname=None, instrum=None, verbose=True):
-    """Extract informations from the header and fill the missing values with the
-    input arguments. Return the infos class containing important informations of
-    the input header (keys: target, seeing, instrument, ...)
-    """
+    """Extract observation metadata from a FITS header.
+
+    Parameters
+    ----------
+    hdr : mapping
+        FITS header providing observation metadata.
+    targetname : str, optional
+        Target-name fallback when ``OBJECT`` is missing or is ``"STD"``.
+    filtname : str, optional
+        Filter-name fallback when ``FILTER`` is missing.
+    instrum : str, optional
+        Instrument-name fallback when ``INSTRUME`` is missing.
+    verbose : bool, default=True
+        Whether to print metadata fallback warnings.
+
+    Returns
+    -------
+    object
+        Metadata with target, filter name, instrument, source filename, and mean
+        seeing FWHM in the header's native angular unit.
+
+    Raises
+    ------
+    OSError
+        If neither the header nor ``instrum`` supplies an instrument."""
 
     target = hdr.get("OBJECT")
     filt = hdr.get("FILTER")
@@ -408,9 +459,17 @@ def _check_input_infos(hdr, targetname=None, filtname=None, instrum=None, verbos
 
 
 def _format_closing_triangle(index_mask):
-    """Use the index_mask from compute_index_mask() to compute the list of
-    closing triangle in an appropriate format (e.g.: [[0,1,2], [0,1,3], ..., [4,5,6]]
-    for a 7 mask holes)."""
+    """Convert bispectrum baseline indices to aperture-triangle lists.
+
+    Parameters
+    ----------
+    index_mask : object
+        Mask indices with ``bs2bl_ix`` and ``bl2h_ix`` arrays.
+
+    Returns
+    -------
+    list of list of int
+        Aperture indices in each closing triangle."""
     bs2bl_ix = index_mask.bs2bl_ix
     bl2h_ix = index_mask.bl2h_ix
     closing_tri = []
@@ -423,10 +482,22 @@ def _format_closing_triangle(index_mask):
 
 
 def _set_good_nblocks(n_blocks, n_ps, verbose=False):
-    """Check the given n_blocks to do the statistic on
-    different block size. If the n_blocks is 0 or greater
-    than the frame number, n_blocks is set to n_ps.
-    """
+    """Validate the number of statistical blocks used for uncertainty estimates.
+
+    Parameters
+    ----------
+    n_blocks : int
+        Requested number of frame blocks.
+    n_ps : int
+        Number of frames in the cube.
+    verbose : bool, default=False
+        Whether to print corrections to the requested block count.
+
+    Returns
+    -------
+    int
+        Usable block count, set to ``n_ps`` when ``n_blocks`` is 0, 1, or exceeds
+        the number of frames."""
     if (n_blocks == 0) or (n_blocks == 1):
         if verbose:
             rprint(
@@ -446,9 +517,25 @@ def _set_good_nblocks(n_blocks, n_ps, verbose=False):
 
 
 def _compute_corr_noise(complex_bs, ft_arr, fringe_peak):
-    """Compute the bias (science and dark) and the correlated noise of the
-    Fourier transform (correlation between neighbouring terms in each
-    frame after removing the signal)."""
+    """Estimate Fourier bias and correlated noise outside sampled signal peaks.
+
+    Parameters
+    ----------
+    complex_bs : dict
+        Complex-observable data containing mean science and dark power spectra.
+    ft_arr : numpy.ndarray of complex, shape (n_frames, npix, npix)
+        Fourier-transform cube.
+    fringe_peak : numpy.ndarray of shape (n_baselines,)
+        Per-baseline Fourier ``(y, x, gain)`` peak samples.
+
+    Returns
+    -------
+    bias : float
+        Median science power-spectrum bias outside identified signal.
+    dark_bias : float
+        Median dark power-spectrum bias outside identified signal.
+    autocor_noise : numpy.ndarray of shape (npix, npix)
+        Mean Fourier autocorrelation of the masked noise."""
     n_ps = ft_arr.shape[0]
     npix = ft_arr.shape[1]
 
@@ -496,8 +583,29 @@ def _compute_corr_noise(complex_bs, ft_arr, fringe_peak):
 def _unbias_v2_arr(
     v2_arr, npix, fringe_peak, bias, dark_bias, autocor_noise, unbias=True
 ):
-    """Unbias the squared visibilities array and add the dark bias substracted
-    twice instead of one."""
+    """Subtract correlated-noise bias from frame-wise squared visibilities.
+
+    Parameters
+    ----------
+    v2_arr : numpy.ndarray, shape (n_frames, n_baselines)
+        Squared visibility samples, modified in place.
+    npix : int
+        Fourier-image side length in pixels.
+    fringe_peak : numpy.ndarray of shape (n_baselines,)
+        Per-baseline Fourier ``(y, x, gain)`` peak samples.
+    bias, dark_bias : float
+        Science and dark median power-spectrum biases.
+    autocor_noise : numpy.ndarray of shape (npix, npix)
+        Fourier autocorrelation of masked noise.
+    unbias : bool, default=True
+        Whether to subtract the estimated correlated science bias.
+
+    Returns
+    -------
+    v2_arr : numpy.ndarray, shape (n_frames, n_baselines)
+        Bias-corrected squared visibilities.
+    bias_arr : numpy.ndarray, shape (n_baselines,)
+        Estimated correlated science bias for each baseline."""
     n_baselines = v2_arr.shape[1]
 
     bias_arr = np.zeros(n_baselines)
@@ -523,8 +631,22 @@ def _unbias_v2_arr(
 
 
 def _compute_v2_quantities(v2_arr, bias_arr, n_blocks):
-    """Compute the squared visibilities quantities: - average ('v2') over the
-    cube, - covariance ('v2_cov'), - avar ('avar') and - 'err_avar'."""
+    """Compute mean squared visibilities and their block-estimated covariance.
+
+    Parameters
+    ----------
+    v2_arr : numpy.ndarray, shape (n_frames, n_baselines)
+        Bias-corrected squared visibility samples.
+    bias_arr : numpy.ndarray, shape (n_baselines,)
+        Per-baseline correlated-noise bias estimates.
+    n_blocks : int
+        Number of frame blocks used to estimate covariance.
+
+    Returns
+    -------
+    dict
+        Mean squared visibilities, their covariance, amplitude-variance estimates,
+        associated uncertainties, and the input visibility array."""
     n_ps = v2_arr.shape[0]
     n_baselines = v2_arr.shape[1]
 
@@ -573,8 +695,28 @@ def _compute_v2_quantities(v2_arr, bias_arr, n_blocks):
 def _compute_bs_quantities(
     bs_arr, v2, fluxes, index_mask, n_blocks, subtract_bs_bias=True
 ):
-    """Compute the bispectrum quantities: - average ('bs') over the
-    cube, - covariance ('bs_cov') and - variance ('bs_var')."""
+    """Compute mean bispectra and bispectrum covariance statistics.
+
+    Parameters
+    ----------
+    bs_arr : numpy.ndarray of complex, shape (n_frames, n_bispectra)
+        Frame-wise bispectrum samples.
+    v2 : numpy.ndarray, shape (n_baselines,)
+        Mean squared visibilities.
+    fluxes : numpy.ndarray, shape (n_frames,)
+        Frame flux estimates.
+    index_mask : object
+        Mask indices including bispectrum and covariance mappings.
+    n_blocks : int
+        Number of frame blocks used for variance estimation.
+    subtract_bs_bias : bool, default=True
+        Whether to subtract the detector bispectrum-bias model.
+
+    Returns
+    -------
+    dict
+        Mean bispectrum, real and imaginary variance and covariance estimates, and
+        the input frame-wise bispectrum array."""
     n_cov = index_mask.n_cov
     n_bispect = index_mask.n_bispect
     bs2bl_ix = index_mask.bs2bl_ix
@@ -604,7 +746,21 @@ def _compute_bs_quantities(
 
 
 def _compute_bs_var(bs_arr, bs, n_blocks):
-    """Compute the variance matrix of the bispectrum array."""
+    """Estimate real and imaginary bispectrum variances from frame blocks.
+
+    Parameters
+    ----------
+    bs_arr : numpy.ndarray of complex, shape (n_frames, n_bispectra)
+        Frame-wise bispectrum samples.
+    bs : numpy.ndarray of complex, shape (n_bispectra,)
+        Mean bispectrum values.
+    n_blocks : int
+        Number of frame blocks.
+
+    Returns
+    -------
+    numpy.ndarray of float, shape (2, n_bispectra)
+        Normalized variances along the bispectrum amplitude and phase directions."""
     n_ps = bs_arr.shape[0]
     n_bispect = bs_arr.shape[1]
 
@@ -629,7 +785,23 @@ def _compute_bs_var(bs_arr, bs, n_blocks):
 
 
 def _compute_bs_cov(bs_arr, bs, bscov2bs_ix, n_cov):
-    """Compute the covariance matrix of the bispectrum array."""
+    """Estimate covariance between bispectra sharing a baseline.
+
+    Parameters
+    ----------
+    bs_arr : numpy.ndarray of complex, shape (n_frames, n_bispectra)
+        Frame-wise bispectrum samples.
+    bs : numpy.ndarray of complex, shape (n_bispectra,)
+        Mean bispectrum values.
+    bscov2bs_ix : numpy.ndarray of int, shape (2, n_cov)
+        Paired bispectrum indices for covariance calculation.
+    n_cov : int
+        Number of bispectrum covariance pairs.
+
+    Returns
+    -------
+    numpy.ndarray of float, shape (2, n_cov)
+        Real and imaginary normalized covariance for each bispectrum pair."""
     n_ps = bs_arr.shape[0]
     bs_cov = np.zeros([2, n_cov])
     for j in range(n_cov):
@@ -649,7 +821,23 @@ def _compute_bs_cov(bs_arr, bs, bscov2bs_ix, n_cov):
 
 
 def _compute_cp_cov(bs_arr, bs, index_mask, disable=False):
-    """Compute the covariance matrix of the closure phase."""
+    """Compute the closure-phase covariance from complex bispectrum samples.
+
+    Parameters
+    ----------
+    bs_arr : numpy.ndarray of complex, shape (n_frames, n_bispectra)
+        Frame-wise bispectrum samples.
+    bs : numpy.ndarray of complex, shape (n_bispectra,)
+        Mean bispectrum values.
+    index_mask : object
+        Mask indices providing the number of bispectra.
+    disable : bool, default=False
+        Whether to disable progress reporting.
+
+    Returns
+    -------
+    numpy.ndarray of float, shape (n_bispectra, n_bispectra)
+        Closure-phase covariance in radians squared."""
     n_ps = bs_arr.shape[0]
     n_bispect = index_mask.n_bispect
 
@@ -664,7 +852,25 @@ def _compute_cp_cov(bs_arr, bs, index_mask, disable=False):
 
 
 def _compute_bs_v2_cov(bs_arr, v2_arr, v2, bs, index_mask):
-    """Compute covariance between power and bispectral amplitude."""
+    """Compute covariance of bispectrum amplitude and squared visibility.
+
+    Parameters
+    ----------
+    bs_arr : numpy.ndarray of complex, shape (n_frames, n_bispectra)
+        Frame-wise bispectrum samples.
+    v2_arr : numpy.ndarray, shape (n_frames, n_baselines)
+        Frame-wise squared visibility samples.
+    v2 : numpy.ndarray, shape (n_baselines,)
+        Mean squared visibilities.
+    bs : numpy.ndarray of complex, shape (n_bispectra,)
+        Mean bispectrum values.
+    index_mask : object
+        Mask indices providing baseline-to-bispectrum mappings.
+
+    Returns
+    -------
+    numpy.ndarray of float, shape (n_baselines, n_holes - 2)
+        Normalized covariance of bispectrum amplitude and squared visibility."""
     n_ps = bs_arr.shape[0]
     n_baselines = index_mask.n_baselines
     n_holes = index_mask.n_holes
@@ -698,8 +904,36 @@ def _normalize_all_obs(
     expert_plot=False,
     save=False,
 ):
-    """Normalize all observables by the appropriate factor proportional to
-    the averaged fluxes and the number of holes."""
+    """Normalize AMI observables by mean frame flux and aperture count.
+
+    Parameters
+    ----------
+    bs_quantities, v2_quantities : dict
+        Bispectrum and squared-visibility statistics.
+    cvis_arr : numpy.ndarray of complex, shape (n_frames, n_baselines)
+        Frame-wise complex visibilities.
+    cp_cov : numpy.ndarray or None
+        Closure-phase covariance matrix.
+    bs_v2_cov : numpy.ndarray
+        Bispectrum-amplitude to squared-visibility covariance.
+    fluxes : numpy.ndarray, shape (n_frames,)
+        Frame flux estimates.
+    index_mask : object
+        Mask indices providing the aperture count.
+    infos : object
+        Observation metadata used for optional diagnostic labels.
+    expert_plot : bool, default=False
+        Whether to display normalized-observable diagnostic plots.
+    save : bool, default=False
+        Reserved flag; it does not affect the computation.
+
+    Returns
+    -------
+    v2_norm : numpy.ndarray, shape (n_baselines,)
+        Flux- and aperture-normalized mean squared visibilities.
+    norm_quantities : dict
+        Normalized frame-wise observables, covariances, variances, and visibility
+        correlation matrix."""
     bs_arr = bs_quantities["bs_arr"]
     v2_arr = v2_quantities["v2_arr"]
 
@@ -770,9 +1004,24 @@ def _normalize_all_obs(
 
 
 def _compute_cp(obs_result, obs_norm, infos, expert_plot=False):
-    """Compute the closure phases array (across the cube) and averaged cp using
-    the normalized bispectrum (see _normalize_all_obs()). Note that for the CP, the
-    extracted quantities are computed after the normalisation."""
+    """Compute closure phases in degrees from normalized bispectra.
+
+    Parameters
+    ----------
+    obs_result : dict
+        Result dictionary updated with mean closure phases.
+    obs_norm : dict
+        Normalized observable data containing mean and frame-wise bispectra.
+    infos : object
+        Observation metadata used for optional diagnostic labels.
+    expert_plot : bool, default=False
+        Whether to display closure-phase diagnostics.
+
+    Returns
+    -------
+    dict
+        ``obs_result`` with closure phases in degrees added as ``cp``; ``obs_norm``
+        is updated in place with frame-wise ``cp_arr`` values in degrees."""
     bs = obs_norm["bs"]
     bs_arr = obs_norm["bs_arr"]
 
@@ -799,9 +1048,22 @@ def _compute_cp(obs_result, obs_norm, infos, expert_plot=False):
 
 
 def _compute_t3_coord(mf, index_mask):
-    """Compute the closure phases coordinates u1, u2, v1, v2
-    and the equivalent maximum baselines (used for the
-    spatial frequencies)."""
+    """Compute baseline coordinates for each closure triangle.
+
+    Parameters
+    ----------
+    mf : object
+        Matched-filter data containing baseline coordinates in metres.
+    index_mask : object
+        Mask indices containing ``n_bispect`` and ``bs2bl_ix``.
+
+    Returns
+    -------
+    t3_coord : dict
+        First and second baseline coordinates ``u1``, ``u2``, ``v1``, and ``v2``
+        in metres for every closure triangle.
+    bl_cp : numpy.ndarray of shape (n_bispectra,)
+        Longest baseline in each closure triangle, in metres."""
     n_bispect = index_mask.n_bispect
     bs2bl_ix = index_mask.bs2bl_ix
 
@@ -824,10 +1086,23 @@ def _compute_t3_coord(mf, index_mask):
 
 
 def _compute_uncertainties(obs_result, obs_norm, naive_err=False):
-    """Compute the uncertainties using the covariance matrix for the v2
-    and the variance matrix for the closure phase. Can also compute the
-    so called naive error using the standard deviation of the cp and v2
-    quantities along the cube (`naive_err`=True, default=False)."""
+    """Compute closure-phase and squared-visibility uncertainties.
+
+    Parameters
+    ----------
+    obs_result : dict
+        Result dictionary updated in place.
+    obs_norm : dict
+        Normalized observables containing bispectrum variance, visibility
+        covariance, and frame-wise closure phases and visibilities.
+    naive_err : bool, default=False
+        Whether to use frame-wise standard deviations instead of covariance-based
+        errors.
+
+    Returns
+    -------
+    dict
+        ``obs_result`` with ``e_cp`` in degrees and ``e_vis2`` added."""
     bs = obs_norm["bs"]
     bs_var = obs_norm["bs_var"]
     v2_cov = obs_norm["v2_cov"]
@@ -849,8 +1124,28 @@ def _compute_uncertainties(obs_result, obs_norm, naive_err=False):
 def _compute_phs_piston(
     complex_bs, index_mask, method="Nelder-Mead", tol=1e-4, verbose=False, display=False
 ):
-    """Compute the phase piston to determine the additional phase error due to
-    the wavefront differences between holes."""
+    """Fit aperture piston phases from mean baseline phases.
+
+    Parameters
+    ----------
+    complex_bs : dict
+        Complex-observable data containing frame-wise visibility phases.
+    index_mask : object
+        Mask indices providing aperture-to-baseline mappings.
+    method : str, default="Nelder-Mead"
+        SciPy minimization method.
+    tol : float, default=1e-4
+        Minimizer tolerance in radians.
+    verbose : bool, default=False
+        Whether to print fit status and reduced chi-square.
+    display : bool, default=False
+        Whether to display fitted baseline phases.
+
+    Returns
+    -------
+    numpy.ndarray of shape (n_holes, n_baselines + 1)
+        Matrix mapping fitted aperture piston parameters to baseline phases and a
+        reference constraint."""
     from scipy.optimize import minimize
 
     n_holes = index_mask.n_holes
@@ -932,7 +1227,23 @@ def _compute_phs_piston(
 
 
 def _calc_weight_reg(x, y, weights):
-    """Apply a linear regression (IDL function) to fit the hole phase and error."""
+    """Fit aperture phase slopes with weighted linear regression.
+
+    Parameters
+    ----------
+    x : numpy.ndarray of shape (n_holes, n_baselines)
+        Aperture-to-baseline design matrix.
+    y : numpy.ndarray of shape (n_baselines,)
+        Measured baseline phase slopes.
+    weights : numpy.ndarray of shape (n_baselines,)
+        Regression weights derived from phase errors.
+
+    Returns
+    -------
+    hole_ph : numpy.ndarray of shape (n_holes,)
+        Fitted aperture phase slopes.
+    hole_ph_err : numpy.ndarray of shape (n_holes,)
+        Uncertainties on fitted aperture phase slopes."""
     reg = regress_noc(x, y, weights)
     sig = cov2cor(reg.cov)[1]
     hole_ph = reg.coeff
@@ -941,7 +1252,26 @@ def _calc_weight_reg(x, y, weights):
 
 
 def _compute_phs_error(complex_bs, fitmat, index_mask, npix, imsize=3):
-    """Compute the phase error"""
+    """Estimate visibility loss caused by frame-wise aperture phase slopes.
+
+    Parameters
+    ----------
+    complex_bs : dict
+        Complex-observable data with phase-slope measurements and squared
+        visibilities.
+    fitmat : numpy.ndarray
+        Aperture-to-baseline phase design matrix.
+    index_mask : object
+        Mask indices providing aperture-to-baseline mappings.
+    npix : int
+        Fourier-image side length in pixels.
+    imsize : float, default=3
+        Approximate diffraction scale, lambda divided by hole diameter, in pixels.
+
+    Returns
+    -------
+    numpy.ndarray of shape (n_baselines,)
+        Mean multiplicative squared-visibility correction due to phase slopes."""
     n_holes = index_mask.n_holes
     n_baselines = index_mask.n_baselines
     bl2h_ix = index_mask.bl2h_ix
@@ -996,7 +1326,29 @@ def _compute_phs_error(complex_bs, fitmat, index_mask, npix, imsize=3):
 
 
 def _add_infos_header(infos, hdr, mf, pa, filename, maskname, npix):
-    """Save important informations and some parts of the original header."""
+    """Add extraction metadata and selected FITS-header values to observation info.
+
+    Parameters
+    ----------
+    infos : mapping
+        Observation information mapping updated in place.
+    hdr : mapping
+        Original FITS header.
+    mf : object
+        Matched filter containing detector pixel scale in radians per pixel.
+    pa : float or array-like
+        Computed position angle in degrees.
+    filename : str or path-like
+        Processed data-cube filename.
+    maskname : str
+        Aperture-mask identifier.
+    npix : int
+        Detector image size in pixels.
+
+    Returns
+    -------
+    mapping
+        Updated observation information."""
     infos["pixscale"] = mf.pixelSize
     infos["pa"] = pa
     infos["filename"] = filename
@@ -1060,69 +1412,70 @@ def extract_bs(
     verbose=False,
     display=True,
 ):
-    """Compute the bispectrum (bs, v2, cp, etc.) from a data cube.
+    """Extract calibrated aperture-masking interferometric observables from a data cube.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
+    cube : numpy.ndarray, shape (n_frames, ny, nx)
+        Cleaned image cube ready for non-redundant-mask extraction.
+    filename : str or path-like
+        FITS file from which observation headers are read.
+    maskname : str
+        Aperture-mask identifier.
+    filtname : str, optional
+        Filter-name fallback when the FITS header lacks ``FILTER``.
+    targetname : str, optional
+        Target-name fallback when the FITS header lacks ``OBJECT``.
+    instrum : str, optional
+        Instrument-name fallback when the FITS header lacks ``INSTRUME``.
+    bs_multi_tri : bool, default=False
+        Whether to compute bispectra from multiple pixel closure triangles.
+    peakmethod : {"fft", "square", "unique", "gauss"}, default="gauss"
+        Method used to sample Fourier splodges.
+    hole_diam : float, default=0.8
+        Aperture-hole diameter in metres.
+    cutoff : float, default=1e-4
+        Minimum matched-filter weight retained for a peak pixel.
+    fw_splodge : float, default=0.7
+        Relative Fourier-splodge size and Gaussian-method FWHM scale.
+    naive_err : bool, default=False
+        Whether to use frame-wise standard deviations instead of covariance-based
+        uncertainties.
+    n_wl : int, default=3
+        Number of wavelengths used to sample filter bandwidth.
+    n_blocks : int, default=0
+        Number of frame blocks used for uncertainty estimation; 0 uses all frames.
+    theta_detector : float, default=0
+        Mask rotation relative to the detector in degrees.
+    scaling_uv : float, default=1
+        Multiplicative scale applied to aperture-mask coordinates.
+    i_wl : int or sequence of int, optional
+        SPHERE-IFS spectral-channel selector.
+    unbias_v2 : bool, default=True
+        Whether to subtract the correlated-noise bias from squared visibilities.
+    compute_cp_cov : bool, default=True
+        Whether to compute the closure-phase covariance matrix.
+    expert_plot : bool, default=False
+        Whether to show expert-level diagnostic plots.
+    save_to : str or path-like, optional
+        Directory in which diagnostic figures are saved.
+    verbose : bool, default=False
+        Whether to print processing progress.
+    display : bool, default=True
+        Whether to display diagnostic figures.
 
-    `cube` {array}:
-        Cleaned and checked data cube ready to extract NRM data,\n
-    `filename` {array}:
-        Name of the file containing the datacube (to keep track on it),\n
-    `maskname` {str}:
-        Name of the mask,\n
-    `filtname` {str}:
-        By default, checks the header to extract the filter, if not in header
-        uses filtname instead (e.g.: F430M, F480M),\n
-    `targetname` {str}:
-        By default, checks the header to extract the target, if not in header
-        uses target_name instead,\n
-    `bs_multi_tri` {bool}:
-        Use the multiple triangle technique to compute the bispectrum
-        (default: False),\n
-    `peakmethod` {str}:
-        3 methods are used to sample to u-v space: 'fft' uses fft between individual holes to compute
-        the expected splodge position; 'square' compute the splodge in a square using the expected
-        fraction of pixel to determine its weight; 'gauss' considers a gaussian splodge (with a gaussian
-        weight) to get the same splodge side for each n(n-1)/2 baselines,\n
-    `fw_splodge` {float}:
-        Relative size of the splodge used to compute multiple triangle indices and the fwhm
-        of the 'gauss' technique,\n
-    `naive_err` {bool}:
-        If True, the uncertainties are computed using the std of the overall
-        cvis or bs array. Otherwise, the uncertainties are computed using
-        covariance matrices,\n
-    `n_wl` {int}:
-        Number of elements to sample the spectral filters (default: 3),\n
-    `n_blocks` {float}:
-        Number of separated blocks use to split the data cube and get more
-        accurate uncertainties (default: 0, n_blocks = n_ps),\n
-    `theta_detector`: {float}
-        Angle [deg] to rotate the mask compare to the detector (if the mask is not
-        perfectly aligned with the detector, e.g.: VLT/VISIR) ,\n
-    `i_wl`: {int}
-        Only used for IFU data (e.g.: IFS/SPHERE), select the desired spectral channel
-        to retrieve the appropriate wavelength and mask positions, \n
-    `unbias_v2`: {bool}
-        If True, the squared visibilities are unbiased using the Fourier base, \n
-    `targetname` {str}:
-        Name of the target to save in oifits file (if not in header of the
-        cube),\n
-    `save_to` {str}:
-        Name of the repository to save the figures,\n
-    `verbose` {bool}:
-        If True, print usefull informations during the process.\n
-    `display` {bool}:
-        If True, display all figures,\n
+    Returns
+    -------
+    object or None
+        AMI observables including squared visibilities, closure phases in degrees,
+        uncertainties, baseline coordinates in metres, wavelength in metres, and
+        mask, metadata, and covariance information. Returns ``None`` if the mask
+        cannot be loaded or the matched filter cannot be constructed.
 
-    Returns:
-    --------
-    `obs_result` {class object}:
-        Return all interferometric observables (.vis2, .e_vis2, .cp, .e_cp, etc.), information relative
-        to the used mask (.mask), the computed matrices and statistic (.matrix)
-        and the important information (.infos). The .mask, .infos and .matrix are also class with
-        various quantities (see .mask.__dict__.keys()).
-    """
+    Raises
+    ------
+    ValueError
+        If SPHERE-IFS data are processed without ``i_wl``."""
     from astropy.io import fits
 
     if verbose:

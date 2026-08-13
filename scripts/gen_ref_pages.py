@@ -7,7 +7,7 @@ src = root / "src"
 
 nav = mkdocs_gen_files.Nav()
 
-SKIP_PATHS = ["_cli", "_rich_display", "__main__"]
+SKIP_PATHS = ["_cli", "_rich_display", "__main__", "externals"]
 
 for path in sorted(src.rglob("*.py")):
     module_path = path.relative_to(src).with_suffix("")

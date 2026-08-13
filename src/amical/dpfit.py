@@ -1,14 +1,4 @@
-"""
-@author: Anthony Soulain (University of Sydney)
-
--------------------------------------------------------------------------
-AMICAL: Aperture Masking Interferometry Calibration and Analysis Library
--------------------------------------------------------------------------
-
-Fitting tools (developed by A. Merand).
-
---------------------------------------------------------------------
-"""
+"""Least-squares fitting utilities developed by A. Merand."""
 
 import time
 
@@ -47,43 +37,38 @@ def leastsqFit(
     normalizedUncer=True,
     follow=None,
 ):
-    """
-    - params is a Dict containing the first guess.
+    """Fit a callable to data with least squares.
 
-    - fits 'y +- err = func(x,params)'. errors are optionnal. in case err is a
-      ndarray of 2 dimensions, it is treated as the covariance of the
-      errors.
+    Parameters
+    ----------
+    func : callable
+        Model called as func(x, params).
+    x, y : array-like
+        Independent and observed values.
+    params : dict
+        Initial parameter values.
+    err : array-like or numpy.ndarray, optional
+        Errors or a two-dimensional error covariance matrix.
+    fitOnly : list of str, optional
+        Parameters to fit; all parameters are fitted by default.
+    verbose : bool or int, default=False
+        Whether to print fit information.
+    doNotFit : list of str, optional
+        Parameters to exclude from fitting.
+    epsfcn, ftol : float, default=1e-7, 1e-5
+        Least-squares solver tolerances.
+    fullOutput : bool, default=True
+        Whether to return fit metadata.
+    normalizedUncer : bool, default=True
+        Whether to scale uncertainties by reduced chi-squared.
+    follow : list of str, optional
+        Parameters to report while fitting.
 
-      np.array([[err1**2, 0, .., 0],
-                [0, err2**2, 0, .., 0],
-                [0, .., 0, errN**2]]) is the equivalent of 1D errors
-
-    - follow=[...] list of parameters to "follow" in the fit, i.e. to print in
-      verbose mode
-
-    - fitOnly is a LIST of keywords to fit. By default, it fits all
-      parameters in 'params'. Alternatively, one can give a list of
-      parameters not to be fitted, as 'doNotFit='
-
-    - doNotFit has a similar purpose: for example if params={'a0':,
-      'a1': 'b1':, 'b2':}, doNotFit=['a'] will result in fitting only
-      'b1' and 'b2'. WARNING: if you name parameter 'A' and another one 'AA',
-      you cannot use doNotFit to exclude only 'A' since 'AA' will be excluded as
-      well...
-
-    - normalizedUncer=True: the uncertainties are independent of the Chi2, in
-      other words the uncertainties are scaled to the Chi2. If set to False, it
-      will trust the values of the error bars: it means that if you grossely
-      underestimate the data's error bars, the uncertainties of the parameters
-      will also be underestimated (and vice versa).
-
-    returns dictionary with:
-    'best': bestparam,
-    'uncer': uncertainties,
-    'chi2': chi2_reduced,
-    'model': func(x, bestparam)
-    'cov': covariance matrix (normalized if normalizedUncer)
-    'fitOnly': names of the columns of 'cov'
+    Returns
+    -------
+    dict
+        Best-fit parameters or, when fullOutput is true, fit parameters,
+        uncertainties, reduced chi-squared, model, covariance, and metadata.
     """
     import scipy.optimize
 
@@ -270,10 +255,19 @@ def bootstrap(
     follow=None,
     Nboot=None,
 ):
-    """
-    bootstraping, called like leastsqFit. returns a list of fits: the first one
-    is the 'normal' one, the Nboot following one are with ramdomization of data. If
-    Nboot is not given, it is set to 10*len(x).
+    """Bootstrap least-squares fits by resampling data indices.
+
+    Parameters
+    ----------
+    func, x, params, y, err, fitOnly, verbose, doNotFit, epsfcn, ftol, fullOutput, normalizedUncer, follow
+        Parameters passed to leastsqFit.
+    Nboot : int, optional
+        Number of resampled fits. Defaults to ten times the length of x.
+
+    Returns
+    -------
+    list of dict
+        The original fit followed by resampled fits.
     """
     if doNotFit is None:
         doNotFit = []
@@ -321,20 +315,31 @@ def bootstrap(
 def _fitFunc(
     pfit, pfitKeys, x, y, err=None, func=None, pfix=None, verbose=False, follow=None
 ):
-    """
-    interface to leastsq from scipy:
-    - x,y,err are the data to fit: f(x) = y +- err
-    - pfit is a list of the paramters
-    - pfitsKeys are the keys to build the dict
-    pfit and pfix (optional) and combines the two
-    in 'A', in order to call F(X,A)
+    """Compute residuals for scipy.optimize.leastsq.
 
-    in case err is a ndarray of 2 dimensions, it is treated as the
-    covariance of the errors.
-    np.array([[err1**2, 0, .., 0],
-             [ 0, err2**2, 0, .., 0],
-             [0, .., 0, errN**2]]) is the equivalent of 1D errors
+    Parameters
+    ----------
+    pfit : sequence
+        Values of fitted parameters.
+    pfitKeys : sequence of str
+        Keys corresponding to pfit.
+    x, y : array-like
+        Independent and observed values.
+    err : array-like or numpy.ndarray, optional
+        Errors or an error covariance matrix.
+    func : callable, optional
+        Model called as func(x, parameters).
+    pfix : dict, optional
+        Fixed parameters combined with fitted parameters.
+    verbose : bool or int, default=False
+        Whether to print progress.
+    follow : list of str, optional
+        Parameters to report.
 
+    Returns
+    -------
+    numpy.ndarray
+        Residuals for the least-squares solver.
     """
     global verboseTime
     params = {}

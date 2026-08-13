@@ -23,31 +23,46 @@ def candid_grid(
     outputfile: str | None = None,
     verbose: bool = False,
 ):
-    """This function is an user friendly interface between the users of amical
-    pipeline and the CANDID analysis package (https://github.com/amerand/CANDID).
+    """Fit a binary model with the CANDID analysis package.
 
-    Parameters:
-    -----------
-    `input_data`:
-        oifits file names or list of oifits files,\n
-    `step`:
-        step used to compute the binary grid positions,\n
-    `rmin`, `rmax`:
-        Bounds of the grid [mas],\n
-    `diam`:
-        Stellar diameter of the primary star [mas] (default=0),\n
-    `obs`:
-        List of observables to be fitted (default: ['cp', 'v2']),\n
-    `doNotFit`:
-        Parameters not fitted (default: ['diam*']),\n
-    `verbose`:
-        print some informations {default: False}.
+    Parameters
+    ----------
+    input_data : str or list of str
+        OIFITS file name or names.
+    step : int, default=10
+        Grid-position step.
+    rmin : float, default=20
+        Minimum grid separation in milliarcseconds.
+    rmax : float, default=400
+        Maximum grid separation in milliarcseconds.
+    diam : float, default=0
+        Primary-star diameter in milliarcseconds.
+    obs : list of str or None, default=None
+        Observables to fit. Uses ``["cp", "v2"]`` when omitted.
+    extra_error_cp : float, default=0
+        Additive closure-phase uncertainty.
+    err_scale : float, default=1
+        Multiplicative error-bar scale.
+    extra_error_v2 : float, default=0
+        Additive squared-visibility uncertainty.
+    instruments : optional
+        Instrument selection passed to CANDID.
+    doNotFit : list of str or None, default=None
+        Parameters excluded from fitting. Uses ``["diam*"]`` when omitted.
+    ncore : int, default=1
+        Number of CANDID worker processes.
+    save : bool, default=False
+        Whether to save the detection map.
+    outputfile : str or None, default=None
+        Filename for the saved detection map.
+    verbose : bool, default=False
+        Whether to print CANDID information.
 
-    Outputs:
-    --------
-    `res` {dict}:
-        Dictionnary of the results ('best'), uncertainties ('uncer'),
-        reduced chi2 ('chi2') and sigma detection ('nsigma').
+    Returns
+    -------
+    dict
+        Best-fit parameters, uncertainties, reduced chi-square, detection
+        significance, and CANDID companion results.
     """
     from uncertainties import ufloat, umath
 

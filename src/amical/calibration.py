@@ -1,14 +1,4 @@
-"""
-@author: Anthony Soulain (University of Sydney)
-
--------------------------------------------------------------------------
-AMICAL: Aperture Masking Interferometry Calibration and Analysis Library
--------------------------------------------------------------------------
-
-Set of functions to calibrate NRM data using a calibrator star data.
-
--------------------------------------------------------------------------
-"""
+"""Calibrate non-redundant-mask interferometric data with calibrator observations."""
 
 import numpy as np
 
@@ -18,9 +8,19 @@ from amical.tools import wtmn
 
 
 def _v2varfunc(X, parms):
-    """
-    This is a function to be fed to leastfit for fitting to normv2var
-    to a 5-parameter windshake-seeing function.
+    """Evaluate the five-parameter windshake-seeing model.
+
+    Parameters
+    ----------
+    X : sequence of numpy.ndarray
+        Baseline lengths and angles.
+    parms : dict
+        Model parameters a through e.
+
+    Returns
+    -------
+    numpy.ndarray
+        Modelled normalized squared-visibility variance.
     """
     b_lengths = X[0]
     b_angles = X[1]
@@ -45,7 +45,28 @@ def _v2varfunc(X, parms):
 def _apply_sig_clip(
     data, e_data, sig_thres=2, ymin=0, ymax=1.2, var="V2", display=False
 ):
-    """Apply the sigma-clipping on the dataset and plot some diagnostic plots."""
+    """Apply sigma clipping to an observable across calibrator files.
+
+    Parameters
+    ----------
+    data : numpy.ndarray
+        Observable values, with files along the first axis.
+    e_data : numpy.ndarray
+        Observable uncertainties.
+    sig_thres : float, default=2
+        Sigma-clipping threshold.
+    ymin, ymax : float, default=0, 1.2
+        Plot limits.
+    var : str, default="V2"
+        Observable label.
+    display : bool, default=False
+        Whether to display diagnostic plots.
+
+    Returns
+    -------
+    mean, std : numpy.ndarray
+        Sigma-clipped mean values and standard deviations.
+    """
     import matplotlib.pyplot as plt
     from astropy.stats import sigma_clip
 
@@ -107,21 +128,30 @@ def _apply_sig_clip(
 def _calc_correction_atm_vis2(
     data, corr_const=1, nf=100, display=False, verbose=False, normalizedUncer=False
 ):
-    """
-    This function corrects V^2 for seeing and windshake. Use this on source and
-    cal before division. Returns a multiplicative correction to the V^2.
+    """Compute a seeing and windshake correction for squared visibilities.
 
-    Parameters:
-    -----------
-    `data` {class}:
-        class like containting results from extract_bs function,
-    `corr_const` {float}:
-        Correction constant (0.4 is good for V for NIRC experiment).
-    Returns:
-    --------
-    `correction` {array}:
-        Correction factor to apply.
+    Apply the returned multiplicative correction to both source and calibrator
+    squared visibilities before their division.
 
+    Parameters
+    ----------
+    data : object
+        Extraction result containing visibility and variance data.
+    corr_const : float, default=1
+        Correction constant.
+    nf : int, default=100
+        Number of fit samples.
+    display : bool, default=False
+        Whether to display the fit.
+    verbose : bool, default=False
+        Whether to print fit information.
+    normalizedUncer : bool, default=False
+        Whether to normalize fitted uncertainties.
+
+    Returns
+    -------
+    numpy.ndarray
+        Multiplicative squared-visibility correction.
     """
     import matplotlib.pyplot as plt
 
@@ -183,15 +213,21 @@ def _calc_correction_atm_vis2(
 
 
 def average_calib_files(list_nrm, sig_thres=2, display=False):
-    """Average NRM data extracted from multiple calibrator files. Additionaly,
-    perform sigma-clipping to reject suspicious dataset.
+    """Average data extracted from multiple calibrator files.
 
-    Parameters:
-    -----------
-    `list_nrm` : {list}
-        List of classes containing extracted NRM data (see bispect.py) of multiple calibrator files,\n
-    `sig_thres` : {float}
-        Threshold of the sigma clipping (default: 2-sigma around the median is used),\n
+    Parameters
+    ----------
+    list_nrm : list of object
+        Extracted NRM data for calibrator files.
+    sig_thres : float, default=2
+        Sigma-clipping threshold around the median.
+    display : bool, default=False
+        Whether to display diagnostic plots.
+
+    Returns
+    -------
+    munch.Munch
+        Averaged calibrator observables and uncertainties.
     """
     from astropy.io import fits
 
@@ -273,38 +309,35 @@ def calibrate(
     normalize_err_indep=False,
     display=False,
 ):
-    """Calibrate v2 and cp from a science target and its calibrator.
+    """Calibrate squared visibilities and closure phases.
 
     Parameters
     ----------
-    `res_t` : {dict}
-        Dictionnary containing extracted NRM data of science target (see bispect.py),\n
-    `res_c` : {list or dict}
-        Dictionnary or a list of dictionnary containing extracted NRM data of calibrator target,\n
-    `clip` : {bool}
-        If True, sigma clipping is performed over the calibrator files (if any) to reject bad
-        observables due to seeing conditions, centering, etc.,\n
-    `sig_thres` : {float}
-        Threshold of the sigma clipping (default: 2-sigma around the median is used),\n
-    `apply_phscorr` : {bool}, optional
-        If True, apply a phasor correction due to piston between holes, by default False.\n
-    `apply_atmcorr` : {bool}, optional
-        If True, apply a atmospheric correction on V2 from seeing and wind shacking issues, by default False.\n
-    `normalize_err_indep` : {bool}, optional
-        If True, the CP uncertaintities are normalized by np.sqrt(n_holes/3.) to not over use
-        the non-independant closure phases.\n
-    `display`: {bool}
-        If True, plot figures.
-
+    res_t : object
+        Extracted NRM data for the science target.
+    res_c : object or list of object
+        Extracted NRM data for one or more calibrators.
+    clip : bool, default=False
+        Whether to sigma-clip calibrator observables.
+    sig_thres : float, default=2
+        Sigma-clipping threshold around the median.
+    apply_phscorr : bool, default=False
+        Whether to apply the piston phasor correction.
+    apply_atmcorr : bool, default=False
+        Whether to apply the seeing and windshake correction to squared
+        visibilities.
+    normalize_err_indep : bool, default=False
+        Whether to normalize closure-phase uncertainties for independent
+        closure phases.
+    display : bool, default=False
+        Whether to display figures.
 
     Returns
     -------
-    `cal`: {class}
-        Class of calibrated data, keys are: `v2`, `e_v2` (squared visibities and errors),
-        `cp`, `e_cp` (closure phase and errors), `visamp`, `e_visamp` (visibility
-        ampliture and errors), `visphi`, `e_visphi` (visibility phase and errors), `u`, `v`
-        (u-v coordinates), `wl` (wavelength), `raw_t` and `raw_c` (dictionnary of extracted raw
-        NRM data, inputs of this function).
+    munch.Munch
+        Calibrated data including squared visibilities, closure phases,
+        visibility amplitudes and phases, coordinates, wavelength, and raw
+        target and calibrator inputs.
     """
 
     if not isinstance(res_c, list):
