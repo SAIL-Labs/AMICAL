@@ -43,10 +43,12 @@ def leastsqFit(
     ----------
     func : callable
         Model called as func(x, params).
-    x, y : array-like
+    x: array-like
         Independent and observed values.
     params : dict
         Initial parameter values.
+    y: array-like
+        Independent and observed values.
     err : array-like or numpy.ndarray, optional
         Errors or a two-dimensional error covariance matrix.
     fitOnly : list of str, optional
@@ -259,15 +261,44 @@ def bootstrap(
 
     Parameters
     ----------
-    func, x, params, y, err, fitOnly, verbose, doNotFit, epsfcn, ftol, fullOutput, normalizedUncer, follow
-        Parameters passed to leastsqFit.
+    func : callable
+        Model called as ``func(x, params)``.
+    x : array_like
+        Independent-variable values to resample.
+    params : dict[str, float]
+        Initial parameter values.
+    y : array_like
+        Observed values to resample with ``x``.
+    err : array_like or numpy.ndarray, optional
+        Errors or a two-dimensional error covariance matrix. This is passed
+        unchanged to every resampled fit.
+    fitOnly : list of str, optional
+        Parameters to fit. All parameters are fitted when omitted.
+    verbose : bool or int, default=False
+        Whether to print fit information. Bootstrap fits are always silent.
+    doNotFit : list of str, optional
+        Parameters to exclude from fitting.
+    epsfcn : float, default=1e-7
+        Step length for the least-squares solver.
+    ftol : float, default=1e-5
+        Relative-error tolerance for the least-squares solver.
+    fullOutput : bool, default=True
+        Whether to return fit metadata. Bootstrap fits always return full
+        output.
+    normalizedUncer : bool, default=True
+        Whether to scale uncertainties by reduced chi-squared. Bootstrap fits
+        always use normalized uncertainties.
+    follow : list of str, optional
+        Parameters to report while fitting. Bootstrap fits do not report
+        progress.
     Nboot : int, optional
-        Number of resampled fits. Defaults to ten times the length of x.
+        Number of resampled fits. Defaults to ten times ``len(x)``.
 
     Returns
     -------
     list of dict
-        The original fit followed by resampled fits.
+        Full-output dictionaries for the original fit followed by ``Nboot``
+        fits based on independently resampled indices.
     """
     if doNotFit is None:
         doNotFit = []

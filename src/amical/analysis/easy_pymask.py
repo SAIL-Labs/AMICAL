@@ -85,6 +85,42 @@ def pymask_mcmc(
     display=True,
     verbose=True,
 ):
+    """Fit a binary model with PyMask Markov chain Monte Carlo sampling.
+
+    Parameters
+    ----------
+    input_data : str
+        OIFITS file name.
+    initial_guess : array_like
+        Initial values for separation, position angle, and contrast ratio.
+    niters : int, default=1000
+        Number of MCMC iterations.
+    pa_prior : list of float or None, default=None
+        Position-angle bounds in degrees. Defaults to ``[0, 360]``.
+    sep_prior : list of float or None, default=None
+        Separation bounds in milliarcseconds.
+    cr_prior : list of float or None, default=None
+        Contrast-ratio bounds.
+    err_scale : float, default=1
+        Multiplicative error-bar scale.
+    extra_error_cp : float, default=0
+        Additive closure-phase uncertainty in degrees.
+    ncore : int, default=1
+        Number of multiprocessing workers.
+    burn_in : int, default=500
+        Number of initial MCMC iterations to discard.
+    walkers : int, default=100
+        Number of MCMC walkers.
+    display : bool, default=True
+        Whether to display PyMask and chain plots.
+    verbose : bool, default=True
+        Whether to print fitted parameters and uncertainties.
+
+    Returns
+    -------
+    dict
+        Best-fit binary parameters and asymmetric uncertainties.
+    """
     if pa_prior is None:
         pa_prior = [0, 360]
 
@@ -197,6 +233,44 @@ def pymask_cr_limit(
     cmin=1.0001,
     display=False,
 ):
+    """Compute PyMask three-sigma contrast limits.
+
+    Parameters
+    ----------
+    input_data : str
+        OIFITS file name.
+    nsim : int, default=100
+        Number of simulated companion datasets.
+    err_scale : float, default=1
+        Multiplicative error-bar scale.
+    extra_error_cp : float, default=0
+        Additive closure-phase uncertainty in degrees.
+    ncore : int, default=1
+        Number of multiprocessing workers.
+    cmax : float, default=500
+        Maximum contrast ratio sampled.
+    nsep : int, default=60
+        Number of separation samples.
+    ncrat : int, default=60
+        Number of contrast-ratio samples.
+    nth : int, default=30
+        Number of position-angle samples.
+    smin : float, default=20
+        Minimum separation in milliarcseconds.
+    smax : float, default=250
+        Maximum separation in milliarcseconds.
+    cmin : float, default=1.0001
+        Minimum contrast ratio sampled.
+    display : bool, default=False
+        Whether to display the contrast-limit plot.
+
+    Returns
+    -------
+    dict
+        Separation samples (``"r"``), three-sigma magnitude-difference limits
+        (``"cr_limit"``), and the raw PyMask detection-limit data
+        (``"lims_data"``).
+    """
     cpo = pymask.cpo(input_data)
     lims_data = pymask.detec_limits(
         cpo,

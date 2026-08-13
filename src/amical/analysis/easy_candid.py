@@ -175,6 +175,46 @@ def candid_cr_limit(
     save: bool = False,
     outputfile=None,
 ):
+    """Compute CANDID contrast limits for a companion search.
+
+    Parameters
+    ----------
+    input_data : str or list of str
+        OIFITS file name or names.
+    step : int, default=10
+        Grid-position step in milliarcseconds.
+    rmin : float, default=20
+        Minimum separation in milliarcseconds.
+    rmax : float, default=400
+        Maximum separation in milliarcseconds.
+    extra_error_cp : float, default=0
+        Additive closure-phase uncertainty.
+    err_scale : float, default=1
+        Multiplicative error-bar scale.
+    extra_error_v2 : float, default=0
+        Additive squared-visibility uncertainty.
+    obs : list of str or None, default=None
+        Observables to use. Defaults to ``["cp", "v2"]``.
+    fitComp : optional
+        Companion model removed before estimating detection limits.
+    ncore : int, default=1
+        Number of CANDID worker processes.
+    diam : float or None, default=None
+        Primary-star diameter in milliarcseconds.
+    methods : list of str or None, default=None
+        Detection-limit methods. Defaults to ``["injection"]``.
+    instruments : optional
+        Instrument selection passed to CANDID.
+    save : bool, default=False
+        Whether to save the detection-limit map.
+    outputfile : str or None, default=None
+        Filename for the saved detection-limit map.
+
+    Returns
+    -------
+    dict
+        Detection-limit results returned by CANDID.
+    """
     if obs is None:
         obs = ["cp", "v2"]
     if methods is None:

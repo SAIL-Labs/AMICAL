@@ -92,6 +92,25 @@ def visPointSource(Utable, Vtable, Lambda, param):
 
 
 def visBinary(Utable, Vtable, Lambda, param):
+    """Compute the complex visibility of an unresolved binary.
+
+    Parameters
+    ----------
+    Utable : array_like
+        U baseline coordinates.
+    Vtable : array_like
+        V baseline coordinates.
+    Lambda : array_like
+        Wavelengths.
+    param : dict
+        Binary parameters: separation ``sep`` in milliarcseconds, magnitude
+        difference ``dm``, and position angle ``theta`` in degrees.
+
+    Returns
+    -------
+    numpy.ndarray
+        Complex binary visibility. Returns NaN values when ``dm`` is negative.
+    """
     sep = mas2rad(param["sep"])
     dm = param["dm"]
     theta = np.deg2rad(90 - param["theta"])
@@ -114,6 +133,26 @@ def visBinary(Utable, Vtable, Lambda, param):
 
 
 def visBinary_res(Utable, Vtable, Lambda, param):
+    """Compute the complex visibility of a binary with a resolved primary.
+
+    Parameters
+    ----------
+    Utable : array_like
+        U baseline coordinates.
+    Vtable : array_like
+        V baseline coordinates.
+    Lambda : array_like
+        Wavelengths.
+    param : dict
+        Binary parameters: separation ``sep`` and primary diameter ``diam`` in
+        milliarcseconds, magnitude difference ``dm``, and position angle
+        ``theta`` in degrees. A zero ``diam`` models the primary as unresolved.
+
+    Returns
+    -------
+    numpy.ndarray
+        Complex binary visibility. Returns NaN values when ``dm`` is negative.
+    """
     sep = mas2rad(param["sep"])
     dm = param["dm"]
     theta = np.deg2rad(90 - param["theta"])
