@@ -32,6 +32,7 @@ dependencies = [
     "astroquery>=0.4.4",
     "corner>=2.2.1",
     "emcee>=3.1.1",
+    "tqdm",
     "h5py>=3.8.0",
     "matplotlib>=3.6.0",
     "numpy>=1.21.3",
@@ -71,8 +72,6 @@ typecheck = [
 test = [
     "pytest>=9.0.3",
 ]
-# TODO: Pin mkdocs version < 2.0 given warning?
-# TODO: Switch to sphinx to avoid breaking mkdocs changes?
 docs = [
     "mkdocs<2.0",
     "mkdocs-material",

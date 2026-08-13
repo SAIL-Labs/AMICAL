@@ -1,7 +1,3 @@
-# TODO: Review all scripts and notebooks
-# TODO: Move tutorial.md to a notebook
-# TODO: Move all scripts to notebooks
-# TODO: Document the CLI
 markdown_extensions:
 - pymdownx.arithmatex:
     generic: true
@@ -15,12 +11,12 @@ site_name: AMICAL - Aperture Masking Interferometry Calibration and Analysis Lib
 nav:
 - Home: index.md
 - Installation: installation.md
+- Getting Started: getting-started.ipynb
 - Tutorials:
-        # TODO: Maybe rename quickstart or getting started?
-  - General Tutorial: tutorial.md
-  - NIRISS Tutorial: notebooks/example_NIRISS.ipynb
-  - SPHERE Tutorial: notebooks/example_SPHERE.ipynb
-  - Candid and Pymask: notebooks/example_analysis.ipynb
+  - NIRISS AMI Extraction: notebooks/example_NIRISS.ipynb
+  - SPHERE SAM Extraction: notebooks/example_SPHERE.ipynb
+  - SPHERE IFS Extraction: notebooks/example_IFS.ipynb
+  - Companion search with Candid and Pymask: notebooks/example_analysis.ipynb
 - API: api/
 
 theme:
@@ -40,5 +36,4 @@ plugins:
       python:
         options:
           show_docstring_modules: false
-                    # TODO: Uniformize docstrings and make compatible with a standard
           docstring_style: numpy
