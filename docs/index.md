@@ -34,7 +34,7 @@ limits, etc.) using different approaches (chi2 grid and local optimization, or M
 
 ## Getting started
 
-Looking for a quickstart into AMICAL? You can go through our **[tutorial](tutorial.md)** explaining
+Looking for a quickstart into AMICAL? You can go through our **[getting started tutorial](getting-started.ipynb)** explaining
 how to use its different features.
 
 You can also have a look to the tutorials
