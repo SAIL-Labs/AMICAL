@@ -1,23 +1,9 @@
+# AMICAL Documentation
+
 <a href="https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL">
 <img src="https://raw.githubusercontent.com/SydneyAstrophotonicInstrumentationLab/AMICAL/master/doc/Figures/amical_logo.png" width="300"></a>
 
-(**A**perture **M**asking **I**nterferometry **C**alibration and **A**nalysis
-**L**ibrary)
-
-[![PyPI](https://img.shields.io/pypi/v/amical)](https://pypi.org/project/amical/)
-[![Supported Python Versions](https://img.shields.io/pypi/pyversions/amical)](https://pypi.org/project/amical/)
-![Licence](https://img.shields.io/github/license/SydneyAstrophotonicInstrumentationLab/AMICAL)
-
-![CI](https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL/actions/workflows/ci.yml/badge.svg)
-[![CI (bleeding edge)](https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL/actions/workflows/bleeding-edge.yaml/badge.svg)](https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL/actions/workflows/bleeding-edge.yaml)
-[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/SydneyAstrophotonicInstrumentationLab/AMICAL/master.svg)](https://results.pre-commit.ci/latest/github/SydneyAstrophotonicInstrumentationLab/AMICAL/master)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-
-## Installation
-
-```shell
-$ python3 -m pip install amical
-```
+**A**perture **M**asking **I**nterferometry **C**alibration and **A**nalysis **L**ibrary
 
 ## What can AMICAL do for you ?
 
@@ -57,12 +43,11 @@ made for [NIRISS](notebooks/example_NIRISS.ipynb) and [SPHERE](notebooks/example
 ## Use policy and reference publication
 
 If you use AMICAL in a publication, we encourage you to properly cite the
-reference paper published during the 2020 SPIE conference: 
+reference paper published during the 2020 SPIE conference:
 
 [The James Webb Space
 Telescope aperture masking
 interferometer](https://ui.adsabs.harvard.edu/abs/2020SPIE11446E..11S/abstract)
-
 
 with BibTex:
 
@@ -98,13 +83,16 @@ version can be found [here](https://github.com/AnthonyCheetham/idl_masking).
 
 ## Contributors
 
+New contributions are always welcome!
+If you wish to contribute to AMICAL, take a look at [CONTRIBUTING.md](https://github.com/SAIL-Labs/AMICAL/blob/main/CONTRIBUTING.md).
+
 AMICAL core developers:
 
 - [Anthony Soulain](https://github.com/drsoulain)
 - [Clément Robert](https://github.com/neutrinoceros)
 - [Thomas Vandal](https://github.com/vandalt)
 
-IDL Masking Code: 
+IDL Masking Code:
 
 - [Peter Tuthill](http://www.physics.usyd.edu.au/~gekko/)
 - [Mike Ireland](https://github.com/mikeireland)
@@ -114,9 +102,9 @@ Pymask:
 
 - [Benjamin Pope](https://github.com/benjaminpope)
 - [Anthony Cheetham](https://github.com/AnthonyCheetham)
-- Based on pysco, now [xara](https://github.com/fmartinache/xara), by [Frantz Martinache](https://github.com/fmartinache)
+- Based on [xara](https://github.com/fmartinache/xara) (formerly pysco), by [Frantz Martinache](https://github.com/fmartinache)
 
 CANDID:
 
 - [Antoine Mérand](https://github.com/amerand)
-- A Galenne
+- Alexandre Gallenne
