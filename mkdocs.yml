@@ -16,7 +16,7 @@ nav:
   - NIRISS AMI Extraction: tutorials/niriss-extraction.ipynb
   - SPHERE IRD Extraction: tutorials/sphere-extraction.ipynb
   - SPHERE IFS Extraction: tutorials/sphere-ifs-extraction.ipynb
-  - Companion search with Candid and Pymask: tutorials/companion-search.ipynb
+  - Companion Search with Candid and Pymask: tutorials/companion-search.ipynb
 - API: api/
 
 theme:
