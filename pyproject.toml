@@ -53,12 +53,31 @@ Homepage = "https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL"
 amical = "amical._cli.main:main"
 
 [dependency-groups]
+dev = [
+    {include-group = "docs"},
+    {include-group = "typecheck"},
+    {include-group = "lint"},
+    {include-group = "test"},
+]
+lint = [
+    "pre-commit",
+    "ruff",
+    "black",
+]
 typecheck = [
     "mypy>=2.1.0",
     "types-termcolor>=1.1.6.2",
 ]
 test = [
     "pytest>=9.0.3",
+]
+# TODO: Pin mkdocs version < 2.0 given warning?
+# TODO: Switch to sphinx to avoid breaking mkdocs changes?
+docs = [
+    "mkdocs<2.0",
+    "mkdocs-material",
+    "mkdocs-jupyter",
+    "mkdocstrings[python]",
 ]
 
 [tool.uv]
