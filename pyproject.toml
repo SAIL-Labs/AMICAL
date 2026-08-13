@@ -78,6 +78,8 @@ docs = [
     "mkdocs-material",
     "mkdocs-jupyter",
     "mkdocstrings[python]",
+    "mkdocs-gen-files",
+    "mkdocs-literate-nav",
 ]
 
 [tool.uv]
