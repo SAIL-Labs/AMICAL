@@ -5,11 +5,13 @@ VIRGIL_URL = "https://benjaminpope.github.io/virgil/"
 
 
 def deprecated_fitter(func):
-    """Mark an AMICAL fitting wrapper (CANDID, Pymask, smartfit) as deprecated.
+    """Mark AMICAL's own fitting tools (smartfit) as deprecated.
 
     AMICAL's job ends at the calibrated OIFITS file; model fitting, binary
     searches and contrast limits are better done with a dedicated package
-    such as virgil, which reads AMICAL's OIFITS output directly.
+    such as virgil, which reads AMICAL's OIFITS output directly. (The CANDID
+    and Pymask functions are kept as a legacy interface computed with virgil:
+    see amical.analysis.legacy.)
     """
 
     @functools.wraps(func)

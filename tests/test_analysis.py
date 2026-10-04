@@ -1,3 +1,5 @@
+import importlib.util
+
 import numpy as np
 import pytest
 from matplotlib import pyplot as plt
@@ -5,22 +7,38 @@ from matplotlib import pyplot as plt
 import amical
 from amical import candid_cr_limit
 from amical.analysis.fitting import compute_chi2_curve, fits2obs, smartfit
-from amical.externals import pymask
 
-# The CANDID, Pymask and smartfit wrappers are deprecated in favour of virgil;
-# the tests below still exercise them until they are removed.
+# smartfit is deprecated in favour of virgil; the tests below still exercise
+# it until it is removed.
 pytestmark = pytest.mark.filterwarnings(
     r"ignore:amical\.\w+ is deprecated:FutureWarning"
 )
 
-
-@pytest.mark.parametrize(
-    "func", [amical.candid_grid, amical.pymask_grid, amical.smartfit]
+# The CANDID and Pymask functions are computed with virgil (Python >= 3.11).
+needs_virgil = pytest.mark.skipif(
+    importlib.util.find_spec("virgil") is None, reason="virgil is not installed"
 )
-def test_fitters_deprecated(func):
+
+
+def test_smartfit_deprecated():
     with pytest.warns(FutureWarning, match="virgil"):
         with pytest.raises(TypeError):
-            func()  # the warning is raised before the arguments are checked
+            amical.smartfit()  # the warning is raised before the arguments are checked
+
+
+def test_legacy_needs_virgil(example_oifits, monkeypatch):
+    import builtins
+
+    real_import = builtins.__import__
+
+    def no_virgil(name, *args, **kwargs):
+        if name == "virgil" or name.startswith("virgil."):
+            raise ImportError(name)
+        return real_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", no_virgil)
+    with pytest.raises(ImportError, match=r"amical\[virgil\]"):
+        amical.candid_grid(example_oifits)
 
 
 @pytest.fixture()
@@ -45,6 +63,7 @@ def example_oifits_no_date_obs(global_datadir):
     return global_datadir / "test_no_date_obs.oifits"
 
 
+@needs_virgil
 @pytest.mark.usefixtures("close_figures")
 @pytest.mark.parametrize("ncore", [1, 2])
 def test_candid_grid(example_oifits, ncore):
@@ -76,6 +95,7 @@ def test_candid_grid(example_oifits, ncore):
     assert e_dm <= 0.01 * true_dm
 
 
+@needs_virgil
 @pytest.mark.usefixtures("close_figures")
 def test_plot_model(example_oifits):
     param_candid = {"rmin": 50, "rmax": 180, "step": 50, "ncore": 1}
@@ -194,6 +214,7 @@ def test_model_binaryres_error(example_oifits):
     assert np.isnan(model[0])
 
 
+@needs_virgil
 @pytest.mark.usefixtures("close_figures")
 @pytest.mark.parametrize("step", [40, 60])
 def test_candid_cr(example_oifits, step):
@@ -206,6 +227,7 @@ def test_candid_cr(example_oifits, step):
     assert len(tested_r) > 1
 
 
+@needs_virgil
 @pytest.mark.usefixtures("close_figures")
 def test_pymask_grid(example_oifits):
     pa_prior = [30, 50]
@@ -220,12 +242,20 @@ def test_pymask_grid(example_oifits):
     assert isinstance(fit, dict)
 
 
+@needs_virgil
+def test_pymask_oifits_no_date_obs(example_oifits_no_date_obs):
+    fit = amical.pymask_grid(str(example_oifits_no_date_obs), ngrid=5)
+    assert fit["chi2"].shape == (5, 5, 5)
+
+
+@needs_virgil
 @pytest.mark.usefixtures("close_figures")
 def test_pymask_cr(example_oifits):
     res = amical.pymask_cr_limit(str(example_oifits), nsim=10, ncore=4)
     assert isinstance(res, dict)
 
 
+@needs_virgil
 @pytest.mark.usefixtures("close_figures")
 def test_pymask_mcmc(example_oifits):
     param_pymask = {
@@ -244,7 +274,9 @@ def test_pymask_mcmc(example_oifits):
         "burn_in": 100,
     }
 
-    fit = amical.pymask_mcmc(str(example_oifits), **param_pymask, **param_mcmc)
+    fit = amical.pymask_mcmc(
+        str(example_oifits), **param_pymask, **param_mcmc, display=False
+    )
 
     # Human checked values
     true_sep, true_pa, true_dm = 147.7, 46.6, 6.0
@@ -261,15 +293,12 @@ def test_pymask_mcmc(example_oifits):
     assert sep == pytest.approx(true_sep, 0.01)
     assert pa == pytest.approx(true_pa, 0.01)
     assert dm == pytest.approx(true_dm, 0.01)
-    # Check small errors
-    assert e_sep <= 0.01 * true_sep
-    assert e_pa <= 0.01 * true_pa
-    assert e_dm <= 0.01 * true_dm
-
-
-def test_pymask_oifits_no_date_obs(example_oifits_no_date_obs):
-    o = pymask.oifits.open(str(example_oifits_no_date_obs))
-    assert isinstance(o, pymask.oifits.oifits)
+    # Check small errors. virgil whitens the 35 correlated closure phases
+    # (15 independent), so the posterior is ~sqrt(35/15) wider than the one
+    # Pymask gave by treating them as independent.
+    assert e_sep <= 0.015 * true_sep
+    assert e_pa <= 0.015 * true_pa
+    assert e_dm <= 0.015 * true_dm
 
 
 @pytest.mark.usefixtures("close_figures")
