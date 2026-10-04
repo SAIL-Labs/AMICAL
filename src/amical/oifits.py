@@ -13,6 +13,7 @@ OIFITS related function.
 import datetime
 import os
 import sys
+import warnings
 from importlib.metadata import version
 
 import numpy as np
@@ -25,6 +26,94 @@ from amical.tools import rad2mas
 list_color = ["#00a7b5", "#afd1de", "#055c63", "#ce0058", "#8a8d8f", "#f1b2dc"]
 
 _ASTROQUERY_VERSION = Version(version("astroquery"))
+
+_MAS_TO_DEG = 1 / 3.6e6
+
+
+def simbad_enabled():
+    """Return False if SIMBAD queries are switched off with the AMICAL_NO_SIMBAD
+    environment variable (e.g. on HPC compute nodes without internet access)."""
+    flag = os.environ.get("AMICAL_NO_SIMBAD", "").strip().lower()
+    return flag in ("", "0", "false", "no")
+
+
+def _query_simbad_target(name):
+    """Coordinates (deg), proper motion (deg/yr), parallax (deg) and spectral type
+    of `name` from SIMBAD, as needed by the OI_TARGET table."""
+    from astroquery.simbad import Simbad
+
+    simbad = Simbad()
+    if _ASTROQUERY_VERSION >= Version("0.4.8"):
+        sp_type_name = "sp_type"
+    else:
+        sp_type_name = "sptype"
+    simbad.add_votable_fields("propermotions", sp_type_name, "parallax")
+    query = simbad.query_object(name)
+    if query is None or len(query) == 0:
+        raise LookupError(f"no SIMBAD match for {name!r}")
+
+    def value(col):
+        x = query[col][0]
+        return 0.0 if np.ma.is_masked(x) else float(x)
+
+    if "ra" in query.colnames:
+        # astroquery >= 0.4.8 (TAP): lower-case columns, coordinates in degrees
+        ra, dec = value("ra"), value("dec")
+        cols = ("sp_type", "pmra", "pmdec", "plx_value")
+    else:
+        from astropy import units as u
+        from astropy.coordinates import SkyCoord
+
+        coord = SkyCoord(
+            query["RA"][0] + " " + query["DEC"][0], unit=(u.hourangle, u.deg)
+        )
+        ra, dec = coord.ra.deg, coord.dec.deg
+        cols = ("SP_TYPE", "PMRA", "PMDEC", "PLX_VALUE")
+
+    col_sp, col_pmra, col_pmdec, col_plx = cols
+    spectyp = query[col_sp][0]
+    return {
+        "ra": ra,
+        "dec": dec,
+        # SIMBAD gives mas/yr and mas; OIFITS wants deg/yr and deg
+        "pmra": value(col_pmra) * _MAS_TO_DEG,
+        "pmdec": value(col_pmdec) * _MAS_TO_DEG,
+        "plx": value(col_plx) * _MAS_TO_DEG,
+        "spectyp": "" if np.ma.is_masked(spectyp) else str(spectyp),
+    }
+
+
+def _target_info(name_star, hdr, fake_obj=False, query_simbad=None):
+    """Values of the OI_TARGET table.
+
+    Coordinates come from SIMBAD when it is queried and answers; otherwise from
+    the RA/DEC keywords (deg) of the original header, if any; otherwise zero.
+    """
+    info = {"ra": 0.0, "dec": 0.0, "pmra": 0.0, "pmdec": 0.0, "plx": 0.0}
+    info["spectyp"] = "fake"
+    if fake_obj:
+        return info
+
+    hdr = hdr or {}
+    ra, dec = hdr.get("RA"), hdr.get("DEC")
+    if isinstance(ra, int | float) and isinstance(dec, int | float):
+        info.update(ra=float(ra), dec=float(dec), spectyp="")
+
+    if query_simbad is None:
+        query_simbad = simbad_enabled()
+    if not query_simbad or name_star in (None, "", "Unknown"):
+        return info
+
+    try:
+        info.update(_query_simbad_target(name_star))
+    except Exception as e:
+        warnings.warn(
+            f"SIMBAD query for {name_star!r} failed ({type(e).__name__}: {e}); "
+            "OI_TARGET uses the header coordinates if any, else zeros. Use "
+            "query_simbad=False or set AMICAL_NO_SIMBAD=1 to skip the query.",
+            stacklevel=3,
+        )
+    return info
 
 
 def _compute_flag(value, sigma, limit=4.0):
@@ -476,6 +565,7 @@ def save(
     *,
     origin=None,
     raw=False,
+    query_simbad=None,
 ):
     """
     Summary:
@@ -502,7 +592,8 @@ def save(
         ncp = (N-1)(N-2)/2.\n
     `fake_obj` {bool}:
         If True, observable are extracted from simulated data and so doesn't
-        contain real target informations (simbad search is ignored),\n
+        contain real target informations (SIMBAD is not queried and the
+        coordinates are set to zero),\n
     `true_flag_v2`, `true_flag_t3` {bool}:
         if True, the true flag are used using snr,\n
     `snr` {float}:
@@ -515,6 +606,12 @@ def save(
     `raw` {bool}:
         Set to True if the input is not calibrated. This will only silence the warning
         shown otherwise when an uncalibrated input is detected (default=False).\n
+    `query_simbad` {bool}:
+        If True, query SIMBAD for the target coordinates, proper motion,
+        parallax and spectral type. If False (e.g. on compute nodes without
+        internet access), use the RA/DEC keywords of the original header
+        instead. If None (default), query unless the environment variable
+        AMICAL_NO_SIMBAD is set to a true value (e.g. AMICAL_NO_SIMBAD=1).\n
 
     Returns:
     --------
@@ -525,7 +622,6 @@ def save(
 
     """
     from astropy.io import fits
-    from astroquery.simbad import Simbad
 
     if observables is None:
         rprint("[on red]\nError save : Wrong data format!", file=sys.stderr)
@@ -643,41 +739,12 @@ def save(
         print("-> Including OI Target table...")
 
     name_star = dic["info"]["TARGET"]
-
-    customSimbad = Simbad()
-
-    if _ASTROQUERY_VERSION >= Version("0.4.8"):
-        sp_type_name = "sp_type"
-    else:
-        sp_type_name = "sptype"
-    customSimbad.add_votable_fields("propermotions", sp_type_name, "parallax")
-
-    # Add information from Simbad:
-    if fake_obj:
-        ra = pmra = dec = pmdec = plx = [0]
-        spectyp = ["fake"]
-    else:
-        if (name_star is not None) & (name_star != "Unknown"):
-            from astropy import units as u
-            from astropy.coordinates import SkyCoord
-
-            try:
-                query = customSimbad.query_object(name_star)
-                coord = SkyCoord(
-                    query["RA"][0] + " " + query["DEC"][0], unit=(u.hourangle, u.deg)
-                )
-                ra = [coord.ra.deg]
-                dec = [coord.dec.deg]
-                spectyp = query["SP_TYPE"]
-                pmra = query["PMRA"]
-                pmdec = query["PMDEC"]
-                plx = query["PLX_VALUE"]
-            except Exception:
-                ra = pmra = dec = pmdec = plx = [0]
-                spectyp = ["fake"]
-        else:
-            ra = pmra = dec = pmdec = plx = [0]
-            spectyp = ["fake"]
+    target = _target_info(
+        name_star, hdr.get("hdr"), fake_obj=fake_obj, query_simbad=query_simbad
+    )
+    ra, dec = [target["ra"]], [target["dec"]]
+    pmra, pmdec, plx = [target["pmra"]], [target["pmdec"]], [target["plx"]]
+    spectyp = [target["spectyp"]]
 
     if name_star == "":
         name_star = "Unknown"
