@@ -38,14 +38,12 @@ instrument pipelines, (2) **Extract** the interferometrical quantities
 (visibilities and closure phases) using a Fourier sampling approach and (3)
 **Calibrate** those quantities to remove the instrumental biases.
 
-In addition (4), we include two external packages called
-[CANDID](https://github.com/amerand/CANDID) and
-[Pymask](https://github.com/AnthonyCheetham/pymask) to **analyse** the final
-outputs obtained from a binary-like sources (star-star or star-planet). We
-interfaced these stand-alone packages with AMICAL to quickly estimate our
-scientific results (e.g., separation, position angle, contrast ratio, contrast
-limits, etc.) using different approaches (chi2 grid, MCMC, see
-[example_analysis.py](https://github.com/SAIL-Labs/AMICAL/blob/main/doc/example_analysis.py) for details).
+AMICAL's job ends at (4) the calibrated **OIFITS** file. To **analyse** it
+(binary searches, contrast limits, model fitting and posteriors), we recommend
+[virgil](https://benjaminpope.github.io/virgil/) (`pip install virgil-astro`),
+which reads AMICAL's OIFITS files directly; see
+[example_analysis.py](https://github.com/SAIL-Labs/AMICAL/blob/main/doc/example_analysis.py).
+The former CANDID and Pymask wrappers, and `amical.smartfit`, are deprecated.
 
 ## Getting started
 
@@ -56,9 +54,13 @@ You can also have a look to the example scripts
 made for
 [NIRISS](https://github.com/SAIL-Labs/AMICAL/blob/main/doc/example_NIRISS.py)
 and
-[SPHERE](https://github.com/SAIL-Labs/AMICAL/blob/main/doc/example_NIRISS.py)
-or get details about the CANDID/Pymask uses with
+[SPHERE](https://github.com/SAIL-Labs/AMICAL/blob/main/doc/example_SPHERE.py),
+and the analysis of the calibrated OIFITS with virgil in
 [example_analysis.py](https://github.com/SAIL-Labs/AMICAL/blob/main/doc/example_analysis.py).
+
+Running on a cluster without internet access? Set `AMICAL_NO_SIMBAD=1` (or
+pass `query_simbad=False` to `amical.save`) so that AMICAL does not try to
+query SIMBAD.
 
 ⚡ Last updates (08/2022) : New example script for IFS-SPHERE data is now available [here](https://github.com/SAIL-Labs/AMICAL/blob/main/doc/example_IFS.py).
 

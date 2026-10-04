@@ -8,8 +8,8 @@ vscode).
 - [Step 1: clean and select data](#step-1-clean-and-select-data)
 - [Step 2: extract observables](#step-2-extract-observables)
 - [Step 3: calibrate V2 & CP](#step-3-calibrate-v2--cp)
-- [Step 4: analyse with CANDID and
-  Pymask](#step-4-analyse-with-candid-and-pymask)
+- [Step 4: analyse the OIFITS file with
+  virgil](#step-4-analyse-the-oifits-file-with-virgil)
 
 In the following, we'll assume you imported the library as:
 
@@ -217,46 +217,67 @@ If you want to save the independent CP only, you can add `ind_hole=0`
 (0..n_holes-1) to select only the CP with the given aperture index. The others
 parameters can be check in the docstrings.
 
-> Note: If data are extracted from a fake target, you have to add
-> `fake_obj=True` to ignore the SIMBAD search.
+The OIFITS file records the observation date (`MJD`) and integration time
+from the original header (`MJD-OBS` or `DATE-OBS`, and `EXPTIME` or ESO
+`DIT`×`NDIT`), so files from several epochs can be fitted together.
 
-### Step 4: analyse with CANDID and Pymask
+> Note: `save()` looks up the target in SIMBAD to fill the `OI_TARGET` table
+> (coordinates, proper motion, parallax, spectral type). If the query fails,
+> it warns and falls back to the `RA`/`DEC` keywords of the original header.
+> On machines without internet access (e.g. HPC compute nodes), switch the
+> query off with `query_simbad=False`, or for a whole batch job by setting the
+> environment variable `AMICAL_NO_SIMBAD=1` (this also applies to the
+> `amical calibrate` command line). For simulated data, use `fake_obj=True`:
+> SIMBAD is not contacted and the coordinates are set to zero.
 
-Finally, you can fit the data using CANDID or Pymask (two independant and
-stand-alone packages).
+### Step 4: analyse the OIFITS file with virgil
 
-First, you can use CANDID to fit the data using a grid search approach.
+AMICAL's job ends at the calibrated OIFITS file. To fit models to it, we
+recommend [virgil](https://benjaminpope.github.io/virgil/), an
+interferometry fitting package built on JAX that reads AMICAL's OIFITS files
+directly. It does fast likelihood grids for binary searches, contrast limits
+(Absil et al. 2011; Ruffio et al. 2018), least-squares fits and HMC
+posteriors, for point sources and for resolved and extended models.
+
+```shell
+$ python -m pip install virgil-astro
+```
+
+virgil needs Python ≥ 3.11 and JAX; it can live in its own environment, as the
+two packages only share the OIFITS files. (The distribution is `virgil-astro`;
+`pip install virgil` installs an unrelated package.)
 
 ```python
-inputdata = "Saveoifits/my_oifits_results.oifits"
+import jax.numpy as jnp
+from virgil.grid_fit import best_grid_point, likelihood_grid
+from virgil.models import BinaryModelCartesian
+from virgil.oidata import OIData
 
-param_candid = {
-    "rmin": 20,  # inner radius of the grid
-    "rmax": 250,  # outer radius of the grid
-    "step": 50,  # grid sampling
-    "ncore": 12,  # core for multiprocessing
+data = OIData("Saveoifits/my_oifits_results.oifits")  # or a list of files
+
+samples = {
+    "dra": jnp.linspace(-250.0, 250.0, 101),  # mas
+    "ddec": jnp.linspace(-250.0, 250.0, 101),  # mas
+    "flux": 10 ** jnp.linspace(-4.0, -1.0, 31),  # companion/primary flux ratio
 }
-
-fit1 = amical.candid_grid(inputdata, **param_candid, diam=0, doNotFit=["diam*"])
+loglike = likelihood_grid(data, BinaryModelCartesian, samples)
+print(best_grid_point(loglike, samples))
 ```
 
-<p align="center">
-<img src="Figures/example_fit_candid.png" width="80%"/>
-</p>
+[example_analysis.py](example_analysis.py) continues with a least-squares
+refinement of the best grid point and Ruffio contrast limits. On the simulated
+NIRISS binary in `tests/data/test.oifits` it finds a separation of 147.1 mas,
+a position angle of 46.9° and a contrast of 5.97 mag, in agreement with the
+CANDID result previously shown here (147.7 mas, 46.6°, 6.0 mag). The
+[virgil documentation](https://benjaminpope.github.io/virgil/) covers
+posterior sampling, error inflation and extended-source models.
 
-***FIG. 6** - Example of CANDID fit showing the location of the detected companion (red cross) and the associated detection map.*
+> Note: AMICAL saves all N(N-1)(N-2)/6 closure phases, of which only
+> (N-1)(N-2)/2 are independent. Before fitting, either save the independent set
+> (`ind_hole=0` in `amical.save()`), calibrate with `normalize_err_indep=True`,
+> or fit an error-inflation term.
 
-And an estimate of the contrast limit.
-
-```python
-cr_candid = amical.candid_cr_limit(inputdata, **param_candid, fitComp=fit1["comp"])
-```
-
-<p align="center">
-<img src="Figures/example_crlimits_candid.png" width="60%"/>
-</p>
-
-***FIG. 7** - Example of CANDID contrast limit map (top panel) and detection limit curve (lower panel). For this dataset, the contrast limit achieved is around 8.5 magnitudes (3-σ).*
-
-For a detailled description and the use of Pymask package (using the MCMC
-approach), you can check the [example_analysis.py](example_analysis.py) script.
+> Deprecated: the CANDID and Pymask wrappers (`amical.candid_grid`,
+> `amical.candid_cr_limit`, `amical.pymask_grid`, `amical.pymask_mcmc`,
+> `amical.pymask_cr_limit`) and `amical.smartfit` now raise a `FutureWarning`
+> and will be removed in a future release.
