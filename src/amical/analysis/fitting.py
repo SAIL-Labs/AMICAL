@@ -5,7 +5,7 @@ import numpy as np
 from rich.progress import track
 
 import amical
-from amical.analysis import models
+from amical.analysis import deprecated_fitter, models
 from amical.dpfit import leastsqFit
 from amical.tools import mas2rad, roundSciDigit
 
@@ -440,7 +440,7 @@ def compute_chi2_curve(
     import matplotlib.pyplot as plt
     from scipy.interpolate import interp1d
 
-    fit = smartfit(
+    fit = smartfit.__wrapped__(
         obs,
         params,
         normalizeErrors=normalizeErrors,
@@ -461,7 +461,7 @@ def compute_chi2_curve(
     l_chi2r = []
     for pr in track(array_params, description=f"Chi2 curve ({name_param}"):
         params[name_param] = pr
-        lfits = smartfit(
+        lfits = smartfit.__wrapped__(
             obs,
             params,
             normalizeErrors=True,
@@ -716,6 +716,7 @@ def plot_model(
     return mod_v2, mod_cp, chi2
 
 
+@deprecated_fitter
 def smartfit(
     obs,
     first_guess,

@@ -7,6 +7,21 @@ from amical import candid_cr_limit
 from amical.analysis.fitting import compute_chi2_curve, fits2obs, smartfit
 from amical.externals import pymask
 
+# The CANDID, Pymask and smartfit wrappers are deprecated in favour of virgil;
+# the tests below still exercise them until they are removed.
+pytestmark = pytest.mark.filterwarnings(
+    r"ignore:amical\.\w+ is deprecated:FutureWarning"
+)
+
+
+@pytest.mark.parametrize(
+    "func", [amical.candid_grid, amical.pymask_grid, amical.smartfit]
+)
+def test_fitters_deprecated(func):
+    with pytest.warns(FutureWarning, match="virgil"):
+        with pytest.raises(TypeError):
+            func()  # the warning is raised before the arguments are checked
+
 
 @pytest.fixture()
 def close_figures():

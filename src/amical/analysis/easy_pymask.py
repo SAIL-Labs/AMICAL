@@ -1,8 +1,10 @@
 import numpy as np
 
+from amical.analysis import deprecated_fitter
 from amical.externals import pymask
 
 
+@deprecated_fitter
 def pymask_grid(
     input_data,
     ngrid=40,
@@ -68,6 +70,7 @@ def pymask_grid(
     return like_grid
 
 
+@deprecated_fitter
 def pymask_mcmc(
     input_data,
     initial_guess,
@@ -180,6 +183,7 @@ def pymask_mcmc(
     return res
 
 
+@deprecated_fitter
 def pymask_cr_limit(
     input_data,
     nsim=100,

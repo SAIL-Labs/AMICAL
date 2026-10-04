@@ -3,9 +3,11 @@ import os
 import numpy as np
 from rich import print as rprint
 
+from amical.analysis import deprecated_fitter
 from amical.externals import candid
 
 
+@deprecated_fitter
 def candid_grid(
     input_data: str | list[str],
     step: int = 10,
@@ -143,6 +145,7 @@ def candid_grid(
     return res
 
 
+@deprecated_fitter
 def candid_cr_limit(
     input_data: str | list[str],
     step: int = 10,
