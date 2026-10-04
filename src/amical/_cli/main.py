@@ -177,11 +177,13 @@ def main(argv: list[str] | None = None) -> int:
     extract_parser.add_argument(
         "--cutoff",
         default=1e-4,
+        type=float,
         help="Cutoff limit between noise and signal for fft method (default: %(default)s).",
     )
     extract_parser.add_argument(
         "--diam",
         default=0.8,
+        type=float,
         help="Diameter of a single aperture (default: %(default)s).",
     )
     extract_parser.add_argument(
@@ -198,8 +200,16 @@ def main(argv: list[str] | None = None) -> int:
     )
     extract_parser.add_argument(
         "--unbias",
+        dest="unbias",
+        action="store_true",
+        default=True,
+        help="Unbias the V2 using the Fourier base (the default).",
+    )
+    extract_parser.add_argument(
+        "--no-unbias",
+        dest="unbias",
         action="store_false",
-        help="Unbias the V2 using the Fourier base.",
+        help="Do not unbias the V2.",
     )
 
     # Parameters to rotate and centrally-enlarge the mask position.

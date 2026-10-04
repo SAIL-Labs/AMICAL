@@ -34,7 +34,7 @@ def _select_association_file(args):
 
     if len(l_file) == 0:
         print(f"No h5 files found in {args.datadir}, check --datadir.", file=sys.stderr)
-        return 1
+        raise SystemExit(1)
 
     index_file = []
 
@@ -91,9 +91,7 @@ def perform_calibrate(args):
     sciname, calname = _select_association_file(args)
     bs_t = amical.load_bs_hdf5(sciname)
 
-    bs_c = []
-    for x in calname:
-        bs_c = amical.load_bs_hdf5(x)
+    bs_c = [amical.load_bs_hdf5(x) for x in calname]
 
     display = len(bs_c) > 1
     cal = amical.calibrate(
@@ -118,5 +116,5 @@ def perform_calibrate(args):
 
     oifits_file = Path(bs_t.infos.filename).stem + "_calibrated.fits"
 
-    amical.save(cal, oifits_file=oifits_file, datadir=args.outdir)
+    amical.save(cal, oifits_file=oifits_file, datadir=args.outdir, pa=pa)
     return 0

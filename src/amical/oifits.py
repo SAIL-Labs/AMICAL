@@ -205,6 +205,40 @@ def _apply_flag(dict_calibrated, unit="arcsec"):
     return cal_flagged
 
 
+def _observation_time(infos):
+    """Start of the observation as an astropy Time, from the header keys kept
+    at extraction (MJD-OBS, else DATE-OBS). Falls back to MJD 0 when neither
+    is available, with a warning unless the data are simulated."""
+    from astropy.time import Time
+
+    hdr = infos.get("hdr") or {}
+    mjd = infos.get("mjd-obs") or hdr.get("MJD-OBS")
+    if mjd not in (None, ""):
+        return Time(float(mjd), format="mjd", scale="utc")
+    date = infos.get("date-obs") or hdr.get("DATE-OBS")
+    if date not in (None, ""):
+        return Time(date, scale="utc")
+    if infos.get("orig") != "SimulatedData":
+        warnings.warn(
+            "No MJD-OBS or DATE-OBS in the header: MJD is set to 0 in the OIFITS file.",
+            stacklevel=3,
+        )
+    return Time(0.0, format="mjd", scale="utc")
+
+
+def _exposure_time(hdr):
+    """Total exposure time of the cube in seconds (EXPTIME, else ESO DIT x NDIT),
+    or 0 if unknown."""
+    exptime = hdr.get("EXPTIME")
+    if isinstance(exptime, int | float):
+        return float(exptime)
+    dit = hdr.get("HIERARCH ESO DET DIT", hdr.get("ESO DET DIT"))
+    ndit = hdr.get("HIERARCH ESO DET NDIT", hdr.get("ESO DET NDIT"))
+    if isinstance(dit, int | float) and isinstance(ndit, int | float):
+        return float(dit * ndit)
+    return 0.0
+
+
 def wrap_raw(bs):
     """
     Wrap extraction product to save it as oifits
@@ -284,7 +318,6 @@ def cal2dict(
     `dic`: {dict}
         Dictionnary format of the data to be save as oifits.
     """
-    from astropy.time import Time
 
     res_t = cal.raw_t
     res_c = cal.raw_c
@@ -293,20 +326,17 @@ def cal2dict(
     bl2h_ix = res_t.mask.bl2h_ix
     bs2bl_ix = res_t.mask.bs2bl_ix
 
-    date = "2020-02-07T00:54:11"
-    exp_time = 0.8
     try:
         ins = res_t.infos.instrument
         maskname = res_t.infos.maskname
         pixscale = res_t.infos.pixscale
-    except KeyError:
-        rprint(
-            "[red]Error: 'INSTRUME', 'NRMNAME' or 'PIXELSCL' are not in the header.",
-            file=sys.stderr,
-        )
-        return None
+    except (KeyError, AttributeError) as e:
+        raise KeyError(
+            "'INSTRUME', 'NRMNAME' or 'PIXELSCL' are not in the header."
+        ) from e
 
-    t = Time(date, format="isot", scale="utc")
+    t = _observation_time(res_t.infos)
+    exp_time = _exposure_time(res_t.infos.get("hdr") or {})
 
     if true_flag_v2:
         flagV2 = _compute_flag(cal.vis2, cal.e_vis2, limit=snr)
@@ -322,6 +352,17 @@ def cal2dict(
     for i in range(n_baselines):
         sta_index_v2.append(np.array(bl2h_ix[:, i]))
     sta_index_v2 = np.array(sta_index_v2)
+
+    # Triangle (i, j, k) in the order of the closure phase: baselines ij
+    # (U1/V1) and jk (U2/V2) close with ki.
+    sta_index_t3 = np.stack(
+        [
+            bl2h_ix[0, bs2bl_ix[0, :]],
+            bl2h_ix[1, bs2bl_ix[0, :]],
+            bl2h_ix[1, bs2bl_ix[1, :]],
+        ],
+        axis=1,
+    )
 
     if target is None:
         target = res_t.infos.target
@@ -368,7 +409,7 @@ def cal2dict(
             "V1COORD": v1[bs2bl_ix[0, :]][sel_ind_cp],
             "U2COORD": u1[bs2bl_ix[1, :]][sel_ind_cp],
             "V2COORD": v1[bs2bl_ix[1, :]][sel_ind_cp],
-            "STA_INDEX": list(np.array(res_t.mask.closing_tri)[sel_ind_cp]),
+            "STA_INDEX": list(sta_index_t3[sel_ind_cp]),
             "FLAG": flagCP[sel_ind_cp],
             "BL": res_t.bl_cp[sel_ind_cp],
         },
@@ -800,7 +841,7 @@ def save(
 
     pscale = dic["info"]["PSCALE"] / 1000.0  # arcsec
     isz = dic["info"]["ISZ"]  # Size of the image to extract NRM data
-    fov = [pscale * isz] * N_ap
+    fov = [pscale * isz / 2.0] * N_ap  # radius of the extracted image
     fovtype = ["RADIUS"] * N_ap
 
     hdu = fits.BinTableHDU.from_columns(

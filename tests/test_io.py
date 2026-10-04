@@ -505,3 +505,45 @@ def test_target_info_header_fallback():
 
     info = _target_info("HD 1", {"RA": 10.5, "DEC": -20.25}, query_simbad=False)
     assert (info["ra"], info["dec"]) == (10.5, -20.25)
+
+
+def test_t3_sta_index_matches_uv(cal):
+    """STA_INDEX (i, j, k) of each closure phase must match U1/V1 (ij) and U2/V2 (jk)."""
+    dic = amical.oifits.cal2dict(cal)
+    bl2h_ix = cal.raw_t.mask.bl2h_ix
+    bs2bl_ix = cal.raw_t.mask.bs2bl_ix
+    sta = np.array(dic["OI_T3"]["STA_INDEX"])
+    np.testing.assert_array_equal(sta[:, :2], bl2h_ix[:, bs2bl_ix[0]].T)
+    np.testing.assert_array_equal(sta[:, 1:], bl2h_ix[:, bs2bl_ix[1]].T)
+
+
+@pytest.mark.parametrize(
+    "infos, mjd",
+    [
+        ({"mjd-obs": 58562.25}, 58562.25),
+        ({"date-obs": "2019-03-20T06:00:00"}, 58562.25),
+        ({"hdr": {"DATE-OBS": "2019-03-20T06:00:00"}}, 58562.25),
+        ({"orig": "SimulatedData"}, 0.0),
+    ],
+)
+def test_observation_time(infos, mjd):
+    from amical.oifits import _observation_time
+
+    assert _observation_time(Munch(infos)).mjd == pytest.approx(mjd)
+
+
+def test_observation_time_missing_warns():
+    from amical.oifits import _observation_time
+
+    with pytest.warns(UserWarning, match="MJD is set to 0"):
+        assert _observation_time(Munch({})).mjd == 0
+
+
+def test_exposure_time():
+    from amical.oifits import _exposure_time
+
+    assert _exposure_time({"EXPTIME": 12.5}) == 12.5
+    assert _exposure_time(
+        {"HIERARCH ESO DET DIT": 0.1, "HIERARCH ESO DET NDIT": 50}
+    ) == pytest.approx(5.0)
+    assert _exposure_time({}) == 0.0
