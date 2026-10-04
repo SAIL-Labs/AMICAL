@@ -40,10 +40,14 @@ instrument pipelines, (2) **Extract** the interferometrical quantities
 
 AMICAL's job ends at (4) the calibrated **OIFITS** file. To **analyse** it
 (binary searches, contrast limits, model fitting and posteriors), we recommend
-[virgil](https://benjaminpope.github.io/virgil/) (`pip install virgil-astro`),
+[virgil](https://benjaminpope.github.io/virgil/) (`pip install amical[virgil]`),
 which reads AMICAL's OIFITS files directly; see
 [example_analysis.py](https://github.com/SAIL-Labs/AMICAL/blob/main/doc/example_analysis.py).
-The former CANDID and Pymask wrappers, and `amical.smartfit`, are deprecated.
+AMICAL no longer bundles [CANDID](https://github.com/amerand/CANDID) and
+[Pymask](https://github.com/AnthonyCheetham/pymask): `amical.candid_grid`,
+`amical.pymask_mcmc` and the other functions that used them keep working,
+computed with virgil (see the
+[tutorial](https://github.com/SAIL-Labs/AMICAL/blob/main/doc/tutorial.md#legacy-candid-and-pymask-functions)).
 
 ## Getting started
 

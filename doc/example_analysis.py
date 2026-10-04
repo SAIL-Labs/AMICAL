@@ -9,13 +9,15 @@ package. We recommend virgil (https://benjaminpope.github.io/virgil/), which
 reads AMICAL's OIFITS files directly and is built on JAX, so grid searches are
 fast and posteriors can be sampled with gradient-based HMC.
 
-The CANDID and Pymask wrappers (amical.candid_grid, amical.pymask_grid, ...)
-and amical.smartfit are deprecated and will be removed in a future release.
+AMICAL no longer bundles CANDID and Pymask. amical.candid_grid,
+amical.candid_cr_limit, amical.pymask_grid, amical.pymask_mcmc and
+amical.pymask_cr_limit still work for existing scripts, but are computed with
+virgil (see the tutorial); amical.smartfit is deprecated.
 
 virgil needs Python >= 3.11 and JAX. Install it alongside AMICAL, or in a
 separate environment (the two only need to share the OIFITS files):
 
-    python -m pip install virgil-astro
+    python -m pip install amical[virgil]   # or: python -m pip install virgil-astro
 
 (the distribution is `virgil-astro`; `pip install virgil` is an unrelated
 package.)
@@ -49,9 +51,8 @@ inputdata = "Saveoifits/example_fakebinary_NIRISS.oifits"
 data = OIData(inputdata)
 
 # Note on closure phases: AMICAL saves all N(N-1)(N-2)/6 closure phases, of
-# which only (N-1)(N-2)/2 are independent. Either save the independent set
-# with amical.save(..., ind_hole=0), or calibrate with
-# normalize_err_indep=True, or inflate the errors in the fit (`noise=` below).
+# which only (N-1)(N-2)/2 are independent. virgil whitens them together, so
+# keep them all and do not calibrate with normalize_err_indep=True.
 
 # 1. Grid search for a companion
 # ------------------------------

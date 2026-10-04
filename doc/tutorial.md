@@ -240,7 +240,7 @@ directly. It does fast likelihood grids for binary searches, contrast limits
 posteriors, for point sources and for resolved and extended models.
 
 ```shell
-$ python -m pip install virgil-astro
+$ python -m pip install amical[virgil]  # or: python -m pip install virgil-astro
 ```
 
 virgil needs Python ≥ 3.11 and JAX; it can live in its own environment, as the
@@ -273,11 +273,35 @@ CANDID result previously shown here (147.7 mas, 46.6°, 6.0 mag). The
 posterior sampling, error inflation and extended-source models.
 
 > Note: AMICAL saves all N(N-1)(N-2)/6 closure phases, of which only
-> (N-1)(N-2)/2 are independent. Before fitting, either save the independent set
-> (`ind_hole=0` in `amical.save()`), calibrate with `normalize_err_indep=True`,
-> or fit an error-inflation term.
+> (N-1)(N-2)/2 are independent. virgil whitens them together, so save them all
+> and do not also apply `normalize_err_indep=True`, which would count the
+> redundancy twice.
 
-> Deprecated: the CANDID and Pymask wrappers (`amical.candid_grid`,
-> `amical.candid_cr_limit`, `amical.pymask_grid`, `amical.pymask_mcmc`,
-> `amical.pymask_cr_limit`) and `amical.smartfit` now raise a `FutureWarning`
-> and will be removed in a future release.
+#### Legacy CANDID and Pymask functions
+
+AMICAL no longer bundles CANDID and Pymask. Their AMICAL functions still
+exist, with the same arguments and return values, but are now computed with
+virgil (install it with `pip install amical[virgil]`):
+
+| function | what virgil computes |
+|---|---|
+| `amical.candid_grid` | likelihood grid of a companion around a uniform-disk primary, refined by least squares; uncertainties from the Fisher matrix |
+| `amical.candid_cr_limit` | 3σ detection limits (Absil et al. 2011), after removing `fitComp` if given |
+| `amical.pymask_grid` | χ² grid in separation, position angle and contrast ratio, closure phases only |
+| `amical.pymask_mcmc` | posterior of the same binary, sampled with NUTS (HMC) instead of emcee |
+| `amical.pymask_cr_limit` | 3σ contrast limits versus separation (Absil), closure phases only |
+
+```python
+fit = amical.candid_grid(inputdata, rmin=20, rmax=250, step=50, diam=0)
+cr = amical.candid_cr_limit(inputdata, rmin=20, rmax=250, step=50, fitComp=fit["comp"])
+```
+
+The results are close to, but not identical with, those of the original
+packages. CANDID's "injection" limits and Pymask's Monte Carlo limits are
+replaced by the Absil limits. virgil also accounts for the correlations
+between the N(N-1)(N-2)/6 closure phases, so its uncertainties are larger than
+Pymask's were (by about √(35/15) ≈ 1.5 for a 7-hole mask) and no `err_scale`
+correction for redundancy is needed. On the simulated binary,
+`candid_grid` gives 147.1 ± 0.8 mas, 46.9 ± 0.3° and 5.98 ± 0.01 mag, and
+`pymask_mcmc` 147.1 ± 1.3 mas, 46.8 ± 0.5° and 5.98 ± 0.02 mag. For new
+analyses, use virgil directly as above. `amical.smartfit` is deprecated.
