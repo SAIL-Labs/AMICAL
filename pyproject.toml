@@ -115,6 +115,9 @@ filterwarnings = [
 
     # https://github.com/matplotlib/matplotlib/pull/30221
     "ignore:'mode' parameter is deprecated and will be removed in Pillow 13:DeprecationWarning",
+
+    # zodiax (a virgil dependency) has unescaped LaTeX in docstrings
+    "ignore:.*invalid escape sequence:SyntaxWarning",
 ]
 
 [tool.coverage.run]
