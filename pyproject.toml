@@ -112,6 +112,7 @@ constraint-dependencies = [
     "nodeenv>=1.6",
     "bleach>=6.0",
     "cffi>=2.0",
+    "appnope>=0.1.2",
     "decorator>=5.0",
     "defusedxml>=0.7",
     "pyzmq>=27.0",
