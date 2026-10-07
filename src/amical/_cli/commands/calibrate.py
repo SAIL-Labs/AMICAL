@@ -13,8 +13,18 @@ from amical.oifits import simbad_enabled
 
 
 def _query_simbad(targetname):
-    """Check on Simbad if the target is supposed to be a calibrator or a science
-    source."""
+    """Classify a SIMBAD target as a calibrator or science source.
+
+    Parameters
+    ----------
+    targetname : str
+        Target name to query in SIMBAD.
+
+    Returns
+    -------
+    str
+        ``"CAL"`` for targets with the ``Star`` object type; otherwise ``"SCI"``.
+    """
     customSimbad = Simbad()
     customSimbad.add_votable_fields("otype")
     res = customSimbad.query_object(targetname)
@@ -28,8 +38,24 @@ def _query_simbad(targetname):
 
 
 def _select_association_file(args):
-    """Show report with the data found and allow to select the science target
-    (SCI) to be calibrated and the calibrator (CAL)."""
+    """Select science and calibrator bispectrum files interactively.
+
+    Parameters
+    ----------
+    args : argparse.Namespace
+        CLI arguments containing the ``datadir`` attribute.
+
+    Returns
+    -------
+    tuple[str, list[str]] | int
+        Selected science file and calibrator files, or ``1`` when no HDF5 files
+        are found.
+
+    Raises
+    ------
+    SystemExit
+        If a selected file index is invalid.
+    """
     l_file = sorted(glob(os.path.join(args.datadir, "*.h5")))
 
     if len(l_file) == 0:
@@ -86,7 +112,18 @@ def _select_association_file(args):
 
 
 def perform_calibrate(args):
-    """Calibrate the data with AMICAL (save calibrated oifits files)"""
+    """Calibrate selected AMICAL data and save an OIFITS file.
+
+    Parameters
+    ----------
+    args : argparse.Namespace
+        CLI arguments controlling calibration, plotting, and the output directory.
+
+    Returns
+    -------
+    int
+        Zero when calibration completes successfully.
+    """
 
     sciname, calname = _select_association_file(args)
     bs_t = amical.load_bs_hdf5(sciname)

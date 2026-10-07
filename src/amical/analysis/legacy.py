@@ -23,8 +23,8 @@ replaced by the Absil limits (both give the companions that would have been
 detected at 3 sigma), Pymask's emcee is replaced by NUTS, and virgil whitens
 the correlated closure phases together, so uncertainties no longer need an
 `err_scale` for their redundancy (and are wider than Pymask's were). For new
-work, use virgil directly (see
-doc/example_analysis.py).
+work, use virgil directly (see the companion search tutorial in the AMICAL
+documentation).
 
 virgil needs Python >= 3.11 and JAX: `pip install amical[virgil]`.
 """
@@ -196,41 +196,50 @@ def candid_grid(
 
     The log-likelihood of a companion is mapped on a grid of offsets between
     `rmin` and `rmax` (no coarser than `step`), and the best grid points are
-    refined by least squares (virgil.fitting.fit). The primary is a uniform
-    disk of diameter `diam`, fitted too unless "diam*" is in `doNotFit`.
+    refined by least squares (``virgil.fitting.fit``). The primary is a
+    uniform disk of diameter `diam`, fitted too unless ``"diam*"`` is in
+    `doNotFit`. Uncertainties come from the Fisher matrix.
 
-    Parameters:
-    -----------
-    `input_data`:
-        oifits file names or list of oifits files,\n
-    `step`:
-        step used to compute the binary grid positions [mas],\n
-    `rmin`, `rmax`:
-        Bounds of the grid [mas],\n
-    `diam`:
-        Stellar diameter of the primary star [mas] (default=0),\n
-    `obs`:
-        List of observables to be fitted (default: ['cp', 'v2']),\n
-    `extra_error_cp`, `err_scale`, `extra_error_v2`:
-        Additional CP error [deg] (quadratic), CP error scaling and additional
-        V2 error (quadratic),\n
-    `instruments`:
-        INSNAME(s) of the OIFITS tables to use (default: all),\n
-    `doNotFit`:
-        Parameters not fitted (default: ['diam*']),\n
-    `ncore`:
-        Unused (kept for compatibility; virgil vectorises the grid),\n
-    `save`, `outputfile`:
-        Save the detection map as pdf,\n
-    `verbose`:
-        print some informations {default: False}.
+    Parameters
+    ----------
+    input_data : str or list of str
+        OIFITS file name or names.
+    step : int, default=10
+        Grid step in milliarcseconds.
+    rmin : float, default=20
+        Minimum grid separation in milliarcseconds.
+    rmax : float, default=400
+        Maximum grid separation in milliarcseconds.
+    diam : float, default=0
+        Primary-star diameter in milliarcseconds.
+    obs : list of str or None, default=None
+        Observables to fit. Uses ``["cp", "v2"]`` when omitted.
+    extra_error_cp : float, default=0
+        Additional closure-phase uncertainty in degrees, added in quadrature.
+    err_scale : float, default=1
+        Multiplicative closure-phase error-bar scale.
+    extra_error_v2 : float, default=0
+        Additional squared-visibility uncertainty, added in quadrature.
+    instruments : str or list of str, optional
+        INSNAME(s) of the OIFITS tables to use. Uses all tables when omitted.
+    doNotFit : list of str or None, default=None
+        Parameters excluded from fitting. Uses ``["diam*"]`` when omitted.
+    ncore : int, default=1
+        Unused; kept for compatibility (virgil vectorizes the grid).
+    save : bool, default=False
+        Whether to save the detection map as a PDF.
+    outputfile : str or None, default=None
+        Filename for the saved detection map.
+    verbose : bool, default=False
+        Whether to print more information.
 
-    Outputs:
-    --------
-    `res` {dict}:
-        Dictionnary of the results ('best'), uncertainties ('uncer'),
-        reduced chi2 ('chi2'), sigma detection ('nsigma') and the companion in
-        CANDID format ('comp': x, y [mas], f [%], diam* [mas]).
+    Returns
+    -------
+    dict
+        Best-fit parameters (``"best"``), uncertainties (``"uncer"``), reduced
+        chi-square (``"chi2"``), detection significance (``"nsigma"``) and the
+        companion in CANDID format (``"comp"``: x, y in mas, f in per cent,
+        diam* in mas).
     """
     _virgil()
     import jax.numpy as jnp
@@ -371,21 +380,57 @@ def candid_cr_limit(
     save: bool = False,
     outputfile=None,
 ):
-    """3-sigma detection limits around the target, CANDID style (computed
-    with virgil).
+    """Compute 3-sigma detection limits around the target, CANDID style
+    (computed with virgil).
 
-    At each position of a map of step `step` [mas] out to `rmax`, the
-    companion flux ruled out at 3 sigma is found by the method of Absil et al.
-    (2011) (virgil.limits.absil_limits). CANDID's "injection" method is not
+    At each position of a map of step `step` out to `rmax`, the companion flux
+    ruled out at 3 sigma is found by the method of Absil et al. (2011)
+    (``virgil.limits.absil_limits``). CANDID's "injection" method is not
     available: every requested method returns the Absil limits. A companion
-    fitted with `candid_grid` (its 'comp' entry) can be removed first with
+    fitted with `candid_grid` (its ``"comp"`` entry) can be removed first with
     `fitComp`.
 
-    Outputs:
-    --------
-    `res` {dict}:
-        'r' (mas), one entry per method, and 'cr_limit': the 3-sigma
-        magnitude-difference limit (99th percentile around each separation).
+    Parameters
+    ----------
+    input_data : str or list of str
+        OIFITS file name or names.
+    step : int, default=10
+        Map step in milliarcseconds.
+    rmin : float, default=20
+        Minimum separation in milliarcseconds.
+    rmax : float, default=400
+        Maximum separation in milliarcseconds.
+    extra_error_cp : float, default=0
+        Additional closure-phase uncertainty in degrees, added in quadrature.
+    err_scale : float, default=1
+        Multiplicative closure-phase error-bar scale.
+    extra_error_v2 : float, default=0
+        Additional squared-visibility uncertainty, added in quadrature.
+    obs : list of str or None, default=None
+        Observables to use. Defaults to ``["cp", "v2"]``.
+    fitComp : dict or None, default=None
+        Companion (``candid_grid(...)["comp"]``) removed from the data before
+        estimating the limits.
+    ncore : int, default=1
+        Unused; kept for compatibility.
+    diam : float or None, default=None
+        Primary-star diameter in milliarcseconds.
+    methods : list of str or None, default=None
+        Names under which the limits are returned. Defaults to
+        ``["injection"]``; all give the Absil limits.
+    instruments : str or list of str, optional
+        INSNAME(s) of the OIFITS tables to use. Uses all tables when omitted.
+    save : bool, default=False
+        Whether to save the detection-limit map as a PDF.
+    outputfile : str or None, default=None
+        Filename for the saved detection-limit map.
+
+    Returns
+    -------
+    dict
+        Separations (``"r"``, mas), one entry per method, and ``"cr_limit"``:
+        the 3-sigma magnitude-difference limit (99th percentile around each
+        separation).
     """
     _virgil()
     import jax.numpy as jnp
@@ -466,34 +511,36 @@ def pymask_grid(
     ncore=1,
     verbose=False,
 ):
-    """Compute chi2 map of a binary model over a regular grid, Pymask style
-    (closure phases only; computed with virgil).
+    """Compute a chi-square map of a binary model on a regular grid, Pymask
+    style (closure phases only; computed with virgil).
 
-    Parameters:
-    -----------
-    `input_data` {str}:
-        Oifits file name,\n
-    `ngrid` {int}:
-        Number of points in the grid (for each parameters: pa, sep,
-        cr, i.e.: ngrid**3),\n
-    `pa_prior` {list}:
-        Bounds of the position angle (default: [0, 360]),\n
-    `sep_prior` {list}:
-        Bounds of the separation (default: [0, 100]),\n
-    `cr_prior` {list}:
-        Bounds of the contrast ratio (default: [1, 150]),\n
-    `err_scale` {float}:
-        Scaling factor apply on the errorbars (multiplicative),\n
-    `extra_error_cp` {float}:
-        Additional error [deg] (additive),\n
-    `ncore` {int}:
-        Unused (kept for compatibility).
+    Parameters
+    ----------
+    input_data : str
+        OIFITS file name.
+    ngrid : int, default=40
+        Number of grid points for each of position angle, separation and
+        contrast ratio (``ngrid**3`` models).
+    pa_prior : list of float or None, default=None
+        Position-angle bounds in degrees. Defaults to ``[0, 360]``.
+    sep_prior : list of float or None, default=None
+        Separation bounds in milliarcseconds. Defaults to ``[0, 100]``.
+    cr_prior : list of float or None, default=None
+        Contrast-ratio bounds. Defaults to ``[1, 150]``.
+    err_scale : float, default=1.0
+        Multiplicative error-bar scale.
+    extra_error_cp : float, default=0.0
+        Additional closure-phase uncertainty in degrees.
+    ncore : int, default=1
+        Unused; kept for compatibility.
+    verbose : bool, default=False
+        Whether to print more information.
 
-    Return:
+    Returns
     -------
-    `like_grid` {dict}:
-        'chi2' and 'like' arrays of shape (sep, pa, cr), the axes 'seps',
-        'ths' and 'cons', and the 'best' [sep, pa, cr].
+    dict
+        ``"chi2"`` and ``"like"`` arrays of shape (sep, pa, cr), the axes
+        ``"seps"``, ``"ths"`` and ``"cons"``, and the ``"best"`` [sep, pa, cr].
     """
     _virgil()
     pa_prior = [0, 360] if pa_prior is None else pa_prior
@@ -541,14 +588,48 @@ def pymask_mcmc(
     display=True,
     verbose=True,
 ):
-    """Posterior of a binary model, Pymask style (closure phases only),
-    sampled with NUTS by numpyro and virgil.
+    """Sample the posterior of a binary model, Pymask style (closure phases
+    only), with NUTS (numpyro and virgil).
 
-    `initial_guess` is [sep (mas), pa (deg), contrast ratio]. The priors are
-    uniform over `sep_prior`, `pa_prior` and `cr_prior` (by default 0.5 to 2
-    times the initial separation, 0-360 deg, and 1 to 10 times the initial
-    contrast ratio). `burn_in` warm-up steps are followed by `niters` samples;
-    `walkers` and `ncore` are unused (kept for compatibility).
+    The priors are uniform over `sep_prior`, `pa_prior` and `cr_prior`.
+    Pymask used emcee; the NUTS sampler needs no walkers.
+
+    Parameters
+    ----------
+    input_data : str
+        OIFITS file name.
+    initial_guess : array_like
+        Initial separation (mas), position angle (deg) and contrast ratio.
+    niters : int, default=1000
+        Number of samples after warm-up.
+    pa_prior : list of float or None, default=None
+        Position-angle bounds in degrees. Defaults to ``[0, 360]``.
+    sep_prior : list of float or None, default=None
+        Separation bounds in milliarcseconds. Defaults to 0.5 to 2 times the
+        initial separation.
+    cr_prior : list of float or None, default=None
+        Contrast-ratio bounds. Defaults to 1 to 10 times the initial contrast
+        ratio.
+    err_scale : float, default=1
+        Multiplicative error-bar scale.
+    extra_error_cp : float, default=0
+        Additional closure-phase uncertainty in degrees.
+    ncore : int, default=1
+        Unused; kept for compatibility.
+    burn_in : int, default=500
+        Number of warm-up steps.
+    walkers : int, default=100
+        Unused; kept for compatibility.
+    display : bool, default=True
+        Whether to plot the sample chains.
+    verbose : bool, default=True
+        Whether to show a progress bar and print the fitted parameters.
+
+    Returns
+    -------
+    dict
+        Best-fit binary parameters (``"best"``) and asymmetric uncertainties
+        (``"uncer"``).
     """
     _virgil()
     import jax
@@ -659,21 +740,50 @@ def pymask_cr_limit(
     cmin=1.0001,
     display=False,
 ):
-    """3-sigma contrast limits versus separation, Pymask style (closure
-    phases only; computed with virgil).
+    """Compute 3-sigma contrast limits versus separation, Pymask style
+    (closure phases only; computed with virgil).
 
-    Pymask simulated `nsim` noise realisations; here the limit is computed
+    Pymask simulated `nsim` noise realizations; here the limit is computed
     directly with the method of Absil et al. (2011) on a polar grid of `nsep`
     separations and `nth` position angles. As in Pymask, the limit at each
     separation is the one valid at every position angle (the brightest
-    companion flux ruled out everywhere). `nsim`, `ncrat` and `ncore` are
-    unused (kept for compatibility).
+    companion flux ruled out everywhere).
 
-    Outputs:
-    --------
-    `res` {dict}:
-        'r' (mas), 'cr_limit' (magnitudes) and 'lims_data' ('flux_limit' map of
-        shape (sep, pa), 'seps', 'ths').
+    Parameters
+    ----------
+    input_data : str
+        OIFITS file name.
+    nsim : int, default=100
+        Unused; kept for compatibility.
+    err_scale : float, default=1
+        Multiplicative error-bar scale.
+    extra_error_cp : float, default=0
+        Additional closure-phase uncertainty in degrees.
+    ncore : int, default=1
+        Unused; kept for compatibility.
+    cmax : float, default=500
+        Maximum contrast ratio.
+    nsep : int, default=60
+        Number of separation samples.
+    ncrat : int, default=60
+        Unused; kept for compatibility.
+    nth : int, default=30
+        Number of position-angle samples.
+    smin : float, default=20
+        Minimum separation in milliarcseconds.
+    smax : float, default=250
+        Maximum separation in milliarcseconds.
+    cmin : float, default=1.0001
+        Minimum contrast ratio.
+    display : bool, default=False
+        Whether to display the contrast-limit plot.
+
+    Returns
+    -------
+    dict
+        Separations (``"r"``, mas), 3-sigma magnitude-difference limits
+        (``"cr_limit"``), and the limit map (``"lims_data"``: ``"flux_limit"``
+        of shape (sep, pa), ``"seps"``, ``"ths"``).
     """
     _virgil()
     import jax.numpy as jnp

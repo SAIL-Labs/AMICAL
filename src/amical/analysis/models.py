@@ -4,7 +4,28 @@ from amical.tools import mas2rad
 
 
 def shiftFourier(Utable, Vtable, wl, C_in, x0, y0):
-    """Shift the image (apply a phasor in Fourier space."""
+    """Apply an image-plane shift as a Fourier-space phasor.
+
+    Parameters
+    ----------
+    Utable : array-like
+        U baseline coordinates.
+    Vtable : array-like
+        V baseline coordinates.
+    wl : array-like
+        Wavelengths.
+    C_in : array-like
+        Input complex visibility.
+    x0 : float
+        Image-plane x shift in radians.
+    y0 : float
+        Image-plane y shift in radians.
+
+    Returns
+    -------
+    numpy.ndarray
+        Shifted complex visibility.
+    """
     u = Utable / wl
     v = Vtable / wl
     C_out = C_in * np.exp(-2j * np.pi * (u * x0 + v * y0))
@@ -12,15 +33,23 @@ def shiftFourier(Utable, Vtable, wl, C_in, x0, y0):
 
 
 def visUniformDisk(Utable, Vtable, Lambda, param):
-    """
-    Compute complex visibility of an uniform disk
+    """Compute the complex visibility of a uniform disk.
 
-    Params:
+    Parameters
+    ----------
+    Utable : array-like
+        U baseline coordinates.
+    Vtable : array-like
+        V baseline coordinates.
+    Lambda : array-like
+        Wavelengths.
+    param : dict
+        Model parameters: ``diam``, ``x0``, and ``y0`` in milliarcseconds.
+
+    Returns
     -------
-    diam: {float}
-        Diameter of the disk [rad],\n
-    x0, y0: {float}
-        Shift along x and y position [rad].
+    numpy.ndarray
+        Complex visibility of the shifted uniform disk.
     """
     from scipy import special
 
@@ -39,13 +68,23 @@ def visUniformDisk(Utable, Vtable, Lambda, param):
 
 
 def visPointSource(Utable, Vtable, Lambda, param):
-    """
-    Compute complex visibility of a point source.
+    """Compute the complex visibility of a point source.
 
-    Params:
+    Parameters
+    ----------
+    Utable : array-like
+        U baseline coordinates.
+    Vtable : array-like
+        V baseline coordinates.
+    Lambda : array-like
+        Wavelengths.
+    param : dict
+        Model parameters ``x0`` and ``y0`` in radians.
+
+    Returns
     -------
-    x0, y0: {float}
-        Shift along x and y position [rad].
+    numpy.ndarray
+        Complex visibility of the shifted point source.
     """
     C_centered = np.ones(np.size(Utable))
     C = shiftFourier(Utable, Vtable, Lambda, C_centered, param["x0"], param["y0"])
@@ -53,6 +92,25 @@ def visPointSource(Utable, Vtable, Lambda, param):
 
 
 def visBinary(Utable, Vtable, Lambda, param):
+    """Compute the complex visibility of an unresolved binary.
+
+    Parameters
+    ----------
+    Utable : array_like
+        U baseline coordinates.
+    Vtable : array_like
+        V baseline coordinates.
+    Lambda : array_like
+        Wavelengths.
+    param : dict
+        Binary parameters: separation ``sep`` in milliarcseconds, magnitude
+        difference ``dm``, and position angle ``theta`` in degrees.
+
+    Returns
+    -------
+    numpy.ndarray
+        Complex binary visibility. Returns NaN values when ``dm`` is negative.
+    """
     sep = mas2rad(param["sep"])
     dm = param["dm"]
     theta = np.deg2rad(90 - param["theta"])
@@ -75,6 +133,26 @@ def visBinary(Utable, Vtable, Lambda, param):
 
 
 def visBinary_res(Utable, Vtable, Lambda, param):
+    """Compute the complex visibility of a binary with a resolved primary.
+
+    Parameters
+    ----------
+    Utable : array_like
+        U baseline coordinates.
+    Vtable : array_like
+        V baseline coordinates.
+    Lambda : array_like
+        Wavelengths.
+    param : dict
+        Binary parameters: separation ``sep`` and primary diameter ``diam`` in
+        milliarcseconds, magnitude difference ``dm``, and position angle
+        ``theta`` in degrees. A zero ``diam`` models the primary as unresolved.
+
+    Returns
+    -------
+    numpy.ndarray
+        Complex binary visibility. Returns NaN values when ``dm`` is negative.
+    """
     sep = mas2rad(param["sep"])
     dm = param["dm"]
     theta = np.deg2rad(90 - param["theta"])
@@ -105,15 +183,23 @@ def visBinary_res(Utable, Vtable, Lambda, param):
 
 
 def visGaussianDisk(Utable, Vtable, Lambda, param):
-    """
-    Compute complex visibility of a gaussian disk
+    """Compute the complex visibility of a Gaussian disk.
 
-    Params:
+    Parameters
+    ----------
+    Utable : array-like
+        U baseline coordinates.
+    Vtable : array-like
+        V baseline coordinates.
+    Lambda : array-like
+        Wavelengths.
+    param : dict
+        Model parameters ``fwhm``, ``x0``, and ``y0`` in radians.
+
+    Returns
     -------
-    fwhm: {float}
-        fwhm of the disk [rad],\n
-    x0, y0: {float}
-        Shift along x and y position [rad].
+    numpy.ndarray
+        Complex visibility of the shifted Gaussian disk.
     """
     u = Utable / Lambda
     v = Vtable / Lambda
@@ -131,23 +217,26 @@ def visGaussianDisk(Utable, Vtable, Lambda, param):
 
 
 def visEllipticalDisk(Utable, Vtable, Lambda, param):
-    """
-    Compute complex visibility of an elliptical thick ring.
+    """Compute the complex visibility of an elliptical thick ring.
 
-    Params:
+    Parameters
+    ----------
+    Utable : array-like
+        U baseline coordinates.
+    Vtable : array-like
+        V baseline coordinates.
+    Lambda : array-like
+        Wavelengths.
+    param : dict
+        Model parameters: ``majorAxis`` and ``thickness`` in milliarcseconds,
+        ``incl`` and ``posang`` in degrees, star-to-disk contrast ``cr``, and
+        position values ``x0`` and ``y0``. The latter are used directly for the
+        ring shift and are converted from milliarcseconds for the stellar term.
+
+    Returns
     -------
-    majorAxis: {float}
-        Major axis of the disk [mas],\n
-    incl: {float}
-        Inclination [deg],\n
-    posang: {float}
-        Orientation of the disk [deg],\n
-    thickness: {float}
-        Thickness of the ring [mas],\n
-    cr: {float}
-        Contrast ratio with the star,\n
-    x0, y0: {float}
-        Position of the star (relative to the center) [mas].
+    numpy.ndarray
+        Complex visibility of the star and elliptical ring.
     """
     from scipy import special
 
@@ -189,21 +278,26 @@ def visEllipticalDisk(Utable, Vtable, Lambda, param):
 
 
 def visClumpDebrisDisk(Utable, Vtable, Lambda, param):
-    """
-    Compute complex visibility of an elliptical thick ring.
+    """Compute the complex visibility of a clumpy debris disk.
 
-    Params:
+    Parameters
+    ----------
+    Utable : array-like
+        U baseline coordinates.
+    Vtable : array-like
+        V baseline coordinates.
+    Lambda : array-like
+        Wavelengths.
+    param : dict
+        Model parameters: ``majorAxis`` and ``thickness`` in milliarcseconds;
+        ``x0`` and ``y0`` in radians; ``incl`` and ``posang`` in degrees;
+        star-to-disk contrast ``cr``; clump diameter ``d_clump`` in
+        milliarcseconds; and clump flux percentage ``cr_clump``.
+
+    Returns
     -------
-    majorAxis: {float}
-        Major axis of the disk [rad],\n
-    minorAxis: {float}
-        Minor axis of the disk [rad],\n
-    angle: {float}
-        Orientation of the disk [rad],\n
-    thickness: {float}
-        Thickness of the ring [rad],\n
-    x0, y0: {float}
-        Shift along x and y position [rad].
+    numpy.ndarray
+        Complex visibility of the star, debris disk, and clump.
     """
     from scipy import special
 

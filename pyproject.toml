@@ -55,6 +55,17 @@ Homepage = "https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL"
 amical = "amical._cli.main:main"
 
 [dependency-groups]
+dev = [
+    {include-group = "docs"},
+    {include-group = "typecheck"},
+    {include-group = "lint"},
+    {include-group = "test"},
+]
+lint = [
+    "pre-commit>=3.0",
+    "ruff>=0.5",
+    "black>=24.1",
+]
 typecheck = [
     "mypy>=2.1.0",
     "types-termcolor>=1.1.6.2",
@@ -62,6 +73,14 @@ typecheck = [
 test = [
     "pytest>=9.0.3",
     "virgil-astro>=0.2.0 ; python_version >= '3.11'",
+]
+docs = [
+    "mkdocs>=1.6,<2.0",
+    "mkdocs-material>=9.5",
+    "mkdocs-jupyter>=0.25",
+    "mkdocstrings[python]>=0.29",
+    "mkdocs-gen-files>=0.5",
+    "mkdocs-literate-nav>=0.6",
 ]
 
 [tool.uv]
@@ -87,6 +106,16 @@ constraint-dependencies = [
     # `uv sync --resolution=lowest`
     "absl-py>=1.0.0",
     "setuptools>=61.0",
+    # transitive dependencies of the lint and docs groups (pre-commit,
+    # mkdocs-jupyter/nbconvert/ipykernel), which `uv sync --resolution=lowest`
+    # also resolves: older releases fail to build or to import
+    "nodeenv>=1.6",
+    "bleach>=6.0",
+    "cffi>=2.0",
+    "appnope>=0.1.2",
+    "decorator>=5.0",
+    "defusedxml>=0.7",
+    "pyzmq>=27.0",
 ]
 
 [tool.ruff.lint]

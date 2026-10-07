@@ -1,14 +1,4 @@
-"""
-@author: Anthony Soulain (University of Sydney)
-
--------------------------------------------------------------------------
-AMICAL: Aperture Masking Interferometry Calibration and Analysis Library
--------------------------------------------------------------------------
-
-Set of functions to work with spectraly dispersed (IFU) NRM data.
-
--------------------------------------------------------------------------
-"""
+"""Deprecated utilities for spectrally dispersed IFU NRM data."""
 
 import warnings
 
@@ -30,9 +20,22 @@ warnings.warn(
 
 
 def get_lambda(i_wl=None, filtname="YH", instrument="SPHERE-IFS"):
-    """Get spectral information for the given instrumental IFU setup.
-    i_wl can be an integer or a list of 2 integers used to display the
-    requested spectral channel."""
+    """Display and return wavelengths for the selected IFU channels.
+
+    Parameters
+    ----------
+    i_wl : int or list of int or None, default=None
+        One channel, a two-index channel range, or all channels.
+    filtname : str, default="YH"
+        IFU filter name.
+    instrument : str, default="SPHERE-IFS"
+        Instrument name.
+
+    Returns
+    -------
+    float, numpy.ndarray, or None
+        Selected wavelength values in micrometres, or None when unavailable.
+    """
     wl = get_wavelength(instrument, filtname) * 1e6
 
     if np.isnan(wl).any():
@@ -103,11 +106,43 @@ def clean_data(
     ihdu=0,
     display=False,
 ):
-    """Clean data using the standard procedure amical.select_clean_data()
-    for each file in list_file. For IFU mode of SPHERE, the different frames
-    are stored in different files and need to be reshaped into the appropriate
-    4D datacube (i.e.: `cube_lambda.shape = [ndit, nlambda, isz,
-    isz]`). Check amical.select_clean_data() for details about input parameters.
+    """Clean IFU files and reshape their frames into a four-dimensional cube.
+
+    Parameters
+    ----------
+    list_file : list of str or path-like
+        IFU FITS files.
+    isz : int, default=256
+        Crop size.
+    r1, dr : int, default=100, 10
+        Sky-ring parameters.
+    edge : int, default=0
+        Detector-edge width to remove.
+    bad_map : numpy.ndarray or None, default=None
+        Bad-pixel map.
+    add_bad : list or None, default=None
+        Additional bad-pixel coordinates.
+    offx, offy : int, default=0
+        Crop-center offsets.
+    clip_fact : float, default=0.5
+        Relative sigma threshold for frame selection.
+    apod, sky : bool, default=True
+        Whether to apodize and sky-subtract frames.
+    window : float or None, default=None
+        Apodization width.
+    f_kernel : int or None, default=3
+        Median-filter kernel size for centering.
+    verbose : bool, default=False
+        Whether to print progress.
+    ihdu : int, default=0
+        FITS HDU containing the data.
+    display : bool, default=False
+        Whether to display cleaning parameters.
+
+    Returns
+    -------
+    numpy.ndarray
+        Cube with shape (ndit, nlambda, isz, isz).
     """
 
     clean_param = {

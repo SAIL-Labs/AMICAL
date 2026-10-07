@@ -22,8 +22,18 @@ err_pts_style = {
 
 
 def select_model(name):
-    """Select a simple model computed in the Fourier space
-    (check model.py)"""
+    """Select a Fourier-space model by name.
+
+    Parameters
+    ----------
+    name : str
+        Model identifier.
+
+    Returns
+    -------
+    callable or None
+        Matching visibility-model function, or ``None`` for an unknown name.
+    """
     if name == "disk":
         model = models.visUniformDisk
     elif name == "binary":
@@ -40,8 +50,18 @@ def select_model(name):
 
 
 def check_params_model(param):
-    """Check if the user parameters are compatible
-    with the model."""
+    """Check whether model parameters satisfy model constraints.
+
+    Parameters
+    ----------
+    param : dict
+        Model parameters, including the ``model`` key.
+
+    Returns
+    -------
+    tuple[bool, str]
+        Whether parameters are valid and a validation message.
+    """
     isValid = True
     log = ""
     if param["model"] == "edisk":
@@ -61,7 +81,22 @@ def check_params_model(param):
 
 
 def comput_V2(X, param, model):
-    """Compute squared visibility for a given model."""
+    """Compute squared visibility for a model.
+
+    Parameters
+    ----------
+    X : sequence of array-like
+        Spatial-frequency coordinates ``(u, v, wavelength)``.
+    param : dict
+        Model parameters.
+    model : callable
+        Complex-visibility model.
+
+    Returns
+    -------
+    numpy.ndarray or int
+        Squared visibility, or ``2`` when model parameters are invalid.
+    """
     u = X[0]
     v = X[1]
     wl = X[2]
@@ -77,7 +112,22 @@ def comput_V2(X, param, model):
 
 
 def comput_CP(X, param, model):
-    """Compute closure phases for a given model."""
+    """Compute closure phases for a model.
+
+    Parameters
+    ----------
+    X : sequence of array-like
+        Baseline coordinates and wavelength ``(u1, u2, u3, v1, v2, v3, wl)``.
+    param : dict
+        Model parameters.
+    model : callable
+        Complex-visibility model.
+
+    Returns
+    -------
+    numpy.ndarray
+        Closure phases in degrees.
+    """
     u1 = X[0]
     u2 = X[1]
     u3 = X[2]
@@ -96,8 +146,18 @@ def comput_CP(X, param, model):
 
 
 def engine_multi_proc(inputs):
-    """
-    Function used to parallelize (model_parallelized() function).
+    """Compute one model datum for multiprocessing.
+
+    Parameters
+    ----------
+    inputs : sequence
+        Model coordinates, observable type, and model parameters.
+
+    Returns
+    -------
+    scalar
+        Modelled observable, ``numpy.nan`` for an unknown type, or ``0`` when
+        model evaluation fails.
     """
     try:
         X = inputs[0]
@@ -121,8 +181,19 @@ def engine_multi_proc(inputs):
 
 
 def model_standard(obs, param):
-    """
-    Compute model for each data points in obs tuple.
+    """Compute model values for all observations serially.
+
+    Parameters
+    ----------
+    obs : array-like
+        Observation rows containing coordinates and observable types.
+    param : dict
+        Model parameters.
+
+    Returns
+    -------
+    numpy.ndarray
+        Model values for the observations.
     """
     modelname = param["model"]
     model_target = select_model(modelname)
@@ -149,8 +220,21 @@ def model_standard(obs, param):
 
 
 def model_parallelized(obs, param, ncore=12):
-    """
-    Compute model for each data points in obs tuple (multiprocess version).
+    """Compute model values for all observations using multiprocessing.
+
+    Parameters
+    ----------
+    obs : array-like
+        Observation rows containing coordinates and observable types.
+    param : dict
+        Model parameters.
+    ncore : int, default=12
+        Number of worker processes.
+
+    Returns
+    -------
+    numpy.ndarray
+        Model values for the observations.
     """
     pool = multiprocessing.Pool(ncore)
 
@@ -179,41 +263,40 @@ def fits2obs(
     input_rad=False,
     verbose=True,
 ):
-    """
-    Convert and select data from an oifits file.
+    """Convert selected OIFITS observables to fitting observations.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
+    inputdata : str
+        OIFITS file name.
+    use_flag : bool, default=True
+        Whether to exclude data flagged in the OIFITS file.
+    cond_wl : bool, default=False
+        Whether to restrict wavelengths to ``wl_min`` through ``wl_max``.
+    wl_min : float or None, default=None
+        Lower wavelength limit in micrometres.
+    wl_max : float or None, default=None
+        Upper wavelength limit in micrometres.
+    cond_uncer : bool, default=False
+        Whether to filter data by relative uncertainty.
+    rel_max : float or None, default=None
+        Maximum allowed relative uncertainty in percent.
+    extra_error_v2 : float, default=0
+        Additive squared-visibility uncertainty.
+    extra_error_cp : float, default=0
+        Additive closure-phase uncertainty.
+    err_scale : float, default=1
+        Multiplicative closure-phase uncertainty scale.
+    input_rad : bool, default=False
+        Whether closure phases and their uncertainties are expressed in radians.
+    verbose : bool, default=True
+        Whether to print data-selection information.
 
-    `inputdata`: {str}
-        Oifits file,\n
-    `use_flag`: {boolean}
-        If True, use flag from the original oifits file,\n
-    `cond_wl`: {boolean}
-        If True, apply wavelenght restriction between wl_min and wl_max,\n
-    `wl_min`, `wl_max`: {float}
-        if cond_wl, limits of the wavelength domain [µm],\n
-    `cond_uncer`: {boolean}
-        If True, select the best data according their relative uncertainties (rel_max),\n
-    `rel_max`: {float}
-        if cond_uncer, maximum sigma uncertainties allowed [%],\n
-    `extra_error_v2`: {float}
-        Additional uncertainty of the V2 (added quadraticaly),\n
-    `extra_error_cp`: {float}
-        Additional uncertainty of the CP (added quadraticaly),\n
-    `err_scale`: {float}
-        Scaling factor applied on the CP uncertainties usualy used to
-        include the non-independant CP correlation,\n
-    `verbose`: {boolean}
-        If True, display useful information about the data selection,\n
-
-
-    Return:
+    Returns
     -------
-
-    Obs: {tuple}
-        Tuple containing all the selected data in an appropriate format to perform the fit.
-
+    numpy.ndarray
+        Object array of selected coordinates, observable types, values, and
+        uncertainties.
     """
 
     data = amical.loadc(inputdata)
@@ -372,7 +455,20 @@ def fits2obs(
 
 
 def _normalize_err_obs(obs, verbose=False):
-    """Normalize the errorbars to give the same weight for the V2 and CP data"""
+    """Normalize errors to give V2 and CP data equal aggregate weight.
+
+    Parameters
+    ----------
+    obs : array-like
+        Observation rows whose last item is an uncertainty.
+    verbose : bool, default=False
+        Whether to print normalization details.
+
+    Returns
+    -------
+    list
+        Normalized uncertainties.
+    """
 
     errs = [o[-1] for o in obs]
     techs = [("V2"), ("CP")]
@@ -407,35 +503,39 @@ def compute_chi2_curve(
     ymin=0,
     ymax=3,
 ):
-    """
-    Compute a 1D reduced chi2 curve to determine the pessimistic (fully correlated)
-    uncertainties on one parameter (name_param).
+    """Compute a one-dimensional reduced-chi-square curve.
 
-    Parameters:
-    -----------
+    The curve estimates pessimistic, fully correlated uncertainty for one model
+    parameter.
 
-    `obs`: {tuple}
-        Tuple containing all the selected data fromOiClass2Obs function,\n
-    `name_param` {str}:
-        Name of the parameter to compute the chi2 curve,\n
-    `params`: {dict}
-        Parameters of the model,\n
-    `array_params`: {array}
-        List of parameters used to computed the chi2 curve,\n
-    `fitOnly`: {list}
-        fitOnly is a list of keywords to fit. By default, it fits all parameters in `param`,\n
-    `normalizeErrors`: {str or boolean}
-        If 'techniques', give the same weight for the V2 and CP data (even if only few CP compare to V2),\n
-    `fitCP`: {boolean}
-        If True, fit the CP data. If not fit only the V2 data.\n
+    Parameters
+    ----------
+    obs : array-like
+        Selected fitting observations.
+    name_param : str
+        Parameter for which to calculate the curve.
+    params : dict
+        Model parameters.
+    array_params : numpy.ndarray
+        Parameter values used to calculate the curve.
+    fitOnly : list of str
+        Parameters to fit. This list is modified in place to remove ``name_param``.
+    normalizeErrors : bool, default=False
+        Whether to normalize V2 and CP errors.
+    fitCP : bool, default=True
+        Whether to fit closure-phase data.
+    onlyCP : bool, default=False
+        Whether to fit only closure-phase data.
+    ymin : float, default=0
+        Lower normalized vertical extent for uncertainty shading.
+    ymax : float, default=3
+        Upper normalized vertical extent for uncertainty shading.
 
-    Returns:
-    --------
-
-    `fit` {dict}:
-        Contains the results of the initial fit,\n
-    `errors_chi2` {float}:
-        Computed errors using the chi2 curve at the position of the chi2_r.min() + 1.
+    Returns
+    -------
+    tuple[dict, float] or None
+        Initial fit and chi-square-curve uncertainty, or ``None`` if the curve
+        bounds are insufficient.
     """
     import matplotlib.pyplot as plt
     from scipy.interpolate import interp1d
@@ -567,33 +667,40 @@ def plot_model(
     cp_max=None,
     unit="m",
 ):
-    """Plot the model compared to the data (V2 and CP) and the associated
-    residuals.
+    """Plot V2 and CP model predictions, data, and residuals.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
+    inputdata : str
+        OIFITS file name.
+    param : dict
+        Model parameters, such as the ``"best"`` result from
+        :func:`amical.candid_grid`.
+    save : bool, default=False
+        Whether to save the figure.
+    outputfile : str or None, default=None
+        Filename for the saved figure.
+    extra_error_v2 : float, default=0
+        Additive squared-visibility uncertainty.
+    extra_error_cp : float, default=0
+        Additive closure-phase uncertainty.
+    err_scale : float, default=1
+        Multiplicative closure-phase uncertainty scale.
+    d_freedom : int, default=3
+        Number of model degrees of freedom.
+    v2_min : float or None, default=None
+        Lower squared-visibility axis limit.
+    v2_max : float, default=1.1
+        Upper squared-visibility axis limit.
+    cp_max : float or None, default=None
+        Absolute closure-phase axis limit.
+    unit : {"m", "lambda", "arcsec"}, default="m"
+        Spatial-frequency unit.
 
-    `inputdata`: {str}
-        Oifits file,\n
-    `param`: {dict}
-        Parameters of the fit (**tips**: use fit['best'] if you want to
-        use the output of `amical.candid_grid()`.),\n
-    `save`: {boolean}
-        If True, figure is saved using the inputdata file as name followed
-        by '_fit_candid.pdf'. Optionnaly, you can use `outputfile` to
-        change the output file name (e.g.: outputfile='my_fit.pdf'),\n
-    `extra_error_v2`: {float}
-        Additional uncertainty of the V2 (added quadraticaly),\n
-    `extra_error_cp`: {float}
-        Additional uncertainty of the CP (added quadraticaly),\n
-    `err_scale`: {float}
-        Scaling factor applied on the CP uncertainties usualy used to
-        include the non-independant CP correlation,\n
-    `d_freedom` {int}:
-        Degree of freedom (3 by default: sep, theta and dm),\n
-    v2_min, v2_max, cp_max: {float}
-        Limits of the y-axis,\n
-
+    Returns
+    -------
+    tuple[numpy.ndarray, numpy.ndarray, float]
+        Model squared visibilities, model closure phases, and reduced chi-square.
     """
     import matplotlib.pyplot as plt
 
@@ -732,27 +839,46 @@ def smartfit(
     onlyCP=False,
     verbose=True,
 ):
-    """
-    Perform the fit of V2 and CP data contained in the obs tuple.
+    """Fit V2 and CP data contained in observations.
 
-    Parameters:
-    -----------
+    .. deprecated::
+        `smartfit` is deprecated and will be removed in a future release. Fit
+        the calibrated OIFITS file with virgil instead
+        (``pip install amical[virgil]``).
 
-    obs: {tuple}
-        Tuple containing all the selected data fromOiClass2Obs function.\n
-    first_guess: {dict}
-        Parameters of the model.\n
-    fitOnly: {list}
-        fitOnly is a LIST of keywords to fit. By default, it fits all parameters in 'first_guess'.\n
-    follow: {list}
-        List of parameters to "follow" in the fit, i.e. to print in verbose mode.\n
-    multiproc: {boolean}
-        If True, use ModelM to compute the model with pool (12 cores by default).\n
-    normalizeErrors: {boolean}
-        If True, give the same weight for the V2 and CP data (even if only few CP compare to V2).\n
-    fitCP: {boolean}
-        If True, fit the CP data. If not fit only the V2 data.\n
+    Parameters
+    ----------
+    obs : numpy.ndarray
+        Selected fitting observations.
+    first_guess : dict
+        Initial model parameters.
+    doNotFit : list of str or None, default=None
+        Parameters excluded from fitting.
+    fitOnly : list of str or None, default=None
+        Parameters to fit; defaults to all numeric parameters.
+    follow : list of str or None, default=None
+        Parameters to print in verbose mode.
+    multiproc : bool, default=False
+        Whether to evaluate models using multiprocessing.
+    ftol : float, default=0.0001
+        Relative fit-tolerance threshold.
+    epsfcn : float, default=1e-07
+        Finite-difference step used by the optimizer.
+    normalizeErrors : bool, default=False
+        Whether to normalize V2 and CP errors.
+    scale_err : float, default=1
+        Multiplicative scale for fitting uncertainties.
+    fitCP : bool, default=True
+        Whether to fit closure-phase data.
+    onlyCP : bool, default=False
+        Whether to fit only closure-phase data.
+    verbose : bool, default=True
+        Whether to print fitting information.
 
+    Returns
+    -------
+    dict
+        Result returned by :func:`amical.dpfit.leastsqFit`.
     """
 
     save_obs = obs.copy()

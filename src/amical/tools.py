@@ -1,14 +1,4 @@
-"""
-@author: Anthony Soulain (University of Sydney)
-
--------------------------------------------------------------------------
-AMICAL: Aperture Masking Interferometry Calibration and Analysis Library
--------------------------------------------------------------------------
-
-General tools.
-
---------------------------------------------------------------------
-"""
+"""General utilities for aperture-masking data processing and analysis."""
 
 import math as m
 import sys
@@ -21,7 +11,20 @@ from amical.externals.munch import munchify as dict2class
 
 
 def linear(x, param):
-    """Linear model used in dpfit"""
+    """Evaluate the linear model used by the fitting utilities.
+
+    Parameters
+    ----------
+    x : array_like
+        Independent-variable values.
+    param : dict[str, float]
+        Linear-model coefficients with ``"a"`` and ``"b"`` keys.
+
+    Returns
+    -------
+    array_like
+        Values of ``a * x + b``.
+    """
     a = param["a"]
     b = param["b"]
     y = a * x + b
@@ -29,37 +32,55 @@ def linear(x, param):
 
 
 def mas2rad(mas):
-    """Convert angle in milli-arcsec to radians"""
+    """Convert milliarcseconds to radians.
+
+    Parameters
+    ----------
+    mas : float or array_like
+        Angle in milliarcseconds.
+
+    Returns
+    -------
+    float or array_like
+        Angle in radians.
+    """
     rad = mas * (10 ** (-3)) / (3600 * 180 / np.pi)
     return rad
 
 
 def rad2mas(rad):
-    """Convert input angle in radians to milli-arcsec"""
+    """Convert radians to milliarcseconds.
+
+    Parameters
+    ----------
+    rad : float or array_like
+        Angle in radians.
+
+    Returns
+    -------
+    float or array_like
+        Angle in milliarcseconds.
+    """
     mas = rad * (3600.0 * 180 / np.pi) * 10.0**3
     return mas
 
 
 def find_max(img, filtmed=True, f=3):
-    """
-    Summary
-    -------------
-    Find brightest pixel of an image
+    """Find the brightest pixel in an image.
 
     Parameters
     ----------
-    `img` : {numpy.array}
-        input image,\n
-    `filtmed` : {boolean}, (optionnal)
-        True if perform a median filter on the image (to blur bad pixels),\n
-    `f` : {float}, (optionnal),
-        If filtmed == True, kernel size of the median filter.
-
+    img : numpy.ndarray
+        Input image.
+    filtmed : bool, default=True
+        Whether to median-filter before locating the maximum.
+    f : int, default=3
+        Median-filter kernel size.
 
     Returns
     -------
-    `Max coordinates`: {tuple}
-        X and Y positions of max pixel
+    x, y : int
+        Brightest-pixel coordinates.
     """
     from scipy.signal import medfilt2d
 
@@ -81,27 +102,27 @@ def find_max(img, filtmed=True, f=3):
 
 
 def crop_max(img, dim, offx=0, offy=0, filtmed=True, f=3):
-    """
-    Summary
-    -------------
-    Resize an image on the brightest pixel.
+    """Crop an image around its brightest pixel.
 
     Parameters
     ----------
-    `img` : {numpy.array}
-        input image,\n
-    `dim` : {int}
-        resized dimension,\n
-    `filtmed` : {boolean}, (optionnal)
-        True if perform a median filter on the image (to blur bad pixels),\n
-    `f` : {float}, (optionnal),
-        If filtmed == True, kernel size of the median filter.
-
+    img : numpy.ndarray
+        Input image.
+    dim : int
+        Output dimension.
+    offx, offy : int, default=0
+        Crop-center offsets.
+    filtmed : bool, default=True
+        Whether to median-filter before locating the maximum.
+    f : int, default=3
+        Median-filter kernel size.
 
     Returns
     -------
-    `cutout`: {numpy.array}
-        Resized image.
+    image : numpy.ndarray
+        Cropped image.
+    position : tuple of int
+        Brightest-pixel coordinates.
     """
     from astropy.nddata import Cutout2D
 
@@ -122,51 +143,36 @@ def crop_max(img, dim, offx=0, offy=0, filtmed=True, f=3):
 
 
 def norm_max(tab):
-    """
-    Short Summary
-    -------------
-    Normalize an array or a list by the maximum.
+    """Normalize values by their maximum.
 
     Parameters
     ----------
-    `tab` : {numpy.array}, {list}
-        input array or list.
+    tab : numpy.ndarray or list
+        Input values.
 
     Returns
     -------
-    `tab_norm` : {numpy.array}, {list}
-        Normalized array.
+    numpy.ndarray or list
+        Normalized values.
     """
     tab_norm = tab / np.max(tab)
     return tab_norm
 
 
 def gauss_2d_asym(X, param):
-    """
-    Short Summary
-    -------------
-    Creates 2D oriented gaussian with an asymmetrical grid.
+    """Create an oriented two-dimensional Gaussian on an asymmetric grid.
 
     Parameters
     ----------
-    `X` : {list}.
-        Input values :
-         - `X[0]` : x coordinates [pixels]
-         - `X[1]` : y coordinates [pixels]
-         - `X[2]` : pixels scale [mas]\n
+    X : sequence
+        X coordinates, y coordinates, and pixel scale in milliarcseconds.
+    param : dict
+        Gaussian amplitude, offsets, widths, and orientation.
 
-    `param` : {dict}.
-        Input parameters, with the keys:
-            - `A` : amplitude.
-            - `x0` : x offset from the center [mas].
-            - `y0` : y offset from the center [mas].
-            - `fwhm_x` : width in x direction [mas].
-            - `fwhm_y` : width in y direction [mas].
-            - `theta` : orientation [deg].()
     Returns
     -------
-    `im`: {numpy.array}
-        image of a 2D gaussian function.
+    numpy.ndarray
+        Gaussian image.
     """
 
     x_1d = X[0]
@@ -206,7 +212,26 @@ def gauss_2d_asym(X, param):
 
 
 def plot_circle(d, x, y, hole_radius, sz=1, display=True):
-    """Return an image with a disk = sz at x, y position and zero elsewhere"""
+    """Create an image containing a circular disk.
+
+    Parameters
+    ----------
+    d : int
+        Image dimension.
+    x, y : float
+        Disk-center coordinates.
+    hole_radius : float
+        Disk radius.
+    sz : float, default=1
+        Disk value.
+    display : bool, default=True
+        Whether to display the image.
+
+    Returns
+    -------
+    numpy.ndarray
+        Disk image.
+    """
     chipsz = np.shape(d)[0]
 
     im = np.zeros([chipsz, chipsz])
@@ -245,19 +270,19 @@ def plot_circle(d, x, y, hole_radius, sz=1, display=True):
 
 
 def cov2cor(cov):
-    """
-    Convert the input covariance matrix to a correlation matrix
-    corr[i,j] = cov[i,j]/sqrt(cov[i,i]*cov[j,j]).
+    """Convert a covariance matrix to a correlation matrix.
 
     Parameters
     ----------
-    `cov`: {square array}
-        An NxN covariance matrix.
+    cov : numpy.ndarray
+        Square covariance matrix.
 
-    Outputs
+    Returns
     -------
-    `cor`: {square array}
-        The NxN correlation matrix.
+    cor : numpy.ndarray
+        Correlation matrix.
+    sigma : numpy.ndarray
+        Standard deviations.
     """
     cor = np.zeros(cov.shape)
 
@@ -347,8 +372,17 @@ def apply_windowing(
 
 
 def sanitize_array(dic):  # pragma: no cover
-    """Recursively convert values in a nested dictionnary from np.bool_ to builtin bool type
-    This is required for json serialization.
+    """Convert NumPy boolean values in a nested dictionary to Python booleans.
+
+    Parameters
+    ----------
+    dic : dict
+        Dictionary to sanitize.
+
+    Returns
+    -------
+    dict
+        Sanitized dictionary.
     """
     d2 = dic.copy()
     for k, v in dic.items():
@@ -360,11 +394,20 @@ def sanitize_array(dic):  # pragma: no cover
 
 
 def wtmn(values, weights):
-    """
-    Return the inverse-variance weighted average and standard deviation.
+    """Compute an inverse-variance weighted mean and standard deviation.
 
-    values, weights -- Numpy ndarrays with the same shape; `weights` are the
-    1-sigma uncertainties of `values`.
+    Parameters
+    ----------
+    values : numpy.ndarray
+        Values to average.
+    weights : numpy.ndarray
+        1-sigma uncertainties of `values`, with the same shape. The average is
+        weighted by their inverse squares.
+
+    Returns
+    -------
+    mean, std : numpy.ndarray
+        Weighted mean and unbiased standard deviation.
     """
     inv_var = 1.0 / np.asarray(weights) ** 2
     mn = np.average(values, weights=inv_var, axis=0)
@@ -390,7 +433,20 @@ def wtmn(values, weights):
 
 
 def jd2lst(lng, jd):
-    """Convert Julian date to LST"""
+    """Convert a Julian date to local sidereal time.
+
+    Parameters
+    ----------
+    lng : float
+        Longitude.
+    jd : float
+        Julian date.
+
+    Returns
+    -------
+    float
+        Local sidereal time.
+    """
     c = [280.46061837, 360.98564736629, 0.000387933, 38710000.0]
     jd2000 = 2451545.0
     t0 = jd - jd2000
@@ -497,11 +553,19 @@ def eris_parang(hdr, n_dit=None):
 
 
 def sphere_parang(hdr, n_dit_ifs=None):
-    """
-    Reads the header and creates an array giving the paralactic angle for each frame,
-    taking into account the inital derotator position.
-    The columns of the output array contains:
-    frame_number, frame_time, paralactic_angle
+    """Compute parallactic angles for SPHERE frames.
+
+    Parameters
+    ----------
+    hdr : astropy.io.fits.Header
+        FITS header.
+    n_dit_ifs : int or None, default=None
+        Number of IFS integrations.
+
+    Returns
+    -------
+    numpy.ndarray
+        Frame number, frame time, and parallactic angle.
     """
     from astropy.time import Time
 
@@ -658,15 +722,17 @@ def sphere_parang(hdr, n_dit_ifs=None):
 
 
 def check_seeing_cond(list_nrm):  # pragma: no cover
-    """Extract the seeing conditions, parang, averaged vis2
-    and cp of a list of nrm classes extracted with extract_bs
-    function (bispect.py).
+    """Extract seeing conditions and observables from NRM results.
 
-    Output
-    ------
-    If output is **res**, access to parallactic angle by `res.infos.pa`, or
-    `res.infos.seeing` for the seeing across multiple nrm data (files).
+    Parameters
+    ----------
+    list_nrm : list of object
+        Results from the extraction pipeline.
 
+    Returns
+    -------
+    munch.Munch
+        Seeing, parallactic-angle, visibility, and closure-phase information.
     """
     from astropy.io import fits
 
@@ -699,7 +765,20 @@ def check_seeing_cond(list_nrm):  # pragma: no cover
 
 
 def plot_seeing_cond(cond, lim_seeing=None):  # pragma: no cover
-    """Plot seeing condition between calibrator and target files."""
+    """Plot calibrator and target seeing conditions.
+
+    Parameters
+    ----------
+    cond : object
+        Seeing-condition data.
+    lim_seeing : float or None, default=None
+        Upper seeing limit.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+        Seeing-condition figure.
+    """
     import matplotlib.pyplot as plt
 
     fig = plt.figure()
@@ -725,7 +804,20 @@ def plot_seeing_cond(cond, lim_seeing=None):  # pragma: no cover
 
 
 def roundSciDigit(number):
-    """Rounds a float number with a significant digit number."""
+    """Round a number to its significant-digit precision.
+
+    Parameters
+    ----------
+    number : float
+        Number to round.
+
+    Returns
+    -------
+    rounded : float
+        Rounded number.
+    sig_digit : int
+        Significant-digit count.
+    """
     ff = str(number).split(".")[0]
     d = str(number).split(".")[1]
     d, ff = m.modf(number)
@@ -742,7 +834,20 @@ def roundSciDigit(number):
 
 
 def save_bs_hdf5(bs, filename):
-    """Save results from `amical.extract_bs()` into hdf5 file."""
+    """Save extraction results to an HDF5 file.
+
+    Parameters
+    ----------
+    bs : object
+        Extraction result.
+    filename : str or path-like
+        Output filename.
+
+    Returns
+    -------
+    None
+        The result is written to disk.
+    """
     import h5py
 
     if ".h5" not in filename:
@@ -802,8 +907,17 @@ def save_bs_hdf5(bs, filename):
 
 
 def load_bs_hdf5(filename):
-    """Load hdf5 file and format as class like object (same
-    format as `amical.extract_bs()`
+    """Load extraction results from an HDF5 file.
+
+    Parameters
+    ----------
+    filename : str or path-like
+        HDF5 filename.
+
+    Returns
+    -------
+    munch.Munch
+        Loaded extraction result.
     """
     import h5py
 
