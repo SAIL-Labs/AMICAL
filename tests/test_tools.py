@@ -145,3 +145,11 @@ def test_ERIS_parang():
     hdr["HIERARCH ESO TEL PARANG END"] = 30.0
     pa = tools.eris_parang(hdr, n_dit=3)
     np.testing.assert_allclose(pa, [-8.0, -13.0, -18.0])
+
+
+def test_wtmn_inverse_variance():
+    """The calibrator average must favour the precise file, not the noisy one."""
+    values = np.array([[1.0], [0.0]])
+    errors = np.array([[0.01], [1.0]])
+    mn, _ = tools.wtmn(values, errors)
+    assert mn[0] == pytest.approx(1.0, abs=1e-3)

@@ -35,7 +35,7 @@ def get_lambda(i_wl=None, filtname="YH", instrument="SPHERE-IFS"):
     requested spectral channel."""
     wl = get_wavelength(instrument, filtname) * 1e6
 
-    if np.isnan(wl.any()):
+    if np.isnan(wl).any():
         return None
 
     print(f"\nInstrument: {instrument}, spectral range: {filtname}")
@@ -80,7 +80,7 @@ def get_lambda(i_wl=None, filtname="YH", instrument="SPHERE-IFS"):
     if one_wl:
         output = np.round(wl[i_wl], 2)
     else:
-        output = np.round(wl_range)
+        output = np.round(wl_range, 2)
     return output
 
 
@@ -144,7 +144,7 @@ def clean_data(
 
     for i in track(
         range(len(list_file)),
-        desription="Format/clean IFU ({})".format(hdr["OBJECT"]),
+        description="Format/clean IFU ({})".format(hdr["OBJECT"]),
     ):
         cube_cleaned = select_clean_data(list_file[i], **clean_param)
         cube_lambda[i] = cube_cleaned

@@ -277,22 +277,60 @@ def cov2cor(cov):
     return cor, sigma
 
 
-def super_gaussian(x, sigma, m, amp=1, x0=0):
-    sigma = float(sigma)
-    m = float(m)
+def super_gaussian(
+    x: np.ndarray, sigma: float, m: float = 3.0, amp: float = 1.0, x0: float = 0.0
+) -> np.ndarray:
+    """
+    Function for creating a super-Gaussian window.
+
+    Parameters
+    ----------
+    x : np.ndarray
+        2D array with the distances of each pixel to the image center.
+    sigma : float
+        Full width at half maximum (FWHM) of the super-Gaussian
+        window. It is therefore not the standard deviation, as the
+        parameter name would suggest.
+    m : float
+        Exponent used for the super-Gaussian function (default: 3.0).
+    amp : float
+        Amplitude of the Gaussian function (default: 1.0).
+    x0 : float
+        Offset applied to the distances (default: 0.0)
+
+    Returns
+    -------
+    np.ndarray
+        2D array with the super-Gaussian window function.
+    """
+
     return amp * (
-        (
-            np.exp(
-                -(2 ** (2 * m - 1))
-                * np.log(2)
-                * (((x - x0) ** 2) / ((sigma) ** 2)) ** (m)
-            )
-        )
+        (np.exp(-(2 ** (2 * m - 1)) * np.log(2) * (((x - x0) ** 2) / (sigma**2)) ** m))
         ** 2
     )
 
 
-def apply_windowing(img, window=80, m=3):
+def apply_windowing(
+    img: np.ndarray, window: float = 80.0, m: float = 3.0
+) -> np.ndarray:
+    """
+    Function for applying a super-Gaussian window to an image.
+
+    Parameters
+    ----------
+    img : np.ndarray
+        2D array with the input image.
+    window : float
+        Half width at half maximum (HWHM) of the window function
+        (default: 80.0).
+    m : float
+        Exponent used for the super-Gaussian function (default: 3.0).
+
+    Returns
+    -------
+    np.ndarray
+        2D array with the windowed input image.
+    """
     isz = len(img)
     xx, yy = np.arange(isz), np.arange(isz)
     xx2 = xx - isz // 2
@@ -301,11 +339,11 @@ def apply_windowing(img, window=80, m=3):
     distance = np.sqrt(xx2**2 + yy2[:, np.newaxis] ** 2)
 
     # Super-gaussian windowing
-    window = super_gaussian(distance, sigma=window * 2, m=m)
+    # Mutiply the window value with 2 to change from HWHM to FWHM
+    super_gauss = super_gaussian(distance, sigma=window * 2, m=m)
 
     # Apply the windowing
-    img_apod = img * window
-    return img_apod
+    return img * super_gauss
 
 
 def sanitize_array(dic):  # pragma: no cover
@@ -323,16 +361,18 @@ def sanitize_array(dic):  # pragma: no cover
 
 def wtmn(values, weights):
     """
-    Return the weighted average and standard deviation.
+    Return the inverse-variance weighted average and standard deviation.
 
-    values, weights -- Numpy ndarrays with the same shape.
+    values, weights -- Numpy ndarrays with the same shape; `weights` are the
+    1-sigma uncertainties of `values`.
     """
-    mn = np.average(values, weights=weights, axis=0)
+    inv_var = 1.0 / np.asarray(weights) ** 2
+    mn = np.average(values, weights=inv_var, axis=0)
 
     ndim = values.ndim
 
     # Fast and numerically precise:
-    variance = np.average((values - mn) ** 2, weights=weights, axis=0)
+    variance = np.average((values - mn) ** 2, weights=inv_var, axis=0)
     std = np.sqrt(variance)
 
     if ndim == 2:
@@ -395,7 +435,10 @@ def compute_pa(hdr, n_ps, verbose=False, display=False, *, sci_hdr=None):
         l_pa = fct_pa(**kwargs_pa)
         pa_exist = True
 
-    pa = np.mean(l_pa)
+    # Frames are in time order: unwrap so that a sequence crossing 0/360 deg
+    # does not average to the opposite direction.
+    l_pa = np.rad2deg(np.unwrap(np.deg2rad(np.atleast_1d(l_pa))))
+    pa = np.mean(l_pa) % 360
     std_pa = np.std(l_pa)
 
     if display and pa_exist:

@@ -370,7 +370,7 @@ def make_mf(
     # Get detector, filter and mask informations
     # ------------------------------------------
     pixelsize = get_pixel_size(instrument)  # Pixel size of the detector [rad]
-    if pixelsize is np.nan:
+    if np.isnan(pixelsize):
         rprint(f"[red]Error: Pixel size unknown for {instrument}.", file=sys.stderr)
         return None
     # Wavelength of the filter (filt[0]: central, filt[1]: width)
@@ -1090,9 +1090,8 @@ def find_bad_BL_BS(bad_holes, bs):
                     (bs2bl_ix[0, :] == bad_baselines[i])
                     | (bs2bl_ix[1, :] == bad_baselines[i])
                     | (bs2bl_ix[2, :] == bad_baselines[i])
-                )
-                if len(bad_bispect) == 0:
-                    bad_bispect.extend(new_bad)
+                )[0]
+                bad_bispect.extend(new_bad)
 
         bad_bispect = np.unique(bad_bispect)
 

@@ -58,13 +58,13 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Perform apodisation using a super-gaussian function "
         + "(known as windowing)."
-        + " The gaussian FWHM is set by the parameter `window`.",
+        + " The gaussian HWHM is set by the parameter `window`.",
     )
     clean_parser.add_argument(
         "--window",
         default=65,
         type=int,
-        help="FWHM used for windowing (used with --apod)(default: %(default)s)",
+        help="HWHM used for windowing (used with --apod)(default: %(default)s)",
     )
     clean_parser.add_argument(
         "--sky",
@@ -177,11 +177,13 @@ def main(argv: list[str] | None = None) -> int:
     extract_parser.add_argument(
         "--cutoff",
         default=1e-4,
+        type=float,
         help="Cutoff limit between noise and signal for fft method (default: %(default)s).",
     )
     extract_parser.add_argument(
         "--diam",
         default=0.8,
+        type=float,
         help="Diameter of a single aperture (default: %(default)s).",
     )
     extract_parser.add_argument(
@@ -198,8 +200,16 @@ def main(argv: list[str] | None = None) -> int:
     )
     extract_parser.add_argument(
         "--unbias",
+        dest="unbias",
+        action="store_true",
+        default=True,
+        help="Unbias the V2 using the Fourier base (the default).",
+    )
+    extract_parser.add_argument(
+        "--no-unbias",
+        dest="unbias",
         action="store_false",
-        help="Unbias the V2 using the Fourier base.",
+        help="Do not unbias the V2.",
     )
 
     # Parameters to rotate and centrally-enlarge the mask position.

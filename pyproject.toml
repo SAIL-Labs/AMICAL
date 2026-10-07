@@ -1,5 +1,5 @@
 [build-system]
-requires = ["flit_core >=3.11,<5"]
+requires = ["flit_core>=4.1.0,<5"]
 build-backend = "flit_core.buildapi"
 
 [project]
@@ -12,9 +12,7 @@ authors = [
 license = "MIT"
 license-files = [
     "LICENSE",
-    "src/amical/externals/candid/LICENCE",
     "src/amical/externals/munch/LICENSE",
-    "src/amical/externals/pymask/LICENSE",
 ]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -30,16 +28,20 @@ requires-python = ">=3.10"
 dependencies = [
     "astropy>=5.0.1",
     "astroquery>=0.4.4",
-    "corner>=2.2.1",
-    "emcee>=3.1.1",
     "h5py>=3.8.0",
     "matplotlib>=3.6.0",
     "numpy>=1.21.3",
     "packaging>=26.2",
-    "pypdf>=6.14.2",
-    "rich>=13.5.2",
+    "pypdf>=6.19.0",
+    "rich>=15.0.0",
     "scipy>=1.8.2",
-    "uncertainties>=3.1.7",
+]
+
+[project.optional-dependencies]
+# Model fitting of the calibrated OIFITS (and the legacy CANDID/Pymask
+# functions) is computed with virgil, which needs Python >= 3.11.
+virgil = [
+    "virgil-astro>=0.2.0 ; python_version >= '3.11'",
 ]
 
 [project.readme]
@@ -59,6 +61,7 @@ typecheck = [
 ]
 test = [
     "pytest>=9.0.3",
+    "virgil-astro>=0.2.0 ; python_version >= '3.11'",
 ]
 
 [tool.uv]
@@ -79,6 +82,11 @@ constraint-dependencies = [
     "requests>=2.18.4",
     "urllib3>=1.26.6",
     "keyring>=20.0.0",
+    # transitive dependencies of the optional virgil-astro (via optax/chex):
+    # older releases are sdist-only and fail to build, which breaks
+    # `uv sync --resolution=lowest`
+    "absl-py>=1.0.0",
+    "setuptools>=61.0",
 ]
 
 [tool.ruff.lint]
@@ -115,6 +123,11 @@ filterwarnings = [
 
     # https://github.com/matplotlib/matplotlib/pull/30221
     "ignore:'mode' parameter is deprecated and will be removed in Pillow 13:DeprecationWarning",
+
+    # zodiax (a virgil dependency, up to at least 0.5.0) has unescaped LaTeX in
+    # docstrings. The message starts with the offending sequence on
+    # Python >= 3.14 ('"\\m" is an invalid escape sequence'), hence the leading .*
+    "ignore:.*invalid escape sequence:SyntaxWarning",
 ]
 
 [tool.coverage.run]

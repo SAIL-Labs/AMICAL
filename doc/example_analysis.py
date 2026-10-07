@@ -1,116 +1,106 @@
 """
-@author: Anthony Soulain (University of Sydney)
-
 -------------------------------------------------------------------------
 AMICAL: Aperture Masking Interferometry Calibration and Analysis Library
 -------------------------------------------------------------------------
 
-The idea is to provide the users with all the tools to analyze and interpret
-their AMI data in the best possible way. We included with AMICAL two additional
-(and independant) packages to perform this purposes.
+AMICAL's job ends at the calibrated OIFITS file. To fit models to it (binary
+searches, contrast limits, posteriors), use a dedicated interferometry fitting
+package. We recommend virgil (https://benjaminpope.github.io/virgil/), which
+reads AMICAL's OIFITS files directly and is built on JAX, so grid searches are
+fast and posteriors can be sampled with gradient-based HMC.
 
-CANDID developed by A. Merand & A. Gallenne (https://github.com/amerand/CANDID) and
-Pymask developed by B. Pope & A. Cheetham (https://github.com/AnthonyCheetham/pymask).
+AMICAL no longer bundles CANDID and Pymask. amical.candid_grid,
+amical.candid_cr_limit, amical.pymask_grid, amical.pymask_mcmc and
+amical.pymask_cr_limit still work for existing scripts, but are computed with
+virgil (see the tutorial); amical.smartfit is deprecated.
 
-With AMICAL, we provide some easy interface between these codes and the outputs
-of our extraction pipeline. We give below some example to analyze and
-extract the quantitative values of our simulated binary.
+virgil needs Python >= 3.11 and JAX. Install it alongside AMICAL, or in a
+separate environment (the two only need to share the OIFITS files):
+
+    python -m pip install amical[virgil]   # or: python -m pip install virgil-astro
+
+(the distribution is `virgil-astro`; `pip install virgil` is an unrelated
+package.)
+
+This script fits the simulated binary saved by example_NIRISS.py. For the
+file tests/data/test.oifits it finds a separation of about 147 mas, a position
+angle of about 47 deg and a contrast of about 6 mag.
 
 --------------------------------------------------------------------
 """
 
+import jax.numpy as jnp
+import numpy as np
+import numpyro.distributions as dist
+from jax.scipy.stats import norm
 from matplotlib import pyplot as plt
+from virgil.fitting import fit
+from virgil.grid_fit import (
+    best_grid_point,
+    laplace_flux_uncertainty_grid,
+    likelihood_grid,
+    optimized_flux_grid,
+)
+from virgil.limits import flux_to_delta_mag, ruffio_upperlimit
+from virgil.models import BinaryModelCartesian, PointSource, System
+from virgil.oidata import OIData
+from virgil.plotting import plot_contrast_curve, plot_grid_map
 
-import amical
-
-# Your inputdata is an oifits file or a list of oifits.
+# Your input data is an oifits file or a list of oifits files (fitted jointly).
 inputdata = "Saveoifits/example_fakebinary_NIRISS.oifits"
+data = OIData(inputdata)
 
-use_candid = True
-use_pymask = False
+# Note on closure phases: AMICAL saves all N(N-1)(N-2)/6 closure phases, of
+# which only (N-1)(N-2)/2 are independent. virgil whitens them together, so
+# keep them all and do not calibrate with normalize_err_indep=True.
 
-# Analysis with CANDID package
-# ----------------------------
-if use_candid:
-    param_candid = {
-        "rmin": 20,  # inner radius of the grid
-        "rmax": 250,  # outer radius of the grid
-        "step": 50,  # grid sampling
-        "ncore": 1,  # core for multiprocessing
-    }
+# 1. Grid search for a companion
+# ------------------------------
+# Log-likelihood of a point-source companion over offsets (mas) and
+# companion/primary flux ratios.
+samples = {
+    "dra": jnp.linspace(-250.0, 250.0, 101),
+    "ddec": jnp.linspace(-250.0, 250.0, 101),
+    "flux": 10 ** jnp.linspace(-4.0, -1.0, 31),
+}
+loglike = likelihood_grid(data, BinaryModelCartesian, samples)
+best = best_grid_point(loglike, samples)
+plot_grid_map(loglike, samples, best=best, label="Max log-likelihood over flux")
 
-    # If you want to save the figure locally as .pdf, use save=True (new feature
-    # June 2021).
+# 2. Refine the best grid point
+# -----------------------------
+start = System(
+    primary=PointSource(),
+    companion=PointSource(flux=best["flux"], dra=best["dra"], ddec=best["ddec"]),
+)
+priors = {
+    "companion.dra": dist.Uniform(-300.0, 300.0),
+    "companion.ddec": dist.Uniform(-300.0, 300.0),
+    "companion.flux": dist.Uniform(0.0, 0.1),
+}
+result = fit(start, priors, data)
+v = result.values
+sep = np.hypot(v["companion.dra"], v["companion.ddec"])
+pa = np.degrees(np.arctan2(v["companion.dra"], v["companion.ddec"])) % 360
+dm = float(flux_to_delta_mag(v["companion.flux"]))
+print(f"chi2_red = {result.info['chi2_red']:.2f}")
+print(f"sep = {sep:.1f} mas, pa = {pa:.1f} deg, contrast = {dm:.2f} mag")
 
-    fit1 = amical.candid_grid(
-        inputdata, **param_candid, diam=20, doNotFit=[], save=False
-    )
+# If the calibrated errors look underestimated (chi2_red >> 1), fit error
+# inflation terms with the model, e.g.
+#   fit(start, priors, data, noise={"phi_error": dist.HalfNormal(0.05)})
+# For posteriors, see virgil.likelihood.numpyro_model and the virgil binary
+# search tutorial (HMC with NUTS).
 
-    # Plot and save the fitted model
-    amical.plot_model(inputdata, fit1["best"], save=False)
-
-    cr_candid = amical.candid_cr_limit(
-        inputdata, **param_candid, fitComp=fit1["comp"], save=False
-    )
-
-# Analysis with PYMASK package
-# ----------------------------
-if use_pymask:
-    param_pymask = {
-        "sep_prior": [100, 180],  # Prior on the separation
-        "pa_prior": [20, 80],  # Prior on the position angle
-        "cr_prior": [230, 270],  # Prior on the contrast ratio
-        "ncore": 1,  # core for multiprocessing
-        "extra_error_cp": 0,
-        "err_scale": 1,
-    }
-
-    # Pymask proposes to add some extra_error_cp on the CP. This allows to take
-    # into account a possibly understimated uncertainties on the data. Indeed,
-    # some bias due to mismatch between the calibrator and the science spectral type,
-    # or some systematic temporal effect could produce additional errors not properly
-    # retrieved by the covariance matrix.
-
-    # In addition, we can also add some scaling parameter (`err_scale`) on the CP
-    # uncertainties to deal with the number of independant closure phases (N(N-1)(N-2)/6)
-    # compare to the dependant one ((N-1)(N-2)/2). If you considere the full CP set (35 for
-    # a 7 holes mask), you possibly over-use your data, so you have to scale
-    # your uncertainties by the factor of additional CP, which is sqrt(N/3).
-
-    # ** Note that if you used only a subset of CP (by selecting one common hole to
-    # save the oifits, see amical.save for details), this additional `err_scale` is unusable.
-
-    fit2 = amical.pymask_grid(inputdata, **param_pymask)
-
-    param_mcmc = {
-        "niters": 800,
-        "walkers": 100,
-        "initial_guess": [146, 47, 244],
-        "burn_in": 100,
-    }
-
-    fit3 = amical.pymask_mcmc(inputdata, **param_pymask, **param_mcmc)
-
-    cr_pymask = amical.pymask_cr_limit(
-        inputdata,
-        nsim=500,
-        ncore=1,
-        smax=250,
-        nsep=100,
-        cmax=5000,
-        nth=30,
-        ncrat=60,
-    )
-
-if use_candid & use_pymask:
-    plt.figure()
-    plt.plot(cr_candid["r"], cr_candid["cr_limit"], label="CANDID", alpha=0.5, lw=3)
-    plt.plot(cr_pymask["r"], cr_pymask["cr_limit"], label="Pymask", alpha=0.5, lw=3)
-    plt.ylim(plt.ylim()[1], plt.ylim()[0])  # -- reverse plot
-    plt.xlabel("Separation [mas]")
-    plt.ylabel(r"$\Delta \mathrm{Mag}_{3\sigma}$")
-    plt.legend(loc="best")
-    plt.grid()
-    plt.tight_layout()
+# 3. Contrast limits
+# ------------------
+# Ruffio et al. (2018) upper limits at the 3-sigma-equivalent percentile. For
+# limits on a detected system, subtract or fit the companion first.
+flux = optimized_flux_grid(data, BinaryModelCartesian, samples)
+sigma_flux = laplace_flux_uncertainty_grid(
+    data, BinaryModelCartesian, samples, flux=flux
+)
+limit = ruffio_upperlimit(flux, sigma_flux, norm.cdf(3.0))
+plot_contrast_curve(limit, samples, label=r"Ruffio 3$\sigma$")
 
 plt.show(block=True)
