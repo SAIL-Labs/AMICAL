@@ -702,7 +702,7 @@ def select_clean_data(
     offx=0,
     offy=0,
     clip_fact=0.5,
-    apod=False,
+    apod=True,
     sky=True,
     window=None,
     darkfile=None,
@@ -729,13 +729,10 @@ def select_clean_data(
     `clip` {bool}: If True, sigma-clipping is used to reject frames with low integrated flux,\n
     `clip_fact` {float}: Relative sigma if rejecting frames by sigma-clipping,\n
     `apod` {bool}: If True, apodisation is performed in the image plan using a super-Gaussian
-    function (known as windowing). The Gaussian HWHM is set by the parameter `window`. This
-    parameter is deprecated and will be removed in a future release. Instead, the apodization
-    is applied when providing a value to the `window` parameter. Setting the argument of
-    `window` to None will not apply the super-Gaussian windowing,\n
+    function (known as windowing). The Gaussian HWHM is set by the parameter `window`; no
+    windowing is applied if `window` is None (default: True),\n
     `window` {float}: Half width at half maximum (HWHM) of the super-Gaussian to apodise
-    the image (smoothly go to zero on the edges). The windowing is not applied when the
-    argument is set to None,\n
+    the image (smoothly go to zero on the edges). Only used if `apod` is True,\n
     `sky` {bool}: If True, the sky is remove using the annulus technique (computed between `r1`
     and `r1` + `dr`),\n
     `darkfile` {str}: If specified (default: None), the input dark (master_dark averaged if
