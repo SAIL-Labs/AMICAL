@@ -229,8 +229,6 @@ def average_calib_files(list_nrm, sig_thres=2, display=False):
     munch.Munch
         Averaged calibrator observables and uncertainties.
     """
-    from astropy.io import fits
-
     nfiles = len(list_nrm)
     l_pa = np.zeros(nfiles)
     cp_vs_file, e_cp_vs_file = [], []
@@ -239,13 +237,11 @@ def average_calib_files(list_nrm, sig_thres=2, display=False):
     # Fill array containing each vis2 and cp across files.
     for n in range(nfiles):
         nrm = list_nrm[n]
-        with fits.open(nrm.infos.filename) as hdu:
-            hdr = hdu[0].header
-        try:
-            # todo: Check parallactic angle param of a real NIRISS header.
-            l_pa[n] = hdr["PARANG"]
-        except KeyError:
-            l_pa[n] = 0
+        # Use the header stored at extraction: the original FITS file may not
+        # be available where the calibration runs.
+        hdr = nrm.infos.get("hdr") or {}
+        # todo: Check parallactic angle param of a real NIRISS header.
+        l_pa[n] = hdr.get("PARANG", 0)
 
         cp = nrm.cp
         e_cp = nrm.e_cp

@@ -216,3 +216,17 @@ def test_calibrate_method(method, cli_datadir, tmp_path, monkeypatch):
     assert len(cal_keys) == 20
     assert cal.vis2[0] == pytest.approx(true_value_vis2, 1e-3)
     assert cal.wl[0] == pytest.approx(true_value_wl, 1e-9)
+
+
+@pytest.mark.parametrize(
+    "flags, unbias", [([], True), (["--unbias"], True), (["--no-unbias"], False)]
+)
+def test_extract_unbias_flag(flags, unbias, monkeypatch):
+    seen = {}
+    monkeypatch.setattr(
+        "amical._cli.main.perform_extract", lambda args: seen.update(vars(args)) or 0
+    )
+    main(["extract", "--cutoff", "1e-3", "--diam", "1.2", *flags])
+    assert seen["unbias"] is unbias
+    assert seen["cutoff"] == 1e-3
+    assert seen["diam"] == 1.2

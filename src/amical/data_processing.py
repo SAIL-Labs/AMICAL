@@ -107,7 +107,8 @@ def select_data(cube, clip_fact=0.5, clip=False, verbose=True, display=True):
     limit_flux = med_flux - clip_fact * std_flux
 
     if clip:
-        cond_clip = fluxes > limit_flux
+        is_flagged = np.isin(np.arange(len(fluxes)), flag_fram)
+        cond_clip = (fluxes > limit_flux) & ~is_flagged
         cube_cleaned_checked = cube[cond_clip]
         ind_clip = np.where(fluxes <= limit_flux)[0]
     else:
@@ -328,7 +329,7 @@ def fix_bad_pixels(image, bad_map, add_bad=None, x_stddev=1):
         for j in range(len(add_bad)):
             bad_map[add_bad[j][1], add_bad[j][0]] = 1
 
-    img_nan = image.copy()
+    img_nan = image.astype(float)
     img_nan[bad_map == 1] = np.nan
     kernel = Gaussian2DKernel(x_stddev=x_stddev)
     fixed_image = interpolate_replace_nans(img_nan, kernel)
@@ -464,9 +465,9 @@ def show_clean_params(
 
     if edge != 0:
         img0[:, 0:edge] = 0
-        img0[:, -edge:-1] = 0
+        img0[:, -edge:] = 0
         img0[0:edge, :] = 0
-        img0[-edge:-1, :] = 0
+        img0[-edge:, :] = 0
     if (bad_map is not None) & (remove_bad):
         img1 = fix_bad_pixels(img0, bmap0, add_bad=ab0)
     else:
@@ -501,6 +502,7 @@ def show_clean_params(
         noBadPixel = True
 
     theta = np.linspace(0, 2 * np.pi, 100)
+    sky_method = None
     x0 = pos[0]
     y0 = pos[1]
     if r1 is not None:
@@ -598,9 +600,9 @@ def _apply_edge_correction(img0, edge=0):
     """
     if edge != 0:
         img0[:, 0:edge] = 0
-        img0[:, -edge:-1] = 0
+        img0[:, -edge:] = 0
         img0[0:edge, :] = 0
-        img0[-edge:-1, :] = 0
+        img0[-edge:, :] = 0
     return img0
 
 
@@ -672,6 +674,9 @@ def clean_data(
     numpy.ndarray
         Cleaned data cube.
     """
+    # Work on a float copy: integer cubes cannot hold NaN (bad pixels) and the
+    # edge correction would otherwise modify the input cube in place.
+    data = np.array(data, dtype=float)
     n_im = data.shape[0]
     cube_cleaned = []  # np.zeros([n_im, isz, isz])
     l_bad_frame = []
@@ -848,7 +853,7 @@ def select_clean_data(
                     "Your file seems to be obtained with an IFU instrument: spectral "
                     f"channel index `i_wl` must be specified (nlambda = {naxis4})."
                 )
-            if i_wl > naxis4:
+            if i_wl >= naxis4:
                 iwl_msg = f"The choosen spectral channel {i_wl} do not exist (i_wl <= {naxis4 - 1})"
                 raise ValueError(iwl_msg)
 
@@ -891,6 +896,7 @@ def select_clean_data(
             apod=apod,
             window=window,
             ifu=ifu,
+            mask=mask,
         )
 
     if ifu:

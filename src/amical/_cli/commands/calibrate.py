@@ -9,6 +9,7 @@ from rich import print as rprint
 
 import amical
 from amical._rich_display import tabulate
+from amical.oifits import simbad_enabled
 
 
 def _query_simbad(targetname):
@@ -27,7 +28,8 @@ def _query_simbad(targetname):
     customSimbad = Simbad()
     customSimbad.add_votable_fields("otype")
     res = customSimbad.query_object(targetname)
-    otype = res["OTYPE"][0]
+    # astroquery >= 0.4.8 returns lower-case column names
+    otype = res["otype" if "otype" in res.colnames else "OTYPE"][0]
     if otype == "Star":
         nrm_type = "CAL"
     else:
@@ -58,7 +60,7 @@ def _select_association_file(args):
 
     if len(l_file) == 0:
         print(f"No h5 files found in {args.datadir}, check --datadir.", file=sys.stderr)
-        return 1
+        raise SystemExit(1)
 
     index_file = []
 
@@ -73,14 +75,16 @@ def _select_association_file(args):
         date = hdr.get("DATE-OBS")
         ins = hdr.get("INSTRUME")
 
-        if target not in (None, "Unknown"):
+        if target in (None, "Unknown"):
+            target = "Unknown"
+            source = "Unknown"
+        elif not simbad_enabled():
+            source = "Unknown"
+        else:
             try:
                 source = _query_simbad(target)
             except Exception:
                 source = "Unknown"
-        else:
-            target = "Unknown"
-            source = "Unknown"
 
         d.append([filename, target, date, ins, source, i])
         index_file.append(i)
@@ -124,9 +128,7 @@ def perform_calibrate(args):
     sciname, calname = _select_association_file(args)
     bs_t = amical.load_bs_hdf5(sciname)
 
-    bs_c = []
-    for x in calname:
-        bs_c = amical.load_bs_hdf5(x)
+    bs_c = [amical.load_bs_hdf5(x) for x in calname]
 
     display = len(bs_c) > 1
     cal = amical.calibrate(
@@ -151,5 +153,5 @@ def perform_calibrate(args):
 
     oifits_file = Path(bs_t.infos.filename).stem + "_calibrated.fits"
 
-    amical.save(cal, oifits_file=oifits_file, datadir=args.outdir)
+    amical.save(cal, oifits_file=oifits_file, datadir=args.outdir, pa=pa)
     return 0

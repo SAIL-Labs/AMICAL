@@ -125,3 +125,11 @@ def test_get_table_ifu(list_index_ifu, filtname):
 def test_get_table_ifu_error():
     with pytest.raises(KeyError):
         get_ifu_table([0], instrument="fake")
+
+
+def test_wtmn_inverse_variance():
+    """The calibrator average must favour the precise file, not the noisy one."""
+    values = np.array([[1.0], [0.0]])
+    errors = np.array([[0.01], [1.0]])
+    mn, _ = tools.wtmn(values, errors)
+    assert mn[0] == pytest.approx(1.0, abs=1e-3)

@@ -416,3 +416,134 @@ def test_full_process_ifs(tmpdir, global_datadir, ifs_clean_param, ifs_ami_param
         fake_obj=True,
         pa=bs.infos.pa,
     )
+
+
+class _OfflineSimbad:
+    """Stand-in for astroquery's Simbad on a node without internet access."""
+
+    def __init__(self, *args, **kwargs):
+        raise ConnectionError("no route to SIMBAD")
+
+
+def test_save_fake_obj_does_not_contact_simbad(cal, tmpdir, monkeypatch):
+    import astroquery.simbad
+
+    monkeypatch.setattr(astroquery.simbad, "Simbad", _OfflineSimbad)
+    dic, _ = amical.save(
+        cal, oifits_file="test_cal.oifits", datadir=tmpdir, fake_obj=True
+    )
+    assert isinstance(dic, dict)
+
+
+@pytest.mark.parametrize("how", ["argument", "environment"])
+def test_save_without_simbad(cal, tmpdir, monkeypatch, how):
+    import astroquery.simbad
+
+    monkeypatch.setattr(astroquery.simbad, "Simbad", _OfflineSimbad)
+    kwargs = {}
+    if how == "argument":
+        kwargs["query_simbad"] = False
+    else:
+        monkeypatch.setenv("AMICAL_NO_SIMBAD", "1")
+    dic, savefile = amical.save(
+        cal, oifits_file="test_cal.oifits", datadir=tmpdir, **kwargs
+    )
+    with fits.open(savefile) as hdul:
+        assert hdul["OI_TARGET"].data["RAEP0"][0] == 0
+
+
+def test_save_simbad_failure_warns(cal, tmpdir, monkeypatch):
+    import astroquery.simbad
+
+    monkeypatch.setattr(astroquery.simbad, "Simbad", _OfflineSimbad)
+    with pytest.warns(UserWarning, match="SIMBAD query .* failed"):
+        amical.save(
+            cal,
+            oifits_file="test_cal.oifits",
+            datadir=tmpdir,
+            query_simbad=True,
+        )
+
+
+def test_query_simbad_target_units(monkeypatch):
+    """SIMBAD answers in mas and mas/yr; OI_TARGET wants deg and deg/yr."""
+    import astroquery.simbad
+    from astropy.table import Table
+
+    from amical.oifits import _query_simbad_target
+
+    class FakeSimbad:
+        def add_votable_fields(self, *args):
+            pass
+
+        def query_object(self, name):
+            return Table(
+                {
+                    "ra": [173.356],
+                    "dec": [-70.195],
+                    "sp_type": ["A0V"],
+                    "pmra": [-38.73],
+                    "pmdec": [-0.097],
+                    "plx_value": [9.2494],
+                }
+            )
+
+    monkeypatch.setattr(astroquery.simbad, "Simbad", FakeSimbad)
+    monkeypatch.setattr(
+        "amical.oifits._ASTROQUERY_VERSION", amical.oifits.Version("0.4.11")
+    )
+    info = _query_simbad_target("HD 100546")
+    assert info["ra"] == pytest.approx(173.356)
+    assert info["dec"] == pytest.approx(-70.195)
+    assert info["spectyp"] == "A0V"
+    assert info["pmra"] == pytest.approx(-38.73 / 3.6e6)
+    assert info["plx"] == pytest.approx(9.2494 / 3.6e6)
+
+
+def test_target_info_header_fallback():
+    from amical.oifits import _target_info
+
+    info = _target_info("HD 1", {"RA": 10.5, "DEC": -20.25}, query_simbad=False)
+    assert (info["ra"], info["dec"]) == (10.5, -20.25)
+
+
+def test_t3_sta_index_matches_uv(cal):
+    """STA_INDEX (i, j, k) of each closure phase must match U1/V1 (ij) and U2/V2 (jk)."""
+    dic = amical.oifits.cal2dict(cal)
+    bl2h_ix = cal.raw_t.mask.bl2h_ix
+    bs2bl_ix = cal.raw_t.mask.bs2bl_ix
+    sta = np.array(dic["OI_T3"]["STA_INDEX"])
+    np.testing.assert_array_equal(sta[:, :2], bl2h_ix[:, bs2bl_ix[0]].T)
+    np.testing.assert_array_equal(sta[:, 1:], bl2h_ix[:, bs2bl_ix[1]].T)
+
+
+@pytest.mark.parametrize(
+    "infos, mjd",
+    [
+        ({"mjd-obs": 58562.25}, 58562.25),
+        ({"date-obs": "2019-03-20T06:00:00"}, 58562.25),
+        ({"hdr": {"DATE-OBS": "2019-03-20T06:00:00"}}, 58562.25),
+        ({"orig": "SimulatedData"}, 0.0),
+    ],
+)
+def test_observation_time(infos, mjd):
+    from amical.oifits import _observation_time
+
+    assert _observation_time(Munch(infos)).mjd == pytest.approx(mjd)
+
+
+def test_observation_time_missing_warns():
+    from amical.oifits import _observation_time
+
+    with pytest.warns(UserWarning, match="MJD is set to 0"):
+        assert _observation_time(Munch({})).mjd == 0
+
+
+def test_exposure_time():
+    from amical.oifits import _exposure_time
+
+    assert _exposure_time({"EXPTIME": 12.5}) == 12.5
+    assert _exposure_time(
+        {"HIERARCH ESO DET DIT": 0.1, "HIERARCH ESO DET NDIT": 50}
+    ) == pytest.approx(5.0)
+    assert _exposure_time({}) == 0.0

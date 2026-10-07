@@ -256,7 +256,7 @@ def get_pixel_size(ins):
     try:
         p = mas2rad(saved_pixel_detector[ins])
     except KeyError:
-        p = np.NaN
+        p = np.nan
     return p
 
 
@@ -294,11 +294,11 @@ def get_ifu_table(
 
     one_wl = True
     multiple_wl = False
-    if isinstance(i_wl, list) & (len(i_wl) == 2):
+    if isinstance(i_wl, list) and (len(i_wl) == 2):
         one_wl = False
         wl_range = wl[i_wl[0] : i_wl[1]]
         sp_range = np.arange(i_wl[0], i_wl[1], 1)
-    elif isinstance(i_wl, list) & (len(i_wl) > 2):
+    elif isinstance(i_wl, list) and (len(i_wl) > 2):
         multiple_wl = True
         one_wl = False
     elif i_wl is None:
@@ -317,7 +317,7 @@ def get_ifu_table(
                 np.arange(len(wl))[i_wl],
                 wl[i_wl],
                 "ro",
-                label=f"Selected ({wl[i_wl[0]]:2.2f} µm)",
+                label=f"Selected ({wl[np.atleast_1d(i_wl)[0]]:2.2f} µm)",
             )
         elif multiple_wl:
             plt.plot(

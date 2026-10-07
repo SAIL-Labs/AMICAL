@@ -6,6 +6,7 @@ bispectrum statistics, and assembles AMICAL interferometric observables."""
 import os
 import sys
 import time
+import warnings
 from pathlib import Path
 
 import numpy as np
@@ -472,12 +473,12 @@ def _format_closing_triangle(index_mask):
         Aperture indices in each closing triangle."""
     bs2bl_ix = index_mask.bs2bl_ix
     bl2h_ix = index_mask.bl2h_ix
+    # Holes (i, j, k) in closure order: baselines ij and jk close with ki.
+    # (A set would return them in hash order, which permutes triangles with
+    # hole indices >= 8.)
     closing_tri = []
-    for i_bs in range(len(bs2bl_ix.T)):
-        tmp = []
-        for x in bs2bl_ix.T[i_bs]:
-            tmp.extend(bl2h_ix.T[x])
-        closing_tri.append(list(set(tmp)))
+    for b1, b2 in bs2bl_ix[:2].T:
+        closing_tri.append([bl2h_ix[0, b1], bl2h_ix[1, b1], bl2h_ix[1, b2]])
     return closing_tri
 
 
@@ -661,7 +662,7 @@ def _compute_v2_quantities(v2_arr, bias_arr, n_blocks):
     for j in range(n_baselines):
         for k in range(n_blocks):
             ind1 = k * n_ps // n_blocks
-            ind2 = (k + 1) * n_ps // (n_blocks - 1)
+            ind2 = (k + 1) * n_ps // n_blocks
             v2_diff[k, j] = np.mean(v2_arr[ind1:ind2, j]) - v2[j]
             # v2_diff[k, j] = np.mean(v2_arr[k, j]) - v2[j]
 
@@ -773,7 +774,7 @@ def _compute_bs_var(bs_arr, bs, n_blocks):
         tmp = (bs_arr[:, j] - bs[j]) * np.conj(bs[j])
         for k in range(n_blocks):
             ind1 = k * n_ps // n_blocks
-            ind2 = (k + 1) * n_ps // (n_blocks)
+            ind2 = (k + 1) * n_ps // n_blocks
             comp_diff[k] = np.mean(tmp[ind1:ind2])
 
         num_real = np.sum(np.real(comp_diff) ** 2) / (n_blocks - 1) / n_blocks
@@ -1481,6 +1482,14 @@ def extract_bs(
     if verbose:
         rprint("[cyan]\n-- Starting extraction of observables --")
     start_time = time.time()
+
+    if save_to is not None and not display:
+        warnings.warn(
+            "Diagnostic figures are only saved when display=True: "
+            "`save_to` is ignored.",
+            stacklevel=2,
+        )
+        save_to = None
 
     if save_to is not None:
         if not os.path.exists(save_to):

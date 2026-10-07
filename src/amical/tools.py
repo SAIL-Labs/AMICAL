@@ -356,24 +356,28 @@ def sanitize_array(dic):  # pragma: no cover
 
 
 def wtmn(values, weights):
-    """Compute a weighted mean and standard deviation.
+    """Compute an inverse-variance weighted mean and standard deviation.
 
     Parameters
     ----------
-    values, weights : numpy.ndarray
-        Values and corresponding weights.
+    values : numpy.ndarray
+        Values to average.
+    weights : numpy.ndarray
+        1-sigma uncertainties of `values`, with the same shape. The average is
+        weighted by their inverse squares.
 
     Returns
     -------
     mean, std : numpy.ndarray
         Weighted mean and unbiased standard deviation.
     """
-    mn = np.average(values, weights=weights, axis=0)
+    inv_var = 1.0 / np.asarray(weights) ** 2
+    mn = np.average(values, weights=inv_var, axis=0)
 
     ndim = values.ndim
 
     # Fast and numerically precise:
-    variance = np.average((values - mn) ** 2, weights=weights, axis=0)
+    variance = np.average((values - mn) ** 2, weights=inv_var, axis=0)
     std = np.sqrt(variance)
 
     if ndim == 2:
@@ -448,7 +452,10 @@ def compute_pa(hdr, n_ps, verbose=False, display=False, *, sci_hdr=None):
         l_pa = fct_pa(**kwargs_pa)
         pa_exist = True
 
-    pa = np.mean(l_pa)
+    # Frames are in time order: unwrap so that a sequence crossing 0/360 deg
+    # does not average to the opposite direction.
+    l_pa = np.rad2deg(np.unwrap(np.deg2rad(np.atleast_1d(l_pa))))
+    pa = np.mean(l_pa) % 360
     std_pa = np.std(l_pa)
 
     if display and pa_exist:

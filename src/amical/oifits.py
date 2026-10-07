@@ -3,6 +3,7 @@
 import datetime
 import os
 import sys
+import warnings
 from importlib.metadata import version
 
 import numpy as np
@@ -15,6 +16,94 @@ from amical.tools import rad2mas
 list_color = ["#00a7b5", "#afd1de", "#055c63", "#ce0058", "#8a8d8f", "#f1b2dc"]
 
 _ASTROQUERY_VERSION = Version(version("astroquery"))
+
+_MAS_TO_DEG = 1 / 3.6e6
+
+
+def simbad_enabled():
+    """Return False if SIMBAD queries are switched off with the AMICAL_NO_SIMBAD
+    environment variable (e.g. on HPC compute nodes without internet access)."""
+    flag = os.environ.get("AMICAL_NO_SIMBAD", "").strip().lower()
+    return flag in ("", "0", "false", "no")
+
+
+def _query_simbad_target(name):
+    """Coordinates (deg), proper motion (deg/yr), parallax (deg) and spectral type
+    of `name` from SIMBAD, as needed by the OI_TARGET table."""
+    from astroquery.simbad import Simbad
+
+    simbad = Simbad()
+    if _ASTROQUERY_VERSION >= Version("0.4.8"):
+        sp_type_name = "sp_type"
+    else:
+        sp_type_name = "sptype"
+    simbad.add_votable_fields("propermotions", sp_type_name, "parallax")
+    query = simbad.query_object(name)
+    if query is None or len(query) == 0:
+        raise LookupError(f"no SIMBAD match for {name!r}")
+
+    def value(col):
+        x = query[col][0]
+        return 0.0 if np.ma.is_masked(x) else float(x)
+
+    if "ra" in query.colnames:
+        # astroquery >= 0.4.8 (TAP): lower-case columns, coordinates in degrees
+        ra, dec = value("ra"), value("dec")
+        cols = ("sp_type", "pmra", "pmdec", "plx_value")
+    else:
+        from astropy import units as u
+        from astropy.coordinates import SkyCoord
+
+        coord = SkyCoord(
+            query["RA"][0] + " " + query["DEC"][0], unit=(u.hourangle, u.deg)
+        )
+        ra, dec = coord.ra.deg, coord.dec.deg
+        cols = ("SP_TYPE", "PMRA", "PMDEC", "PLX_VALUE")
+
+    col_sp, col_pmra, col_pmdec, col_plx = cols
+    spectyp = query[col_sp][0]
+    return {
+        "ra": ra,
+        "dec": dec,
+        # SIMBAD gives mas/yr and mas; OIFITS wants deg/yr and deg
+        "pmra": value(col_pmra) * _MAS_TO_DEG,
+        "pmdec": value(col_pmdec) * _MAS_TO_DEG,
+        "plx": value(col_plx) * _MAS_TO_DEG,
+        "spectyp": "" if np.ma.is_masked(spectyp) else str(spectyp),
+    }
+
+
+def _target_info(name_star, hdr, fake_obj=False, query_simbad=None):
+    """Values of the OI_TARGET table.
+
+    Coordinates come from SIMBAD when it is queried and answers; otherwise from
+    the RA/DEC keywords (deg) of the original header, if any; otherwise zero.
+    """
+    info = {"ra": 0.0, "dec": 0.0, "pmra": 0.0, "pmdec": 0.0, "plx": 0.0}
+    info["spectyp"] = "fake"
+    if fake_obj:
+        return info
+
+    hdr = hdr or {}
+    ra, dec = hdr.get("RA"), hdr.get("DEC")
+    if isinstance(ra, int | float) and isinstance(dec, int | float):
+        info.update(ra=float(ra), dec=float(dec), spectyp="")
+
+    if query_simbad is None:
+        query_simbad = simbad_enabled()
+    if not query_simbad or name_star in (None, "", "Unknown"):
+        return info
+
+    try:
+        info.update(_query_simbad_target(name_star))
+    except Exception as e:
+        warnings.warn(
+            f"SIMBAD query for {name_star!r} failed ({type(e).__name__}: {e}); "
+            "OI_TARGET uses the header coordinates if any, else zeros. Use "
+            "query_simbad=False or set AMICAL_NO_SIMBAD=1 to skip the query.",
+            stacklevel=3,
+        )
+    return info
 
 
 def _compute_flag(value, sigma, limit=4.0):
@@ -167,6 +256,40 @@ def _apply_flag(dict_calibrated, unit="arcsec"):
     return cal_flagged
 
 
+def _observation_time(infos):
+    """Start of the observation as an astropy Time, from the header keys kept
+    at extraction (MJD-OBS, else DATE-OBS). Falls back to MJD 0 when neither
+    is available, with a warning unless the data are simulated."""
+    from astropy.time import Time
+
+    hdr = infos.get("hdr") or {}
+    mjd = infos.get("mjd-obs") or hdr.get("MJD-OBS")
+    if mjd not in (None, ""):
+        return Time(float(mjd), format="mjd", scale="utc")
+    date = infos.get("date-obs") or hdr.get("DATE-OBS")
+    if date not in (None, ""):
+        return Time(date, scale="utc")
+    if infos.get("orig") != "SimulatedData":
+        warnings.warn(
+            "No MJD-OBS or DATE-OBS in the header: MJD is set to 0 in the OIFITS file.",
+            stacklevel=3,
+        )
+    return Time(0.0, format="mjd", scale="utc")
+
+
+def _exposure_time(hdr):
+    """Total exposure time of the cube in seconds (EXPTIME, else ESO DIT x NDIT),
+    or 0 if unknown."""
+    exptime = hdr.get("EXPTIME")
+    if isinstance(exptime, int | float):
+        return float(exptime)
+    dit = hdr.get("HIERARCH ESO DET DIT", hdr.get("ESO DET DIT"))
+    ndit = hdr.get("HIERARCH ESO DET NDIT", hdr.get("ESO DET NDIT"))
+    if isinstance(dit, int | float) and isinstance(ndit, int | float):
+        return float(dit * ndit)
+    return 0.0
+
+
 def wrap_raw(bs):
     """Wrap raw extraction observables in a calibration-compatible object.
 
@@ -236,11 +359,14 @@ def cal2dict(
 
     Returns
     -------
-    dict or None
-        OIFITS-compatible dictionary, or None when required metadata is
-        unavailable.
+    dict
+        OIFITS-compatible dictionary.
+
+    Raises
+    ------
+    KeyError
+        If required metadata is missing from the observables.
     """
-    from astropy.time import Time
 
     res_t = cal.raw_t
     res_c = cal.raw_c
@@ -249,20 +375,17 @@ def cal2dict(
     bl2h_ix = res_t.mask.bl2h_ix
     bs2bl_ix = res_t.mask.bs2bl_ix
 
-    date = "2020-02-07T00:54:11"
-    exp_time = 0.8
     try:
         ins = res_t.infos.instrument
         maskname = res_t.infos.maskname
         pixscale = res_t.infos.pixscale
-    except KeyError:
-        rprint(
-            "[red]Error: 'INSTRUME', 'NRMNAME' or 'PIXELSCL' are not in the header.",
-            file=sys.stderr,
-        )
-        return None
+    except (KeyError, AttributeError) as e:
+        raise KeyError(
+            "'INSTRUME', 'NRMNAME' or 'PIXELSCL' are not in the header."
+        ) from e
 
-    t = Time(date, format="isot", scale="utc")
+    t = _observation_time(res_t.infos)
+    exp_time = _exposure_time(res_t.infos.get("hdr") or {})
 
     if true_flag_v2:
         flagV2 = _compute_flag(cal.vis2, cal.e_vis2, limit=snr)
@@ -278,6 +401,17 @@ def cal2dict(
     for i in range(n_baselines):
         sta_index_v2.append(np.array(bl2h_ix[:, i]))
     sta_index_v2 = np.array(sta_index_v2)
+
+    # Triangle (i, j, k) in the order of the closure phase: baselines ij
+    # (U1/V1) and jk (U2/V2) close with ki.
+    sta_index_t3 = np.stack(
+        [
+            bl2h_ix[0, bs2bl_ix[0, :]],
+            bl2h_ix[1, bs2bl_ix[0, :]],
+            bl2h_ix[1, bs2bl_ix[1, :]],
+        ],
+        axis=1,
+    )
 
     if target is None:
         target = res_t.infos.target
@@ -324,7 +458,7 @@ def cal2dict(
             "V1COORD": v1[bs2bl_ix[0, :]][sel_ind_cp],
             "U2COORD": u1[bs2bl_ix[1, :]][sel_ind_cp],
             "V2COORD": v1[bs2bl_ix[1, :]][sel_ind_cp],
-            "STA_INDEX": list(np.array(res_t.mask.closing_tri)[sel_ind_cp]),
+            "STA_INDEX": list(sta_index_t3[sel_ind_cp]),
             "FLAG": flagCP[sel_ind_cp],
             "BL": res_t.bl_cp[sel_ind_cp],
         },
@@ -531,6 +665,7 @@ def save(
     *,
     origin=None,
     raw=False,
+    query_simbad=None,
 ):
     """Save calibrated observables in OIFITS format.
 
@@ -545,9 +680,11 @@ def save(
     pa : float, default=0
         Position angle in degrees.
     ind_hole : int or None, default=None
-        Hole used to select independent closure phases.
+        If set, save only the (N-1)(N-2)/2 independent closure phases that
+        include this hole; otherwise save all N(N-1)(N-2)/6.
     fake_obj : bool, default=False
-        Whether observables originate from simulated data.
+        Whether observables originate from simulated data. SIMBAD is then not
+        queried and the coordinates are set to zero.
     true_flag_v2, true_flag_t3 : bool, default=True, False
         Whether to compute squared-visibility and closure-phase flags.
     snr : float, default=4
@@ -558,6 +695,12 @@ def save(
         Value for the OIFITS ORIGIN key.
     raw : bool, keyword-only, default=False
         Whether the input is uncalibrated.
+    query_simbad : bool or None, keyword-only, default=None
+        Whether to query SIMBAD for the target coordinates, proper motion,
+        parallax and spectral type. If False (e.g. on compute nodes without
+        internet access), the RA/DEC keywords of the original header are used
+        instead. If None, SIMBAD is queried unless the environment variable
+        ``AMICAL_NO_SIMBAD`` is set to a true value (e.g. ``AMICAL_NO_SIMBAD=1``).
 
     Returns
     -------
@@ -567,7 +710,6 @@ def save(
         Saved OIFITS filename.
     """
     from astropy.io import fits
-    from astroquery.simbad import Simbad
 
     if observables is None:
         rprint("[on red]\nError save : Wrong data format!", file=sys.stderr)
@@ -685,41 +827,12 @@ def save(
         print("-> Including OI Target table...")
 
     name_star = dic["info"]["TARGET"]
-
-    customSimbad = Simbad()
-
-    if _ASTROQUERY_VERSION >= Version("0.4.8"):
-        sp_type_name = "sp_type"
-    else:
-        sp_type_name = "sptype"
-    customSimbad.add_votable_fields("propermotions", sp_type_name, "parallax")
-
-    # Add information from Simbad:
-    if fake_obj:
-        ra = pmra = dec = pmdec = plx = [0]
-        spectyp = ["fake"]
-    else:
-        if (name_star is not None) & (name_star != "Unknown"):
-            from astropy import units as u
-            from astropy.coordinates import SkyCoord
-
-            try:
-                query = customSimbad.query_object(name_star)
-                coord = SkyCoord(
-                    query["RA"][0] + " " + query["DEC"][0], unit=(u.hourangle, u.deg)
-                )
-                ra = [coord.ra.deg]
-                dec = [coord.dec.deg]
-                spectyp = query["SP_TYPE"]
-                pmra = query["PMRA"]
-                pmdec = query["PMDEC"]
-                plx = query["PLX_VALUE"]
-            except Exception:
-                ra = pmra = dec = pmdec = plx = [0]
-                spectyp = ["fake"]
-        else:
-            ra = pmra = dec = pmdec = plx = [0]
-            spectyp = ["fake"]
+    target = _target_info(
+        name_star, hdr.get("hdr"), fake_obj=fake_obj, query_simbad=query_simbad
+    )
+    ra, dec = [target["ra"]], [target["dec"]]
+    pmra, pmdec, plx = [target["pmra"]], [target["pmdec"]], [target["plx"]]
+    spectyp = [target["spectyp"]]
 
     if name_star == "":
         name_star = "Unknown"
@@ -775,7 +888,7 @@ def save(
 
     pscale = dic["info"]["PSCALE"] / 1000.0  # arcsec
     isz = dic["info"]["ISZ"]  # Size of the image to extract NRM data
-    fov = [pscale * isz] * N_ap
+    fov = [pscale * isz / 2.0] * N_ap  # radius of the extracted image
     fovtype = ["RADIUS"] * N_ap
 
     hdu = fits.BinTableHDU.from_columns(

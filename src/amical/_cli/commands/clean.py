@@ -78,6 +78,14 @@ def _select_data_file(args, process):
     return filename, hdr
 
 
+def _add_clean_keys(hdr, clean_param):
+    """Record the cleaning step and its parameters in the header."""
+    hdr["HIERARCH AMICAL step"] = "CLEANED"
+    hdr["HIERARCH AMICAL time"] = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    for k in clean_param:
+        hdr[f"HIERARCH AMICAL params {k}"] = clean_param[k]
+
+
 def perform_clean(args):
     """Clean one or all FITS data cubes with AMICAL.
 
@@ -117,7 +125,11 @@ def perform_clean(args):
         )
         return 1
 
-    if not args.all:
+    if args.all:
+        if args.check:
+            print("--check shows a single file: use it without --all.", file=sys.stderr)
+            return 1
+    else:
         filename, hdr = _select_data_file(args, process="clean")
 
     if args.check:
@@ -134,19 +146,14 @@ def perform_clean(args):
     if args.all:
         # Clean all files in --datadir
         for f in track(l_file, description="# files"):
-            hdr = fits.open(f)[0].header
-            hdr["HIERARCH AMICAL step"] = "CLEANED"
+            hdr = fits.getheader(f)
+            _add_clean_keys(hdr, clean_param)
             cube = amical.select_clean_data(f, **clean_param, display=True)
             f_clean = os.path.join(args.outdir, Path(f).stem + "_cleaned.fits")
             fits.writeto(f_clean, cube, header=hdr, overwrite=True)
     else:
         # Or clean just the specified file (in --datadir)
-        hdr["HIERARCH AMICAL step"] = "CLEANED"
-        now = datetime.now()
-        dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
-        hdr["HIERARCH AMICAL time"] = dt_string
-        for k in clean_param:
-            hdr[f"HIERARCH AMICAL params {k}"] = clean_param[k]
+        _add_clean_keys(hdr, clean_param)
         cube = amical.select_clean_data(filename, **clean_param, display=True)
         if args.plot:
             plt.show()
