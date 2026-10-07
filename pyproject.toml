@@ -4,7 +4,7 @@ build-backend = "flit_core.buildapi"
 
 [project]
 name = "amical"
-version = "1.6.0"
+version = "1.7.0"
 description = "Extraction pipeline and analysis tools for Aperture Masking Interferometry mode of latest generation instruments (ground-based and space)."
 authors = [
     { name = "Anthony Soulain", email = "anthony.soulain@univ-grenoble-alpes.fr" },
