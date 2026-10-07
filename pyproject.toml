@@ -82,6 +82,11 @@ constraint-dependencies = [
     "requests>=2.18.4",
     "urllib3>=1.26.6",
     "keyring>=20.0.0",
+    # transitive dependencies of the optional virgil-astro (via optax/chex):
+    # older releases are sdist-only and fail to build, which breaks
+    # `uv sync --resolution=lowest`
+    "absl-py>=1.0.0",
+    "setuptools>=61.0",
 ]
 
 [tool.ruff.lint]
@@ -119,8 +124,10 @@ filterwarnings = [
     # https://github.com/matplotlib/matplotlib/pull/30221
     "ignore:'mode' parameter is deprecated and will be removed in Pillow 13:DeprecationWarning",
 
-    # zodiax (a virgil dependency) has unescaped LaTeX in docstrings
-    "ignore:invalid escape sequence:SyntaxWarning",
+    # zodiax (a virgil dependency, up to at least 0.5.0) has unescaped LaTeX in
+    # docstrings. The message starts with the offending sequence on
+    # Python >= 3.14 ('"\\m" is an invalid escape sequence'), hence the leading .*
+    "ignore:.*invalid escape sequence:SyntaxWarning",
 ]
 
 [tool.coverage.run]

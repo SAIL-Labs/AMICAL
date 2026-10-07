@@ -12,9 +12,11 @@ resolution-markers = [
 
 [manifest]
 constraints = [
+    { name = "absl-py", specifier = ">=1.0.0" },
     { name = "keyring", specifier = ">=20.0.0" },
     { name = "pyerfa", specifier = ">=2.0.0.2" },
     { name = "requests", specifier = ">=2.18.4" },
+    { name = "setuptools", specifier = ">=61.0" },
     { name = "urllib3", specifier = ">=1.26.6" },
 ]
 
@@ -785,7 +787,7 @@ name = "importlib-metadata"
 version = "8.7.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "zipp", marker = "python_full_version < '3.15'" },
+    { name = "zipp", marker = "python_full_version < '3.12'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/76/66/650a33bd90f786193e4de4b3ad86ea60b53c89b669a5c7be931fac31cdb0/importlib_metadata-8.7.0.tar.gz", hash = "sha256:d13b81ad223b890aa16c5471f2ac3056cf76c5f10f82d6f9292f0b415f389000", size = 56641, upload-time = "2025-04-27T15:29:01.736Z" }
 wheels = [

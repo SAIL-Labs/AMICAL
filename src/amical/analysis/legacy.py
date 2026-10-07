@@ -275,7 +275,7 @@ def candid_grid(
             for x, y, _ in starts
         ):
             flux = float(samples["companion.flux"][np.argmax(loglike[i, j])])
-            starts.append((xx[i, j], yy[i, j], flux))
+            starts.append((float(xx[i, j]), float(yy[i, j]), flux))
         if len(starts) == 5:
             break
 
