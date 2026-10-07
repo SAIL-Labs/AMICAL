@@ -4,7 +4,7 @@ from astropy.io import fits
 from matplotlib import pyplot as plt
 
 from amical import tools
-from amical.get_infos_obs import get_ifu_table
+from amical.get_infos_obs import get_ifu_table, get_mask
 
 
 def test_find_max():
@@ -125,6 +125,26 @@ def test_get_table_ifu(list_index_ifu, filtname):
 def test_get_table_ifu_error():
     with pytest.raises(KeyError):
         get_ifu_table([0], instrument="fake")
+
+
+@pytest.mark.parametrize("band", ["K", "L"])
+@pytest.mark.parametrize("mask_name,n_holes", [("g7", 7), ("g9", 9), ("g23", 23)])
+def test_get_mask_eris(mask_name, n_holes, band):
+    xycoords = get_mask("ERIS", f"{mask_name}_{band}")
+    assert xycoords.shape == (n_holes, 2)
+
+
+def test_get_mask_eris_unknown():
+    assert get_mask("ERIS", "g7_fake") is None
+
+
+def test_ERIS_parang():
+    hdr = fits.Header()
+    hdr["HIERARCH ESO ADA PUPILPOS"] = 10.0
+    hdr["HIERARCH ESO TEL PARANG START"] = 20.0
+    hdr["HIERARCH ESO TEL PARANG END"] = 30.0
+    pa = tools.eris_parang(hdr, n_dit=3)
+    np.testing.assert_allclose(pa, [-8.0, -13.0, -18.0])
 
 
 def test_wtmn_inverse_variance():
