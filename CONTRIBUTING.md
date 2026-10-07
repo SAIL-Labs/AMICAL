@@ -32,6 +32,10 @@ To test your local installation, you can run the tests with
 uv run pytest
 ```
 
+The tests of the legacy CANDID/Pymask functions (`amical.analysis.legacy`) need
+[virgil](https://github.com/benjaminpope/virgil), which the `test` group
+installs on Python >= 3.11; on Python 3.10 they are skipped.
+
 ## Building the documentation
 
 AMICAL uses [MkDocs](https://www.mkdocs.org/) with the

@@ -1,7 +1,7 @@
 # AMICAL Documentation
 
-<a href="https://github.com/SydneyAstrophotonicInstrumentationLab/AMICAL">
-<img src="https://raw.githubusercontent.com/SydneyAstrophotonicInstrumentationLab/AMICAL/master/doc/Figures/amical_logo.png" width="300"></a>
+<a href="https://github.com/SAIL-Labs/AMICAL">
+<img src="Figures/amical_logo.png" width="300"></a>
 
 **A**perture **M**asking **I**nterferometry **C**alibration and **A**nalysis **L**ibrary
 
@@ -24,13 +24,15 @@ instrument pipelines, (2) **Extract** the interferometrical quantities
 (visibilities and closure phases) using a Fourier sampling approach and (3)
 **Calibrate** those quantities to remove the instrumental biases.
 
-In addition (4), we include two external packages called
+AMICAL's job ends at (4) the calibrated **OIFITS** file. To **analyse** it
+(binary searches, contrast limits, model fitting and posteriors), we recommend
+[virgil](https://github.com/benjaminpope/virgil) (`pip install amical[virgil]`),
+which reads AMICAL's OIFITS files directly. AMICAL no longer bundles
 [CANDID](https://github.com/amerand/CANDID) and
-[Pymask](https://github.com/AnthonyCheetham/pymask) to **analyse** the final
-outputs obtained from a binary-like sources (star-star or star-planet). We
-interfaced these stand-alone packages with AMICAL to quickly estimate our
-scientific results (e.g., separation, position angle, contrast ratio, contrast
-limits, etc.) using different approaches (chi2 grid and local optimization, or MCMC; see our [companion search tutorial](tutorials/companion-search.ipynb) for details).
+[Pymask](https://github.com/AnthonyCheetham/pymask): `amical.candid_grid`,
+`amical.pymask_mcmc` and the other functions that used them remain as a legacy
+API, computed with virgil, and `amical.smartfit` is deprecated. See the
+[companion search tutorial](tutorials/companion-search.ipynb) for both.
 
 ## Getting started
 
@@ -38,7 +40,7 @@ Looking for a quickstart into AMICAL? You can go through our **[getting started 
 how to use its different features.
 
 You can also have a look to the tutorials
-for [NIRISS](tutorials/niriss-extraction.ipynb) and [SPHERE](tutorials/sphere-extraction.ipynb) or get details about the CANDID/Pymask uses with [the companion search tutorial](tutorials/companion-search.ipynb).
+for [NIRISS](tutorials/niriss-extraction.ipynb) and [SPHERE](tutorials/sphere-extraction.ipynb) or see how to analyse the calibrated OIFITS file in [the companion search tutorial](tutorials/companion-search.ipynb).
 
 ## Use policy and reference publication
 
@@ -97,6 +99,9 @@ IDL Masking Code:
 - [Peter Tuthill](http://www.physics.usyd.edu.au/~gekko/)
 - [Mike Ireland](https://github.com/mikeireland)
 - [John Monnier](https://lsa.umich.edu/astro/people/core-faculty/monnier.html)
+
+The analysis functions were originally interfaces to the following packages
+(now replaced by [virgil](https://github.com/benjaminpope/virgil)):
 
 Pymask:
 
