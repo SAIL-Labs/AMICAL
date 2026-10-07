@@ -20,15 +20,11 @@ dm = 6.0  # contrast ratio [mag]
 
 file_t = os.path.join(
     datadir,
-    "t_binary_s={:2.1f}mas_mag=6.0_dm={:2.1f}_posang={:2.1f}__F430M_81_flat_x11__00.fits".format(
-        sep, dm, theta
-    ),
+    f"t_binary_s={sep:2.1f}mas_mag=6.0_dm={dm:2.1f}_posang={theta:2.1f}__F430M_81_flat_x11__00.fits",
 )
 file_c = os.path.join(
     datadir,
-    "c_binary_s={:2.1f}mas_mag=6.0_dm={:2.1f}_posang={:2.1f}__F430M_81_flat_x11__00.fits".format(
-        sep, dm, theta
-    ),
+    f"c_binary_s={sep:2.1f}mas_mag=6.0_dm={dm:2.1f}_posang={theta:2.1f}__F430M_81_flat_x11__00.fits",
 )
 
 # Firslty, open fits files as cube: _t is for target (astronomical scene) and _c for calibrator (point source)

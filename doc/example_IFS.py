@@ -10,6 +10,7 @@ instruments like the VLT/SPHERE. The main idea is to deal with each spectral
 channels individually and combine them afterward.
 --------------------------------------------------------------------
 """
+
 import os
 
 import amical
