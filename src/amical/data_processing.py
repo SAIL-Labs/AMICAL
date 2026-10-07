@@ -7,7 +7,7 @@ import numpy as np
 from rich import print as rprint
 from rich.progress import track
 
-from amical.tools import apply_windowing, crop_max, find_max
+from amical.tools import apply_windowing, crop_max, find_max, super_gaussian
 
 
 def _apply_patch_ghost(cube, xc, yc, radius=20, dx=0, dy=-200, method="bg"):
@@ -404,11 +404,12 @@ def show_clean_params(
     f_kernel=3,
     offx=0,
     offy=0,
-    apod=False,
+    apod=True,
     window=None,
     *,
     ifu=False,
     mask=None,
+    window_contours=False,
 ):
     """Display the parameters used to clean a FITS data cube.
 
@@ -432,14 +433,18 @@ def show_clean_params(
         Median-filter kernel size for centering.
     offx, offy : int, default=0
         Crop-center offsets.
-    apod : bool, default=False
+    apod : bool, default=True
         Whether to show apodization.
     window : float or None, default=None
-        Apodization width.
+        Half width at half maximum (HWHM) of the super-Gaussian apodization
+        window, in pixels. No windowing is applied if None.
     ifu : bool, keyword-only, default=False
         Whether the input is an IFU cube.
     mask : numpy.ndarray of bool or None, keyword-only, default=None
         Sky-background mask.
+
+    window_contours : bool, keyword-only, default=False
+        Whether to show contours of the super-Gaussian window.
 
     Returns
     -------
@@ -518,10 +523,6 @@ def show_clean_params(
         bg_x = bg_coords[0]
         bg_y = bg_coords[1]
         sky_method = "mask"
-    if window is not None:
-        r3 = window
-        x3 = r3 * np.cos(theta) + x0
-        y3 = r3 * np.sin(theta) + y0
 
     xs1, ys1 = x0 + isz // 2, y0 + isz // 2
     xs2, ys2 = x0 - isz // 2, y0 + isz // 2
@@ -548,9 +549,44 @@ def show_clean_params(
             s=20,
             label="Pixels used for sky subtraction",
         )
-    if apod:
-        if window is not None:
-            plt.plot(x3, y3, "--", label="Super-gaussian windowing")
+
+    if window is not None:
+        # The window parameter gives the HWHM of the super-Gaussian.
+        # The value is used as the radius for the circle in the plot.
+        x3 = window * np.cos(theta) + x0
+        y3 = window * np.sin(theta) + y0
+        plt.plot(x3, y3, "--", label="Super-Gaussian windowing (HWHM)")
+
+        if window_contours:
+            # Create distance grid for windowing,
+            # relative to the new image center (x0, y0)
+            y_coord = np.arange(img1.shape[0]) - y0
+            x_coord = np.arange(img1.shape[1]) - x0
+            xx_grid, yy_grid = np.meshgrid(x_coord, y_coord)
+            distance = np.hypot(xx_grid, yy_grid)
+
+            # Create the super-Gaussian window function
+            # Mutiply the window value with 2 to change from HWHM to FWHM
+            super_gauss = super_gaussian(distance, sigma=window * 2)
+
+            # Plot contours of the window function
+            # Create a new meshgrid because the coordinate system
+            # in the plot is relative to the bottom left corner
+            y_coord = np.arange(img1.shape[0])
+            x_coord = np.arange(img1.shape[1])
+            xx_grid, yy_grid = np.meshgrid(x_coord, y_coord)
+            levels = [0.1, 0.25, 0.5, 0.75, 0.9]
+            contours = plt.contour(
+                xx_grid,
+                yy_grid,
+                super_gauss,
+                levels=levels,
+                linestyles=":",
+                linewidths=0.8,
+                colors="white",
+            )
+            plt.clabel(contours, contours.levels, inline=True, fontsize=7.0)
+
     plt.plot(x0, y0, "+", color="c", ms=10, label="Centering position")
     plt.plot(
         [xs1, xs2, xs3, xs4, xs1],
@@ -659,7 +695,9 @@ def clean_data(
     sky : bool, default=True
         Whether to apply sky subtraction.
     window : float or None, default=None
-        Apodization width.
+        Half width at half maximum (HWHM) of the super-Gaussian apodization
+        window, in pixels. Only used if `apod` is True; no windowing is applied
+        if None.
     darkfile : str or path-like or None, default=None
         Dark-cube filename.
     f_kernel : int or None, default=3
@@ -798,7 +836,9 @@ def select_clean_data(
     apod, sky : bool, default=True
         Whether to apodize frames and subtract the sky.
     window : float or None, default=None
-        Apodization width.
+        Half width at half maximum (HWHM) of the super-Gaussian apodization
+        window, in pixels. Only used if `apod` is True; no windowing is applied
+        if None.
     darkfile : str or path-like or None, default=None
         Dark-cube filename.
     f_kernel : int or None, default=3

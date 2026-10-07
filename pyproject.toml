@@ -33,7 +33,7 @@ dependencies = [
     "numpy>=1.21.3",
     "packaging>=26.2",
     "pypdf>=6.19.0",
-    "rich>=13.5.2",
+    "rich>=15.0.0",
     "scipy>=1.8.2",
 ]
 

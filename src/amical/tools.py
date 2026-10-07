@@ -302,22 +302,60 @@ def cov2cor(cov):
     return cor, sigma
 
 
-def super_gaussian(x, sigma, m, amp=1, x0=0):
-    sigma = float(sigma)
-    m = float(m)
+def super_gaussian(
+    x: np.ndarray, sigma: float, m: float = 3.0, amp: float = 1.0, x0: float = 0.0
+) -> np.ndarray:
+    """
+    Function for creating a super-Gaussian window.
+
+    Parameters
+    ----------
+    x : np.ndarray
+        2D array with the distances of each pixel to the image center.
+    sigma : float
+        Full width at half maximum (FWHM) of the super-Gaussian
+        window. It is therefore not the standard deviation, as the
+        parameter name would suggest.
+    m : float
+        Exponent used for the super-Gaussian function (default: 3.0).
+    amp : float
+        Amplitude of the Gaussian function (default: 1.0).
+    x0 : float
+        Offset applied to the distances (default: 0.0)
+
+    Returns
+    -------
+    np.ndarray
+        2D array with the super-Gaussian window function.
+    """
+
     return amp * (
-        (
-            np.exp(
-                -(2 ** (2 * m - 1))
-                * np.log(2)
-                * (((x - x0) ** 2) / ((sigma) ** 2)) ** (m)
-            )
-        )
+        (np.exp(-(2 ** (2 * m - 1)) * np.log(2) * (((x - x0) ** 2) / (sigma**2)) ** m))
         ** 2
     )
 
 
-def apply_windowing(img, window=80, m=3):
+def apply_windowing(
+    img: np.ndarray, window: float = 80.0, m: float = 3.0
+) -> np.ndarray:
+    """
+    Function for applying a super-Gaussian window to an image.
+
+    Parameters
+    ----------
+    img : np.ndarray
+        2D array with the input image.
+    window : float
+        Half width at half maximum (HWHM) of the window function
+        (default: 80.0).
+    m : float
+        Exponent used for the super-Gaussian function (default: 3.0).
+
+    Returns
+    -------
+    np.ndarray
+        2D array with the windowed input image.
+    """
     isz = len(img)
     xx, yy = np.arange(isz), np.arange(isz)
     xx2 = xx - isz // 2
@@ -326,11 +364,11 @@ def apply_windowing(img, window=80, m=3):
     distance = np.sqrt(xx2**2 + yy2[:, np.newaxis] ** 2)
 
     # Super-gaussian windowing
-    window = super_gaussian(distance, sigma=window * 2, m=m)
+    # Mutiply the window value with 2 to change from HWHM to FWHM
+    super_gauss = super_gaussian(distance, sigma=window * 2, m=m)
 
     # Apply the windowing
-    img_apod = img * window
-    return img_apod
+    return img * super_gauss
 
 
 def sanitize_array(dic):  # pragma: no cover
@@ -429,6 +467,7 @@ def jd2lst(lng, jd):
 
 def compute_pa(hdr, n_ps, verbose=False, display=False, *, sci_hdr=None):
     list_fct_pa = {
+        "ERIS": (eris_parang, {"hdr": hdr, "n_dit": n_ps}),
         "SPHERE": (sphere_parang, {"hdr": hdr, "n_dit_ifs": n_ps}),
         "NIRISS": (niriss_parang, {"hdr": sci_hdr}),
     }
@@ -484,6 +523,33 @@ def niriss_parang(hdr):
     roll_ref_pa = hdr["ROLL_REF"]  # Offset between V3 and N in local aperture coord
 
     return roll_ref_pa - v3i_yang
+
+
+def eris_parang(hdr, n_dit=None):
+    """
+    Reads the header and creates an array giving the paralactic angle for each frame,
+    taking into account the inital derotator position.
+    The parallactic angles are linearly interpolated between the start and end of the template.
+    If some frames are removed from the cube beforehand but the header is kept the same,
+    then this approximation becomes even worse.
+    TO-DO:
+    Ideally, the indices of the frames that are removed from the cube should be passed as argument,
+    and the true parallactic angles between START and END should be calculated instead of linearly interpolated.
+    """
+
+    if n_dit is None:
+        n_frames = hdr["NAXIS3"]
+    else:
+        n_frames = n_dit
+
+    pupil_pos = hdr["HIERARCH ESO ADA PUPILPOS"]
+    par_ang_start = hdr["HIERARCH ESO TEL PARANG START"]
+    par_ang_end = hdr["HIERARCH ESO TEL PARANG END"]
+    par_angles = np.linspace(par_ang_start, par_ang_end, n_frames)
+
+    pos_angles = pupil_pos - par_angles + 2
+
+    return pos_angles
 
 
 def sphere_parang(hdr, n_dit_ifs=None):
