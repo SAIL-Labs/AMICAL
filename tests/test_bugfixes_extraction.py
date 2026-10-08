@@ -23,7 +23,7 @@ from amical.mf_pipeline.ami_function import (
     find_bad_BL_BS,
     make_mf,
 )
-from amical.mf_pipeline.bispect import _compute_v2_quantities
+from amical.mf_pipeline.bispect import _compute_v2_quantities, _phase_slope_weights
 from amical.mf_pipeline.idl_function import regress_noc
 
 
@@ -225,3 +225,18 @@ def test_calc_weight_reg_degenerate_frame_warns():
     np.testing.assert_array_equal(ph[1], 0)
     np.testing.assert_array_equal(err[1], 0)
     assert np.all(ph[0] == 1)
+
+
+def test_phase_slope_weights_are_inverse_variances():
+    err = np.array([0.1, 0.1, 0.1, 0.1, 100.0, 0.0, np.inf, np.nan])
+    w = _phase_slope_weights(err)
+    np.testing.assert_allclose(w[:5], 1 / err[:5] ** 2)
+    np.testing.assert_array_equal(w[5:], 0.0)
+
+    # A very noisy point barely moves the fit with inverse-variance weights.
+    x = np.ones((1, 5))
+    y = np.array([1.0, 1.0, 1.0, 1.0, 50.0])
+    coeff = regress_noc(x, y, _phase_slope_weights(err[:5])).coeff[0]
+    assert abs(coeff - 1.0) < 1e-3
+    # With the sigma-like weights (the old behaviour) it dominates the fit.
+    assert regress_noc(x, y, err[:5]).coeff[0] > 10.0
