@@ -307,7 +307,7 @@ def main(argv: list[str] | None = None) -> int:
     calibrate_parser.add_argument(
         "--phscorr",
         action="store_true",
-        help="Apply a phasor correction due to piston between holes (default: %(default)s).",
+        help="Apply a phasor correction due to piston between holes; not recommended, known to bias V2 (see GitHub issue #347) (default: %(default)s).",
     )
     calibrate_parser.add_argument(
         "--atmcorr",

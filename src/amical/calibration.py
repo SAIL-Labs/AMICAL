@@ -1,5 +1,7 @@
 """Calibrate non-redundant-mask interferometric data with calibrator observations."""
 
+import warnings
+
 import numpy as np
 
 from amical.dpfit import leastsqFit
@@ -318,7 +320,8 @@ def calibrate(
     sig_thres : float, default=2
         Sigma-clipping threshold around the median.
     apply_phscorr : bool, default=False
-        Whether to apply the piston phasor correction.
+        Whether to apply the piston phasor correction. Not recommended: it is
+        known to bias the calibrated V2 (see GitHub issue #347).
     apply_atmcorr : bool, default=False
         Whether to apply the seeing and windshake correction to squared
         visibilities.
@@ -361,6 +364,13 @@ def calibrate(
         v2_corr_t = _calc_correction_atm_vis2(res_t)
 
     if apply_phscorr:
+        warnings.warn(
+            "apply_phscorr is known to over-correct V2: on simulated data the "
+            "calibrated V2 is worse than with no correction. See "
+            "https://github.com/SAIL-Labs/AMICAL/issues/347",
+            UserWarning,
+            stacklevel=2,
+        )
         v2_corr_t *= res_t.matrix.phs_v2corr
 
     # Raw V2 target (corrected from atm correction and phasors.)

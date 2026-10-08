@@ -160,7 +160,8 @@ def test_cal_phscorr(global_datadir):
         display=False,
         peakmethod="fft",
     )
-    cal = amical.calibrate(bs, bs, apply_atmcorr=True)
+    with pytest.warns(UserWarning, match="apply_phscorr"):
+        cal = amical.calibrate(bs, bs, apply_phscorr=True)
     assert isinstance(cal, Munch)
 
 
