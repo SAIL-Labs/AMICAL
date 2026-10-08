@@ -360,7 +360,7 @@ def _interpolate_nans_local(img_nan, kernel):
     k = kernel[::-1, ::-1]
     num = np.empty(len(rows))
     den = np.empty(len(rows))
-    for n, (i, j) in enumerate(zip(rows, cols)):
+    for n, (i, j) in enumerate(zip(rows, cols, strict=True)):
         sl = (slice(i, i + ky), slice(j, j + kx))
         num[n] = np.sum(padded[sl] * k)
         den[n] = np.sum(valid[sl] * k)
