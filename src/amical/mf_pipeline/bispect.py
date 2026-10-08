@@ -1271,7 +1271,7 @@ def _calc_weight_reg(x, y, weights):
         Measured baseline phase slopes; leading dimensions (e.g. frames) are
         fitted independently.
     weights : numpy.ndarray of shape (..., n_baselines)
-        Regression weights derived from phase errors.
+        Regression weights, inverse variances (1/sigma**2) of the phase errors.
 
     Returns
     -------
@@ -1297,6 +1297,18 @@ def _calc_weight_reg(x, y, weights):
     hole_ph_err = sig * np.sqrt(reg.MSE)[..., None]
     hole_ph_err = np.where(bad[..., None], 0.0, hole_ph_err)
     return hole_ph, hole_ph_err
+
+
+def _phase_slope_weights(err):
+    """Inverse-variance regression weights, 1/err**2, for phase-slope errors.
+
+    ``regress_noc`` multiplies by its weights (as IDL's REGRESS does), so they
+    must be inverse variances, not the sigma-like ``phs["err"]``, which would
+    give the noisiest slopes the most weight. A zero, infinite or non-finite
+    error carries no usable information and gets zero weight."""
+    with np.errstate(divide="ignore", invalid="ignore"):
+        weights = 1.0 / np.asarray(err) ** 2
+    return np.where(np.isfinite(weights), weights, 0.0)
 
 
 def _compute_phs_error(complex_bs, fitmat, index_mask, npix, imsize=3):
@@ -1340,8 +1352,12 @@ def _compute_phs_error(complex_bs, fitmat, index_mask, npix, imsize=3):
 
     # One regression per frame and axis, batched over frames:
     # hole_phs[axis] and hole_err_phs[axis] have shape (n_frames, n_holes).
+    phs_weights = _phase_slope_weights(phserr_arr)
     hole_phs, hole_err_phs = zip(
-        *(_calc_weight_reg(fitmat, phs_arr[axis], phserr_arr[axis]) for axis in (0, 1)),
+        *(
+            _calc_weight_reg(fitmat, phs_arr[axis], phs_weights[axis])
+            for axis in (0, 1)
+        ),
         strict=True,
     )
 
