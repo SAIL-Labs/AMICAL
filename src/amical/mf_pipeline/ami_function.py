@@ -908,6 +908,98 @@ def tri_pix(array_size, sampledisk_r, verbose=True, display=True):
     return closing_tri_pix
 
 
+def _multi_triangle_filter(mf, dim1, dim2):
+    """Matched filter in the (fftshifted) Fourier plane for multiple triangles.
+
+    Parameters
+    ----------
+    mf : object
+        Matched-filter object returned by ``make_mf``.
+    dim1, dim2 : int
+        Fourier-frame shape.
+
+    Returns
+    -------
+    numpy.ndarray of shape (dim1, dim2)
+        Filter gains at each splodge pixel and at its point-symmetric partner."""
+    mfilter_spec = np.zeros([dim1, dim2])
+
+    coord_peak = array_coords(mf.cpvct, dim1)
+    mfilter_spec[coord_peak[1], coord_peak[0]] = mf.cgvct
+
+    mfilter_spec_op = np.roll(
+        np.roll(np.rot90(np.rot90(mfilter_spec)), 1, axis=0), 1, axis=1
+    )
+    return mfilter_spec + mfilter_spec_op
+
+
+def _multi_triangle_index(bs2bl_ix, mf, closing_tri_pix, dim1):
+    """Flattened Fourier pixels of every closing triangle of every bispectrum.
+
+    The pixel triplets in ``closing_tri_pix`` close within the splodges of a
+    reference triangle; each bispectrum uses them shifted to the splodges of
+    its own three baselines. This depends only on the mask, not on the data,
+    so it is computed once for all frames.
+
+    Parameters
+    ----------
+    bs2bl_ix : numpy.ndarray of int, shape (3, n_bispectra)
+        Baseline indices forming each bispectrum.
+    mf : object
+        Matched-filter object returned by ``make_mf``.
+    closing_tri_pix : numpy.ndarray, shape (3, n_closing)
+        Flattened-pixel combinations that close within a splodge.
+    dim1 : int
+        Fourier-frame side length.
+
+    Returns
+    -------
+    numpy.ndarray of int, shape (3, n_bispectra, n_closing)
+        ``index[k, b, c]`` is the flattened pixel of side ``k`` of closing
+        triangle ``c`` for bispectrum ``b``."""
+    closing_tri_pix = closing_tri_pix.T  # (n_closing, 3)
+    base_origin = closing_tri_pix[0, 0]
+
+    # Shift from the reference splodge to the first pixel of the splodge of
+    # each side of each bispectrum, shape (3, n_bispect).
+    tri_splodge_origin = np.array(mf.cpvct)[mf.ix[0, bs2bl_ix]]
+    splodge_shift = (tri_splodge_origin - base_origin).astype(float)
+
+    # (3, n_bispect, n_closing): closing_tri_pix[c, k] + splodge_shift[k, b]
+    trisampling = closing_tri_pix.T[:, None, :] + splodge_shift[:, :, None]
+
+    # The third side is conjugated: reflect its pixels through the centre.
+    a = (splodge_shift + ((dim1 / 2) * (dim1 + 1))).astype(int)
+    spl_offset = array_coords(a[2], dim1) - dim1 // 2  # (2, n_bispect)
+    trisampling[2] -= 2 * (spl_offset[0] + 1 * spl_offset[1] * dim1)[:, None]
+    return trisampling.astype(int)
+
+
+def _multi_triangle_bs(ft_frame, mfilter_spec, tri_index):
+    """Bispectra of one frame summed over all closing triangles.
+
+    Parameters
+    ----------
+    ft_frame : numpy.ndarray of complex, shape (dim1, dim2)
+        Fourier transform of the image frame.
+    mfilter_spec : numpy.ndarray, shape (dim1, dim2)
+        Filter from ``_multi_triangle_filter``.
+    tri_index : numpy.ndarray of int, shape (3, n_bispectra, n_closing)
+        Pixel indices from ``_multi_triangle_index``.
+
+    Returns
+    -------
+    numpy.ndarray of complex, shape (n_bispectra,)
+        Multiple-triangle bispectra."""
+    mfilter_spec2 = (mfilter_spec * np.fft.fftshift(ft_frame)).ravel()
+    return np.sum(
+        mfilter_spec2[tri_index[0]]
+        * mfilter_spec2[tri_index[1]]
+        * mfilter_spec2[tri_index[2]],
+        axis=-1,
+    )
+
+
 def bs_multi_triangle(i, bs_arr, ft_frame, bs2bl_ix, mf, closing_tri_pix):
     """Accumulate a bispectrum sample using multiple closing triangles.
 
@@ -930,75 +1022,13 @@ def bs_multi_triangle(i, bs_arr, ft_frame, bs2bl_ix, mf, closing_tri_pix):
     -------
     numpy.ndarray of complex, shape (n_frames, n_bispectra)
         ``bs_arr`` with row ``i`` populated from the multiple-triangle products."""
-    dim1 = ft_frame.shape[0]
-    dim2 = ft_frame.shape[1]
-
-    closing_tri_pix = closing_tri_pix.T
+    dim1, dim2 = ft_frame.shape
     n_bispect = bs_arr.shape[1]
-
-    mfilter_spec = np.zeros([dim1, dim2])
-
-    mfc_pvct = array_coords(mf.cpvct, dim1)
-    coord_peak = array_coords(mf.cpvct, dim1)
-
-    for j in range(len(mfc_pvct[0])):
-        mfilter_spec[coord_peak[1][j], coord_peak[0][j]] = mf.cgvct[j]
-
-    mfilter_spec_op = np.roll(
-        np.roll(np.rot90(np.rot90(mfilter_spec)), 1, axis=0), 1, axis=1
+    mfilter_spec = _multi_triangle_filter(mf, dim1, dim2)
+    tri_index = _multi_triangle_index(
+        bs2bl_ix[:, :n_bispect], mf, closing_tri_pix, dim1
     )
-
-    mfilter_spec += mfilter_spec_op
-
-    mfilter_spec = mfilter_spec * np.fft.fftshift(ft_frame)
-
-    base_origin = closing_tri_pix[0, 0]
-
-    n_closing_tri = closing_tri_pix.shape[0]
-
-    All_multi_tri = []
-
-    for this_bs in range(n_bispect):
-        this_tri = bs2bl_ix[:, this_bs]
-
-        mfc_vect = np.array(mf.cpvct)
-
-        tri_splodge_origin = mfc_vect[mf.ix[0, this_tri]]  # -80
-
-        splodge_shift = tri_splodge_origin - base_origin
-
-        splodge_shift = splodge_shift.reshape([1, len(splodge_shift)])
-
-        sh = np.ones([1, n_closing_tri])
-
-        this_trisampling = closing_tri_pix + np.dot(splodge_shift.T, sh).T
-
-        this_trisampling = this_trisampling.T
-
-        a = (splodge_shift + ((dim1 / 2) * (dim1 + 1))).astype(int)[0]
-
-        spl_offset = array_coords(a, dim1).T - dim1 // 2
-        spl_offset = spl_offset.T
-
-        this_trisampling[2, :] = (
-            this_trisampling[2, :]
-            - 2 * (spl_offset[0, 2] + 1 * spl_offset[1, 2] * dim1)
-            + 0
-        )
-        this_trisampling[0, :] -= 0
-        this_trisampling[1, :] -= 0
-        this_trisampling = this_trisampling.astype(int)
-
-        mfilter_spec2 = mfilter_spec.ravel()
-
-        bs_arr[i, this_bs] = np.sum(
-            mfilter_spec2[this_trisampling[0, :]]
-            * mfilter_spec2[this_trisampling[1, :]]
-            * (mfilter_spec2[this_trisampling[2, :]])
-        )
-
-        All_multi_tri.append(this_trisampling)
-
+    bs_arr[i] = _multi_triangle_bs(ft_frame, mfilter_spec, tri_index)
     return bs_arr
 
 

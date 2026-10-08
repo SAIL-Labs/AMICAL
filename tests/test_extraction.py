@@ -157,3 +157,37 @@ def test_compute_complex_bs_chunks_and_dark(global_datadir, monkeypatch):
         for peak in fringe_peak
     ]
     np.testing.assert_allclose(whole["calib_v2"]["dark"], last_dark, rtol=1e-12)
+
+
+def test_bs_multi_triangle_matches_complex_bs(global_datadir):
+    from amical.mf_pipeline import bispect
+    from amical.mf_pipeline.ami_function import (
+        bs_multi_triangle,
+        give_peak_info2d,
+        tri_pix,
+    )
+
+    with fits.open(global_datadir / "test.fits") as fh:
+        cube = fh[0].data[:3]
+    ft_arr, n_ps, npix = bispect._construct_ft_arr(cube)
+    index_mask = compute_index_mask(7)
+    mf = make_mf("g7", "NIRISS", "F430M", npix, display=False)
+    fringe_peak = give_peak_info2d(mf, index_mask.n_baselines, npix, npix)
+    sampledisk_r = np.min(np.hypot(mf.u, mf.v)) / 2 / mf.wl * mf.pixelSize * npix
+    closing_tri_pix = tri_pix(npix, 0.7 * sampledisk_r, display=False, verbose=False)
+
+    complex_bs = bispect._compute_complex_bs(
+        ft_arr,
+        index_mask,
+        fringe_peak,
+        mf,
+        closing_tri_pix=closing_tri_pix,
+        bs_multi_tri=True,
+        verbose=False,
+    )
+    bs_arr = np.zeros((n_ps, index_mask.n_bispect), dtype=complex)
+    for i in range(n_ps):
+        bs_arr = bs_multi_triangle(
+            i, bs_arr, ft_arr[i], index_mask.bs2bl_ix, mf, closing_tri_pix
+        )
+    np.testing.assert_array_equal(complex_bs["bs_arr"], bs_arr)
