@@ -42,9 +42,9 @@ MAX_STORED = 2048  # entries kept from any one large array
 
 
 def synthetic_g18_cube(n_frames=12, npix=96, seed=18):
-    """Deterministic VAMPIRES-like 18-hole interferogram cube.
+    """Deterministic VAMPIRES-like interferogram cube for the g18 mask.
 
-    Each frame is a Gaussian envelope times the fringe pattern of the 18-hole
+    Each frame is a Gaussian envelope times the fringe pattern of the g18
     mask, with seeded random hole pistons (seeing) and Gaussian noise.
     """
     from amical.get_infos_obs import get_mask, get_pixel_size, get_wavelength
