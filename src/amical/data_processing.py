@@ -332,8 +332,42 @@ def fix_bad_pixels(image, bad_map, add_bad=None, x_stddev=1):
     img_nan = image.astype(float)
     img_nan[bad_map == 1] = np.nan
     kernel = Gaussian2DKernel(x_stddev=x_stddev)
-    fixed_image = interpolate_replace_nans(img_nan, kernel)
-    return fixed_image
+    fixed = _interpolate_nans_local(img_nan, kernel.array)
+    if fixed is not None:
+        return fixed
+    return interpolate_replace_nans(img_nan, kernel)
+
+
+def _interpolate_nans_local(img_nan, kernel):
+    """Gaussian-weighted NaN replacement evaluated only at the NaN pixels.
+
+    Reproduces ``astropy.convolution.interpolate_replace_nans`` (zero-filled
+    boundary, single pass) but returns ``None`` when it cannot do so safely
+    (non-2D input, or a NaN pixel with no finite pixel under the kernel), so
+    the caller falls back to astropy.
+    """
+    if img_nan.ndim != 2 or kernel.ndim != 2 or not np.isfinite(kernel).all():
+        return None
+    nan_mask = np.isnan(img_nan)
+    out = img_nan.copy()
+    rows, cols = np.nonzero(nan_mask)
+    if len(rows) == 0:
+        return out
+    ky, kx = kernel.shape
+    ry, rx = ky // 2, kx // 2
+    padded = np.pad(np.where(nan_mask, 0.0, img_nan), ((ry, ry), (rx, rx)))
+    valid = np.pad((~nan_mask).astype(float), ((ry, ry), (rx, rx)))
+    k = kernel[::-1, ::-1]
+    num = np.empty(len(rows))
+    den = np.empty(len(rows))
+    for n, (i, j) in enumerate(zip(rows, cols)):
+        sl = (slice(i, i + ky), slice(j, j + kx))
+        num[n] = np.sum(padded[sl] * k)
+        den[n] = np.sum(valid[sl] * k)
+    if np.any(den == 0) or not np.isfinite(num).all():
+        return None
+    out[rows, cols] = num / (den)
+    return out
 
 
 def _get_3d_bad_pixels(bad_map, add_bad, data):
