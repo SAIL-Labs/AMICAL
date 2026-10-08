@@ -631,6 +631,30 @@ def _unbias_v2_arr(
     return v2_arr, bias_arr
 
 
+def _block_means(arr, n_blocks):
+    """Average consecutive frame blocks of an array along its first axis.
+
+    Block ``k`` spans frames ``k * n_ps // n_blocks`` to
+    ``(k + 1) * n_ps // n_blocks``, as in the original IDL code.
+
+    Parameters
+    ----------
+    arr : numpy.ndarray, shape (n_frames, ...)
+        Frame-wise samples.
+    n_blocks : int
+        Number of blocks, at most ``n_frames`` so that no block is empty.
+
+    Returns
+    -------
+    numpy.ndarray, shape (n_blocks, ...)
+        Mean of each block."""
+    n_ps = arr.shape[0]
+    bounds = np.arange(n_blocks + 1) * n_ps // n_blocks
+    counts = np.diff(bounds).reshape((n_blocks,) + (1,) * (arr.ndim - 1))
+    # reduceat sums arr[bounds[k]:bounds[k + 1]] for each block start.
+    return np.add.reduceat(arr, bounds[:-1], axis=0) / counts
+
+
 def _compute_v2_quantities(v2_arr, bias_arr, n_blocks):
     """Compute mean squared visibilities and their block-estimated covariance.
 
@@ -651,27 +675,15 @@ def _compute_v2_quantities(v2_arr, bias_arr, n_blocks):
     n_ps = v2_arr.shape[0]
     n_baselines = v2_arr.shape[1]
 
-    v2 = np.zeros(n_baselines)
-    v2_cov = np.zeros([n_baselines, n_baselines])
-    v2_diff = np.zeros([n_blocks, n_baselines])
-
     # Compute vis. squared average
     v2 = np.mean(v2_arr, axis=0)
 
-    # Compute vis. squared difference
-    for j in range(n_baselines):
-        for k in range(n_blocks):
-            ind1 = k * n_ps // n_blocks
-            ind2 = (k + 1) * n_ps // n_blocks
-            v2_diff[k, j] = np.mean(v2_arr[ind1:ind2, j]) - v2[j]
-            # v2_diff[k, j] = np.mean(v2_arr[k, j]) - v2[j]
+    # Compute vis. squared difference, shape (n_blocks, n_baselines)
+    v2_diff = _block_means(v2_arr, n_blocks) - v2
 
     # Compute vis. squared covariance
-    for j in range(n_baselines):
-        for k in range(n_baselines):
-            num = np.sum(v2_diff[:, j] * v2_diff[:, k])
-            v2_cov[j, k] = num / (n_blocks - 1) / n_blocks
-            # Additonal "/ n_blocks" in the original code ???
+    v2_cov = v2_diff.T @ v2_diff / (n_blocks - 1) / n_blocks
+    # Additonal "/ n_blocks" in the original code ???
 
     # AS. Comparison with numpy cov matrices
     # v2_cov_pyt = np.cov(v2_arr.T, bias=False)
@@ -762,26 +774,15 @@ def _compute_bs_var(bs_arr, bs, n_blocks):
     -------
     numpy.ndarray of float, shape (2, n_bispectra)
         Normalized variances along the bispectrum amplitude and phase directions."""
-    n_ps = bs_arr.shape[0]
-    n_bispect = bs_arr.shape[1]
+    # comp_diff is the complex difference from the mean, shifted so that the
+    # real axis corresponds to amplitude and the imaginary axis phase.
+    # Shape (n_blocks, n_bispect).
+    comp_diff = _block_means((bs_arr - bs) * np.conj(bs), n_blocks)
 
-    bs_var = np.zeros([2, n_bispect])
-    # Compute bispectrum variance
-    comp_diff = np.zeros(n_blocks).astype(complex)
-    for j in range(n_bispect):
-        # comp_diff is the complex difference from the mean, shifted so that the
-        # real axis corresponds to amplitude and the imaginary axis phase.
-        tmp = (bs_arr[:, j] - bs[j]) * np.conj(bs[j])
-        for k in range(n_blocks):
-            ind1 = k * n_ps // n_blocks
-            ind2 = (k + 1) * n_ps // n_blocks
-            comp_diff[k] = np.mean(tmp[ind1:ind2])
+    num_real = np.sum(np.real(comp_diff) ** 2, axis=0) / (n_blocks - 1) / n_blocks
+    num_imag = np.sum(np.imag(comp_diff) ** 2, axis=0) / (n_blocks - 1) / n_blocks
 
-        num_real = np.sum(np.real(comp_diff) ** 2) / (n_blocks - 1) / n_blocks
-        num_imag = np.sum(np.imag(comp_diff) ** 2) / (n_blocks - 1) / n_blocks
-
-        bs_var[0, j] = num_real / (np.abs(bs[j]) ** 2)
-        bs_var[1, j] = num_imag / (np.abs(bs[j]) ** 2)
+    bs_var = np.array([num_real, num_imag]) / np.abs(bs) ** 2
     return bs_var
 
 
@@ -804,21 +805,21 @@ def _compute_bs_cov(bs_arr, bs, bscov2bs_ix, n_cov):
     numpy.ndarray of float, shape (2, n_cov)
         Real and imaginary normalized covariance for each bispectrum pair."""
     n_ps = bs_arr.shape[0]
-    bs_cov = np.zeros([2, n_cov])
-    for j in range(n_cov):
-        temp1 = (bs_arr[:, bscov2bs_ix[0, j]] - bs[bscov2bs_ix[0, j]]) * np.conj(
-            bs[bscov2bs_ix[0, j]]
-        )
-        temp2 = (bs_arr[:, bscov2bs_ix[1, j]] - bs[bscov2bs_ix[1, j]]) * np.conj(
-            bs[bscov2bs_ix[1, j]]
-        )
-        denom = (
-            abs(bs[bscov2bs_ix[0, j]]) * abs(bs[bscov2bs_ix[1, j]]) * (n_ps - 1) * n_ps
-        )
+    ix1, ix2 = bscov2bs_ix[0, :n_cov], bscov2bs_ix[1, :n_cov]
 
-        bs_cov[0, j] = np.sum(np.real(temp1) * np.real(temp2)) / denom
-        bs_cov[1, j] = np.sum(np.imag(temp1) * np.imag(temp2)) / denom
-    return bs_cov
+    # Deviations rotated so that real = amplitude and imaginary = phase
+    # direction, shape (n_frames, n_bispect); then gathered for each pair.
+    temp = (bs_arr - bs) * np.conj(bs)
+    temp1, temp2 = temp[:, ix1], temp[:, ix2]
+    denom = np.abs(bs[ix1]) * np.abs(bs[ix2]) * (n_ps - 1) * n_ps
+
+    bs_cov = np.array(
+        [
+            np.sum(np.real(temp1) * np.real(temp2), axis=0),
+            np.sum(np.imag(temp1) * np.imag(temp2), axis=0),
+        ]
+    )
+    return bs_cov / denom
 
 
 def _compute_cp_cov(bs_arr, bs, index_mask, disable=False):
@@ -833,22 +834,21 @@ def _compute_cp_cov(bs_arr, bs, index_mask, disable=False):
     index_mask : object
         Mask indices providing the number of bispectra.
     disable : bool, default=False
-        Whether to disable progress reporting.
+        Unused; kept for backwards compatibility (the vectorised computation
+        no longer reports progress).
 
     Returns
     -------
     numpy.ndarray of float, shape (n_bispectra, n_bispectra)
         Closure-phase covariance in radians squared."""
     n_ps = bs_arr.shape[0]
-    n_bispect = index_mask.n_bispect
 
-    cp_cov = dblarr(n_bispect, n_bispect)
-    for i in track(range(n_bispect), description="CP covariance", disable=disable):
-        for j in range(n_bispect):
-            temp1 = (bs_arr[:, i] - bs[i]) * np.conj(bs[i])
-            temp2 = (bs_arr[:, j] - bs[j]) * np.conj(bs[j])
-            denom = abs(bs[i]) ** 2 * abs(bs[j]) ** 2 * (n_ps - 1) * n_ps
-            cp_cov[i, j] = np.sum(np.imag(temp1) * np.imag(temp2)) / denom
+    # Phase-direction deviations of each bispectrum, shape (n_frames, n_bispect):
+    # cp_cov[i, j] = sum_frames imag_i * imag_j / denom[i, j].
+    imag_dev = np.imag((bs_arr - bs) * np.conj(bs))
+    abs2 = np.abs(bs) ** 2
+    denom = np.outer(abs2, abs2) * (n_ps - 1) * n_ps
+    cp_cov = imag_dev.T @ imag_dev / denom
     return cp_cov
 
 
@@ -873,23 +873,19 @@ def _compute_bs_v2_cov(bs_arr, v2_arr, v2, bs, index_mask):
     numpy.ndarray of float, shape (n_baselines, n_holes - 2)
         Normalized covariance of bispectrum amplitude and squared visibility."""
     n_ps = bs_arr.shape[0]
-    n_baselines = index_mask.n_baselines
-    n_holes = index_mask.n_holes
     bl2bs_ix = index_mask.bl2bs_ix
 
     # This complicated thing calculates the dot product between the bispectrum point and
     # its error term ie (x . del_x)/|x| and multiplies this by the power error term.
     # Note that this is not the same as using absolute value, and that this sum should be
     # zero where |bs| is zero within errors.
-    bs_v2_cov = np.zeros([n_baselines, n_holes - 2])
-    for j in range(n_baselines):
-        for k in range(n_holes - 2):
-            temp = bs_arr[:, bl2bs_ix[j, k]] - bs[bl2bs_ix[j, k]]
-            bs_real_tmp = np.real(temp * np.conj(bs[bl2bs_ix[j, k]]))
-            diff_v2 = v2_arr[:, j] - v2[j]
-            norm = abs(bs[bl2bs_ix[j, k]]) / (n_ps - 1.0) / n_ps
-            norm_bs_v2_cov = np.sum(bs_real_tmp * diff_v2) / norm
-            bs_v2_cov[j, k] = norm_bs_v2_cov
+    # bl2bs_ix[j, k] is the k-th bispectrum containing baseline j; gathering
+    # with it gives arrays of shape (n_frames, n_baselines, n_holes - 2).
+    bs_ix = bs[bl2bs_ix]
+    bs_real_tmp = np.real((bs_arr[:, bl2bs_ix] - bs_ix) * np.conj(bs_ix))
+    diff_v2 = (v2_arr - v2)[:, :, None]
+    norm = np.abs(bs_ix) / (n_ps - 1.0) / n_ps
+    bs_v2_cov = np.sum(bs_real_tmp * diff_v2, axis=0) / norm
     return bs_v2_cov
 
 
