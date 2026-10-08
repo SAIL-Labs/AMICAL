@@ -1550,6 +1550,7 @@ def extract_bs(
         display=display,
         save_to=save_to,
         filename=filename,
+        index_mask=index_mask,
     )
 
     ifig = 2

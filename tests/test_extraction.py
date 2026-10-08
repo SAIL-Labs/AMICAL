@@ -1,7 +1,9 @@
+import numpy as np
 import pytest
 from astropy.io import fits
 
 from amical.externals.munch import Munch, munchify
+from amical.mf_pipeline.ami_function import compute_index_mask, make_mf
 from amical.mf_pipeline.bispect import _add_infos_header
 
 
@@ -68,3 +70,32 @@ def test_no_commentary_warning_astropy_version():
     hdr["HISTORY"] = "History is a commentary card"
 
     infos = _add_infos_header(infos, hdr, mf, 1.0, "afilename", "amaskname", 1)
+
+
+@pytest.mark.parametrize("n_holes", [3, 4, 7, 9, 12])
+def test_compute_index_mask_bscov(n_holes):
+    # Pairs of bispectra (i < j, row-major) sharing at least one baseline.
+    index_mask = compute_index_mask(n_holes)
+    bs2bl_ix = index_mask.bs2bl_ix
+    expected = [
+        (i, j)
+        for i in range(index_mask.n_bispect)
+        for j in range(i + 1, index_mask.n_bispect)
+        if set(bs2bl_ix[:, i]) & set(bs2bl_ix[:, j])
+    ]
+    expected = np.array(expected, dtype=int).reshape(-1, 2).T
+
+    assert index_mask.n_cov == expected.shape[1]
+    np.testing.assert_array_equal(index_mask.bscov2bs_ix, expected)
+
+
+def test_make_mf_index_mask_mismatch():
+    with pytest.raises(ValueError, match="index_mask is for 9 holes"):
+        make_mf(
+            "g7",
+            "NIRISS",
+            "F430M",
+            80,
+            display=False,
+            index_mask=compute_index_mask(9),
+        )

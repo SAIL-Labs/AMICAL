@@ -338,6 +338,7 @@ def make_mf(
     display=True,
     save_to=None,
     filename=None,
+    index_mask=None,
 ):
     """Construct the Fourier-plane matched filter for an aperture mask.
 
@@ -377,6 +378,9 @@ def make_mf(
         Directory in which the mask-coordinate figure is saved.
     filename : str or path-like, optional
         Source filename used to name the saved figure.
+    index_mask : object, optional
+        Precomputed ``compute_index_mask(n_holes)`` for this mask, to avoid
+        rebuilding it. Computed here when not given.
 
     Returns
     -------
@@ -439,7 +443,13 @@ def make_mf(
 
     n_holes = xy_coords.shape[0]
 
-    index_mask = compute_index_mask(n_holes)
+    if index_mask is None:
+        index_mask = compute_index_mask(n_holes)
+    elif index_mask.n_holes != n_holes:
+        raise ValueError(
+            f"index_mask is for {index_mask.n_holes} holes but mask "
+            f"{maskname} has {n_holes}."
+        )
     n_baselines = index_mask.n_baselines
     n_bispect = index_mask.n_bispect
 
@@ -699,26 +709,19 @@ def compute_index_mask(n_holes, verbose=False):
         print(bl2bs_ix.T)  # transpose to display as IDL
         print("Indexing the bispectral covariance...")
 
+    # bscov2bs_ix lists every pair of bispectra (i < j) that share a baseline,
+    # in row-major (i, j) order. Two distinct triangles share at most one
+    # baseline, so the pairs are exactly all pairs drawn from the same row of
+    # bl2bs_ix (the n_holes - 2 bispectra containing that baseline), each
+    # appearing once. Collect them per baseline, then sort by (i, j).
+    a, b = np.triu_indices(n_holes - 2, 1)
+    first = bl2bs_ix[:, a].ravel()
+    second = bl2bs_ix[:, b].ravel()
+    pairs = np.array([np.minimum(first, second), np.maximum(first, second)])
+    pairs = pairs[:, np.lexsort((pairs[1], pairs[0]))]
+
     bscov2bs_ix = np.zeros([2, n_cov], dtype=int)
-
-    count = 0
-
-    for i in range(n_bispect - 1):
-        for j in np.arange(i + 1, n_bispect):
-            if (
-                (bs2bl_ix[0, i] == bs2bl_ix[0, j])
-                or (bs2bl_ix[1, i] == bs2bl_ix[0, j])
-                or (bs2bl_ix[2, i] == bs2bl_ix[0, j])
-                or (bs2bl_ix[0, i] == bs2bl_ix[1, j])
-                or (bs2bl_ix[1, i] == bs2bl_ix[1, j])
-                or (bs2bl_ix[2, i] == bs2bl_ix[1, j])
-                or (bs2bl_ix[0, i] == bs2bl_ix[2, j])
-                or (bs2bl_ix[1, i] == bs2bl_ix[2, j])
-                or (bs2bl_ix[2, i] == bs2bl_ix[2, j])
-            ):
-                bscov2bs_ix[0, count] = i
-                bscov2bs_ix[1, count] = j
-                count += 1
+    bscov2bs_ix[:, : pairs.shape[1]] = pairs
 
     if verbose:
         print(bscov2bs_ix.T)
