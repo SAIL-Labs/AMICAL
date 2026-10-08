@@ -326,8 +326,8 @@ def fix_bad_pixels(image, bad_map, add_bad=None, x_stddev=1):
 
     if len(add_bad) != 0:
         bad_map = bad_map.copy()  # Don't modify input bad pixel map, use a copy
-        for j in range(len(add_bad)):
-            bad_map[add_bad[j][1], add_bad[j][0]] = 1
+        ab = np.asarray(add_bad, dtype=int)
+        bad_map[ab[:, 1], ab[:, 0]] = 1
 
     img_nan = image.astype(float)
     img_nan[bad_map == 1] = np.nan
@@ -707,6 +707,7 @@ def clean_data(
     verbose=False,
     *,
     mask=None,
+    remove_bad=True,
 ):
     """Clean an aperture-masking data cube.
 
@@ -740,6 +741,8 @@ def clean_data(
         Whether to print cleaning information.
     mask : numpy.ndarray of bool or None, keyword-only, default=None
         Sky-background mask.
+    remove_bad : bool, keyword-only, default=True
+        Whether to interpolate over the bad pixels (`bad_map`, `add_bad`).
 
     Returns
     -------
@@ -758,7 +761,7 @@ def clean_data(
     for i in track(range(n_im), description="Cleaning"):
         img0 = data[i]
         img0 = _apply_edge_correction(img0, edge=edge)
-        if bad_map is not None:
+        if bad_map is not None and remove_bad:
             img1 = fix_bad_pixels(img0, bad_map[i], add_bad=add_bad[i])
         else:
             img1 = img0.copy()
@@ -993,6 +996,7 @@ def select_clean_data(
         darkfile=darkfile,
         verbose=verbose,
         mask=mask,
+        remove_bad=remove_bad,
     )
 
     if cube_cleaned is None:

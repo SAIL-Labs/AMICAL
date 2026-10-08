@@ -148,15 +148,19 @@ def test_compute_complex_bs_chunks_and_dark(global_datadir, monkeypatch):
     np.testing.assert_allclose(chunked["ps"], whole["ps"], rtol=1e-12)
     np.testing.assert_allclose(chunked["dps"], whole["dps"], rtol=1e-12)
 
-    # The returned dark calibration is that of the last frame.
-    last_dark = [
-        np.sum(
-            peak[:, 2].astype(float) ** 2
-            * dark_ps[-1][tuple(peak[:, :2].T.astype(int))]
+    # The returned dark calibration is the mean over frames, whatever the chunking.
+    mean_dark = [
+        np.mean(
+            np.sum(
+                peak[:, 2].astype(float) ** 2
+                * dark_ps[:, peak[:, 0].astype(int), peak[:, 1].astype(int)],
+                axis=1,
+            )
         )
         for peak in fringe_peak
     ]
-    np.testing.assert_allclose(whole["calib_v2"]["dark"], last_dark, rtol=1e-12)
+    np.testing.assert_allclose(whole["calib_v2"]["dark"], mean_dark, rtol=1e-12)
+    np.testing.assert_allclose(chunked["calib_v2"]["dark"], mean_dark, rtol=1e-12)
 
 
 def test_bs_multi_triangle_matches_complex_bs(global_datadir):
