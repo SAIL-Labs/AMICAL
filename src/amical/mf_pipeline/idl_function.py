@@ -11,13 +11,17 @@ from amical.externals.munch import munchify as dict2class
 def regress_noc(x, y, weights):
     """Perform a weighted linear regression without a constant term.
 
+    ``y`` and ``weights`` may carry leading batch dimensions, in which case an
+    independent regression is performed for each and every output gains the
+    same leading dimensions.
+
     Parameters
     ----------
     x : numpy.ndarray of shape (n_terms, n_observations)
         Regression design matrix.
-    y : numpy.ndarray of shape (n_observations,)
+    y : numpy.ndarray of shape (..., n_observations)
         Observed values.
-    weights : numpy.ndarray of shape (n_observations,)
+    weights : numpy.ndarray of shape (..., n_observations)
         Multiplicative weights for each observation.
 
     Returns
@@ -26,30 +30,30 @@ def regress_noc(x, y, weights):
         Regression results containing coefficients, coefficient covariance, fitted
         values, mean squared error, and fitted-value variances."""
 
+    y = np.asarray(y)
+    weights = np.asarray(weights)
     sx = x.shape
     sy = y.shape
     nterm = sx[0]  # # OF TERMS
-    npts = sy[0]  # # OF OBSERVATIONS
+    npts = sy[-1]  # # OF OBSERVATIONS
 
-    if (len(weights) != sy[0]) or (len(sx) != 2) or (sy[0] != sx[1]):
+    if (weights.shape != sy) or (len(sx) != 2) or (sy[-1] != sx[1]):
         raise ValueError("Incompatible arrays to compute slope error.")
 
-    xwy = np.dot(x, (weights * y))
-    wx = np.zeros([npts, nterm])
-    for i in range(npts):
-        wx[i, :] = x[:, i] * weights[i]
-    xwx = np.dot(x, wx)
+    # xwy[..., h] = sum_i x[h, i] * w[..., i] * y[..., i]
+    xwy = (weights * y) @ x.T
+    # xwx[..., h, k] = sum_i x[h, i] * w[..., i] * x[k, i]
+    xwx = (x * weights[..., None, :]) @ x.T
     cov = np.linalg.inv(xwx)
-    coeff = np.dot(cov, xwy)
-    yfit = np.dot(x.T, coeff)
-    MSE = np.nan
+    coeff = np.squeeze(cov @ xwy[..., None], axis=-1)
+    yfit = coeff @ x
     if npts != nterm:
-        MSE = np.sum(weights * (yfit - y) ** 2) / (npts - nterm)
+        MSE = np.sum(weights * (yfit - y) ** 2, axis=-1) / (npts - nterm)
+    else:
+        MSE = np.full(sy[:-1], np.nan)[()]
 
-    var_yfit = np.zeros(npts)
-
-    for i in range(npts):
-        var_yfit[i] = np.dot(np.dot(x[:, i].T, cov), x[:, i])  # Neter et al pg 233
+    # var_yfit[..., i] = x[:, i].T @ cov @ x[:, i]  (Neter et al pg 233)
+    var_yfit = np.einsum("hi,...hk,ki->...i", x, cov, x)
 
     dic = {"coeff": coeff, "cov": cov, "yfit": yfit, "MSE": MSE, "var_yfit": var_yfit}
     return dict2class(dic)
