@@ -99,3 +99,61 @@ def test_make_mf_index_mask_mismatch():
             display=False,
             index_mask=compute_index_mask(9),
         )
+
+
+def test_regress_noc_batched():
+    from amical.mf_pipeline.idl_function import regress_noc
+
+    rng = np.random.default_rng(1)
+    x = rng.normal(size=(5, 12))
+    y = rng.normal(size=(4, 12))
+    weights = rng.uniform(1, 2, size=(4, 12))
+
+    batched = regress_noc(x, y, weights)
+    for i in range(4):
+        single = regress_noc(x, y[i], weights[i])
+        for key in single:
+            np.testing.assert_allclose(batched[key][i], single[key], rtol=1e-12)
+
+    # Exactly determined fit: no degrees of freedom for the MSE.
+    assert np.isnan(regress_noc(x[:, :5], y[0, :5], weights[0, :5]).MSE)
+
+
+def test_compute_complex_bs_chunks_and_dark(global_datadir, monkeypatch):
+    from amical.mf_pipeline import bispect
+    from amical.mf_pipeline.ami_function import give_peak_info2d
+
+    with fits.open(global_datadir / "test.fits") as fh:
+        cube = fh[0].data[:7]
+    ft_arr, n_ps, npix = bispect._construct_ft_arr(cube)
+    index_mask = compute_index_mask(7)
+    mf = make_mf("g7", "NIRISS", "F430M", npix, display=False)
+    fringe_peak = give_peak_info2d(mf, index_mask.n_baselines, npix, npix)
+    dark_ps = np.random.default_rng(2).uniform(0, 1e3, size=(n_ps, npix, npix))
+
+    def run():
+        return bispect._compute_complex_bs(
+            ft_arr, index_mask, fringe_peak, mf, dark_ps=dark_ps, verbose=False
+        )
+
+    whole = run()
+    monkeypatch.setattr(bispect, "_CHUNK_PIXELS", 3 * npix**2)  # chunks of 3 frames
+    chunked = run()
+
+    for key in ["vis_arr", "phs"]:
+        for field in whole[key].dtype.names:
+            np.testing.assert_array_equal(chunked[key][field], whole[key][field])
+    for key in ["bs_arr", "fluxes"]:
+        np.testing.assert_array_equal(chunked[key], whole[key])
+    np.testing.assert_allclose(chunked["ps"], whole["ps"], rtol=1e-12)
+    np.testing.assert_allclose(chunked["dps"], whole["dps"], rtol=1e-12)
+
+    # The returned dark calibration is that of the last frame.
+    last_dark = [
+        np.sum(
+            peak[:, 2].astype(float) ** 2
+            * dark_ps[-1][tuple(peak[:, :2].T.astype(int))]
+        )
+        for peak in fringe_peak
+    ]
+    np.testing.assert_allclose(whole["calib_v2"]["dark"], last_dark, rtol=1e-12)

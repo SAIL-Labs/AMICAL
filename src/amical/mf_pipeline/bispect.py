@@ -27,6 +27,34 @@ from amical.tools import compute_pa, cov2cor
 
 from .idl_function import dblarr, dist, regress_noc
 
+# Frames are processed in chunks of about this many Fourier pixels
+# (n_frames * npix**2) to bound the memory used by _compute_complex_bs.
+_CHUNK_PIXELS = 2**20
+
+
+def _flatten_fringe_peaks(fringe_peak):
+    """Concatenate the Fourier samples of all baselines.
+
+    Parameters
+    ----------
+    fringe_peak : numpy.ndarray of shape (n_baselines,)
+        Per-baseline arrays of Fourier ``(y, x, gain)`` peak samples.
+
+    Returns
+    -------
+    ys, xs : numpy.ndarray of int, shape (n_samples,)
+        Pixel coordinates of every sample, baseline after baseline.
+    gain : numpy.ndarray of float, shape (n_samples,)
+        Matched-filter gain of every sample.
+    starts : numpy.ndarray of int, shape (n_baselines,)
+        Index of the first sample of each baseline."""
+    ys = np.concatenate([peak[:, 0] for peak in fringe_peak]).astype(int)
+    xs = np.concatenate([peak[:, 1] for peak in fringe_peak]).astype(int)
+    gain = np.concatenate([peak[:, 2] for peak in fringe_peak]).astype(float)
+    counts = [len(peak) for peak in fringe_peak]
+    starts = np.concatenate([[0], np.cumsum(counts)[:-1]]).astype(int)
+    return ys, xs, gain, starts
+
 
 def _compute_complex_bs(
     ft_arr,
@@ -92,82 +120,88 @@ def _compute_complex_bs(
 
     fluxes = np.zeros(n_ps)
 
-    for i in track(
-        range(n_ps),
+    # Fourier samples of all baselines in one flat list: pixel (ys[p], xs[p])
+    # with gain[p]. Baseline j owns samples starts[j] to starts[j + 1], so
+    # per-baseline sums over the last axis are np.add.reduceat(..., starts).
+    ys, xs, gain, starts = _flatten_fringe_peaks(fringe_peak)
+
+    def per_baseline_sum(values):
+        return np.add.reduceat(values, starts, axis=-1)
+
+    # The phase slopes compare each sample with its neighbours one pixel
+    # before/after along each axis, wrapping round the array as np.roll does
+    # (np.roll(ft, 1, axis=0)[y] == ft[y - 1]).
+    ys_prev, ys_next = (ys - 1) % npix, (ys + 1) % npix
+    xs_prev, xs_next = (xs - 1) % npix, (xs + 1) % npix
+
+    # Process frames in chunks to bound the memory of the power spectra.
+    chunk_size = max(1, _CHUNK_PIXELS // npix**2)
+    for start in track(
+        range(0, n_ps, chunk_size),
         description="Extracting in the cube",
         disable=not verbose,
     ):
-        ft_frame = ft_arr[i]
-        ps = np.abs(ft_frame) ** 2
+        frames = slice(start, min(start + chunk_size, n_ps))
+        ft_chunk = ft_arr[frames]
+        n_chunk = ft_chunk.shape[0]
 
         if dark_ps is not None and (len(dark_ps.shape) == 3):
-            dps = dark_ps[i]
+            dps = dark_ps[frames]
         elif dark_ps is not None and (len(dark_ps.shape) == 2):
-            dps = dark_ps
+            dps = np.broadcast_to(dark_ps, ft_chunk.shape)
         else:
-            dps = np.zeros([npix, npix])
+            dps = np.zeros(ft_chunk.shape)
 
-        avedps += dps  # Cumulate ps (dark) to perform an average at the end
-        aveps += ps  # Cumulate ps to perform an average at the end
+        avedps += np.sum(dps, axis=0)  # Cumulate ps (dark) to average at the end
+        aveps += np.sum(np.abs(ft_chunk) ** 2, axis=0)  # Same for ps
 
-        fluxes[i] = abs(ft_frame[0, 0]) - np.sqrt(dps[0, 0])
+        fluxes[frames] = abs(ft_chunk[:, 0, 0]) - np.sqrt(dps[:, 0, 0])
 
         # Extract complex visibilities of each fringe peak (each indices are
-        # computed using make_mf function)
-        cvis = np.zeros(n_baselines).astype(complex)
-        for j in range(n_baselines):
-            pix = fringe_peak[j][:, 0].astype(int), fringe_peak[j][:, 1].astype(int)
-            gain = fringe_peak[j][:, 2]
+        # computed using make_mf function); shape (n_chunk, n_baselines)
+        ft_peak = ft_chunk[:, ys, xs]
+        dark = per_baseline_sum(gain**2 * dps[:, ys, xs])
+        cvis = per_baseline_sum(gain * ft_peak)
 
-            calib_v2["dark"][j] = np.sum(gain**2 * dps[pix])
-            cvis[j] = np.sum(gain * ft_frame[pix])
-
-            ftf1 = np.roll(ft_frame, 1, axis=0)
-            ftf2 = np.roll(ft_frame, -1, axis=0)
-            dummy = np.sum(
-                ft_frame[pix] * np.conj(ftf1[pix]) + np.conj(ft_frame[pix]) * ftf2[pix]
-            )
-
-            phs["value"][0, i, j] = np.arctan2(dummy.imag, dummy.real)
-            phs["err"][0, i, j] = 1 / abs(dummy)
-
-            ftf1 = np.roll(ft_frame, 1, axis=1)
-            ftf2 = np.roll(ft_frame, -1, axis=1)
-            dummy = np.sum(
-                ft_frame[pix] * np.conj(ftf1[pix]) + np.conj(ft_frame[pix]) * ftf2[pix]
-            )
-
-            phs["value"][1, i, j] = np.arctan2(dummy.imag, dummy.real)
-            phs["err"][1, i, j] = 1 / abs(dummy)
+        for axis, (prev, after) in enumerate(
+            [
+                (ft_chunk[:, ys_prev, xs], ft_chunk[:, ys_next, xs]),
+                (ft_chunk[:, ys, xs_prev], ft_chunk[:, ys, xs_next]),
+            ]
+        ):
+            dummy = per_baseline_sum(ft_peak * np.conj(prev) + np.conj(ft_peak) * after)
+            phs["value"][axis, frames] = np.arctan2(dummy.imag, dummy.real)
+            phs["err"][axis, frames] = 1 / abs(dummy)
 
         # Correct for overlapping baselines
-        rvis = cvis.real
-        ivis = cvis.imag
-
-        rvis = np.dot(mf.rmat, rvis)
-        ivis = np.dot(mf.imat, ivis)
+        rvis = cvis.real @ mf.rmat.T
+        ivis = cvis.imag @ mf.imat.T
 
         cvis_fixed = rvis + ivis * 1j
-        vis_arr["complex"][i, :] = cvis_fixed
-        vis_arr["phase"][i, :] = np.arctan2(cvis_fixed.imag, cvis_fixed.real)
-        vis_arr["amplitude"][i, :] = np.abs(cvis_fixed)
-        vis_arr["squared"][i] = np.abs(cvis_fixed) ** 2 - calib_v2["dark"]
+        vis_arr["complex"][frames] = cvis_fixed
+        vis_arr["phase"][frames] = np.arctan2(cvis_fixed.imag, cvis_fixed.real)
+        vis_arr["amplitude"][frames] = np.abs(cvis_fixed)
+        vis_arr["squared"][frames] = np.abs(cvis_fixed) ** 2 - dark
+
+        # As in the original frame loop, keep the dark of the last frame.
+        calib_v2["dark"] = dark[n_chunk - 1]
 
         # Calculate Bispectrum
         if not bs_multi_tri:
-            cvis_1 = cvis_fixed[bs2bl_ix[0, :]]
-            cvis_2 = cvis_fixed[bs2bl_ix[1, :]]
-            cvis_3 = cvis_fixed[bs2bl_ix[2, :]]
-            bs_arr[i, :] = cvis_1 * cvis_2 * np.conj(cvis_3)
+            cvis_1 = cvis_fixed[:, bs2bl_ix[0, :]]
+            cvis_2 = cvis_fixed[:, bs2bl_ix[1, :]]
+            cvis_3 = cvis_fixed[:, bs2bl_ix[2, :]]
+            bs_arr[frames] = cvis_1 * cvis_2 * np.conj(cvis_3)
         else:
-            bs_arr = bs_multi_triangle(
-                i,
-                bs_arr,
-                ft_frame,
-                bs2bl_ix,
-                mf,
-                closing_tri_pix,
-            )
+            for i in range(frames.start, frames.stop):
+                bs_arr = bs_multi_triangle(
+                    i,
+                    bs_arr,
+                    ft_arr[i],
+                    bs2bl_ix,
+                    mf,
+                    closing_tri_pix,
+                )
 
     ps = aveps / n_ps
     dps = avedps / n_ps
@@ -1230,21 +1264,29 @@ def _calc_weight_reg(x, y, weights):
     ----------
     x : numpy.ndarray of shape (n_holes, n_baselines)
         Aperture-to-baseline design matrix.
-    y : numpy.ndarray of shape (n_baselines,)
-        Measured baseline phase slopes.
-    weights : numpy.ndarray of shape (n_baselines,)
+    y : numpy.ndarray of shape (..., n_baselines)
+        Measured baseline phase slopes; leading dimensions (e.g. frames) are
+        fitted independently.
+    weights : numpy.ndarray of shape (..., n_baselines)
         Regression weights derived from phase errors.
 
     Returns
     -------
-    hole_ph : numpy.ndarray of shape (n_holes,)
+    hole_ph : numpy.ndarray of shape (..., n_holes)
         Fitted aperture phase slopes.
-    hole_ph_err : numpy.ndarray of shape (n_holes,)
+    hole_ph_err : numpy.ndarray of shape (..., n_holes)
         Uncertainties on fitted aperture phase slopes."""
     reg = regress_noc(x, y, weights)
-    sig = cov2cor(reg.cov)[1]
+    var = np.diagonal(reg.cov, axis1=-2, axis2=-1)
+    negative = np.argwhere(var < 0.0)
+    if negative.size:
+        # Same check as cov2cor, applied to every fit in the batch.
+        first = tuple(negative[0])
+        ix = first[-1]
+        raise ValueError(f"diagonal cov[{ix},{ix}]={var[first]:e} is not positive")
+    sig = np.sqrt(var)
     hole_ph = reg.coeff
-    hole_ph_err = sig * np.sqrt(reg.MSE)
+    hole_ph_err = sig * np.sqrt(reg.MSE)[..., None]
     return hole_ph, hole_ph_err
 
 
@@ -1269,55 +1311,43 @@ def _compute_phs_error(complex_bs, fitmat, index_mask, npix, imsize=3):
     -------
     numpy.ndarray of shape (n_baselines,)
         Mean multiplicative squared-visibility correction due to phase slopes."""
-    n_holes = index_mask.n_holes
     n_baselines = index_mask.n_baselines
     bl2h_ix = index_mask.bl2h_ix
 
     phs_arr = complex_bs["phs"]["value"]
     phserr_arr = complex_bs["phs"]["err"]
-    v2_arr = complex_bs["vis_arr"]["squared"]
-
-    n_ps = phs_arr.shape[1]
 
     # Fit to the phase slopes using weighted linear regression.
     # Normalisation:  hole_phs was in radians per Fourier pixel.
     # Convert to phase slopes in pixels.
     phs_arr = phs_arr / 2.0 / np.pi * npix
-    hole_phs = np.zeros([2, n_ps, n_holes])
-    hole_err_phs = np.zeros([2, n_ps, n_holes])
 
+    # NB: this modifies the caller's fitmat in place, as it always has.
     for j in range(n_baselines):
         fitmat[bl2h_ix[1, j], j] = 1
 
     fitmat = fitmat / 2.0
     fitmat = fitmat[:, 0:n_baselines]
 
-    err, err_bias = np.zeros_like(v2_arr), np.zeros_like(v2_arr)
-    for j in range(n_ps):
-        y, weight = phs_arr[0, j, :], phserr_arr[0, j, :]
-        hole_phs[0, j, :], hole_err_phs[0, j, :] = _calc_weight_reg(fitmat, y, weight)
-        y, weight = phs_arr[1, j, :], phserr_arr[1, j, :]
-        hole_phs[1, j, :], hole_err_phs[1, j, :] = _calc_weight_reg(fitmat, y, weight)
+    # One regression per frame and axis, batched over frames:
+    # hole_phs[axis] and hole_err_phs[axis] have shape (n_frames, n_holes).
+    hole_phs, hole_err_phs = zip(
+        *(_calc_weight_reg(fitmat, phs_arr[axis], phserr_arr[axis]) for axis in (0, 1)),
+        strict=True,
+    )
 
-        tmp1 = hole_phs[0, j, bl2h_ix[0, :]] - hole_phs[0, j, bl2h_ix[1, :]]
-        tmp2 = hole_phs[1, j, bl2h_ix[0, :]] - hole_phs[1, j, bl2h_ix[1, :]]
-        err[j, :] = tmp1**2 + tmp2**2
-        err_bias[j, :] = (
-            hole_err_phs[0, j, bl2h_ix[0, :]] - hole_err_phs[0, j, bl2h_ix[1, :]]
-        ) ** 2 + (
-            hole_err_phs[1, j, bl2h_ix[0, :]] - hole_err_phs[1, j, bl2h_ix[1, :]]
-        ) ** 2
+    def baseline_diff(hole_values):
+        # Difference between the two holes of each baseline, per frame.
+        return hole_values[:, bl2h_ix[0, :]] - hole_values[:, bl2h_ix[1, :]]
 
-    predictor = np.zeros_like(v2_arr)
-    for j in range(n_baselines):
-        predictor[:, j] = err[:, j] - np.mean(err_bias[:, j])
+    err = baseline_diff(hole_phs[0]) ** 2 + baseline_diff(hole_phs[1]) ** 2
+    err_bias = baseline_diff(hole_err_phs[0]) ** 2 + baseline_diff(hole_err_phs[1]) ** 2
+    predictor = err - np.mean(err_bias, axis=0)
 
     # imsize is λ/hole_diameter in pixels. A factor of 3.0 was only
     # roughly correct based on simulations 2.5 seems to be better based
     # on real data (NB there is no window size adjustment here).
-    phs_v2corr = np.zeros(n_baselines)
-    for j in range(n_baselines):
-        phs_v2corr[j] = np.mean(np.exp(-2.5 * predictor[:, j] / imsize**2))
+    phs_v2corr = np.mean(np.exp(-2.5 * predictor / imsize**2), axis=0)
 
     return phs_v2corr
 
