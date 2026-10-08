@@ -99,6 +99,14 @@ def run_case(name, tmp_dir):
     elif name == "vampires_g18":
         cube, fits_file = _g18_cube(tmp_dir)
         kw = {"maskname": "g18", "filtname": "750-50", "peakmethod": "fft"}
+    elif name == "niriss_multitri":
+        cube, fits_file = _niriss_cube(n_frames=40)
+        kw = {"maskname": "g7", "fw_splodge": 0.7, "peakmethod": "fft"}
+        kw["bs_multi_tri"] = True
+    elif name == "vampires_g18_multitri":
+        cube, fits_file = _g18_cube(tmp_dir)
+        kw = {"maskname": "g18", "filtname": "750-50", "peakmethod": "fft"}
+        kw["bs_multi_tri"] = True
     else:
         raise ValueError(f"Unknown reference case {name!r}")
     with warnings.catch_warnings():
@@ -106,30 +114,45 @@ def run_case(name, tmp_dir):
         return amical.extract_bs(cube, fits_file, **common, **kw)
 
 
-CASES = ["niriss_fft", "niriss_gauss", "vampires_g18"]
+CASES = [
+    "niriss_fft",
+    "niriss_gauss",
+    "vampires_g18",
+    "niriss_multitri",
+    "vampires_g18_multitri",
+]
 
 
-def _compact(name, arr, rng):
+# Multiple-triangle cases only differ in the bispectrum, so they store just
+# the bispectrum-derived quantities, more sparsely.
+MULTITRI_KEYS = {"cp", "e_cp", "bl_cp", "bs", "bs_cov", "cp_cov", "bs_var"}
+MULTITRI_KEYS |= {"bs_v2_cov", "bs_arr", "cp_arr"}
+MULTITRI_MAX_STORED = 512
+
+
+def _compact(name, arr, rng, max_stored=MAX_STORED):
     """Return {key: array} entries storing ``arr`` (or a subsample of it)."""
     arr = np.asarray(arr)
-    if arr.size <= MAX_STORED:
+    if arr.size <= max_stored:
         return {name: arr}
-    flat = np.sort(rng.choice(arr.size, MAX_STORED, replace=False))
+    flat = np.sort(rng.choice(arr.size, max_stored, replace=False))
     return {name: arr.ravel()[flat], name + "__idx": flat}
 
 
 def collect(name, bs):
     """Flatten an ``extract_bs`` result into reference entries for ``name``."""
     rng = np.random.default_rng(0)
+    keep, max_stored = set(RESULT_KEYS + MATRIX_KEYS + FRAME_KEYS), MAX_STORED
+    if name.endswith("_multitri"):
+        keep, max_stored = MULTITRI_KEYS, MULTITRI_MAX_STORED
     out = {}
-    for key in RESULT_KEYS:
-        out.update(_compact(f"{name}/{key}", bs[key], rng))
-    for key in MATRIX_KEYS:
-        out.update(_compact(f"{name}/{key}", bs.matrix[key], rng))
-    for key in FRAME_KEYS:
-        arr = np.asarray(bs.matrix[key])
-        frames = [0, len(arr) // 2, len(arr) - 1]
-        out.update(_compact(f"{name}/{key}", arr[frames], rng))
+    for key in RESULT_KEYS + MATRIX_KEYS + FRAME_KEYS:
+        if key not in keep:
+            continue
+        arr = np.asarray(bs[key] if key in RESULT_KEYS else bs.matrix[key])
+        if key in FRAME_KEYS:
+            arr = arr[[0, len(arr) // 2, len(arr) - 1]]
+        out.update(_compact(f"{name}/{key}", arr, rng, max_stored))
     return out
 
 

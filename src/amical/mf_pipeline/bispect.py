@@ -16,7 +16,9 @@ from rich.progress import track
 from amical.externals.munch import munchify as dict2class
 from amical.get_infos_obs import get_mask
 from amical.mf_pipeline.ami_function import (
-    bs_multi_triangle,
+    _multi_triangle_bs,
+    _multi_triangle_filter,
+    _multi_triangle_index,
     compute_index_mask,
     give_peak_info2d,
     make_mf,
@@ -134,6 +136,12 @@ def _compute_complex_bs(
     ys_prev, ys_next = (ys - 1) % npix, (ys + 1) % npix
     xs_prev, xs_next = (xs - 1) % npix, (xs + 1) % npix
 
+    if bs_multi_tri:
+        # The multiple-triangle filter and pixel indices are the same for
+        # every frame (see ami_function.bs_multi_triangle).
+        mfilter_spec = _multi_triangle_filter(mf, npix, npix)
+        tri_index = _multi_triangle_index(bs2bl_ix, mf, closing_tri_pix, npix)
+
     # Process frames in chunks to bound the memory of the power spectra.
     chunk_size = max(1, _CHUNK_PIXELS // npix**2)
     for start in track(
@@ -194,14 +202,7 @@ def _compute_complex_bs(
             bs_arr[frames] = cvis_1 * cvis_2 * np.conj(cvis_3)
         else:
             for i in range(frames.start, frames.stop):
-                bs_arr = bs_multi_triangle(
-                    i,
-                    bs_arr,
-                    ft_arr[i],
-                    bs2bl_ix,
-                    mf,
-                    closing_tri_pix,
-                )
+                bs_arr[i] = _multi_triangle_bs(ft_arr[i], mfilter_spec, tri_index)
 
     ps = aveps / n_ps
     dps = avedps / n_ps
