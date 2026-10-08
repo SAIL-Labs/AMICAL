@@ -123,6 +123,62 @@ CASES = [
 ]
 
 
+CLEAN_CASES = ["clean_synthetic"]
+
+
+def synthetic_clean_inputs(n_frames=4, npix=72, seed=7):
+    """Deterministic raw cube and bad-pixel inputs for ``clean_data``.
+
+    Each frame is a fringed Gaussian PSF (centre jittered by a few pixels) on a
+    sky background with noise. The bad-pixel map has isolated pixels, a 2x2
+    cluster and a three-pixel line near the PSF, and pixels on the image edge
+    and corner; bad pixels are set to large values in the data.
+    """
+    rng = np.random.default_rng(seed)
+    y, x = np.mgrid[:npix, :npix]
+    cube = np.empty((n_frames, npix, npix))
+    for i in range(n_frames):
+        x0, y0 = npix / 2 + rng.uniform(-2, 2, size=2)
+        r2 = (x - x0) ** 2 + (y - y0) ** 2
+        fringes = 1 + 0.5 * np.cos(0.9 * (x - x0)) * np.cos(0.7 * (y - y0))
+        cube[i] = 1e4 * np.exp(-r2 / (2 * 3.0**2)) * fringes + 50
+        cube[i] += rng.normal(0, 5, (npix, npix))
+
+    bad_map = np.zeros((npix, npix), dtype=int)
+    bad = [(30, 40), (12, 60)]  # isolated (y, x)
+    bad += [(38, 33), (38, 34), (39, 33), (39, 34)]  # 2x2 cluster near the core
+    bad += [(33, 40), (34, 40), (35, 40)]  # line of three
+    bad += [(0, 20), (npix - 1, npix - 1)]  # edge and corner
+    for yb, xb in bad:
+        bad_map[yb, xb] = 1
+        cube[:, yb, xb] = 1e6
+    add_bad = [[25, 45]]  # extra (x, y) bad pixel
+    cube[:, 45, 25] = 1e6
+    return cube, bad_map, add_bad
+
+
+def run_clean_case(name):
+    """Run ``clean_data`` for a named reference case and return the cube."""
+    from amical.data_processing import clean_data
+
+    if name != "clean_synthetic":
+        raise ValueError(f"Unknown reference case {name!r}")
+    cube, bad_map, add_bad = synthetic_clean_inputs()
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        return clean_data(
+            cube,
+            isz=33,
+            r1=16,
+            dr=3,
+            bad_map=bad_map,
+            add_bad=add_bad,
+            apod=True,
+            window=10,
+            f_kernel=3,
+        )
+
+
 # Multiple-triangle cases only differ in the bispectrum, so they store just
 # the bispectrum-derived quantities, more sparsely.
 MULTITRI_KEYS = {"cp", "e_cp", "bl_cp", "bs", "bs_cov", "cp_cov", "bs_var"}
@@ -159,12 +215,15 @@ def collect(name, bs):
 if __name__ == "__main__":
     import tempfile
 
-    names = sys.argv[1:] or CASES
+    names = sys.argv[1:] or CASES + CLEAN_CASES
     entries = dict(np.load(REFERENCE_FILE)) if REFERENCE_FILE.exists() else {}
     with tempfile.TemporaryDirectory() as tmp:
         for name in names:
             entries = {k: v for k, v in entries.items() if not k.startswith(name + "/")}
-            entries.update(collect(name, run_case(name, tmp)))
+            if name in CLEAN_CASES:
+                entries[f"{name}/cube"] = run_clean_case(name)
+            else:
+                entries.update(collect(name, run_case(name, tmp)))
             print(f"{name}: done")
     np.savez_compressed(REFERENCE_FILE, **entries)
     print(f"Wrote {REFERENCE_FILE} ({REFERENCE_FILE.stat().st_size / 1e3:.0f} kB)")
