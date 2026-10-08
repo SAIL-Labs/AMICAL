@@ -7,7 +7,14 @@ optimised code must reproduce it to floating-point noise.
 
 import numpy as np
 import pytest
-from reference_cases import CASES, REFERENCE_FILE, collect, run_case
+from reference_cases import (
+    CASES,
+    CLEAN_CASES,
+    REFERENCE_FILE,
+    collect,
+    run_case,
+    run_clean_case,
+)
 
 # Agreement required relative to the largest stored magnitude of each array.
 # Results agree to ~1e-14 on the machine that generated the reference; the
@@ -47,3 +54,13 @@ def test_reference_outputs(case, reference):
         np.testing.assert_allclose(
             got, ref, rtol=0, atol=TOLERANCE * scale, err_msg=key
         )
+
+
+@pytest.mark.parametrize("name", CLEAN_CASES)
+def test_reference_clean_data(name, reference):
+    got = run_clean_case(name)
+    ref = reference[f"{name}/cube"]
+    assert got.shape == ref.shape
+    np.testing.assert_allclose(
+        got, ref, rtol=0, atol=TOLERANCE * np.max(np.abs(ref)), err_msg=name
+    )

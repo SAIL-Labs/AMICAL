@@ -1,5 +1,6 @@
 """General utilities for aperture-masking data processing and analysis."""
 
+import functools
 import math as m
 import sys
 import warnings
@@ -65,6 +66,48 @@ def rad2mas(rad):
     return mas
 
 
+def _find_max_median_fast(img, f, n_seed=64):
+    """Exact brightest pixel of ``medfilt2d(img, f)`` without filtering it all.
+
+    The median of a window never exceeds the window maximum, and ``medfilt2d``
+    zero-pads.  So a lower bound ``L > 0`` on the filtered maximum (taken from
+    exact medians at the brightest pixels) restricts the search to pixels whose
+    window contains a value ``>= L``.  Returns ``(X, Y)`` with the same
+    row-major tie-breaking as ``np.where``, or ``None`` when the fast path does
+    not apply.
+    """
+    from numpy.lib.stride_tricks import sliding_window_view
+    from scipy.ndimage import binary_dilation
+
+    img = np.asarray(img)
+    if (
+        img.ndim != 2
+        or img.dtype not in (np.float64, np.float32)
+        or f % 2 != 1
+        or f < 1
+        or min(img.shape) < f
+        or img.size <= 4 * n_seed
+        or not np.isfinite(img).all()
+    ):
+        return None
+    r = f // 2
+    padded = np.pad(img, r)
+    windows = sliding_window_view(padded, (f, f))
+
+    def medians(rows, cols):
+        return np.median(windows[rows, cols].reshape(len(rows), -1), axis=1)
+
+    seeds = np.argpartition(img.ravel(), -n_seed)[-n_seed:]
+    lower = medians(*np.unravel_index(seeds, img.shape)).max()
+    if not lower > 0:
+        return None
+    mask = binary_dilation(img >= lower, structure=np.ones((f, f), bool))
+    rows, cols = np.nonzero(mask)  # row-major order
+    vals = medians(rows, cols)
+    k = int(np.argmax(vals))
+    return cols[k], rows[k]
+
+
 def find_max(img, filtmed=True, f=3):
     """Find the brightest pixel in an image.
 
@@ -85,6 +128,9 @@ def find_max(img, filtmed=True, f=3):
     from scipy.signal import medfilt2d
 
     if filtmed:
+        fast = _find_max_median_fast(img, f)
+        if fast is not None:
+            return fast
         try:
             im_med = medfilt2d(img, f)
         except ValueError:
@@ -330,6 +376,19 @@ def super_gaussian(
     )
 
 
+@functools.lru_cache(maxsize=8)
+def _window_map(isz, window, m):
+    """Cached super-Gaussian window map (read-only)."""
+    xx, yy = np.arange(isz), np.arange(isz)
+    xx2 = xx - isz // 2
+    yy2 = isz // 2 - yy
+    distance = np.sqrt(xx2**2 + yy2[:, np.newaxis] ** 2)
+    # Mutiply the window value with 2 to change from HWHM to FWHM
+    out = super_gaussian(distance, sigma=window * 2, m=m)
+    out.setflags(write=False)
+    return out
+
+
 def apply_windowing(
     img: np.ndarray, window: float = 80.0, m: float = 3.0
 ) -> np.ndarray:
@@ -351,16 +410,7 @@ def apply_windowing(
     np.ndarray
         2D array with the windowed input image.
     """
-    isz = len(img)
-    xx, yy = np.arange(isz), np.arange(isz)
-    xx2 = xx - isz // 2
-    yy2 = isz // 2 - yy
-    # Distance map
-    distance = np.sqrt(xx2**2 + yy2[:, np.newaxis] ** 2)
-
-    # Super-gaussian windowing
-    # Mutiply the window value with 2 to change from HWHM to FWHM
-    super_gauss = super_gaussian(distance, sigma=window * 2, m=m)
+    super_gauss = _window_map(len(img), float(window), float(m))
 
     # Apply the windowing
     return img * super_gauss
