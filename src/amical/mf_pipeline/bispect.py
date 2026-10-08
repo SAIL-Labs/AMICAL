@@ -121,6 +121,7 @@ def _compute_complex_bs(
     phs = np.zeros((2, n_ps, n_baselines), dtype=[("value", float), ("err", float)])
 
     fluxes = np.zeros(n_ps)
+    dark_sum = np.zeros(n_baselines)
 
     # Fourier samples of all baselines in one flat list: pixel (ys[p], xs[p])
     # with gain[p]. Baseline j owns samples starts[j] to starts[j + 1], so
@@ -151,7 +152,6 @@ def _compute_complex_bs(
     ):
         frames = slice(start, min(start + chunk_size, n_ps))
         ft_chunk = ft_arr[frames]
-        n_chunk = ft_chunk.shape[0]
 
         if dark_ps is not None and (len(dark_ps.shape) == 3):
             dps = dark_ps[frames]
@@ -191,8 +191,7 @@ def _compute_complex_bs(
         vis_arr["amplitude"][frames] = np.abs(cvis_fixed)
         vis_arr["squared"][frames] = np.abs(cvis_fixed) ** 2 - dark
 
-        # As in the original frame loop, keep the dark of the last frame.
-        calib_v2["dark"] = dark[n_chunk - 1]
+        dark_sum += dark.sum(axis=0)
 
         # Calculate Bispectrum
         if not bs_multi_tri:
@@ -206,6 +205,9 @@ def _compute_complex_bs(
 
     ps = aveps / n_ps
     dps = avedps / n_ps
+    # Frame-averaged dark power per baseline (the per-frame darks are already
+    # subtracted from vis_arr["squared"]); nothing downstream reads this field.
+    calib_v2["dark"] = dark_sum / n_ps
 
     complex_bs = {
         "vis_arr": vis_arr,
@@ -1279,15 +1281,21 @@ def _calc_weight_reg(x, y, weights):
         Uncertainties on fitted aperture phase slopes."""
     reg = regress_noc(x, y, weights)
     var = np.diagonal(reg.cov, axis1=-2, axis2=-1)
-    negative = np.argwhere(var < 0.0)
-    if negative.size:
-        # Same check as cov2cor, applied to every fit in the batch.
-        first = tuple(negative[0])
-        ix = first[-1]
-        raise ValueError(f"diagonal cov[{ix},{ix}]={var[first]:e} is not positive")
+    bad = np.any(var < 0.0, axis=-1)
+    if np.any(bad):
+        # A degenerate frame has a negative covariance diagonal. Do not stop
+        # the whole extraction: give that fit zero phase and zero error.
+        warnings.warn(
+            f"{int(np.sum(bad))} phase-slope fit(s) had a negative covariance "
+            "diagonal and were set to zero.",
+            RuntimeWarning,
+            stacklevel=2,
+        )
+        var = np.where(bad[..., None], 0.0, var)
     sig = np.sqrt(var)
-    hole_ph = reg.coeff
+    hole_ph = np.where(bad[..., None], 0.0, reg.coeff)
     hole_ph_err = sig * np.sqrt(reg.MSE)[..., None]
+    hole_ph_err = np.where(bad[..., None], 0.0, hole_ph_err)
     return hole_ph, hole_ph_err
 
 
@@ -1323,7 +1331,7 @@ def _compute_phs_error(complex_bs, fitmat, index_mask, npix, imsize=3):
     # Convert to phase slopes in pixels.
     phs_arr = phs_arr / 2.0 / np.pi * npix
 
-    # NB: this modifies the caller's fitmat in place, as it always has.
+    fitmat = fitmat.copy()  # do not modify the caller's design matrix
     for j in range(n_baselines):
         fitmat[bl2h_ix[1, j], j] = 1
 

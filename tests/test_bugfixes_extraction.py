@@ -171,3 +171,57 @@ def test_closing_triangle_order_large_mask():
     index_mask = compute_index_mask(18)
     tri = np.array(_format_closing_triangle(index_mask))
     assert (np.diff(tri, axis=1) > 0).all()
+
+
+def test_clean_data_remove_bad_false_leaves_bad_pixels():
+    data = np.random.default_rng(0).random((3, 20, 20))
+    bad_map = np.zeros((20, 20))
+    bad_map[5, 7] = 1
+    data[:, 5, 7] = 1e5
+    kw = {"sky": False, "apod": False, "bad_map": bad_map}
+    fixed = clean_data(data, **kw)
+    kept = clean_data(data, remove_bad=False, **kw)
+    assert np.all(fixed[:, 5, 7] < 1)
+    assert np.all(kept[:, 5, 7] == 1e5)
+
+
+def test_select_clean_data_passes_remove_bad(global_datadir, monkeypatch):
+    seen = {}
+    monkeypatch.setattr(
+        data_processing, "clean_data", lambda *a, **k: seen.update(k) or None
+    )
+    select_clean_data(global_datadir / "test.fits", r1=30, dr=5, remove_bad=False)
+    assert seen["remove_bad"] is False
+
+
+def test_compute_phs_error_does_not_modify_fitmat():
+    from amical.mf_pipeline.bispect import _compute_phs_error
+
+    index_mask = compute_index_mask(7)
+    n_holes, n_bl = 7, index_mask.n_baselines
+    rng = np.random.default_rng(1)
+    fitmat = np.zeros((n_holes, n_bl + 1))
+    for j in range(n_bl):
+        fitmat[index_mask.bl2h_ix[0, j], j] = 1.0
+        fitmat[index_mask.bl2h_ix[1, j], j] = -1.0
+    fitmat[0, n_bl] = 1.0
+    before = fitmat.copy()
+    phs = np.zeros((2, 5, n_bl), dtype=[("value", float), ("err", float)])
+    phs["value"] = rng.normal(size=phs.shape)
+    phs["err"] = rng.uniform(0.5, 1, size=phs.shape)
+    _compute_phs_error({"phs": phs}, fitmat, index_mask, 64)
+    np.testing.assert_array_equal(fitmat, before)
+
+
+def test_calc_weight_reg_degenerate_frame_warns():
+    from amical.mf_pipeline.bispect import _calc_weight_reg
+
+    x = np.eye(3)
+    y = np.ones((2, 3))
+    w = np.ones((2, 3))
+    w[1] = -1.0  # negative weights give a negative covariance diagonal
+    with pytest.warns(RuntimeWarning, match="negative covariance"):
+        ph, err = _calc_weight_reg(x, y, w)
+    np.testing.assert_array_equal(ph[1], 0)
+    np.testing.assert_array_equal(err[1], 0)
+    assert np.all(ph[0] == 1)
