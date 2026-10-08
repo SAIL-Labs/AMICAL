@@ -153,3 +153,26 @@ def test_wtmn_inverse_variance():
     errors = np.array([[0.01], [1.0]])
     mn, _ = tools.wtmn(values, errors)
     assert mn[0] == pytest.approx(1.0, abs=1e-3)
+
+
+def test_cov2cor():
+    rng = np.random.default_rng(0)
+    samples = rng.normal(size=(10, 5))
+    cov = samples.T @ samples
+
+    cor, sigma = tools.cov2cor(cov)
+
+    expected = np.empty_like(cov)
+    for i in range(5):
+        for j in range(5):
+            expected[i, j] = cov[i, j] / np.sqrt(cov[i, i] * cov[j, j])
+    np.testing.assert_array_equal(cor, expected)
+    np.testing.assert_array_equal(sigma, np.sqrt(np.diag(cov)))
+    np.testing.assert_allclose(np.diag(cor), 1.0)
+
+
+def test_cov2cor_negative_diagonal():
+    cov = np.eye(4)
+    cov[2, 2] = -1.0
+    with pytest.raises(ValueError, match=r"diagonal cov\[2,2\]=-1.000000e\+00"):
+        tools.cov2cor(cov)

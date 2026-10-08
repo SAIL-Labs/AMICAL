@@ -284,20 +284,15 @@ def cov2cor(cov):
     sigma : numpy.ndarray
         Standard deviations.
     """
-    cor = np.zeros(cov.shape)
+    diag = np.diag(cov)
+    negative = np.flatnonzero(diag < 0.0)
+    if negative.size:
+        ix = negative[0]
+        raise ValueError(f"diagonal cov[{ix},{ix}]={diag[ix]:e} is not positive")
 
-    sigma = np.sqrt(np.diag(cov))
-    for ix in range(cov.shape[0]):
-        cxx = cov[ix, ix]
-        if cxx < 0.0:
-            str_err = f"diagonal cov[{ix},{ix}]={cxx:e} is not positive"
-            raise ValueError(str_err)
-        for iy in range(cov.shape[1]):
-            cyy = cov[iy, iy]
-            if cyy < 0.0:
-                str_err = f"diagonal cov[{iy},{iy}]={cyy:e} is not positive"
-                raise ValueError(str_err)
-            cor[ix, iy] = cov[ix, iy] / np.sqrt(cxx * cyy)
+    sigma = np.sqrt(diag)
+    # cor[i, j] = cov[i, j] / sqrt(cov[i, i] * cov[j, j])
+    cor = cov / np.sqrt(np.outer(diag, diag))
 
     return cor, sigma
 
